@@ -23,8 +23,8 @@ public class User {
     }
 
     public User(int userId, String username, String passwordHash, String email,
-                String fullName, String phone, String status,
-                LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime lastLoginAt) {
+            String fullName, String phone, String status,
+            LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime lastLoginAt) {
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
