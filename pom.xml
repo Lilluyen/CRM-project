@@ -64,6 +64,13 @@
       <version>13.2.0.jre11</version>
     </dependency>
 
+    <!-- Hashcode by Bcrypt-->
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <version>0.4</version>
+    </dependency>
+
   </dependencies>
 
   <build>
