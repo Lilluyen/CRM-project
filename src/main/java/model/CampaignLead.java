@@ -3,26 +3,38 @@ package model;
 import java.time.LocalDateTime;
 
 public class CampaignLead {
+
     private int campaignId;
     private int leadId;
-    private LocalDateTime joinedAt;
+    private String leadStatus;
+    private LocalDateTime assignedAt;
+    private LocalDateTime updatedAt;
 
     public CampaignLead() {
     }
 
-    public CampaignLead(int campaignId, int leadId, LocalDateTime joinedAt) {
+    public CampaignLead(int campaignId, int leadId, String leadStatus, LocalDateTime assignedAt, LocalDateTime updatedAt) {
         this.campaignId = campaignId;
         this.leadId = leadId;
-        this.joinedAt = joinedAt;
+        this.leadStatus = leadStatus;
+        this.assignedAt = assignedAt;
+        this.updatedAt = updatedAt;
     }
 
-    // Getters and Setters
     public int getCampaignId() {
         return campaignId;
     }
 
     public void setCampaignId(int campaignId) {
         this.campaignId = campaignId;
+    }
+
+    public String getLeadStatus() {
+        return leadStatus;
+    }
+
+    public void setLeadStatus(String leadStatus) {
+        this.leadStatus = leadStatus;
     }
 
     public int getLeadId() {
@@ -33,11 +45,19 @@ public class CampaignLead {
         this.leadId = leadId;
     }
 
-    public LocalDateTime getJoinedAt() {
-        return joinedAt;
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
     }
 
-    public void setJoinedAt(LocalDateTime joinedAt) {
-        this.joinedAt = joinedAt;
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
