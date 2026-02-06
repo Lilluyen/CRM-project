@@ -12,6 +12,7 @@ public class Lead {
     private String interest;
     private String source;
     private String status;
+    private int score;
     private int campaignId;
     private int assignedTo;
     private LocalDateTime createdAt;
@@ -21,7 +22,7 @@ public class Lead {
     }
 
     public Lead(int leadId, String fullName, String email, String phone, String companyName,
-            String interest, String source, String status, int campaignId, int assignedTo,
+            String interest, String source, String status, int score, int campaignId, int assignedTo,
             LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.leadId = leadId;
         this.fullName = fullName;
@@ -31,6 +32,7 @@ public class Lead {
         this.interest = interest;
         this.source = source;
         this.status = status;
+        this.score = score;
         this.campaignId = campaignId;
         this.assignedTo = assignedTo;
         this.createdAt = createdAt;
@@ -132,6 +134,14 @@ public class Lead {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
     }
 
 }
