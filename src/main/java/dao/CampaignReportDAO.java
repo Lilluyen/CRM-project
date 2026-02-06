@@ -5,7 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-
+import java.sql.Statement;
+import java.sql.Timestamp;
 import model.CampaignReport;
 import ultil.DBContext;
 
@@ -14,7 +15,7 @@ public class CampaignReportDAO {
     public int insert(CampaignReport report) {
         String sql = "INSERT INTO Campaign_Reports(campaign_id, total_lead, qualified_lead, converted_lead, cost_per_lead, roi, created_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, report.getCampaignId());
             ps.setInt(2, report.getTotalLead());
             ps.setInt(3, report.getQualifiedLead());
@@ -37,7 +38,7 @@ public class CampaignReportDAO {
 
     public CampaignReport getLatestByCampaignId(int campaignId) {
         String sql = "SELECT TOP 1 * FROM Campaign_Reports WHERE campaign_id = ? ORDER BY created_at DESC";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {

@@ -7,14 +7,15 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.sql.Statement;
+import java.sql.Timestamp;
 import model.Lead;
 import ultil.DBContext;
 
 public class CampaignLeadDAO {
     public boolean assignLeadToCampaign(int campaignId, int leadId, String initialStatus) {
         String sql = "INSERT INTO Campaign_Leads(campaign_id, lead_id, lead_status, assigned_at, updated_at) VALUES(?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
+        try (Connection conn = new DBContext().connection;
              PreparedStatement ps = conn.prepareStatement(sql)) {
             Timestamp now = Timestamp.valueOf(LocalDateTime.now());
             ps.setInt(1, campaignId);
@@ -31,7 +32,7 @@ public class CampaignLeadDAO {
 
     public boolean updateLeadStatus(int campaignId, int leadId, String leadStatus) {
         String sql = "UPDATE Campaign_Leads SET lead_status = ?, updated_at = ? WHERE campaign_id = ? AND lead_id = ?";
-        try (Connection conn = DBContext.getConnection();
+        try (Connection conn = new DBContext().connection;
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, leadStatus);
             ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
@@ -51,7 +52,7 @@ public class CampaignLeadDAO {
                      "WHERE cl.campaign_id = ? " +
                      "ORDER BY l.score DESC, l.created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
+        try (Connection conn = new DBContext().connection;
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
@@ -70,7 +71,7 @@ public class CampaignLeadDAO {
                      "WHERE cl.campaign_id = ? AND cl.lead_status = ? " +
                      "ORDER BY l.score DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
+        try (Connection conn = new DBContext().connection;
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ps.setString(2, leadStatus);
@@ -87,7 +88,7 @@ public class CampaignLeadDAO {
     
     public int countByStatus(int campaignId, String leadStatus) {
         String sql = "SELECT COUNT(*) as cnt FROM Campaign_Leads WHERE campaign_id = ? AND lead_status = ?";
-        try (Connection conn = DBContext.getConnection();
+        try (Connection conn = new DBContext().connection;
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ps.setString(2, leadStatus);
@@ -104,7 +105,7 @@ public class CampaignLeadDAO {
 
     public int countTotalLeads(int campaignId) {
         String sql = "SELECT COUNT(*) as cnt FROM Campaign_Leads WHERE campaign_id = ?";
-        try (Connection conn = DBContext.getConnection();
+        try (Connection conn = new DBContext().connection;
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();

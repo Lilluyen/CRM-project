@@ -7,7 +7,8 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.sql.Statement;
+import java.sql.Timestamp;
 import model.Lead;
 import ultil.DBContext;
 
@@ -16,7 +17,7 @@ public class LeadDAO {
     public int insert(Lead lead) {
         String sql = "INSERT INTO Leads(full_name, email, phone, company_name, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
             ps.setString(3, lead.getPhone());
@@ -44,7 +45,7 @@ public class LeadDAO {
 
     public boolean update(Lead lead) {
         String sql = "UPDATE Leads SET full_name=?, email=?, phone=?, company_name=?, interest=?, source=?, status=?, score=?, campaign_id=?, assigned_to=?, updated_at=? WHERE lead_id=?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
             ps.setString(3, lead.getPhone());
@@ -66,7 +67,7 @@ public class LeadDAO {
 
     public Lead getById(int leadId) {
         String sql = "SELECT * FROM Leads WHERE lead_id = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, leadId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -80,7 +81,7 @@ public class LeadDAO {
 
     public Lead findByEmail(String email) {
         String sql = "SELECT * FROM Leads WHERE email = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -95,7 +96,7 @@ public class LeadDAO {
     public List<Lead> getAll() {
         String sql = "SELECT * FROM Leads ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 leads.add(mapResultSetToLead(rs));
             }
@@ -108,7 +109,7 @@ public class LeadDAO {
     public List<Lead> getByCampaignId(int campaignId) {
         String sql = "SELECT * FROM Leads WHERE campaign_id = ? ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -123,7 +124,7 @@ public class LeadDAO {
     public List<Lead> getByStatus(String status) {
         String sql = "SELECT * FROM Leads WHERE status = ? ORDER BY score DESC, created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
