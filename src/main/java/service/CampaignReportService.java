@@ -18,14 +18,14 @@ public class CampaignReportService {
      * Tạo báo cáo hiệu quả Campaign
      */
     public CampaignReport generateReport(int campaignId) {
-        Campaign campaign = campaignDAO.getById(campaignId);
+        Campaign campaign = campaignDAO.getCampaignById(campaignId);
         if (campaign == null) {
             return null;
         }
 
-        int totalLeads = campaignLeadDAO.countTotalLeads(campaignId);
-        int qualifiedLeads = campaignLeadDAO.countByStatus(campaignId, "QUALIFIED");
-        int convertedLeads = campaignLeadDAO.countByStatus(campaignId, "DEAL_CREATED");
+        int totalLeads = campaignLeadDAO.countTotalLeadsByCampaign(campaignId);
+        int qualifiedLeads = campaignLeadDAO.countLeadByStatus(campaignId, "QUALIFIED");
+        int convertedLeads = campaignLeadDAO.countLeadByStatus(campaignId, "DEAL_CREATED");
 
         // Cost Per Lead = Budget / Total Leads
         BigDecimal costPerLead = (totalLeads > 0)

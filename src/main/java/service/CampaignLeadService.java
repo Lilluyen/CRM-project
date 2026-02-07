@@ -15,12 +15,12 @@ public class CampaignLeadService {
      * Gán Lead vào Campaign
      */
     public boolean assignLeadToCampaign(int campaignId, int leadId) {
-        Lead lead = leadDAO.getById(leadId);
+        Lead lead = leadDAO.getLeadById(leadId);
         if (lead == null) {
             throw new IllegalArgumentException("Lead not found");
         }
         lead.setCampaignId(campaignId);
-        leadDAO.update(lead);
+        leadDAO.updateLead(lead);
         return campaignLeadDAO.assignLeadToCampaign(campaignId, leadId, "NEW");
     }
 
