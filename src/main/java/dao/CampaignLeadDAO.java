@@ -10,7 +10,7 @@ import java.util.List;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import model.Lead;
-import ultil.DBContext;
+import util.DBContext;
 
 public class CampaignLeadDAO {
     public boolean assignLeadToCampaign(int campaignId, int leadId, String initialStatus) {

@@ -32,7 +32,7 @@ public class LoginController extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         User user = userDAO.getUserByUsername(username);
 
-        if (user == null || !ultil.PasswordUtil.check(password, user.getPasswordHash())) {
+        if (user == null || !util.PasswordUtil.check(password, user.getPasswordHash())) {
             req.setAttribute("error", "Invalid username or password.");
             req.getRequestDispatcher("login.jsp").forward(req, resp);
             return;

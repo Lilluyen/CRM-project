@@ -10,7 +10,7 @@ import java.util.List;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import model.Campaign;
-import ultil.DBContext;
+import util.DBContext;
 
 public class CampaignDAO {
      public int insert(Campaign campaign) {
