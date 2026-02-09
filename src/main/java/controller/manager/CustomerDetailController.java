@@ -1,4 +1,4 @@
-package controller.customer;
+package controller.manager;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

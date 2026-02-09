@@ -1,4 +1,4 @@
-package controller.customer;
+package controller.sale;
 
 import java.io.IOException;
 
