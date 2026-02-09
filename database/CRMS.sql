@@ -5,7 +5,8 @@ SQL SERVER
 -- 1. CREATE DATABASE
 CREATE DATABASE CRM_System;
 
-GO USE CRM_System;
+GO 
+USE CRM_System;
 
 GO
 /* ================================
