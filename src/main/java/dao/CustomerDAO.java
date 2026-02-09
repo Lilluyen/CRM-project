@@ -2,19 +2,20 @@ package dao;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import model.Customer;
 import model.User;
-import service.PhoneCheck;
 import ultil.DBContext;
+import ultil.PhoneCheck;
 
 public class CustomerDAO extends DBContext {
 
     private final String BASE_CUSTOMER_QUERY = "SELECT [customer_id], [name], [address], [industry], [company_size], [phone], [email], [status], [owner_id], [created_at], [updated_at] FROM [Customers] ";
 
-    public ArrayList<Customer> getAllCustomers() {
+    public ArrayList<Customer> getAllCustomers() throws SQLException {
         ArrayList<Customer> customers = new ArrayList<>();
 
         String sql = BASE_CUSTOMER_QUERY + "ORDER BY created_at DESC";
@@ -38,7 +39,7 @@ public class CustomerDAO extends DBContext {
                     customer.setPhone(null);
                 }
 
-                if (service.EmailCheck.isValidEmail(rs.getString("email"))) {
+                if (ultil.EmailCheck.isValidEmail(rs.getString("email"))) {
                     customer.setEmail(rs.getString("email"));
                 } else {
                     customer.setEmail(null);
@@ -61,14 +62,12 @@ public class CustomerDAO extends DBContext {
 
                 customers.add(customer);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         return customers;
     }
 
-    public Customer getCustomerById(int customerId) {
+    public Customer getCustomerById(int customerId) throws SQLException {
         String sql = BASE_CUSTOMER_QUERY + "WHERE customer_id = ?";
 
         try (PreparedStatement stm = connection.prepareStatement(sql)) {
@@ -90,7 +89,7 @@ public class CustomerDAO extends DBContext {
                     customer.setPhone(null);
                 }
 
-                if (service.EmailCheck.isValidEmail(rs.getString("email"))) {
+                if (ultil.EmailCheck.isValidEmail(rs.getString("email"))) {
                     customer.setEmail(rs.getString("email"));
                 } else {
                     customer.setEmail(null);
@@ -113,14 +112,12 @@ public class CustomerDAO extends DBContext {
 
                 return customer;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         return null;
     }
 
-    public void addCustomer(Customer customer) {
+    public void addCustomer(Customer customer) throws SQLException {
         String sql = "INSERT INTO [Customers] ([name], [address], [industry], [company_size], [phone], [email], [status], [owner_id], [created_at], [updated_at]) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -137,8 +134,6 @@ public class CustomerDAO extends DBContext {
             stm.setTimestamp(10, Timestamp.valueOf(customer.getUpdatedAt()));
 
             stm.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
