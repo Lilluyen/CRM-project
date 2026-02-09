@@ -9,8 +9,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import ultil.ControllerUltil;
 
-@WebServlet(name = "CustomerListController", urlPatterns = { "/customers/list" })
+@WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list" })
 public class CustomerListController extends HttpServlet {
 
     @Override
@@ -20,6 +21,7 @@ public class CustomerListController extends HttpServlet {
             doProcess(request, response);
         } catch (ServletException | IOException e) {
             log("CustomerListController - doPost failed", e);
+            ControllerUltil.forwardError(request, response, "Failed to retrieve customer list.");
         }
     }
 
@@ -29,6 +31,7 @@ public class CustomerListController extends HttpServlet {
             doProcess(request, response);
         } catch (ServletException | IOException e) {
             log("CustomerListController - doGet failed", e);
+            ControllerUltil.forwardError(request, response, "Failed to retrieve customer list.");
         }
 
     }
@@ -45,19 +48,14 @@ public class CustomerListController extends HttpServlet {
 
         } catch (SQLException e) {
             log("DB error", e);
-            request.setAttribute("errorMessage", "Error database.");
-            request.getRequestDispatcher("/view/error.jsp").forward(request, response);
+            ControllerUltil.forwardError(request, response,
+                    "Database error occurred while retrieving customer list.");
 
         } catch (ServletException | IOException e) {
-            log("CustomerListController - forward customerList.jsp failed", e);
+            log("View error", e);
+            ControllerUltil.forwardError(request, response,
+                    "Internal server error occurred while processing your request.");
 
-            request.setAttribute("errorMessage", "Error retrieving customer list.");
-            try {
-                request.getRequestDispatcher("/view/error.jsp")
-                        .forward(request, response);
-            } catch (ServletException | IOException ex) {
-                log("CustomerListController - forward error.jsp failed", ex);
-            }
         }
     }
 }

@@ -12,9 +12,9 @@ public class DBContext {
 
     public DBContext() {
         try {
-            String username = "sa";
+            String username = "lilluyen";
             String password = "123";
-            String url = "jdbc:sqlserver://localhost:1433;"
+            String url = "jdbc:sqlserver://MSI:1433;"
                     + "databaseName=CRM_System;"
                     + "encrypt=true;"
                     + "trustServerCertificate=true";
