@@ -11,11 +11,20 @@
     <body>
         <h2>Customer List Test Page</h2>
         <table border="1">
+            <tr>
+                <th>Customer Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Owner</th>
+            </tr>
             <c:forEach items="${customers}" var="customer">
                 <tr>
                     <td>${customer.name}</td>
                     <td>${customer.phone}</td>
-
+                    <td>${customer.email}</td>
+                    <td>${customer.status}</td>
+                    <td>${customer.owner.fullName}</td>
                 </tr>
             </c:forEach>
         </table>
