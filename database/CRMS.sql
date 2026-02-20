@@ -46,58 +46,101 @@ CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES Roles(role_id)
 /* ================================
 CUSTOMERS & CONTACTS
 ================================ */
+/* =============================================================
+1. BẢNG KHÁCH HÀNG (Mở rộng thông tin cá nhân hóa)
+============================================================= */
 CREATE TABLE Customers (
-customer_id   INT IDENTITY PRIMARY KEY,
-name          NVARCHAR(100),
-address       NVARCHAR(255),
-industry      NVARCHAR(100),
-company_size  NVARCHAR(50),
-phone         VARCHAR(20),
-email         VARCHAR(100),
-status        NVARCHAR(20),
-customer_type VARCHAR(20) NOT NULL,
-owner_id      INT,
-created_at    DATETIME DEFAULT GETDATE(),
-updated_at    DATETIME,
-CONSTRAINT fk_customers_owner FOREIGN KEY (owner_id) REFERENCES Users(user_id),
-CONSTRAINT chk_customer_type CHECK (customer_type IN ('INDIVIDUAL', 'COMPANY')),
-CONSTRAINT chk_industry_by_type CHECK (
-(customer_type = 'INDIVIDUAL' AND industry IS NULL)
-OR
-(customer_type = 'COMPANY' AND industry IS NOT NULL)
-)
+    customer_id    INT IDENTITY PRIMARY KEY,
+    name           NVARCHAR(100) NOT NULL,
+    phone          VARCHAR(20) UNIQUE, -- SĐT là định danh quan trọng nhất trong Retail
+    email          VARCHAR(100),
+    birthday       DATE,               -- Quan trọng để chạy UC chúc mừng sinh nhật
+    gender         NVARCHAR(10),       -- Nam/Nữ/Khác
+    address        NVARCHAR(255),
+    social_link    NVARCHAR(MAX),      -- UC-32: Link FB/Zalo để chat nhanh
+    
+    -- Phân loại & Hệ thống
+    customer_type  VARCHAR(20) DEFAULT 'INDIVIDUAL', 
+    status         NVARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, BLACKLIST (UC-68)
+    loyalty_tier   NVARCHAR(20) DEFAULT 'BRONZE', -- BRONZE, SILVER, GOLD
+    
+    -- Chỉ số thông minh (UC-31, 34, 68)
+    rfm_score      INT DEFAULT 0,      -- Điểm RFM tổng hợp
+    return_rate    DECIMAL(5,2) DEFAULT 0, -- Tỷ lệ hoàn hàng (%)
+    last_purchase  DATETIME,           -- Ngày mua cuối (để tính Recency)
+    
+    owner_id       INT,
+    created_at     DATETIME DEFAULT GETDATE(),
+    updated_at     DATETIME,
+    
+    CONSTRAINT fk_customers_owner FOREIGN KEY (owner_id) REFERENCES Users(user_id)
 );
 
-CREATE TABLE Contacts (
-contact_id  INT IDENTITY PRIMARY KEY,
-customer_id INT NOT NULL,
-full_name   NVARCHAR(100),
-job_title   NVARCHAR(100),
-phone       VARCHAR(20),
-email       VARCHAR(100),
-is_primary  BIT DEFAULT 0,
-status      NVARCHAR(20),
-created_at  DATETIME DEFAULT GETDATE(),
-updated_at  DATETIME,
-CONSTRAINT fk_contacts_customer FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+/* =============================================================
+2. HỒ SƠ SỐ ĐO (UC-28: Fashion Profile)
+Dùng bảng riêng vì số đo khách hàng sẽ thay đổi (lên/xuống cân)
+============================================================= */
+CREATE TABLE Customer_Measurements (
+    measure_id     INT IDENTITY PRIMARY KEY,
+    customer_id    INT NOT NULL,
+    height         DECIMAL(5,2), -- cm
+    weight         DECIMAL(5,2), -- kg
+    bust           DECIMAL(5,2), -- Vòng 1
+    waist          DECIMAL(5,2), -- Vòng 2
+    hips           DECIMAL(5,2), -- Vòng 3
+    shoulder       DECIMAL(5,2), -- Chiều rộng vai
+    preferred_size NVARCHAR(10), -- S, M, L, XL
+    body_shape     NVARCHAR(50), -- Đồng hồ cát, quả lê...
+    measured_at    DATETIME DEFAULT GETDATE(),
+    CONSTRAINT fk_measure_customer FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
 
-/* ================================
-CUSTOMER SEGMENTS
-================================ */
+/* =============================================================
+3. SỞ THÍCH & GU THỜI TRANG (UC-30: Style Tagging)
+============================================================= */
+CREATE TABLE Style_Tags (
+    tag_id         INT IDENTITY PRIMARY KEY,
+    tag_name       NVARCHAR(50), -- #Vintage, #Minimalism, #BlackOnly
+    category       NVARCHAR(50)  -- Style, Material, Color
+);
+
+CREATE TABLE Customer_Style_Map (
+    customer_id    INT NOT NULL,
+    tag_id         INT NOT NULL,
+    PRIMARY KEY (customer_id, tag_id),
+    CONSTRAINT fk_style_cust FOREIGN KEY (customer_id) REFERENCES Customers(customer_id),
+    CONSTRAINT fk_style_tag  FOREIGN KEY (tag_id) REFERENCES Style_Tags(tag_id)
+);
+
+/* =============================================================
+4. TỦ ĐỒ ẢO (UC-71: Virtual Wardrobe)
+Lưu trữ các sản phẩm khách đã mua để gợi ý phối đồ
+============================================================= */
+CREATE TABLE Virtual_Wardrobe (
+    wardrobe_id    INT IDENTITY PRIMARY KEY,
+    customer_id    INT NOT NULL,
+    product_id     INT NOT NULL, -- Liên kết sang bảng Products
+    bought_at      DATETIME DEFAULT GETDATE(),
+    photo_feedback NVARCHAR(MAX), -- UC-37: Lưu ảnh khách mặc đồ
+    CONSTRAINT fk_wardrobe_cust FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+);
+
+/* =============================================================
+5. PHÂN KHÚC (Giữ nguyên cấu trúc của bạn nhưng dùng cho Marketing)
+============================================================= */
 CREATE TABLE Customer_Segments (
-segment_id   INT IDENTITY PRIMARY KEY,
-segment_name NVARCHAR(50),
-description  NVARCHAR(MAX)
+    segment_id     INT IDENTITY PRIMARY KEY,
+    segment_name   NVARCHAR(50), -- VIP, Khách ngủ đông, Khách săn Sale
+    criteria_logic NVARCHAR(MAX) -- Lưu logic để thuật toán quét (Vd: Spend > 10M)
 );
 
 CREATE TABLE Customer_Segment_Map (
-customer_id INT NOT NULL,
-segment_id  INT NOT NULL,
-assigned_at DATETIME DEFAULT GETDATE(),
-CONSTRAINT pk_customer_segment PRIMARY KEY (customer_id, segment_id),
-CONSTRAINT fk_csm_customer FOREIGN KEY (customer_id) REFERENCES Customers(customer_id),
-CONSTRAINT fk_csm_segment  FOREIGN KEY (segment_id)  REFERENCES Customer_Segments(segment_id)
+    customer_id    INT NOT NULL,
+    segment_id     INT NOT NULL,
+    assigned_at    DATETIME DEFAULT GETDATE(),
+    PRIMARY KEY (customer_id, segment_id),
+    CONSTRAINT fk_csm_customer FOREIGN KEY (customer_id) REFERENCES Customers(customer_id),
+    CONSTRAINT fk_csm_segment  FOREIGN KEY (segment_id) REFERENCES Customer_Segments(segment_id)
 );
 
 /* ================================

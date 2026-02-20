@@ -26,12 +26,12 @@ public class CustomerDAO extends DBContext {
                   ,c.[owner_id]
                   ,c.[created_at]
                   ,c.[updated_at]
-                  , """;
+                   """;
 
     public ArrayList<Customer> getAllCustomers() throws SQLException {
         ArrayList<Customer> customers = new ArrayList<>();
 
-        String sql = BASE_CUSTOMER_QUERY + " u.[full_name]" +
+        String sql = BASE_CUSTOMER_QUERY + ", u.[full_name]" +
                 "  FROM [Customers] c JOIN [Users] u ON c.owner_id = u.[user_id]" +
                 "  ORDER BY c.[created_at] DESC";
 
@@ -84,7 +84,8 @@ public class CustomerDAO extends DBContext {
     }
 
     public Customer getCustomerById(int customerId) throws SQLException {
-        String sql = BASE_CUSTOMER_QUERY + "WHERE customer_id = ?";
+        String sql = BASE_CUSTOMER_QUERY + ", u.[full_name] "
+                + "  FROM [Customers] c JOIN [Users] u ON c.owner_id = u.[user_id] WHERE customer_id = ?";
 
         try (PreparedStatement stm = connection.prepareStatement(sql)) {
             stm.setInt(1, customerId);
@@ -95,7 +96,7 @@ public class CustomerDAO extends DBContext {
                 customer.setName(rs.getNString("name"));
                 customer.setAddress(rs.getNString("address"));
                 customer.setIndustry(rs.getNString("industry"));
-                customer.setCompanySize(rs.getString("company_size"));
+                customer.setCompanySize(rs.getNString("company_size"));
 
                 // Email and Phone validation
                 if (PhoneCheck.isValidPhone(rs.getString("phone"))) {
