@@ -2,8 +2,10 @@ package controller.manager;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
-import dao.CustomerDAO;
+import controller.dto.CustomerListDTO;
+import dao.CustomerQueryDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,10 +41,10 @@ public class CustomerListController extends HttpServlet {
     protected void doProcess(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Handle GET requests to display the customer list
-        CustomerDAO customerDAO = new CustomerDAO();
-
+        CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
         try {
-            request.setAttribute("customers", customerDAO.getAllCustomers());
+            List<CustomerListDTO> customerList = customerQueryDAO.getCustomerList();
+            request.setAttribute("customerList", customerList);
             request.getRequestDispatcher("/view/customer/customerList.jsp")
                     .forward(request, response);
 
