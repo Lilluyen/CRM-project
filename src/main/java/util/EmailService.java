@@ -10,7 +10,11 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Email service for sending emails with support for plain text, HTML content,
@@ -125,65 +129,74 @@ public class EmailService {
      * @throws MessagingException if message creation fails
      */
     private static MimeMessage createMimeMessage(Email email) throws MessagingException {
-        MimeMessage message = new MimeMessage(session);
-
-        // Set sender
-        message.setFrom(new InternetAddress(
-                EmailConfig.getFromAddress(),
-                EmailConfig.getFromName()
-        ));
-
-        // Set recipient
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email.getTo()));
-
-        // Set CC if provided
-        if (email.getCc() != null && !email.getCc().trim().isEmpty()) {
-            message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(email.getCc()));
-        }
-
-        // Set BCC if provided
-        if (email.getBcc() != null && !email.getBcc().trim().isEmpty()) {
-            message.setRecipients(Message.RecipientType.BCC, InternetAddress.parse(email.getBcc()));
-        }
-
-        // Set subject
-        message.setSubject(email.getSubject(), "UTF-8");
-
-        // Set content based on email type and attachments
-        if (email.getAttachments().isEmpty()) {
-            // No attachments, simple message
-            if (email.isHtml()) {
-                message.setContent(email.getBodyHtml(), "text/html; charset=UTF-8");
+        try {
+            MimeMessage message = new MimeMessage(session);
+            
+            // Set sender
+            message.setFrom(new InternetAddress(
+                    EmailConfig.getFromAddress(),
+                    EmailConfig.getFromName()
+            ));
+            
+            // Set recipient
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email.getTo()));
+            
+            // Set CC if provided
+            if (email.getCc() != null && !email.getCc().trim().isEmpty()) {
+                message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(email.getCc()));
+            }
+            
+            // Set BCC if provided
+            if (email.getBcc() != null && !email.getBcc().trim().isEmpty()) {
+                message.setRecipients(Message.RecipientType.BCC, InternetAddress.parse(email.getBcc()));
+            }
+            
+            // Set subject
+            message.setSubject(email.getSubject(), "UTF-8");
+            
+            // Set content based on email type and attachments
+            if (email.getAttachments().isEmpty()) {
+                // No attachments, simple message
+                if (email.isHtml()) {
+                    message.setContent(email.getBodyHtml(), "text/html; charset=UTF-8");
+                } else {
+                    message.setText(email.getBodyText(), "UTF-8");
+                }
             } else {
-                message.setText(email.getBodyText(), "UTF-8");
+                // With attachments, use multipart
+                MimeMultipart multipart = new MimeMultipart();
+                
+                // Add body part
+                MimeBodyPart bodyPart = new MimeBodyPart();
+                if (email.isHtml()) {
+                    bodyPart.setContent(email.getBodyHtml(), "text/html; charset=UTF-8");
+                } else {
+                    bodyPart.setText(email.getBodyText(), "UTF-8");
+                }
+                multipart.addBodyPart(bodyPart);
+                
+                // Add attachments
+                for (File attachment : email.getAttachments()) {
+                    MimeBodyPart attachmentPart = new MimeBodyPart();
+                    try {
+                        attachmentPart.attachFile(attachment);
+                    } catch (IOException ex) {
+                        Logger.getLogger(EmailService.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    multipart.addBodyPart(attachmentPart);
+                }
+                
+                message.setContent(multipart);
             }
-        } else {
-            // With attachments, use multipart
-            MimeMultipart multipart = new MimeMultipart();
-
-            // Add body part
-            MimeBodyPart bodyPart = new MimeBodyPart();
-            if (email.isHtml()) {
-                bodyPart.setContent(email.getBodyHtml(), "text/html; charset=UTF-8");
-            } else {
-                bodyPart.setText(email.getBodyText(), "UTF-8");
-            }
-            multipart.addBodyPart(bodyPart);
-
-            // Add attachments
-            for (File attachment : email.getAttachments()) {
-                MimeBodyPart attachmentPart = new MimeBodyPart();
-                attachmentPart.attachFile(attachment);
-                multipart.addBodyPart(attachmentPart);
-            }
-
-            message.setContent(multipart);
+            
+            // Set timestamp
+            message.setSentDate(new java.util.Date());
+            
+            return message;
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(EmailService.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        // Set timestamp
-        message.setSentDate(new java.util.Date());
-
-        return message;
+        return null;
     }
 
     /**
