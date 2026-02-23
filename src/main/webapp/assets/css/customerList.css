@@ -328,6 +328,8 @@ td {
     box-sizing: border-box;
 }
 
+
+
 .tag-selector {
     display: flex;
     gap: 10px;

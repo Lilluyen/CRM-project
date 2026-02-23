@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import controller.dto.CustomerListDTO;
+import dto.CustomerListDTO;
 import ultil.DBContext;
 
 public class CustomerQueryDAO extends DBContext {

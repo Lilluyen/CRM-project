@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import controller.dto.CustomerListDTO;
 import dao.CustomerQueryDAO;
+import dto.CustomerListDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ultil.ControllerUltil;
 
-@WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list" })
+@WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list-customer" })
 public class CustomerListController extends HttpServlet {
 
     @Override
