@@ -15,6 +15,8 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * REST API for real-time task notifications
@@ -27,6 +29,7 @@ import com.google.gson.JsonArray;
 @WebServlet(name = "TaskNotificationAPI", urlPatterns = {"/api/tasks/notifications", "/api/tasks/notifications/*"})
 public class TaskNotificationAPI extends HttpServlet {
 
+    private static final Logger logger = LoggerFactory.getLogger(TaskNotificationAPI.class);
     private static final Gson gson = new Gson();
 
     @Override
@@ -38,41 +41,47 @@ public class TaskNotificationAPI extends HttpServlet {
         
         try {
             String userId = request.getParameter("userId");
-            String pathInfo = request.getPathInfo();
             
-            if (userId == null) {
+            if (userId == null || userId.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println(gson.toJson(createErrorResponse("userId parameter is required")));
+                logger.warn("TaskNotificationAPI: userId parameter missing");
                 return;
             }
             
-            Connection connection = new DBContext().getConnection();
-            TaskDAO taskDAO = new TaskDAO(connection);
-            
-            // Get assigned tasks for the user
-            List<Task> tasks = taskDAO.getAllTasks();
-            JsonArray tasksArray = new JsonArray();
-            
-            for (Task task : tasks) {
-                if (task.getAssignedTo() != null && task.getAssignedTo().toString().equals(userId)) {
-                    JsonObject taskObj = new JsonObject();
-                    taskObj.addProperty("taskId", task.getTaskId());
-                    taskObj.addProperty("title", task.getTitle());
-                    taskObj.addProperty("description", task.getDescription());
-                    taskObj.addProperty("priority", task.getPriority());
-                    taskObj.addProperty("status", task.getStatus());
-                    taskObj.addProperty("dueDate", task.getDueDate() != null ? task.getDueDate().toString() : "");
-                    taskObj.addProperty("createdAt", task.getCreatedAt() != null ? task.getCreatedAt().toString() : "");
-                    tasksArray.add(taskObj);
+            try (Connection connection = new DBContext().getConnection()) {
+                if (connection == null) {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.println(gson.toJson(createErrorResponse("Database connection failed")));
+                    logger.error("TaskNotificationAPI: Failed to establish database connection");
+                    return;
                 }
+                
+                TaskDAO taskDAO = new TaskDAO(connection);
+                List<Task> tasks = taskDAO.getAllTasks();
+                JsonArray tasksArray = new JsonArray();
+                
+                for (Task task : tasks) {
+                    if (task.getAssignedTo() != null && task.getAssignedTo().toString().equals(userId)) {
+                        JsonObject taskObj = new JsonObject();
+                        taskObj.addProperty("taskId", task.getTaskId());
+                        taskObj.addProperty("title", task.getTitle());
+                        taskObj.addProperty("description", task.getDescription());
+                        taskObj.addProperty("priority", task.getPriority());
+                        taskObj.addProperty("status", task.getStatus());
+                        taskObj.addProperty("dueDate", task.getDueDate() != null ? task.getDueDate().toString() : "");
+                        taskObj.addProperty("createdAt", task.getCreatedAt() != null ? task.getCreatedAt().toString() : "");
+                        tasksArray.add(taskObj);
+                    }
+                }
+                
+                response.setStatus(HttpServletResponse.SC_OK);
+                out.println(createSuccessResponse(tasksArray, "Tasks retrieved successfully"));
+                logger.info("TaskNotificationAPI: Retrieved {} tasks for user {}", tasksArray.size(), userId);
             }
             
-            response.setStatus(HttpServletResponse.SC_OK);
-            out.println(createSuccessResponse(tasksArray, "Tasks retrieved successfully"));
-            connection.close();
-            
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("TaskNotificationAPI.doGet: Error retrieving tasks", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println(gson.toJson(createErrorResponse("Error: " + e.getMessage())));
         }
@@ -90,34 +99,48 @@ public class TaskNotificationAPI extends HttpServlet {
             String title = request.getParameter("title");
             String content = request.getParameter("content");
             
-            if (userId == null || title == null || content == null) {
+            if (userId == null || userId.trim().isEmpty() || title == null || title.trim().isEmpty() || 
+                content == null || content.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println(gson.toJson(createErrorResponse("userId, title, and content are required")));
+                logger.warn("TaskNotificationAPI.doPost: Missing required parameters");
                 return;
             }
             
-            Connection connection = DBContext.getConnection();
-            TaskDAO taskDAO = new TaskDAO(connection);
-            
-            boolean success = taskDAO.announceAssignedTask(Integer.parseInt(userId), title, content);
-            
-            if (success) {
-                response.setStatus(HttpServletResponse.SC_CREATED);
-                JsonObject data = new JsonObject();
-                data.addProperty("notificationId", "N" + System.currentTimeMillis());
-                data.addProperty("userId", userId);
-                data.addProperty("title", title);
-                data.addProperty("content", content);
-                out.println(createSuccessResponse(data, "Notification sent successfully"));
-            } else {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.println(gson.toJson(createErrorResponse("Failed to send notification")));
+            try (Connection connection = new DBContext().getConnection()) {
+                if (connection == null) {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.println(gson.toJson(createErrorResponse("Database connection failed")));
+                    logger.error("TaskNotificationAPI.doPost: Failed to establish database connection");
+                    return;
+                }
+                
+                TaskDAO taskDAO = new TaskDAO(connection);
+                boolean success = taskDAO.announceAssignedTask(Integer.parseInt(userId), title, content);
+                
+                if (success) {
+                    response.setStatus(HttpServletResponse.SC_CREATED);
+                    JsonObject data = new JsonObject();
+                    data.addProperty("notificationId", "N" + System.currentTimeMillis());
+                    data.addProperty("userId", userId);
+                    data.addProperty("title", title);
+                    data.addProperty("content", content);
+                    data.addProperty("timestamp", System.currentTimeMillis());
+                    out.println(createSuccessResponse(data, "Notification sent successfully"));
+                    logger.info("TaskNotificationAPI: Notification sent to user {}", userId);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    out.println(gson.toJson(createErrorResponse("Failed to send notification")));
+                    logger.error("TaskNotificationAPI: Failed to send notification to user {}", userId);
+                }
             }
             
-            connection.close();
-            
+        } catch (NumberFormatException e) {
+            logger.error("TaskNotificationAPI.doPost: Invalid user ID format", e);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.println(gson.toJson(createErrorResponse("Invalid userId format")));
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("TaskNotificationAPI.doPost: Error sending notification", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println(gson.toJson(createErrorResponse("Error: " + e.getMessage())));
         }
@@ -136,9 +159,10 @@ public class TaskNotificationAPI extends HttpServlet {
             if ("mark-read".equals(action)) {
                 String notificationId = request.getParameter("notificationId");
                 
-                if (notificationId == null) {
+                if (notificationId == null || notificationId.trim().isEmpty()) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     out.println(gson.toJson(createErrorResponse("notificationId parameter is required")));
+                    logger.warn("TaskNotificationAPI.doPut: notificationId parameter missing");
                     return;
                 }
                 
@@ -146,14 +170,17 @@ public class TaskNotificationAPI extends HttpServlet {
                 JsonObject data = new JsonObject();
                 data.addProperty("notificationId", notificationId);
                 data.addProperty("marked", "read");
+                data.addProperty("timestamp", System.currentTimeMillis());
                 out.println(createSuccessResponse(data, "Notification marked as read"));
+                logger.debug("TaskNotificationAPI: Notification {} marked as read", notificationId);
             } else {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println(gson.toJson(createErrorResponse("Invalid action")));
+                logger.warn("TaskNotificationAPI.doPut: Invalid action: {}", action);
             }
             
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("TaskNotificationAPI.doPut: Error processing request", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println(gson.toJson(createErrorResponse("Error: " + e.getMessage())));
         }
