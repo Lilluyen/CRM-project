@@ -1,72 +1,69 @@
 package dao;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import model.Customer;
-import ultil.DBContext;
 
-public class CustomerDAO extends DBContext {
+public class CustomerDAO {
 
-    private final String BASE_CUSTOMER_QUERY = """
-            SELECT c.[customer_id]
-             ,c.[name]
-             ,c.[phone]
-             ,c.[email]
-             ,c.[birthday]
-             ,c.[gender]
-             ,c.[address]
-             ,c.[social_link]
-             ,c.[customer_type]
-             ,c.[status]
-             ,c.[loyalty_tier]
-             ,c.[rfm_score]
-             ,c.[return_rate]
-             ,c.[last_purchase]
-             ,c.[owner_id]
-             ,c.[created_at]
-             ,c.[updated_at]
-                    """;
-
-    public ArrayList<Customer> getAllCustomers() throws SQLException {
-        ArrayList<Customer> customers = new ArrayList<>();
-
+    public int insertCustomer(Customer customer, Connection connection) throws SQLException {
         String sql = """
-                SELECT
-                    c.customer_id,
-                    c.[name],
-                    c.phone,
-                    c.loyalty_tier,
-                    c.rfm_score,
-                    CONCAT(m.preferred_size, ' (', CAST(m.height AS INT), 'cm - ', CAST(m.weight AS INT), 'kg)') AS fit_profile,
-                    m.body_shape,
-                    STUFF((
-                        SELECT ', ' + t.tag_name
-                        FROM Customer_Style_Map csm
-                        JOIN Style_Tags t ON csm.tag_id = t.tag_id
-                        WHERE csm.customer_id = c.customer_id
-                        FOR XML PATH('')), 1, 2, '') AS style_tags,
-                    c.return_rate,
-                    FORMAT(c.last_purchase, 'dd/MM/yyyy') AS last_purchase_date,
-                    c.[status]
-                FROM Customers c
-                LEFT JOIN Customer_Measurements m ON c.customer_id = m.customer_id
-                ORDER BY c.rfm_score DESC;
-                """;
+                INSERT INTO [Customers]
+                           ([name]
+                           ,[phone]
+                           ,[email]
+                           ,[birthday]
+                           ,[gender]
+                           ,[address]
+                           ,[social_link]
+                           ,[owner_id]
+                           ,[created_at])
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""";
+        try (PreparedStatement stmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, customer.getName());
+            stmt.setString(2, customer.getPhone());
+            stmt.setString(3, customer.getEmail());
 
-        try (
-                PreparedStatement stm = connection.prepareStatement(sql);
-                ResultSet rs = stm.executeQuery();) {
-            while (rs.next()) {
-                Customer customer = new Customer();
+            stmt.setDate(4,
+                    java.sql.Date.valueOf(customer.getBirthday()) != null
+                            ? java.sql.Date.valueOf(customer.getBirthday())
+                            : null);
+            stmt.setString(5, customer.getGender() != null ? customer.getGender() : null);
+            stmt.setString(6, customer.getAddress() != null ? customer.getAddress() : null);
+            stmt.setString(7, customer.getSocialLink() != null ? customer.getSocialLink() : null);
 
-                customers.add(customer);
+            stmt.setInt(8, customer.getOwner().getUserId());
+            stmt.setTimestamp(9, new java.sql.Timestamp(System.currentTimeMillis()));
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating customer failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Creating customer failed, no ID obtained.");
+                }
             }
         }
+    }
 
-        return customers;
+    public boolean existsByPhone(String phone, Connection conn) throws Exception {
+
+        String sql = "SELECT 1 FROM Customers WHERE phone = ?";
+
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+
+            try (var rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
     }
 
 }

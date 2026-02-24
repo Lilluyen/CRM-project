@@ -3,11 +3,12 @@ package dao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
-import controller.dto.CustomerListDTO;
-import ultil.DBContext;
+import dto.CustomerListDTO;
+import util.DBContext;
 
 public class CustomerQueryDAO extends DBContext {
 
@@ -63,7 +64,7 @@ public class CustomerQueryDAO extends DBContext {
                 """;
 
         try (
-                PreparedStatement stm = connection.prepareStatement(sql);
+                PreparedStatement stm = getConnection().prepareStatement(sql);
                 ResultSet rs = stm.executeQuery();) {
             while (rs.next()) {
                 CustomerListDTO dto = new CustomerListDTO();
@@ -85,7 +86,10 @@ public class CustomerQueryDAO extends DBContext {
                 }
 
                 dto.setReturnRate(rs.getDouble("return_rate"));
-                dto.setLastPurchase(rs.getTimestamp("last_purchase_date").toLocalDateTime());
+                Timestamp ts = rs.getTimestamp("last_purchase_date");
+                if (ts != null) {
+                    dto.setLastPurchase(ts.toLocalDateTime());
+                }
                 customerList.add(dto);
             }
         }

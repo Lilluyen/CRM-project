@@ -100,11 +100,15 @@
                                             <div class="muted">${c.bodyShape}</div>
                                         </td>
 
-                                        <!-- Tags -->
-                                        <td class="tags" >
-                                            <c:forEach items="${c.styleTags}" var="tag">
-                                                <span>${tag}</span>
+                                        <td class="tags">
+                                            <c:forEach items="${c.styleTags}" var="tag" begin="0" end="1">
+                                                <span class="tag">${tag}</span>
                                             </c:forEach>
+
+                                            <!-- Nếu còn tag khác thì hiển thị dấu ... -->
+                                            <c:if test="${fn:length(c.styleTags) > 2}">
+                                                <span class="more">...</span>
+                                            </c:if>
                                         </td>
 
                                         <!-- Return -->
@@ -149,7 +153,7 @@
                     <span class="close-btn" onclick="toggleModal()">&times;</span>
                 </div>
 
-                <form id="addCustomerForm">
+                <form id="addCustomerForm" method="post" action="/customers/create">
                     <div class="form-section">
                         <h3><i class="fas fa-id-card"></i> Thông tin cơ bản</h3>
                         <div class="grid-2">
@@ -169,6 +173,16 @@
                                     placeholder="Vd: 0901234567"
                                     required />
                             </div>
+                            <div class="input-group">
+                                <label>Giới tính *</label>
+                                <select name="gender" required>
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="MALE">Nam</option>
+                                    <option value="FEMALE">Nữ</option>
+                                    <option value="OTHER">Khác</option>
+                                </select>
+                            </div>
+
                         </div>
                         <div class="grid-2">
                             <div class="input-group">
@@ -182,6 +196,15 @@
                                 <label>Ngày sinh</label>
                                 <input type="date" name="birthday" />
                             </div>
+
+                        </div>
+                        <div class="input-group">
+                            <label>Social link</label>
+                            <input type="text" name="socialLink" placeholder="Vd: https://www.facebook.com/username">
+                        </div>
+                        <div class="input-group">
+                            <label>Address</label>
+                            <input type="text" name="address" placeholder="Vd: 123 Đường ABC, Quận XYZ, TP. HCM">
                         </div>
                     </div>
 
@@ -208,23 +231,49 @@
                                     <option value="XL">Size XL</option>
                                 </select>
                             </div>
+
+                            <div class="input-group">
+                                <label>Bust (cm)</label>
+                                <input type="number" name="bust" placeholder="85" />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Waist (cm)</label>
+                                <input type="number" name="waist" placeholder="70" />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Hips (cm)</label>
+                                <input type="number" name="hips" placeholder="90" />
+                            </div>
+                            <div class="input-group">
+                                <label>Shoulder (cm)</label>
+                                <input type="number" name="shoulder" placeholder="40" />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Body shape</label>
+                                <select name="bodyShape">
+                                    <option value="HOURGLASS">Đồng hồ cát</option>
+                                    <option value="PEAR">Trái lê</option>
+                                    <option value="APPLE">Trái táo</option>
+                                    <option value="RECTANGLE">Chữ nhật</option>
+                                    <option value="INVERTED_TRIANGLE">Tam giác ngược</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div class="form-section">
                         <h3><i class="fas fa-tshirt"></i> Sở thích & Gu</h3>
                         <div class="tag-selector">
-                            <label><input type="checkbox" value="#Vintage" /> #Vintage</label>
-                            <label
-                                ><input type="checkbox" value="#Minimalism" />
-                                #Minimalism</label
-                            >
-                            <label><input type="checkbox" value="#Office" /> #Office</label>
-                            <label
-                                ><input type="checkbox" value="#Streetwear" />
-                                #Streetwear</label
-                            >
+                            <c:forEach items="${styleTagList}" var="s" varStatus="loop">
+                                <label class="tag-item ${loop.index >= 10 ? 'extra-tag' : ''}">
+                                    <input type="checkbox" name="styleTags" value="${s.tagId}" /> ${s.tagName}
+                                </label>
+                            </c:forEach>
                         </div>
+                        <button type="button" id="toggletags" class="see-more-btn">See more</button>
                     </div>
 
                     <div class="modal-footer">
@@ -241,14 +290,31 @@
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-                function toggleModal() {
-                    const modal = document.getElementById("customerModal");
-                    modal.style.display =
-                            modal.style.display === "block" ? "none" : "block";
-                }
+                            function toggleModal() {
+                                const modal = document.getElementById("customerModal");
+                                modal.style.display =
+                                        modal.style.display === "block" ? "none" : "block";
+                            }
 
-                // Gắn sự kiện cho nút "Thêm khách mới" ở trang danh sách
-                document.querySelector(".btn-add").addEventListener("click", toggleModal);
+                            // Gắn sự kiện cho nút "Thêm khách mới" ở trang danh sách
+                            document.querySelector(".btn-add").addEventListener("click", toggleModal);
+                            
+                            
+                            // Gắn sự kiện xem more tag và less tag
+                            const toggleBtn = document.getElementById("toggleTags");
+                            const extraTags = document.querySelectorAll(".extra-tag");
+
+                            let expanded = false;
+
+                            toggleBtn.addEventListener("click", function () {
+                                expanded = !expanded;
+
+                                extraTags.forEach(tag => {
+                                    tag.style.display = expanded ? "inline-block" : "none";
+                                });
+
+                                toggleBtn.textContent = expanded ? "See less" : "See more";
+                            });
         </script>
     </body>
 </html>

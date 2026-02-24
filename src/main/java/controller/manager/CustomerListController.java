@@ -4,16 +4,20 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import controller.dto.CustomerListDTO;
 import dao.CustomerQueryDAO;
+import dao.CustomerStyleDAO;
+import dto.CustomerListDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import ultil.ControllerUltil;
+import model.StyleTag;
+import util.ControllerUltil;
 
-@WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list" })
+import org.eclipse.tags.shaded.org.apache.regexp.REUtil;
+
+@WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list-customer" })
 public class CustomerListController extends HttpServlet {
 
     @Override
@@ -42,22 +46,28 @@ public class CustomerListController extends HttpServlet {
             throws ServletException, IOException {
         // Handle GET requests to display the customer list
         CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+        CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
         try {
             List<CustomerListDTO> customerList = customerQueryDAO.getCustomerList();
+            List<StyleTag> styleTagList = customerStyleDAO.getAllStyleTags();
+            request.setAttribute("styleTagList", styleTagList);
             request.setAttribute("customerList", customerList);
             request.getRequestDispatcher("/view/customer/customerList.jsp")
                     .forward(request, response);
+
+            return;
 
         } catch (SQLException e) {
             log("DB error", e);
             ControllerUltil.forwardError(request, response,
                     "Database error occurred while retrieving customer list.");
+            return;
 
         } catch (ServletException | IOException e) {
             log("View error", e);
             ControllerUltil.forwardError(request, response,
                     "Internal server error occurred while processing your request.");
-
+            return;
         }
     }
 }

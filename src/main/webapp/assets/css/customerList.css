@@ -328,6 +328,8 @@ td {
     box-sizing: border-box;
 }
 
+
+
 .tag-selector {
     display: flex;
     gap: 10px;
@@ -359,6 +361,19 @@ td {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+}
+
+#toggletags{
+    display: none;
+    margin-top: 5px;
+    background-color: transparent;
+    color: var(--accent-blue);
+    border: none;
+    
+}
+
+#toggletags:hover{
+    border-bottom: solid blue 1px;
 }
 
 .btn-cancel {
