@@ -49,7 +49,7 @@ public class TaskNotificationAPI extends HttpServlet {
                 return;
             }
             
-            try (Connection connection = new DBContext().getConnection()) {
+            try (Connection connection = DBContext.getConnection()) {
                 if (connection == null) {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     out.println(gson.toJson(createErrorResponse("Database connection failed")));
@@ -107,7 +107,7 @@ public class TaskNotificationAPI extends HttpServlet {
                 return;
             }
             
-            try (Connection connection = new DBContext().getConnection()) {
+            try (Connection connection = DBContext.getConnection()) {
                 if (connection == null) {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     out.println(gson.toJson(createErrorResponse("Database connection failed")));

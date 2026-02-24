@@ -20,7 +20,7 @@ public class ViewActivities extends HttpServlet {
             throws ServletException, IOException {
         try {
             // Get all activities from database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             ActivityDAO activityDAO = new ActivityDAO(connection);
             
             List<Activity> activities = activityDAO.getAllActivities();

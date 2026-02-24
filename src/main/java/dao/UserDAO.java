@@ -10,7 +10,7 @@ import model.Role;
 import model.User;
 import util.DBContext;
 
-public class UserDAO extends DBContext {
+public class UserDAO  {
 
     /*
      * =========================
@@ -43,7 +43,7 @@ public class UserDAO extends DBContext {
         User user = null;
         List<Role> roles = new ArrayList<>();
 
-        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
@@ -127,7 +127,7 @@ public class UserDAO extends DBContext {
         User user = null;
         List<Role> roles = new ArrayList<>();
 
-        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
@@ -211,7 +211,7 @@ public class UserDAO extends DBContext {
         User user = null;
         List<Role> roles = new ArrayList<>();
 
-        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();

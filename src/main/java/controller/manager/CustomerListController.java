@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.StyleTag;
+import service.CustomerService;
 import util.ControllerUltil;
 
 @WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list-customer" })
@@ -43,11 +44,10 @@ public class CustomerListController extends HttpServlet {
     protected void doProcess(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Handle GET requests to display the customer list
-        CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-        CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+        CustomerService customerService = new CustomerService();
         try {
-            List<CustomerListDTO> customerList = customerQueryDAO.getCustomerList();
-            List<StyleTag> styleTagList = customerStyleDAO.getAllStyleTags();
+            List<CustomerListDTO> customerList = customerService.getCustomerList();
+            List<StyleTag> styleTagList = customerService.getListStyleTags();
             request.setAttribute("styleTagList", styleTagList);
             request.setAttribute("customerList", customerList);
             request.getRequestDispatcher("/view/customer/customerList.jsp")

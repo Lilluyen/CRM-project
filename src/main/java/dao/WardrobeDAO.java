@@ -2,6 +2,6 @@ package dao;
 
 import util.DBContext;
 
-public class WardrobeDAO extends DBContext {
+public class WardrobeDAO  {
 
 }

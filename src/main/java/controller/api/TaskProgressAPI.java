@@ -50,7 +50,7 @@ public class TaskProgressAPI extends HttpServlet {
             try {
                 int taskId = Integer.parseInt(taskIdStr);
                 
-                try (Connection connection = new DBContext().getConnection()) {
+                try (Connection connection = DBContext.getConnection()) {
                     if (connection == null) {
                         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                         out.println(createErrorResponse("Database connection failed").toString());
@@ -131,7 +131,7 @@ public class TaskProgressAPI extends HttpServlet {
             try {
                 int taskId = Integer.parseInt(parts[1]);
 
-                try (Connection connection = new DBContext().getConnection()) {
+                try (Connection connection = DBContext.getConnection()) {
                     if (connection == null) {
                         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                         out.println(createErrorResponse("Database connection failed").toString());

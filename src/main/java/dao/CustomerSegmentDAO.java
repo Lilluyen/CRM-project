@@ -2,6 +2,6 @@ package dao;
 
 import util.DBContext;
 
-public class CustomerSegmentDAO extends DBContext {
+public class CustomerSegmentDAO  {
 
 }

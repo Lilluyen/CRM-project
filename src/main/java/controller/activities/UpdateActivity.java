@@ -38,7 +38,7 @@ public class UpdateActivity extends HttpServlet {
             activity.setActivityDate(LocalDateTime.now());
             
             // Update in database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             ActivityDAO activityDAO = new ActivityDAO(connection);
             
             boolean success = activityDAO.updateActivity(activity);
