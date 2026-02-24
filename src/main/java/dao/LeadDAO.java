@@ -4,17 +4,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Statement;
-import java.sql.Timestamp;
+
 import model.Lead;
 import util.DBContext;
 
 public class LeadDAO {
 
-    public int insert(Lead lead) {
+    //  Tạo mới một lead và trả về ID vừa được sinh ra
+    public int createLead(Lead lead) {
         String sql = "INSERT INTO Leads(full_name, email, phone, company_name, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = new DBContext().connection;
@@ -44,7 +46,8 @@ public class LeadDAO {
         return 0;
     }
 
-    public boolean update(Lead lead) {
+    // Cập nhật thông tin một lead theo ID
+    public boolean updateLead(Lead lead) {
         String sql = "UPDATE Leads SET full_name=?, email=?, phone=?, company_name=?, interest=?, source=?, status=?, score=?, campaign_id=?, assigned_to=?, updated_at=? WHERE lead_id=?";
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, lead.getFullName());
@@ -66,7 +69,8 @@ public class LeadDAO {
         return false;
     }
 
-    public Lead getById(int leadId) {
+    // Lấy thông tin một lead theo ID
+    public Lead getLeadById(int leadId) {
         String sql = "SELECT * FROM Leads WHERE lead_id = ?";
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, leadId);
@@ -80,7 +84,8 @@ public class LeadDAO {
         return null;
     }
 
-    public Lead findByEmail(String email) {
+    // Tìm một lead theo email
+    public Lead findLeadByEmail(String email) {
         String sql = "SELECT * FROM Leads WHERE email = ?";
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
@@ -94,7 +99,8 @@ public class LeadDAO {
         return null;
     }
 
-    public List<Lead> getAll() {
+    // Lấy toàn bộ danh sách lead (mới nhất trước)
+    public List<Lead> getAllLeads() {
         String sql = "SELECT * FROM Leads ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = new DBContext().connection;
@@ -109,7 +115,8 @@ public class LeadDAO {
         return leads;
     }
 
-    public List<Lead> getByCampaignId(int campaignId) {
+    // Lấy danh sách lead theo chiến dịch, sắp xếp mới nhất trước
+    public List<Lead> getLeadByCampaignId(int campaignId) {
         String sql = "SELECT * FROM Leads WHERE campaign_id = ? ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -124,7 +131,8 @@ public class LeadDAO {
         return leads;
     }
 
-    public List<Lead> getByStatus(String status) {
+    // Lấy danh sách lead theo trạng thái, sắp xếp theo điểm số cao nhất trước, nếu điểm số bằng nhau thì mới nhất trước
+    public List<Lead> getLeadByStatus(String status) {
         String sql = "SELECT * FROM Leads WHERE status = ? ORDER BY score DESC, created_at DESC";
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -139,6 +147,7 @@ public class LeadDAO {
         return leads;
     }
 
+    // Map dữ liệu từ ResultSet sang đối tượng Lead
     private Lead mapResultSetToLead(ResultSet rs) throws SQLException {
         return new Lead(
                 rs.getInt("lead_id"),

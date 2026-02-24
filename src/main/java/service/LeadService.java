@@ -15,10 +15,10 @@ public class LeadService {
     public int importLeads(List<Lead> leads) {
         int importedCount = 0;
         for (Lead lead : leads) {
-            if (leadDAO.findByEmail(lead.getEmail()) == null) {
+            if (leadDAO.findLeadByEmail(lead.getEmail()) == null) {
                 lead.setStatus("NEW_LEAD");
                 lead.setScore(0);
-                if (leadDAO.insert(lead) > 0) {
+                if (leadDAO.createLead(lead) > 0) {
                     importedCount++;
                 }
             }
@@ -30,7 +30,7 @@ public class LeadService {
      * Kiểm tra Lead trùng lặp
      */
     public boolean checkDuplicate(String email) {
-        return leadDAO.findByEmail(email) != null;
+        return leadDAO.findLeadByEmail(email) != null;
     }
 
     /**
@@ -40,7 +40,7 @@ public class LeadService {
         if (score < 0 || score > 100) {
             throw new IllegalArgumentException("Score must be between 0-100");
         }
-        Lead lead = leadDAO.getById(leadId);
+        Lead lead = leadDAO.getLeadById(leadId);
         if (lead == null) {
             return false;
         }
@@ -49,30 +49,30 @@ public class LeadService {
         if (score >= 50 && !lead.getStatus().equals("QUALIFIED")) {
             lead.setStatus("QUALIFIED");
         }
-        return leadDAO.update(lead);
+        return leadDAO.updateLead(lead);
     }
 
     /**
      * Cập nhật trạng thái Lead
      */
     public boolean updateLeadStatus(int leadId, String status) {
-        Lead lead = leadDAO.getById(leadId);
+        Lead lead = leadDAO.getLeadById(leadId);
         if (lead == null) {
             return false;
         }
         lead.setStatus(status);
-        return leadDAO.update(lead);
+        return leadDAO.updateLead(lead);
     }
 
     public Lead getLeadById(int leadId) {
-        return leadDAO.getById(leadId);
+        return leadDAO.getLeadById(leadId);
     }
 
     public List<Lead> getAllLeads() {
-        return leadDAO.getAll();
+        return leadDAO.getAllLeads();
     }
 
     public List<Lead> getLeadsByStatus(String status) {
-        return leadDAO.getByStatus(status);
+        return leadDAO.getLeadByStatus(status);
     }
 }

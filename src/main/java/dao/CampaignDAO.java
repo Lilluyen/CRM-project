@@ -14,11 +14,11 @@ import model.Campaign;
 import util.DBContext;
 
 public class CampaignDAO {
+
     public int insert(Campaign campaign) {
         String sql = "INSERT INTO Campaigns(name, description, budget, start_date, end_date, channel, status, created_by, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = new DBContext().connection;
-                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, campaign.getName());
             ps.setString(2, campaign.getDescription());
             ps.setBigDecimal(3, campaign.getBudget());
@@ -42,10 +42,10 @@ public class CampaignDAO {
         return 0;
     }
 
-    public boolean update(Campaign campaign) {
+    // Cập nhật thông tin một chiến dịch theo ID
+    public boolean updateCampaign(Campaign campaign) {
         String sql = "UPDATE Campaigns SET name=?, description=?, budget=?, start_date=?, end_date=?, channel=?, status=?, updated_at=? WHERE campaign_id=?";
-        try (Connection conn = new DBContext().connection;
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, campaign.getName());
             ps.setString(2, campaign.getDescription());
             ps.setBigDecimal(3, campaign.getBudget());
@@ -62,10 +62,10 @@ public class CampaignDAO {
         return false;
     }
 
-    public Campaign getById(int campaignId) {
+    // Lấy thông tin chiến dịch theo ID
+    public Campaign getCampaignById(int campaignId) {
         String sql = "SELECT * FROM Campaigns WHERE campaign_id = ?";
-        try (Connection conn = new DBContext().connection;
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -77,12 +77,11 @@ public class CampaignDAO {
         return null;
     }
 
-    public List<Campaign> getAll() {
+    // Lấy danh sách tất cả campaign (mới nhất trước)
+    public List<Campaign> getAllCampaign() {
         String sql = "SELECT * FROM Campaigns ORDER BY created_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = new DBContext().connection;
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 campaigns.add(mapResultSetToCampaign(rs));
             }
@@ -92,11 +91,11 @@ public class CampaignDAO {
         return campaigns;
     }
 
-    public List<Campaign> getByCampaignStatus(String status) {
+    // Lấy danh sách campaign theo trạng thái    
+    public List<Campaign> getCampaignByStatus(String status) {
         String sql = "SELECT * FROM Campaigns WHERE status = ? ORDER BY created_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = new DBContext().connection;
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -108,6 +107,7 @@ public class CampaignDAO {
         return campaigns;
     }
 
+    // Map dữ liệu từ ResultSet sang đối tượng Campaign
     private Campaign mapResultSetToCampaign(ResultSet rs) throws SQLException {
         return new Campaign(
                 rs.getInt("campaign_id"),
@@ -120,6 +120,7 @@ public class CampaignDAO {
                 rs.getString("status"),
                 rs.getInt("created_by"),
                 rs.getTimestamp("created_at").toLocalDateTime(),
-                rs.getTimestamp("updated_at").toLocalDateTime());
+                rs.getTimestamp("updated_at").toLocalDateTime()
+        );
     }
 }

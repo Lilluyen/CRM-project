@@ -13,7 +13,8 @@ import util.DBContext;
 
 public class CampaignReportDAO {
 
-    public int insert(CampaignReport report) {
+    // Tạo mới một báo cáo chiến dịch và trả về ID vừa được sinh ra
+    public int createCampaignReport(CampaignReport report) {
         String sql = "INSERT INTO Campaign_Reports(campaign_id, total_lead, qualified_lead, converted_lead, cost_per_lead, roi, created_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = new DBContext().connection;
@@ -38,6 +39,7 @@ public class CampaignReportDAO {
         return 0;
     }
 
+    // Lấy báo cáo chiến dịch mới nhất theo campaign ID
     public CampaignReport getLatestByCampaignId(int campaignId) {
         String sql = "SELECT TOP 1 * FROM Campaign_Reports WHERE campaign_id = ? ORDER BY created_at DESC";
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -52,6 +54,7 @@ public class CampaignReportDAO {
         return null;
     }
 
+    // Map dữ liệu từ ResultSet sang đối tượng CampaignReport
     private CampaignReport mapResultSetToReport(ResultSet rs) throws SQLException {
         return new CampaignReport(
                 rs.getInt("report_id"),

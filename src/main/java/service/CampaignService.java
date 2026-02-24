@@ -23,18 +23,18 @@ public class CampaignService {
         if (campaign.getCampaignId() <= 0) {
             throw new IllegalArgumentException("Campaign ID is invalid");
         }
-        return campaignDAO.update(campaign);
+        return campaignDAO.updateCampaign(campaign);
     }
 
     public Campaign getCampaignById(int campaignId) {
-        return campaignDAO.getById(campaignId);
+        return campaignDAO.getCampaignById(campaignId);
     }
 
     public List<Campaign> getAllCampaigns() {
-        return campaignDAO.getAll();
+        return campaignDAO.getAllCampaign();
     }
 
     public List<Campaign> getActiveCampaigns() {
-        return campaignDAO.getByCampaignStatus("ACTIVE");
+        return campaignDAO.getCampaignByStatus("ACTIVE");
     }
 }
