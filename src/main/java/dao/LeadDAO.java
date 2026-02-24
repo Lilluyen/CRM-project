@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.Lead;
-import ultil.DBContext;
+import util.DBContext;
 
 public class LeadDAO {
 

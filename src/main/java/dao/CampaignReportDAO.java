@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import model.CampaignReport;
-import ultil.DBContext;
+import util.DBContext;
 
 public class CampaignReportDAO {
 
