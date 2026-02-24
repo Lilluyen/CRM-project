@@ -15,8 +15,7 @@ import ultil.DBContext;
 
 public class CampaignDAO {
 
-    // Tạo mới một chiến dịch và trả về ID vừa được sinh ra
-    public int createCampaign(Campaign campaign) {
+    public int insert(Campaign campaign) {
         String sql = "INSERT INTO Campaigns(name, description, budget, start_date, end_date, channel, status, created_by, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -93,7 +92,7 @@ public class CampaignDAO {
     }
 
     // Lấy danh sách campaign theo trạng thái    
-    public List<Campaign> getByCampaignByStatus(String status) {
+    public List<Campaign> getCampaignByStatus(String status) {
         String sql = "SELECT * FROM Campaigns WHERE status = ? ORDER BY created_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
         try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
