@@ -1,17 +1,18 @@
 package controller.tasks;
 
+import java.io.IOException;
+import java.sql.Connection;
+
 import dao.TaskDAO;
-import model.Task;
-import util.DBContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.Connection;
+import model.Task;
+import util.DBContext;
 
-@WebServlet(name = "ViewTaskDetails", urlPatterns = {"/tasks/details"})
+@WebServlet(name = "ViewTaskDetails", urlPatterns = { "/tasks/details" })
 public class ViewTaskDetails extends HttpServlet {
 
     @Override
@@ -20,24 +21,24 @@ public class ViewTaskDetails extends HttpServlet {
         try {
             // Get task ID from request parameter
             int taskId = Integer.parseInt(request.getParameter("id"));
-            
+
             // Get task details from database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
-            
+
             Task task = taskDAO.getTaskById(taskId);
-            
+
             if (task != null) {
                 // Set task as request attribute
                 request.setAttribute("task", task);
-                
+
                 // Forward to JSP for display
                 request.getRequestDispatcher("/CRUD/TaskDetails.jsp").forward(request, response);
             } else {
                 request.setAttribute("error", "Task not found!");
                 request.getRequestDispatcher("/view/error/404.jsp").forward(request, response);
             }
-            
+
             connection.close();
         } catch (NumberFormatException e) {
             request.setAttribute("error", "Invalid task ID!");

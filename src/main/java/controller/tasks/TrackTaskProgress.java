@@ -1,16 +1,17 @@
 package controller.tasks;
 
+import java.io.IOException;
+import java.sql.Connection;
+
 import dao.TaskDAO;
-import util.DBContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.Connection;
+import util.DBContext;
 
-@WebServlet(name = "TrackTaskProgress", urlPatterns = {"/tasks/track", "/tasks/updateStatus"})
+@WebServlet(name = "TrackTaskProgress", urlPatterns = { "/tasks/track", "/tasks/updateStatus" })
 public class TrackTaskProgress extends HttpServlet {
 
     @Override
@@ -20,21 +21,22 @@ public class TrackTaskProgress extends HttpServlet {
             // Get parameters from request
             int taskId = Integer.parseInt(request.getParameter("taskId"));
             String newStatus = request.getParameter("status");
-            
+
             // Update task status in database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
-            
+
             boolean success = taskDAO.updateTaskStatus(taskId, newStatus);
-            
+
             if (success) {
                 request.setAttribute("message", "Task status updated to: " + newStatus);
-                
+
                 // Check if it's an AJAX request
                 String acceptHeader = request.getHeader("Accept");
                 if (acceptHeader != null && acceptHeader.contains("application/json")) {
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": true, \"message\": \"Status updated to " + newStatus + "\"}");
+                    response.getWriter()
+                            .write("{\"success\": true, \"message\": \"Status updated to " + newStatus + "\"}");
                 } else {
                     request.getRequestDispatcher("/view/success.jsp").forward(request, response);
                 }
@@ -47,7 +49,7 @@ public class TrackTaskProgress extends HttpServlet {
                     request.getRequestDispatcher("/view/error/500.jsp").forward(request, response);
                 }
             }
-            
+
             connection.close();
         } catch (Exception e) {
             e.printStackTrace();
