@@ -19,7 +19,7 @@ public class LeadDAO {
     public int createLead(Lead lead) {
         String sql = "INSERT INTO Leads(full_name, email, phone, company_name, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = new DBContext().connection;
+        try (Connection conn = new DBContext().getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
@@ -49,7 +49,7 @@ public class LeadDAO {
     // Cập nhật thông tin một lead theo ID
     public boolean updateLead(Lead lead) {
         String sql = "UPDATE Leads SET full_name=?, email=?, phone=?, company_name=?, interest=?, source=?, status=?, score=?, campaign_id=?, assigned_to=?, updated_at=? WHERE lead_id=?";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
             ps.setString(3, lead.getPhone());
@@ -72,7 +72,7 @@ public class LeadDAO {
     // Lấy thông tin một lead theo ID
     public Lead getLeadById(int leadId) {
         String sql = "SELECT * FROM Leads WHERE lead_id = ?";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, leadId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -87,7 +87,7 @@ public class LeadDAO {
     // Tìm một lead theo email
     public Lead findLeadByEmail(String email) {
         String sql = "SELECT * FROM Leads WHERE email = ?";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -103,7 +103,7 @@ public class LeadDAO {
     public List<Lead> getAllLeads() {
         String sql = "SELECT * FROM Leads ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = new DBContext().connection;
+        try (Connection conn = new DBContext().getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -119,7 +119,7 @@ public class LeadDAO {
     public List<Lead> getLeadByCampaignId(int campaignId) {
         String sql = "SELECT * FROM Leads WHERE campaign_id = ? ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -135,7 +135,7 @@ public class LeadDAO {
     public List<Lead> getLeadByStatus(String status) {
         String sql = "SELECT * FROM Leads WHERE status = ? ORDER BY score DESC, created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

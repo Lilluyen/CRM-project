@@ -64,7 +64,7 @@ public class CustomerQueryDAO extends DBContext {
                 """;
 
         try (
-                PreparedStatement stm = connection.prepareStatement(sql);
+                PreparedStatement stm = getConnection().prepareStatement(sql);
                 ResultSet rs = stm.executeQuery();) {
             while (rs.next()) {
                 CustomerListDTO dto = new CustomerListDTO();
