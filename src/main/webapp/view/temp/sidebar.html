@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      :root {
+        --side-bg: #111827;
+        --item-hover: #1f2937;
+        --accent: #f59e0b; /* Màu vàng Gold thời trang */
+        --ai-gradient: linear-gradient(45deg, #8b5cf6, #3b82f6);
+        --text-dim: #9ca3af;
+      }
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        display: flex;
+      }
+
+      .sidebar {
+        width: 280px;
+        background: var(--side-bg);
+        height: 100vh;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .logo {
+        padding: 30px;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        border-bottom: 1px solid #374151;
+      }
+      .logo span {
+        color: var(--accent);
+      }
+
+      .nav-section {
+        padding: 20px 15px 10px;
+        font-size: 11px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+
+      .nav-item {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: #d1d5db;
+        transition: 0.3s;
+        border-radius: 8px;
+        margin: 2px 10px;
+        cursor: pointer;
+      }
+      .nav-item:hover {
+        background: var(--item-hover);
+        color: white;
+      }
+      .nav-item i {
+        margin-right: 15px;
+        width: 20px;
+        font-size: 18px;
+        color: var(--accent);
+      }
+
+      .sub-menu {
+        margin-left: 45px;
+        border-left: 1px solid #374151;
+        padding-left: 10px;
+        margin-bottom: 10px;
+      }
+      .sub-item {
+        padding: 8px 15px;
+        font-size: 13.5px;
+        color: var(--text-dim);
+        display: block;
+        text-decoration: none;
+        transition: 0.2s;
+      }
+      .sub-item:hover {
+        color: var(--accent);
+      }
+
+      .badge-new {
+        background: #ef4444;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: auto;
+      }
+      .badge-ai {
+        background: var(--ai-gradient);
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: auto;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">FASHION<span>CRM</span></div>
+
+      <a class="nav-item"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+
+      <div class="nav-section">Marketing & Growth</div>
+      <div class="nav-item"><i class="fa-solid fa-bullhorn"></i> Marketing</div>
+      <div class="sub-menu">
+        <a href="#" class="sub-item">Campaigns</a>
+        <a href="#" class="sub-item"
+          >Lead Scoring <span class="badge-new">99+</span></a
+        >
+      </div>
+
+      <div class="nav-section">Commerce</div>
+      <div class="nav-item">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Sales & Orders
+      </div>
+      <div class="sub-menu">
+        <a href="#" class="sub-item">Sales Pipeline (Kanban)</a>
+        <a href="#" class="sub-item">Sản phẩm & Tồn kho</a>
+      </div>
+
+      <div class="nav-section">Insights & Core</div>
+      <div class="nav-item" style="background: var(--item-hover); color: white">
+        <i class="fa-solid fa-user-astronaut"></i> <b>Customer Core</b>
+      </div>
+      <div class="sub-menu">
+        <a href="#" class="sub-item">Danh sách khách 360°</a>
+        <a href="#" class="sub-item"
+          >Hồ sơ số đo <span class="badge-ai">Smart Size</span></a
+        >
+        <a href="#" class="sub-item"
+          >Phân nhóm RFM <span class="badge-ai">AI</span></a
+        >
+        <a href="#" class="sub-item">Tủ đồ ảo (Wardrobe)</a>
+      </div>
+
+      <div class="nav-section">Communication</div>
+      <div class="nav-item">
+        <i class="fa-solid fa-comment-dots"></i> Activities
+      </div>
+      <div class="sub-menu">
+        <a href="#" class="sub-item">Lịch nhắc & Task</a>
+        <a href="#" class="sub-item">Omnichannel Chat</a>
+      </div>
+
+      <div class="nav-section">After Sales</div>
+      <div class="nav-item">
+        <i class="fa-solid fa-hand-holding-heart"></i> Customer Success
+      </div>
+      <div class="sub-menu">
+        <a href="#" class="sub-item">Đổi trả & Sửa đồ</a>
+        <a href="#" class="sub-item"
+          >Risk Monitoring <span class="badge-new">Check</span></a
+        >
+      </div>
+    </div>
+
+    <div style="padding: 50px; flex: 1">
+      <h1>Hệ thống CRM 5 Module</h1>
+      <p>
+        Sidebar này đã tích hợp đầy đủ các Use Case từ quản lý cơ bản đến thuật
+        toán AI chuyên sâu cho Fashion.
+      </p>
+    </div>
+  </body>
+</html>
