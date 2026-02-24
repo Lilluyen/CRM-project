@@ -8,35 +8,37 @@ import java.util.List;
 
 import model.Role;
 import model.User;
-import ultil.DBContext;
+import util.DBContext;
 
 public class UserDAO extends DBContext {
 
-    /* =========================
-       GET USER BY ID
-    ========================= */
+    /*
+     * =========================
+     * GET USER BY ID
+     * =========================
+     */
     public User getUserById(int userId) {
 
         String sql = """
-                SELECT
-                    u.user_id,
-                    u.username,
-                    u.password_hash,
-                    u.email,
-                    u.full_name,
-                    u.phone,
-                    u.status,
-                    u.created_at,
-                    u.updated_at,
-                    u.last_login_at,
-                    r.role_id,
-                    r.role_name,
-                    r.description
-                FROM Users u
-                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
-                LEFT JOIN Roles r ON ur.role_id = r.role_id
-                WHERE u.user_id = ?
-            """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
+                    LEFT JOIN Roles r ON ur.role_id = r.role_id
+                    WHERE u.user_id = ?
+                """;
 
         User user = null;
         List<Role> roles = new ArrayList<>();
@@ -94,31 +96,33 @@ public class UserDAO extends DBContext {
         return user;
     }
 
-    /* =========================
-       GET USER BY USERNAME
-    ========================= */
+    /*
+     * =========================
+     * GET USER BY USERNAME
+     * =========================
+     */
     public User getUserByUsername(String username) {
 
         String sql = """
-                SELECT
-                    u.user_id,
-                    u.username,
-                    u.password_hash,
-                    u.email,
-                    u.full_name,
-                    u.phone,
-                    u.status,
-                    u.created_at,
-                    u.updated_at,
-                    u.last_login_at,
-                    r.role_id,
-                    r.role_name,
-                    r.description
-                FROM Users u
-                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
-                LEFT JOIN Roles r ON ur.role_id = r.role_id
-                WHERE u.username = ?
-            """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
+                    LEFT JOIN Roles r ON ur.role_id = r.role_id
+                    WHERE u.username = ?
+                """;
 
         User user = null;
         List<Role> roles = new ArrayList<>();
@@ -176,31 +180,33 @@ public class UserDAO extends DBContext {
         return user;
     }
 
-    /* =========================
-       GET USER BY EMAIL
-    ========================= */
+    /*
+     * =========================
+     * GET USER BY EMAIL
+     * =========================
+     */
     public User getUserByEmail(String email) {
 
         String sql = """
-                SELECT
-                    u.user_id,
-                    u.username,
-                    u.password_hash,
-                    u.email,
-                    u.full_name,
-                    u.phone,
-                    u.status,
-                    u.created_at,
-                    u.updated_at,
-                    u.last_login_at,
-                    r.role_id,
-                    r.role_name,
-                    r.description
-                FROM Users u
-                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
-                LEFT JOIN Roles r ON ur.role_id = r.role_id
-                WHERE u.email = ?
-            """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
+                    LEFT JOIN Roles r ON ur.role_id = r.role_id
+                    WHERE u.email = ?
+                """;
 
         User user = null;
         List<Role> roles = new ArrayList<>();

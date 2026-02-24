@@ -1,4 +1,4 @@
-package ultil;
+package util;
 
 public class PhoneCheck {
     private static final String PHONE_REGEX = "^(\\+?[0-9]{9,15})$";

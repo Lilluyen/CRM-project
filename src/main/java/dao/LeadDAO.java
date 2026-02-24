@@ -10,14 +10,15 @@ import java.util.List;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import model.Lead;
-import ultil.DBContext;
+import util.DBContext;
 
 public class LeadDAO {
 
     public int insert(Lead lead) {
         String sql = "INSERT INTO Leads(full_name, email, phone, company_name, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = new DBContext().connection;
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
             ps.setString(3, lead.getPhone());
@@ -96,7 +97,9 @@ public class LeadDAO {
     public List<Lead> getAll() {
         String sql = "SELECT * FROM Leads ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = new DBContext().connection;
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 leads.add(mapResultSetToLead(rs));
             }
@@ -150,7 +153,6 @@ public class LeadDAO {
                 rs.getInt("campaign_id"),
                 rs.getInt("assigned_to"),
                 rs.getTimestamp("created_at").toLocalDateTime(),
-                rs.getTimestamp("updated_at").toLocalDateTime()
-        );
+                rs.getTimestamp("updated_at").toLocalDateTime());
     }
 }

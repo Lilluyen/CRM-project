@@ -13,8 +13,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.StyleTag;
+import util.ControllerUltil;
+
 import org.eclipse.tags.shaded.org.apache.regexp.REUtil;
-import ultil.ControllerUltil;
 
 @WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list-customer" })
 public class CustomerListController extends HttpServlet {
@@ -53,7 +54,7 @@ public class CustomerListController extends HttpServlet {
             request.setAttribute("customerList", customerList);
             request.getRequestDispatcher("/view/customer/customerList.jsp")
                     .forward(request, response);
-            
+
             return;
 
         } catch (SQLException e) {

@@ -4,18 +4,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+
 import model.CampaignReport;
-import ultil.DBContext;
+import util.DBContext;
 
 public class CampaignReportDAO {
 
     public int insert(CampaignReport report) {
         String sql = "INSERT INTO Campaign_Reports(campaign_id, total_lead, qualified_lead, converted_lead, cost_per_lead, roi, created_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = new DBContext().connection;
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, report.getCampaignId());
             ps.setInt(2, report.getTotalLead());
             ps.setInt(3, report.getQualifiedLead());
@@ -59,7 +61,6 @@ public class CampaignReportDAO {
                 rs.getInt("converted_lead"),
                 rs.getBigDecimal("cost_per_lead"),
                 rs.getBigDecimal("roi"),
-                rs.getTimestamp("created_at").toLocalDateTime()
-        );
+                rs.getTimestamp("created_at").toLocalDateTime());
     }
 }

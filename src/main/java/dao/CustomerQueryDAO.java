@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import dto.CustomerListDTO;
-import ultil.DBContext;
+import util.DBContext;
 
 public class CustomerQueryDAO extends DBContext {
 
