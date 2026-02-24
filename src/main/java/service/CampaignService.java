@@ -16,7 +16,7 @@ public class CampaignService {
         if (campaign.getStartDate().isAfter(campaign.getEndDate())) {
             throw new IllegalArgumentException("Start date must be before end date");
         }
-        return campaignDAO.createCampaign(campaign);
+        return campaignDAO.insert(campaign);
     }
 
     public boolean updateCampaign(Campaign campaign) {
@@ -35,6 +35,6 @@ public class CampaignService {
     }
 
     public List<Campaign> getActiveCampaigns() {
-        return campaignDAO.getByCampaignByStatus("ACTIVE");
+        return campaignDAO.getCampaignByStatus("ACTIVE");
     }
 }

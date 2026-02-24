@@ -1,9 +1,13 @@
-package model;
+package controller.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
-public class Customer {
+import model.CustomerMeasurement;
+import model.StyleTag;
+
+public class CustomerDetailDTO {
 
     private int customerId;
     private String name;
@@ -22,15 +26,12 @@ public class Customer {
     private double returnRate;
     private LocalDateTime lastPurchase;
 
-    private User owner;
+    private String ownerName;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private List<CustomerMeasurement> measurements;
+    private List<StyleTag> styleTags;
 
-    public Customer() {
-    }
-
-    // ===== Getter & Setter =====
+    // Getter & Setter ...
 
     public int getCustomerId() {
         return customerId;
@@ -144,27 +145,28 @@ public class Customer {
         this.lastPurchase = lastPurchase;
     }
 
-    public User getOwner() {
-        return owner;
+    public String getOwnerName() {
+        return ownerName;
     }
 
-    public void setOwner(User owner) {
-        this.owner = owner;
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public List<CustomerMeasurement> getMeasurements() {
+        return measurements;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setMeasurements(List<CustomerMeasurement> measurements) {
+        this.measurements = measurements;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public List<StyleTag> getStyleTags() {
+        return styleTags;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setStyleTags(List<StyleTag> styleTags) {
+        this.styleTags = styleTags;
     }
+
 }
