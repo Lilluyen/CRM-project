@@ -8,11 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import model.CustomerStyleMap;
 import model.StyleTag;
-import util.DBContext;
 
-public class CustomerStyleDAO extends DBContext {
+public class CustomerStyleDAO {
 
-    public List<StyleTag> getAllStyleTags() throws SQLException {
+    public List<StyleTag> getAllStyleTags(Connection connection) throws SQLException {
 
         List<StyleTag> styletags = new ArrayList<>();
         String sql = """

@@ -4,14 +4,26 @@ import java.util.List;
 
 import dto.CustomerCreateDTO;
 import dto.CustomerListDTO;
+import java.sql.Connection;
+import java.sql.SQLException;
+import util.DBContext;
 
 public class CustomerService {
 
-    int createCustomer(CustomerCreateDTO dto, int userId) throws Exception {
+    public int createCustomer(CustomerCreateDTO dto, int userId) throws SQLException {
+        try (DBContext db = new DBContext(); Connection conn = db.getConnection()) {
+            conn.setAutoCommit(false);
+            
+        }
+        
         return 0;
     }
 
-    List<CustomerListDTO> getCustomerList() throws Exception {
+    public List<CustomerListDTO> getCustomerList() throws SQLException {
+        try (DBContext db = new DBContext(); Connection conn = db.getConnection()) {
+            conn.setAutoCommit(false);
+            
+        }
         return null;
     }
 }
