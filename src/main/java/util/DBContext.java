@@ -16,8 +16,8 @@ public class DBContext {
     // Configuration from environment variables (with fallback defaults for development)
     private static final String DB_DRIVER = getConfigValue("DB_DRIVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
     private static final String DB_URL = getConfigValue("DB_URL", "jdbc:sqlserver://localhost:1433;databaseName=CRM_System;encrypt=true;trustServerCertificate=true");
-    private static final String DB_USERNAME = getConfigValue("DB_USERNAME", null);
-    private static final String DB_PASSWORD = getConfigValue("DB_PASSWORD", null);
+    private static final String DB_USERNAME = getConfigValue("DB_USERNAME", "sa");
+    private static final String DB_PASSWORD = getConfigValue("DB_PASSWORD", "123456");
 
     private final Connection connection;
 

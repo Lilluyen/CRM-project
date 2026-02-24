@@ -30,7 +30,7 @@ public class ViewActivities extends HttpServlet {
             request.setAttribute("totalActivities", activities.size());
             
             // Forward to JSP for display
-            request.getRequestDispatcher("/CRUD/ActivityList.jsp").forward(request, response);
+            request.getRequestDispatcher("/activities/ActivityList.jsp").forward(request, response);
             
             connection.close();
         } catch (Exception e) {

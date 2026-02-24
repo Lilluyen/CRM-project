@@ -73,7 +73,7 @@
                     <p class="text-slate-500 mt-2">Activity ID: ${activity.activityId}</p>
                 </div>
                 <div class="flex gap-2">
-                    <a href="/CRUD/ActivityForm.jsp?id=${activity.activityId}&action=edit" 
+                    <a href="/activities/ActivityForm.jsp?id=${activity.activityId}&action=edit" 
                        class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                         <span class="material-symbols-outlined">edit</span>
                         Edit
