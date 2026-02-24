@@ -2,11 +2,11 @@ package controller.tasks;
 
 import dao.TaskDAO;
 import util.DBContext;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 
@@ -23,7 +23,7 @@ public class AnnounceAssignedTask extends HttpServlet {
             String content = request.getParameter("content");
             
             // Send notification to user
-            Connection connection = DBContext.getConnection();
+            Connection connection = new DBContext().getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
             
             boolean success = taskDAO.announceAssignedTask(userId, title, content);
