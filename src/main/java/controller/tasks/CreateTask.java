@@ -3,11 +3,11 @@ package controller.tasks;
 import dao.TaskDAO;
 import model.Task;
 import util.DBContext;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 import java.time.LocalDate;
@@ -41,7 +41,7 @@ public class CreateTask extends HttpServlet {
             task.setDueDate(LocalDate.parse(dueDateStr));
             
             // Persist to database
-            Connection connection = DBContext.getConnection();
+            Connection connection = new DBContext().getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
             
             boolean success = taskDAO.createTask(task);

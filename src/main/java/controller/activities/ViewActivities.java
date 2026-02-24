@@ -3,11 +3,11 @@ package controller.activities;
 import dao.ActivityDAO;
 import model.Activity;
 import util.DBContext;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.List;
@@ -20,7 +20,7 @@ public class ViewActivities extends HttpServlet {
             throws ServletException, IOException {
         try {
             // Get all activities from database
-            Connection connection = DBContext.getConnection();
+            Connection connection = new DBContext().getConnection();
             ActivityDAO activityDAO = new ActivityDAO(connection);
             
             List<Activity> activities = activityDAO.getAllActivities();
