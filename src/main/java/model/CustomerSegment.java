@@ -1,33 +1,19 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
-/**
- *
- * @author Pham Minh Quan
- */
 public class CustomerSegment {
 
-    private Integer segmentId;
+    private int segmentId;
     private String segmentName;
-    private String description;
+    private String criteriaLogic;
 
     public CustomerSegment() {
     }
 
-    public CustomerSegment(Integer segmentId, String segmentName, String description) {
-        this.segmentId = segmentId;
-        this.segmentName = segmentName;
-        this.description = description;
-    }
-
-    public Integer getSegmentId() {
+    public int getSegmentId() {
         return segmentId;
     }
 
-    public void setSegmentId(Integer segmentId) {
+    public void setSegmentId(int segmentId) {
         this.segmentId = segmentId;
     }
 
@@ -39,12 +25,11 @@ public class CustomerSegment {
         this.segmentName = segmentName;
     }
 
-    public String getDescription() {
-        return description;
+    public String getCriteriaLogic() {
+        return criteriaLogic;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setCriteriaLogic(String criteriaLogic) {
+        this.criteriaLogic = criteriaLogic;
     }
-    
 }
