@@ -3,6 +3,7 @@ package dao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -85,7 +86,10 @@ public class CustomerQueryDAO extends DBContext {
                 }
 
                 dto.setReturnRate(rs.getDouble("return_rate"));
-                dto.setLastPurchase(rs.getTimestamp("last_purchase_date").toLocalDateTime());
+                Timestamp ts = rs.getTimestamp("last_purchase_date");
+                if (ts != null) {
+                    dto.setLastPurchase(ts.toLocalDateTime());
+                }
                 customerList.add(dto);
             }
         }

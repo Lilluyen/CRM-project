@@ -27,6 +27,10 @@ public class DBContext {
         }
     }
 
+    public Connection getConnection() {
+        return connection;
+    }
+
     public static void main(String[] args) {
         DBContext dbContext = new DBContext();
         if (dbContext.connection != null) {

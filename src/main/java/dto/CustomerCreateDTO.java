@@ -2,14 +2,12 @@ package dto;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
+
 
 public class CustomerCreateDTO {
 
-    /*
-     * =========================
-     * BASIC INFO
-     * =========================
-     */
+    
     private String name;
     private String phone;
     private String gender;
@@ -18,34 +16,19 @@ public class CustomerCreateDTO {
     private String socialLink;
     private String address;
 
-    /*
-     * =========================
-     * FIT PROFILE
-     * =========================
-     */
-    private Integer height;
-    private Integer weight;
+    private BigDecimal height;
+    private BigDecimal weight;
     private String preferredSize;
 
-    private Integer bust;
-    private Integer waist;
-    private Integer hips;
-    private Integer shoulder;
+    private BigDecimal bust;
+    private BigDecimal waist;
+    private BigDecimal hips;
+    private BigDecimal shoulder;
 
     private String bodyShape;
 
-    /*
-     * =========================
-     * STYLE TAGS
-     * =========================
-     */
     private List<String> styleTags;
 
-    /*
-     * =========================
-     * GETTER & SETTER
-     * =========================
-     */
 
     public String getName() {
         return name;
@@ -103,19 +86,19 @@ public class CustomerCreateDTO {
         this.address = address;
     }
 
-    public Integer getHeight() {
+    public BigDecimal getHeight() {
         return height;
     }
 
-    public void setHeight(Integer height) {
+    public void setHeight(BigDecimal height) {
         this.height = height;
     }
 
-    public Integer getWeight() {
+    public BigDecimal getWeight() {
         return weight;
     }
 
-    public void setWeight(Integer weight) {
+    public void setWeight(BigDecimal weight) {
         this.weight = weight;
     }
 
@@ -127,35 +110,35 @@ public class CustomerCreateDTO {
         this.preferredSize = preferredSize;
     }
 
-    public Integer getBust() {
+    public BigDecimal getBust() {
         return bust;
     }
 
-    public void setBust(Integer bust) {
+    public void setBust(BigDecimal bust) {
         this.bust = bust;
     }
 
-    public Integer getWaist() {
+    public BigDecimal getWaist() {
         return waist;
     }
 
-    public void setWaist(Integer waist) {
+    public void setWaist(BigDecimal waist) {
         this.waist = waist;
     }
 
-    public Integer getHips() {
+    public BigDecimal getHips() {
         return hips;
     }
 
-    public void setHips(Integer hips) {
+    public void setHips(BigDecimal hips) {
         this.hips = hips;
     }
 
-    public Integer getShoulder() {
+    public BigDecimal getShoulder() {
         return shoulder;
     }
 
-    public void setShoulder(Integer shoulder) {
+    public void setShoulder(BigDecimal shoulder) {
         this.shoulder = shoulder;
     }
 

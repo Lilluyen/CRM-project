@@ -267,17 +267,13 @@
                     <div class="form-section">
                         <h3><i class="fas fa-tshirt"></i> Sở thích & Gu</h3>
                         <div class="tag-selector">
-                            <label><input type="checkbox" name="styleTags" value="#Vintage" /> #Vintage</label>
-                            <label
-                                ><input type="checkbox" name="styleTags" value="#Minimalism" />
-                                #Minimalism</label
-                            >
-                            <label><input type="checkbox" name="styleTags" value="#Office" /> #Office</label>
-                            <label
-                                ><input type="checkbox" name="styleTags" value="#Streetwear" />
-                                #Streetwear</label
-                            >
+                            <c:forEach items="${styleTagList}" var="s" varStatus="loop">
+                                <label class="tag-item ${loop.index >= 10 ? 'extra-tag' : ''}">
+                                    <input type="checkbox" name="styleTags" value="${s.tagId}" /> ${s.tagName}
+                                </label>
+                            </c:forEach>
                         </div>
+                        <button type="button" id="toggletags" class="see-more-btn">See more</button>
                     </div>
 
                     <div class="modal-footer">
@@ -302,6 +298,23 @@
 
                             // Gắn sự kiện cho nút "Thêm khách mới" ở trang danh sách
                             document.querySelector(".btn-add").addEventListener("click", toggleModal);
+                            
+                            
+                            // Gắn sự kiện xem more tag và less tag
+                            const toggleBtn = document.getElementById("toggleTags");
+                            const extraTags = document.querySelectorAll(".extra-tag");
+
+                            let expanded = false;
+
+                            toggleBtn.addEventListener("click", function () {
+                                expanded = !expanded;
+
+                                extraTags.forEach(tag => {
+                                    tag.style.display = expanded ? "inline-block" : "none";
+                                });
+
+                                toggleBtn.textContent = expanded ? "See less" : "See more";
+                            });
         </script>
     </body>
 </html>

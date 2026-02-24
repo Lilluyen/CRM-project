@@ -1,18 +1,19 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 public class CustomerMeasurement {
 
     private int measureId;
     private int customerId;
 
-    private double height;
-    private double weight;
-    private double bust;
-    private double waist;
-    private double hips;
-    private double shoulder;
+    private BigDecimal height;
+    private BigDecimal weight;
+    private BigDecimal bust;
+    private BigDecimal waist;
+    private BigDecimal hips;
+    private BigDecimal shoulder;
 
     private String preferredSize;
     private String bodyShape;
@@ -39,51 +40,51 @@ public class CustomerMeasurement {
         this.customerId = customerId;
     }
 
-    public double getHeight() {
+    public BigDecimal getHeight() {
         return height;
     }
 
-    public void setHeight(double height) {
+    public void setHeight(BigDecimal height) {
         this.height = height;
     }
 
-    public double getWeight() {
+    public BigDecimal getWeight() {
         return weight;
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(BigDecimal weight) {
         this.weight = weight;
     }
 
-    public double getBust() {
+    public BigDecimal getBust() {
         return bust;
     }
 
-    public void setBust(double bust) {
+    public void setBust(BigDecimal bust) {
         this.bust = bust;
     }
 
-    public double getWaist() {
+    public BigDecimal getWaist() {
         return waist;
     }
 
-    public void setWaist(double waist) {
+    public void setWaist(BigDecimal waist) {
         this.waist = waist;
     }
 
-    public double getHips() {
+    public BigDecimal getHips() {
         return hips;
     }
 
-    public void setHips(double hips) {
+    public void setHips(BigDecimal hips) {
         this.hips = hips;
     }
 
-    public double getShoulder() {
+    public BigDecimal getShoulder() {
         return shoulder;
     }
 
-    public void setShoulder(double shoulder) {
+    public void setShoulder(BigDecimal shoulder) {
         this.shoulder = shoulder;
     }
 

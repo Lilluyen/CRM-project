@@ -363,6 +363,19 @@ td {
     gap: 12px;
 }
 
+#toggletags{
+    display: none;
+    margin-top: 5px;
+    background-color: transparent;
+    color: var(--accent-blue);
+    border: none;
+    
+}
+
+#toggletags:hover{
+    border-bottom: solid blue 1px;
+}
+
 .btn-cancel {
     background: white;
     border: 1px solid #d1d5db;
