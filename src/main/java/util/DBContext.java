@@ -67,21 +67,6 @@ public class DBContext {
         return connection;
     }
 
-    <<<<<<<HEAD
-
-    public static void main(String[] args) {
-        DBContext dbContext = new DBContext();
-        if (dbContext.connection != null) {
-            try {
-                if (!dbContext.connection.isClosed()) {
-                    System.out.println("Kết nối tới database CRM_System thành công!");
-                }
-            } catch (Exception e) {
-                System.out.println("Lỗi: " + e.getMessage());
-            }
-        }
-    }=======
-
     /**
      * Close the database connection and free resources.
      */
@@ -99,7 +84,7 @@ public class DBContext {
     /**
      * Retrieve configuration value from environment variable with fallback.
      * 
-     * @param key environment variable key
+     * @param key          environment variable key
      * @param defaultValue value to use if environment variable is not set
      * @return configuration value
      */
@@ -110,5 +95,5 @@ public class DBContext {
             return defaultValue;
         }
         return value;
-    }>>>>>>>32ee e430109cd1748b8cf3e974fa7c63942f545a
+    }
 }
