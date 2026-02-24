@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import model.CustomerStyleMap;
 import model.StyleTag;
 import util.DBContext;
@@ -21,7 +22,7 @@ public class CustomerStyleDAO extends DBContext {
                       ,[category]
                   FROM [Style_Tags]""";
 
-        try (PreparedStatement stm = connection.prepareStatement(sql);
+        try (PreparedStatement stm = getConnection().prepareStatement(sql);
                 ResultSet rs = stm.executeQuery()) {
             while (rs.next()) {
                 StyleTag styleTag = new StyleTag();
