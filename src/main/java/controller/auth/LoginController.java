@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Role;
 import model.User;
 
-@WebServlet(name = "LoginController", urlPatterns = {"/login"})
+@WebServlet(name = "LoginController", urlPatterns = { "/login" })
 public class LoginController extends HttpServlet {
 
     @Override
@@ -23,7 +23,7 @@ public class LoginController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        
+
         String username = Optional.ofNullable(req.getParameter("username")).orElse("");
         String password = Optional.ofNullable(req.getParameter("password")).orElse("");
 
@@ -32,7 +32,7 @@ public class LoginController extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         User user = userDAO.getUserByUsername(username);
 
-        if (user == null || !ultil.PasswordUtil.check(password, user.getPasswordHash())) {
+        if (user == null || !util.PasswordUtil.check(password, user.getPasswordHash())) {
             req.setAttribute("error", "Invalid username or password.");
             req.getRequestDispatcher("login.jsp").forward(req, resp);
             return;
@@ -57,19 +57,20 @@ public class LoginController extends HttpServlet {
         for (Role role : roles) {
             String roleName = role.getRoleName();
 
-            if (roleName == null) continue;
+            if (roleName == null)
+                continue;
 
             switch (roleName.toUpperCase()) {
                 case "ADMIN":
-                    return "admin.jsp";
+                    return "/admin.jsp";
                 case "SALES":
-                    return "sale.jsp";
+                    return "/sale.jsp";
                 case "MARKETING":
-                    return "marketing.jsp";
+                    return "/marketing.jsp";
                 case "CS":
-                    return "cs.jsp";
-                    case "Customer":
-                    return "customer.jsp";
+                    return "/cs.jsp";
+                case "Customer":
+                    return "/customer.jsp";
             }
         }
 

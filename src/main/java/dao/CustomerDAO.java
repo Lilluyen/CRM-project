@@ -1,0 +1,69 @@
+package dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import model.Customer;
+
+public class CustomerDAO {
+
+    public int insertCustomer(Customer customer, Connection connection) throws SQLException {
+        String sql = """
+                INSERT INTO [Customers]
+                           ([name]
+                           ,[phone]
+                           ,[email]
+                           ,[birthday]
+                           ,[gender]
+                           ,[address]
+                           ,[social_link]
+                           ,[owner_id]
+                           ,[created_at])
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""";
+        try (PreparedStatement stmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, customer.getName());
+            stmt.setString(2, customer.getPhone());
+            stmt.setString(3, customer.getEmail());
+
+            stmt.setDate(4,
+                    java.sql.Date.valueOf(customer.getBirthday()) != null
+                            ? java.sql.Date.valueOf(customer.getBirthday())
+                            : null);
+            stmt.setString(5, customer.getGender() != null ? customer.getGender() : null);
+            stmt.setString(6, customer.getAddress() != null ? customer.getAddress() : null);
+            stmt.setString(7, customer.getSocialLink() != null ? customer.getSocialLink() : null);
+
+            stmt.setInt(8, customer.getOwner().getUserId());
+            stmt.setTimestamp(9, new java.sql.Timestamp(System.currentTimeMillis()));
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating customer failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Creating customer failed, no ID obtained.");
+                }
+            }
+        }
+    }
+
+    public boolean existsByPhone(String phone, Connection conn) throws Exception {
+
+        String sql = "SELECT 1 FROM Customers WHERE phone = ?";
+
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+
+            try (var rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+}
