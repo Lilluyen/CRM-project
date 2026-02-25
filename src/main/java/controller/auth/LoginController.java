@@ -62,15 +62,15 @@ public class LoginController extends HttpServlet {
 
             switch (roleName.toUpperCase()) {
                 case "ADMIN":
-                    return "admin.jsp";
+                    return "/admin.jsp";
                 case "SALES":
-                    return "sale.jsp";
+                    return "/sale.jsp";
                 case "MARKETING":
-                    return "marketing.jsp";
+                    return "/marketing.jsp";
                 case "CS":
-                    return "cs.jsp";
+                    return "/cs.jsp";
                 case "Customer":
-                    return "customer.jsp";
+                    return "/customer.jsp";
             }
         }
 
