@@ -14,11 +14,13 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
               rel="stylesheet">
 
-        <link rel="stylesheet" href="../assets/css/customerList.css"/>
+        <link href="${pageContext.request.contextPath}/assets/css/customerList.css" rel="stylesheet" type="text/css"/>
     </head>
 
 
     <body>
+
+
 
         <div class="layout container-fluid">
 
@@ -153,7 +155,7 @@
                     <span class="close-btn" onclick="toggleModal()">&times;</span>
                 </div>
 
-                <form id="addCustomerForm" method="post" action="/customers/add-customer">
+                <form id="addCustomerForm" method="post" action="${pageContext.request.contextPath}/customers/add-customer">
                     <div class="form-section">
                         <h3><i class="fas fa-id-card"></i> Thông tin cơ bản</h3>
                         <div class="grid-2">
@@ -273,7 +275,7 @@
                                 </label>
                             </c:forEach>
                         </div>
-                        <button type="button" id="toggletags" class="see-more-btn">See more</button>
+                        <button type="button" id="toggleTags" class="see-more-btn">See more</button>
                     </div>
 
                     <div class="modal-footer">
@@ -284,37 +286,160 @@
                     </div>
                 </form>
             </div>
+
+
         </div>
+
+        <div id="toast" class="toast">
+            <div class="toast-left">
+                <div id="toastIcon" class="toast-icon"></div>
+            </div>
+
+            <div class="toast-content">
+                <div id="toastMessage" class="toast-message"></div>
+            </div>
+
+            <button class="toast-close" onclick="hideToast()">×</button>
+
+            <div class="toast-progress">
+                <div id="toastBar"></div>
+            </div>
+        </div>
+
 
 
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-                            function toggleModal() {
-                                const modal = document.getElementById("customerModal");
-                                modal.style.display =
-                                        modal.style.display === "block" ? "none" : "block";
-                            }
+                function toggleModal() {
+                    const modal = document.getElementById("customerModal");
+                    modal.style.display =
+                            modal.style.display === "block" ? "none" : "block";
+                }
 
-                            // Gắn sự kiện cho nút "Thêm khách mới" ở trang danh sách
-                            document.querySelector(".btn-add").addEventListener("click", toggleModal);
-                            
-                            
-                            // Gắn sự kiện xem more tag và less tag
-                            const toggleBtn = document.getElementById("toggleTags");
-                            const extraTags = document.querySelectorAll(".extra-tag");
+                // Gắn sự kiện cho nút "Thêm khách mới" ở trang danh sách
+                document.querySelector(".btn-add").addEventListener("click", toggleModal);
 
-                            let expanded = false;
 
-                            toggleBtn.addEventListener("click", function () {
-                                expanded = !expanded;
+                // Gắn sự kiện xem more tag và less tag
+                const toggleBtn = document.getElementById("toggleTags");
+                const extraTags = document.querySelectorAll(".extra-tag");
 
-                                extraTags.forEach(tag => {
-                                    tag.style.display = expanded ? "inline-block" : "none";
-                                });
+                let expanded = false;
 
-                                toggleBtn.textContent = expanded ? "See less" : "See more";
-                            });
+                toggleBtn.addEventListener("click", function () {
+                    expanded = !expanded;
+
+                    extraTags.forEach(tag => {
+                        tag.style.display = expanded ? "inline-block" : "none";
+                    });
+
+                    toggleBtn.textContent = expanded ? "See less" : "See more";
+                });
+
+
+                // thông báo create customer thành công hoặc failed
+                let startTime = 0;
+                const duration = 3200; // thời gian sống cố định
+                let paused = false;
+                let pauseStartedAt = 0;
+                let rafId = null;
+
+                const toast = document.getElementById("toast");
+                const bar = document.getElementById("toastBar");
+
+                function showToast(type, message) {
+                    cancelAnimationFrame(rafId);
+
+                    toast.classList.remove("hide");
+                    void toast.offsetWidth; // reset animation
+
+                    document.getElementById("toastMessage").innerText = message;
+
+                    if (type === "success") {
+                        document.getElementById("toastIcon").innerHTML =
+                                `<svg fill="#22c55e" viewBox="0 0 24 24">
+            <path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.5z"/>
+        </svg>`;
+                        bar.style.background = "#22c55e";
+                    } else {
+                        document.getElementById("toastIcon").innerHTML =
+                                `<svg fill="#ef4444" viewBox="0 0 24 24">
+            <path d="M18.3 5.71L12 12l6.3 6.29-1.41 1.41L10.59 13.41
+                     4.29 19.7 2.88 18.29 9.17 12 2.88 5.71
+                     4.29 4.29 10.59 10.59l6.3-6.3z"/>
+        </svg>`;
+                        bar.style.background = "#ef4444";
+                    }
+
+                    bar.style.transform = "scaleX(1)";
+                    paused = false;
+
+                    toast.classList.add("show");
+
+                    startTime = performance.now();
+                    rafId = requestAnimationFrame(animateBar);
+                }
+
+                function easeOutCubic(t) {
+                    return 1 - Math.pow(1 - t, 3);
+                }
+
+                function animateBar(now) {
+                    if (paused)
+                        return;
+
+                    const elapsed = now - startTime;
+                    let progress = elapsed / duration;
+
+                    progress = Math.min(progress, 1);
+                    const eased = easeOutCubic(progress);
+
+                    bar.style.transform = `scaleX(${1 - eased})`;
+
+                    if (progress < 1) {
+                        rafId = requestAnimationFrame(animateBar);
+                    } else {
+                        hideToast();
+                    }
+                }
+
+                function hideToast() {
+                    cancelAnimationFrame(rafId);
+                    toast.classList.remove("show");
+                    toast.classList.add("hide");
+                }
+
+                /* ===== Pause khi hover ===== */
+                toast.addEventListener("mouseenter", () => {
+                    if (!paused) {
+                        paused = true;
+                        pauseStartedAt = performance.now();
+                    }
+                });
+
+                /* ===== Resume khi rời chuột ===== */
+                toast.addEventListener("mouseleave", () => {
+                    if (paused) {
+                        paused = false;
+
+                        const pauseDuration = performance.now() - pauseStartedAt;
+                        startTime += pauseDuration; // bù lại thời gian bị pause
+
+                        rafId = requestAnimationFrame(animateBar);
+                    }
+                });
+
+                /* ===== Trigger từ server ===== */
+                const status = "${param.status}";
+
+                if (status === "success") {
+                    showToast("success", "Create customer successfully");
+                }
+
+                if (status === "failed") {
+                    showToast("error", "Create customer failed");
+                }
         </script>
     </body>
 </html>

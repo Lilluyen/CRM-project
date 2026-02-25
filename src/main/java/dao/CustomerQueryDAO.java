@@ -1,5 +1,6 @@
 package dao;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,9 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import dto.CustomerListDTO;
-import java.sql.Connection;
 
-public class CustomerQueryDAO  {
+public class CustomerQueryDAO {
 
     public List<CustomerListDTO> getCustomerList(Connection connection) throws SQLException {
 
@@ -64,7 +64,7 @@ public class CustomerQueryDAO  {
                 """;
 
         try (
-                PreparedStatement stm = getConnection().prepareStatement(sql);
+                PreparedStatement stm = connection.prepareStatement(sql);
                 ResultSet rs = stm.executeQuery();) {
             while (rs.next()) {
                 CustomerListDTO dto = new CustomerListDTO();

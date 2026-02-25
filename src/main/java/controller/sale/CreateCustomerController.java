@@ -96,13 +96,11 @@ public class CreateCustomerController extends HttpServlet {
                 customerService.createCustomer(dto, user.getUserId());
 
                 // ===== 6. REDIRECT (tránh submit lại form) =====
-                resp.sendRedirect(req.getContextPath() + "/customers?add-customer=true");
+                resp.sendRedirect(req.getContextPath() + "/customers?status=success");
 
             } catch (Exception e) {
 
-                req.setAttribute("errorMessage", e.getMessage());
-                req.getRequestDispatcher("/view/customer/customerList.jsp")
-                        .forward(req, resp);
+                resp.sendRedirect(req.getContextPath() + "/customers?status=failed");
             }
         }
 
