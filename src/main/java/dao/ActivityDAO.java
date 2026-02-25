@@ -1,10 +1,11 @@
 package dao;
 
 import model.Activity;
-
+import model.User;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import dao.UserDAO;
 
 public class ActivityDAO {
 
@@ -28,7 +29,12 @@ public class ActivityDAO {
             ps.setString(3, activity.getActivityType());
             ps.setString(4, activity.getSubject());
             ps.setString(5, activity.getDescription());
-            ps.setInt(6, activity.getCreatedBy());
+            // createdBy is a User object; store its id
+            if (activity.getCreatedBy() != null) {
+                ps.setInt(6, activity.getCreatedBy().getUserId());
+            } else {
+                ps.setNull(6, java.sql.Types.INTEGER);
+            }
             ps.setTimestamp(7, Timestamp.valueOf(activity.getActivityDate()));
 
             return ps.executeUpdate() > 0;
@@ -117,7 +123,15 @@ public class ActivityDAO {
         activity.setActivityType(rs.getString("activity_type"));
         activity.setSubject(rs.getString("subject"));
         activity.setDescription(rs.getString("description"));
-        activity.setCreatedBy(rs.getInt("created_by"));
+        int createdById = rs.getInt("created_by");
+        if (!rs.wasNull() && createdById > 0) {
+            // fetch user details (may use separate connection internally)
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.getUserById(createdById);
+            activity.setCreatedBy(user);
+        } else {
+            activity.setCreatedBy(null);
+        }
 
         Timestamp activityDate = rs.getTimestamp("activity_date");
         if (activityDate != null) {

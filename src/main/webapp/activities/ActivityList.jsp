@@ -103,9 +103,15 @@
                                             <div class="text-slate-600 dark:text-slate-400">${activity.relatedType}</div>
                                             <div class="text-xs text-slate-500">ID: ${activity.relatedId}</div>
                                         </td>
-                                        <td class="px-6 py-4 text-sm dark:text-slate-300">${activity.createdBy}</td>
                                         <td class="px-6 py-4 text-sm dark:text-slate-300">
-                                            <fmt:formatDate value="${activity.activityDate}" pattern="MMM dd, yyyy HH:mm"/>
+                                            <c:choose>
+                                                <c:when test="${not empty activity.createdBy.fullName}">${activity.createdBy.fullName}</c:when>
+                                                <c:when test="${not empty activity.createdBy.username}">${activity.createdBy.username}</c:when>
+                                                <c:otherwise>Unknown</c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm dark:text-slate-300">
+                                            ${activity.activityDate}
                                         </td>
                                         <td class="px-6 py-4 text-sm">
                                             <div class="flex gap-2">

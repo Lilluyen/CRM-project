@@ -53,11 +53,11 @@
 
             <!-- Action Buttons -->
             <div class="space-y-3">
-                <a href="/activities/list" class="block w-full h-12 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition flex items-center justify-center gap-2">
+                <a href="${pageContext.request.contextPath}/activities/list" class="block w-full h-12 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined">arrow_back</span>
                     Back to Activities
                 </a>
-                <a href="/" class="block w-full h-12 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-300 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
+                <a href="${pageContext.request.contextPath}/" class="block w-full h-12 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-300 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined">home</span>
                     Go to Dashboard
                 </a>
@@ -70,7 +70,7 @@
     <script>
         // Optional: Auto-redirect after 3 seconds
         // setTimeout(function() {
-        //     window.location.href = '/activities/list';
+        //     window.location.href = '${pageContext.request.contextPath}/activities/list';
         // }, 3000);
     </script>
 

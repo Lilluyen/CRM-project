@@ -2,6 +2,7 @@ package controller.activities;
 
 import dao.ActivityDAO;
 import model.Activity;
+import model.User;
 import util.DBContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -25,7 +26,13 @@ public class CreateActivity extends HttpServlet {
             String activityType = request.getParameter("activityType");
             String subject = request.getParameter("subject");
             String description = request.getParameter("description");
-            int createdBy = Integer.parseInt(request.getParameter("createdBy"));
+            // Determine current user from session instead of form input
+            User currentUser = (User) request.getSession().getAttribute("user");
+            if (currentUser == null) {
+                request.setAttribute("error", "You must be logged in to create an activity.");
+                request.getRequestDispatcher("/view/error/401.jsp").forward(request, response);
+                return;
+            }
             
             // Create Activity object
             Activity activity = new Activity();
@@ -34,7 +41,7 @@ public class CreateActivity extends HttpServlet {
             activity.setActivityType(activityType);
             activity.setSubject(subject);
             activity.setDescription(description);
-            activity.setCreatedBy(createdBy);
+            activity.setCreatedBy(currentUser);
             activity.setActivityDate(LocalDateTime.now());
             
             // Persist to database
