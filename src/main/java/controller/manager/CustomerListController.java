@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import dao.CustomerQueryDAO;
-import dao.CustomerStyleDAO;
 import dto.CustomerListDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

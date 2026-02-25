@@ -1,6 +1,7 @@
 package service;
 
 import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
 import dao.CustomerQueryDAO;
 import dao.CustomerStyleDAO;
 import java.util.List;
@@ -15,23 +16,35 @@ import util.DBContext;
 
 public class CustomerService {
 
-    public int createCustomer(CustomerCreateDTO dto, int userId) throws SQLException {
+    public int createCustomer(CustomerCreateDTO dto, int userId) throws SQLException, Exception {
         try (Connection conn = DBContext.getConnection()) {
             try {
                 conn.setAutoCommit(false);
                 CustomerDAO customerDAO = new CustomerDAO();
+                CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+                CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+
                 if (customerDAO.existsByPhone(dto.getPhone(), conn)) {
                     throw new RuntimeException("Phone already exists");
                 }
 
-                customerDAO.insertCustomer(CustomerMapper.toCustomer(dto, userId), conn);
+                int newCustomerId = customerDAO.insertCustomer(CustomerMapper.toCustomer(dto, userId), conn);
+                if (dto.getStyleTags() != null && !dto.getStyleTags().isEmpty()) {
+                    customerStyleDAO.insertCustomerStyles(
+                            conn, newCustomerId, dto.getStyleTags());
+                }
+                customerMeasurementDAO
+                        .insertCustomerMeasurement(CustomerMapper.toCustomerMeasurement(dto, newCustomerId), conn);
 
+                conn.commit();
+                return newCustomerId;
             } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
 
         }
 
-        return 0;
     }
 
     public List<CustomerListDTO> getCustomerList() throws SQLException {
@@ -44,8 +57,8 @@ public class CustomerService {
 
         }
     }
-    
-    public List<StyleTag> getListStyleTags() throws SQLException{
+
+    public List<StyleTag> getListStyleTags() throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
             CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
