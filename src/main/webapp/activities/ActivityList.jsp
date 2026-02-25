@@ -56,7 +56,7 @@
                 <h1 class="text-3xl font-bold dark:text-white">Activities</h1>
                 <p class="text-slate-500 mt-1">Total: ${totalActivities} activities</p>
             </div>
-            <a href="/activities/ActivityForm.jsp" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
+            <a href="${pageContext.request.contextPath}/activities/ActivityForm.jsp" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                 <span class="material-symbols-outlined">add</span>
                 New Activity
             </a>

@@ -94,7 +94,7 @@
 
             <!-- Activity Form -->
             <form id="activityForm" method="post" 
-                  action="<c:choose><c:when test="${param.action == \"edit\"}">/activities/update</c:when><c:otherwise>/activities/create</c:otherwise></c:choose>"
+                  action="<c:choose><c:when test="${param.action == \"edit\"}">update</c:when><c:otherwise>create</c:otherwise></c:choose>"
                   class="space-y-6">
 
                 <!-- Hidden Activity ID for Edit -->

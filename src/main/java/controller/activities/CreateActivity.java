@@ -58,4 +58,10 @@ public class CreateActivity extends HttpServlet {
             request.getRequestDispatcher("/view/error/500.jsp").forward(request, response);
         }
     }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/activities/ActivityForm.jsp").forward(req, resp);
+    }
+    
 }
