@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 import model.CustomerMeasurement;
-import util.DBContext;
 
 public class CustomerMeasurementDAO {
 

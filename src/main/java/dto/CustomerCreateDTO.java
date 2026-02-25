@@ -27,7 +27,7 @@ public class CustomerCreateDTO {
 
     private String bodyShape;
 
-    private List<String> styleTags;
+    private List<Integer> styleTags;
 
 
     public String getName() {
@@ -150,11 +150,11 @@ public class CustomerCreateDTO {
         this.bodyShape = bodyShape;
     }
 
-    public List<String> getStyleTags() {
+    public List<Integer> getStyleTags() {
         return styleTags;
     }
 
-    public void setStyleTags(List<String> styleTags) {
+    public void setStyleTags(List<Integer> styleTags) {
         this.styleTags = styleTags;
     }
 }

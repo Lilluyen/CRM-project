@@ -18,7 +18,7 @@ public class CampaignDAO {
     public int insert(Campaign campaign) {
         String sql = "INSERT INTO Campaigns(name, description, budget, start_date, end_date, channel, status, created_by, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, campaign.getName());
             ps.setString(2, campaign.getDescription());
             ps.setBigDecimal(3, campaign.getBudget());
@@ -45,7 +45,7 @@ public class CampaignDAO {
     // Cập nhật thông tin một chiến dịch theo ID
     public boolean updateCampaign(Campaign campaign) {
         String sql = "UPDATE Campaigns SET name=?, description=?, budget=?, start_date=?, end_date=?, channel=?, status=?, updated_at=? WHERE campaign_id=?";
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, campaign.getName());
             ps.setString(2, campaign.getDescription());
             ps.setBigDecimal(3, campaign.getBudget());
@@ -65,7 +65,7 @@ public class CampaignDAO {
     // Lấy thông tin chiến dịch theo ID
     public Campaign getCampaignById(int campaignId) {
         String sql = "SELECT * FROM Campaigns WHERE campaign_id = ?";
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -81,7 +81,7 @@ public class CampaignDAO {
     public List<Campaign> getAllCampaign() {
         String sql = "SELECT * FROM Campaigns ORDER BY created_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 campaigns.add(mapResultSetToCampaign(rs));
             }
@@ -95,7 +95,7 @@ public class CampaignDAO {
     public List<Campaign> getCampaignByStatus(String status) {
         String sql = "SELECT * FROM Campaigns WHERE status = ? ORDER BY created_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

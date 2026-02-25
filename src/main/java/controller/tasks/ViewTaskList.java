@@ -1,18 +1,19 @@
 package controller.tasks;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.util.List;
+
 import dao.TaskDAO;
-import model.Task;
-import util.DBContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.Connection;
-import java.util.List;
+import model.Task;
+import util.DBContext;
 
-@WebServlet(name = "ViewTaskList", urlPatterns = {"/tasks/view", "/tasks/list"})
+@WebServlet(name = "ViewTaskList", urlPatterns = { "/tasks/view", "/tasks/list" })
 public class ViewTaskList extends HttpServlet {
 
     @Override
@@ -20,18 +21,18 @@ public class ViewTaskList extends HttpServlet {
             throws ServletException, IOException {
         try {
             // Get all tasks from database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
-            
+
             List<Task> tasks = taskDAO.getAllTasks();
-            
+
             // Set tasks as request attribute
             request.setAttribute("tasks", tasks);
             request.setAttribute("totalTasks", tasks.size());
-            
+
             // Forward to JSP for display
             request.getRequestDispatcher("/CRUD/TaskList.jsp").forward(request, response);
-            
+
             connection.close();
         } catch (Exception e) {
             e.printStackTrace();

@@ -8,11 +8,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import dto.CustomerListDTO;
-import util.DBContext;
+import java.sql.Connection;
 
-public class CustomerQueryDAO extends DBContext {
+public class CustomerQueryDAO  {
 
-    public List<CustomerListDTO> getCustomerList() throws SQLException {
+    public List<CustomerListDTO> getCustomerList(Connection connection) throws SQLException {
 
         // Implement the logic to fetch customer list with necessary details
         List<CustomerListDTO> customerList = new java.util.ArrayList<>();
@@ -64,7 +64,7 @@ public class CustomerQueryDAO extends DBContext {
                 """;
 
         try (
-                PreparedStatement stm = getConnection().prepareStatement(sql);
+                PreparedStatement stm = connection.prepareStatement(sql);
                 ResultSet rs = stm.executeQuery();) {
             while (rs.next()) {
                 CustomerListDTO dto = new CustomerListDTO();

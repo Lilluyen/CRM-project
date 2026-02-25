@@ -22,7 +22,7 @@ public class ViewActivityDetails extends HttpServlet {
             int activityId = Integer.parseInt(request.getParameter("id"));
             
             // Get activity details from database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             ActivityDAO activityDAO = new ActivityDAO(connection);
             
             Activity activity = activityDAO.getActivityById(activityId);

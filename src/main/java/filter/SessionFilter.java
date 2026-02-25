@@ -1,30 +1,44 @@
-//package filter;
-//
-//import dao.UserDAO;
-//import jakarta.servlet.FilterChain;
-//import jakarta.servlet.ServletException;
-//import jakarta.servlet.annotation.WebFilter;
-//import jakarta.servlet.http.HttpFilter;
-//import jakarta.servlet.http.HttpServletRequest;
-//import jakarta.servlet.http.HttpServletResponse;
-//import java.io.IOException;
-//import java.util.Optional;
-//import model.User;
-//
-//@WebFilter("/*")
-//public class SessionFilter extends HttpFilter {
-//
-//    @Override
-//    protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-//        Optional<User> opt = Optional.ofNullable(request.getSession().getAttribute("user")).map(obj -> (User) obj);
-//        if (opt.isPresent()) {
-//            User user = new UserDAO().getUserById(opt.get().getUserId());
-//            if (user.getStatus().equals("LOCKED")) {
-//                request.getSession().invalidate();
-//            } else {
-//                request.getSession().setAttribute("user", user);
-//            }
-//        }
-//        super.doFilter(request, response, chain);
-//    }
-//}
+package filter;
+
+import java.io.IOException;
+
+import dao.UserDAO;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import model.User;
+
+
+public class SessionFilter extends HttpFilter {
+
+    @Override
+    protected void doFilter(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain)
+            throws IOException, ServletException {
+
+        HttpSession session = request.getSession(false);
+
+        if (session != null) {
+            User sessionUser = (User) session.getAttribute("user");
+
+            if (sessionUser != null) {
+
+                User freshUser = new UserDAO().getUserById(sessionUser.getUserId());
+
+                if (freshUser == null || "LOCKED".equals(freshUser.getStatus())) {
+                    session.invalidate();
+                    response.sendRedirect(request.getContextPath() + "/login");
+                    return;
+                }
+
+                session.setAttribute("user", freshUser);
+            }
+        }
+
+        chain.doFilter(request, response);
+    }
+}

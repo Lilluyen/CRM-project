@@ -1,16 +1,17 @@
 package controller.tasks;
 
+import java.io.IOException;
+import java.sql.Connection;
+
 import dao.TaskDAO;
-import util.DBContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.Connection;
+import util.DBContext;
 
-@WebServlet(name = "AnnounceAssignedTask", urlPatterns = {"/tasks/announce"})
+@WebServlet(name = "AnnounceAssignedTask", urlPatterns = { "/tasks/announce" })
 public class AnnounceAssignedTask extends HttpServlet {
 
     @Override
@@ -21,13 +22,13 @@ public class AnnounceAssignedTask extends HttpServlet {
             int userId = Integer.parseInt(request.getParameter("userId"));
             String title = request.getParameter("title");
             String content = request.getParameter("content");
-            
+
             // Send notification to user
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
-            
+
             boolean success = taskDAO.announceAssignedTask(userId, title, content);
-            
+
             if (success) {
                 // Check if it's an AJAX request
                 String acceptHeader = request.getHeader("Accept");
@@ -47,7 +48,7 @@ public class AnnounceAssignedTask extends HttpServlet {
                     request.getRequestDispatcher("/view/error/500.jsp").forward(request, response);
                 }
             }
-            
+
             connection.close();
         } catch (Exception e) {
             e.printStackTrace();

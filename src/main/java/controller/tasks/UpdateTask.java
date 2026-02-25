@@ -41,7 +41,7 @@ public class UpdateTask extends HttpServlet {
             task.setDueDate(LocalDate.parse(dueDateStr));
             
             // Update in database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
             
             boolean success = taskDAO.updateTask(task);
