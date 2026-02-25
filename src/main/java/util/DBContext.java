@@ -16,7 +16,7 @@ public final class DBContext {
             DB_DRIVER = getEnv("DB_DRIVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
             DB_URL = getEnv("DB_URL",
                     "jdbc:sqlserver://localhost:1433;databaseName=CRM_System;encrypt=true;trustServerCertificate=true");
-            DB_USERNAME = getEnv("DB_USERNAME", "lilluyen");
+            DB_USERNAME = getEnv("DB_USERNAME", "sa");
             DB_PASSWORD = getEnv("DB_PASSWORD", "123");
 
             Class.forName(DB_DRIVER);
