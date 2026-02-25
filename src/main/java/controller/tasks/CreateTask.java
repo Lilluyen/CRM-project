@@ -1,18 +1,19 @@
 package controller.tasks;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.time.LocalDate;
+
 import dao.TaskDAO;
-import model.Task;
-import util.DBContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.Connection;
-import java.time.LocalDate;
+import model.Task;
+import util.DBContext;
 
-@WebServlet(name = "CreateTask", urlPatterns = {"/tasks/create"})
+@WebServlet(name = "CreateTask", urlPatterns = { "/tasks/create" })
 public class CreateTask extends HttpServlet {
 
     @Override
@@ -28,7 +29,7 @@ public class CreateTask extends HttpServlet {
             String priority = request.getParameter("priority");
             String status = request.getParameter("status");
             String dueDateStr = request.getParameter("dueDate");
-            
+
             // Create Task object
             Task task = new Task();
             task.setTitle(title);
@@ -39,13 +40,13 @@ public class CreateTask extends HttpServlet {
             task.setPriority(priority);
             task.setStatus(status != null ? status : "PENDING");
             task.setDueDate(LocalDate.parse(dueDateStr));
-            
+
             // Persist to database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             TaskDAO taskDAO = new TaskDAO(connection);
-            
+
             boolean success = taskDAO.createTask(task);
-            
+
             if (success) {
                 request.setAttribute("message", "Task created successfully!");
                 request.getRequestDispatcher("/view/success.jsp").forward(request, response);
@@ -53,7 +54,7 @@ public class CreateTask extends HttpServlet {
                 request.setAttribute("error", "Failed to create task!");
                 request.getRequestDispatcher("/view/error/500.jsp").forward(request, response);
             }
-            
+
             connection.close();
         } catch (Exception e) {
             e.printStackTrace();

@@ -3,10 +3,8 @@ package mapper;
 import java.time.LocalDateTime;
 
 import dto.CustomerCreateDTO;
-import java.util.List;
 import model.Customer;
 import model.CustomerMeasurement;
-import model.CustomerStyleMap;
 import model.User;
 
 
@@ -45,11 +43,5 @@ public class CustomerMapper {
         return measurement;
     }
 
-    public static List<CustomerStyleMap> toCustomerStyleMap(int customerId, int tagId, CustomerCreateDTO dto) {
-        for (String styleTag : dto.getStyleTags()) {
-            CustomerStyleMap c = new CustomerStyleMap();
-            
-        }
-        return null;
-    }
+    
 }

@@ -17,7 +17,7 @@ public class CampaignReportDAO {
     public int createCampaignReport(CampaignReport report) {
         String sql = "INSERT INTO Campaign_Reports(campaign_id, total_lead, qualified_lead, converted_lead, cost_per_lead, roi, created_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = new DBContext().getConnection();
+        try (Connection conn = DBContext.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, report.getCampaignId());
             ps.setInt(2, report.getTotalLead());
@@ -42,7 +42,7 @@ public class CampaignReportDAO {
     // Lấy báo cáo chiến dịch mới nhất theo campaign ID
     public CampaignReport getLatestByCampaignId(int campaignId) {
         String sql = "SELECT TOP 1 * FROM Campaign_Reports WHERE campaign_id = ? ORDER BY created_at DESC";
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {

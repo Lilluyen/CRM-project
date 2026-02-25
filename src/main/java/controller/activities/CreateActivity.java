@@ -38,7 +38,7 @@ public class CreateActivity extends HttpServlet {
             activity.setActivityDate(LocalDateTime.now());
             
             // Persist to database
-            Connection connection = new DBContext().getConnection();
+            Connection connection = DBContext.getConnection();
             ActivityDAO activityDAO = new ActivityDAO(connection);
             
             boolean success = activityDAO.createActivity(activity);

@@ -1,13 +1,20 @@
 package controller.api;
 
-import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
+import jakarta.websocket.server.PathParam;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnClose;
+import jakarta.websocket.OnError;
+import jakarta.websocket.Session;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * WebSocket endpoint for real-time task notifications
@@ -17,6 +24,7 @@ import com.google.gson.Gson;
 @ServerEndpoint("/ws/notifications/{userId}")
 public class TaskNotificationWebSocket {
 
+    private static final Logger logger = LoggerFactory.getLogger(TaskNotificationWebSocket.class);
     private static final Set<Session> sessions = Collections.synchronizedSet(new HashSet<>());
     private static final Gson gson = new Gson();
 
@@ -32,9 +40,9 @@ public class TaskNotificationWebSocket {
             message.addProperty("timestamp", System.currentTimeMillis());
             session.getBasicRemote().sendText(message.toString());
             
-            System.out.println("User " + userId + " connected to notifications. Total sessions: " + sessions.size());
+            logger.info("User {} connected to notifications. Total sessions: {}", userId, sessions.size());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error sending connection message to user {}: {}", userId, e.getMessage(), e);
         }
     }
 
@@ -44,7 +52,7 @@ public class TaskNotificationWebSocket {
         
         try {
             JsonObject json = gson.fromJson(message, JsonObject.class);
-            String action = json.get("action").getAsString();
+            String action = json.get("action") != null ? json.get("action").getAsString() : "";
             
             if ("ping".equals(action)) {
                 JsonObject pong = new JsonObject();
@@ -56,9 +64,11 @@ public class TaskNotificationWebSocket {
                 response.addProperty("type", "heartbeat_ack");
                 response.addProperty("timestamp", System.currentTimeMillis());
                 session.getBasicRemote().sendText(response.toString());
+            } else {
+                logger.debug("Unknown action from user {}: {}", userId, action);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error processing message from user {}: {}", userId, e.getMessage(), e);
         }
     }
 
@@ -66,7 +76,7 @@ public class TaskNotificationWebSocket {
     public void onClose(Session session) {
         String userId = (String) session.getUserProperties().get("userId");
         sessions.remove(session);
-        System.out.println("User " + userId + " disconnected from notifications. Total sessions: " + sessions.size());
+        logger.info("User {} disconnected from notifications. Total sessions: {}", userId, sessions.size());
     }
 
     @OnError
