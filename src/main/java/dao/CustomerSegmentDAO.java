@@ -1,7 +1,5 @@
 package dao;
 
-import util.DBContext;
-
-public class CustomerSegmentDAO  {
+public class CustomerSegmentDAO {
 
 }

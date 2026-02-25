@@ -1,7 +1,5 @@
 package dao;
 
-import util.DBContext;
-
-public class WardrobeDAO  {
+public class WardrobeDAO {
 
 }
