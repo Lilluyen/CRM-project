@@ -153,7 +153,7 @@
                     <span class="close-btn" onclick="toggleModal()">&times;</span>
                 </div>
 
-                <form id="addCustomerForm" method="post" action="/customers/create">
+                <form id="addCustomerForm" method="post" action="/customers/add-customer">
                     <div class="form-section">
                         <h3><i class="fas fa-id-card"></i> Thông tin cơ bản</h3>
                         <div class="grid-2">

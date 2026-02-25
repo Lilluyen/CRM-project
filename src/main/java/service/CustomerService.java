@@ -1,15 +1,16 @@
 package service;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
 import dao.CustomerDAO;
 import dao.CustomerMeasurementDAO;
 import dao.CustomerQueryDAO;
 import dao.CustomerStyleDAO;
-import java.util.List;
-
 import dto.CustomerCreateDTO;
 import dto.CustomerListDTO;
-import java.sql.Connection;
-import java.sql.SQLException;
+import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
 import model.StyleTag;
 import util.DBContext;
@@ -25,7 +26,7 @@ public class CustomerService {
                 CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
 
                 if (customerDAO.existsByPhone(dto.getPhone(), conn)) {
-                    throw new RuntimeException("Phone already exists");
+                    throw new DuplicatePhoneException("Phone already exists");
                 }
 
                 int newCustomerId = customerDAO.insertCustomer(CustomerMapper.toCustomer(dto, userId), conn);
