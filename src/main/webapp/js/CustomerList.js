@@ -1,3 +1,7 @@
+
+
+
+
 function toggleModal() {
     const modal = document.getElementById("customerModal");
     modal.style.display =

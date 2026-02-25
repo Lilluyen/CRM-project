@@ -1,22 +1,22 @@
 package controller.sale;
 
-import dto.CustomerCreateDTO;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+import dto.CustomerCreateDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import model.User;
 import service.CustomerService;
 
-@WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
+@WebServlet(name = "CreateCustomerController", urlPatterns = { "/customers/add-customer" })
 public class CreateCustomerController extends HttpServlet {
 
     private final CustomerService customerService = new CustomerService();
@@ -24,7 +24,7 @@ public class CreateCustomerController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // TODO Auto-generated method stub
-        
+        resp.sendRedirect(req.getContextPath() + "/customers");
     }
 
     @Override

@@ -61,18 +61,20 @@
                         <div class="sub">Managing ${fn:length(customerList)} customers & body profiles</div>
 
                         <div class="top-bar">
-                            <div>
-                                <div class="search-box">
-                                    <input type="text" id="searchInput" placeholder="Search by name, phone, or style..." />
-                                    <button class="btn btn-filter" onclick="applyFilters()">Filter</button>
+                            <div class="filter-section">
+                                <div>
+                                    <div class="search-box">
+                                        <input type="text" id="searchInput" placeholder="Search by name, phone, or style..." />
+                                        <button class="btn btn-filter" onclick="applyFilters()">Filter</button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="filter-buttons">
-                                <button class="filter-btn" onclick="toggleFilterTag('GOLD')">Gold Members</button>
-                                <button class="filter-btn" onclick="toggleFilterTag('HIGH_RETURN')">High Return</button>
-                                <button class="filter-btn" onclick="toggleFilterTag('NEW')">New Customers</button>
-                                <button class="filter-btn advanced" onclick="openAdvancedFilter()"><i class="fas fa-sliders-h"></i> Advanced</button>
+                                <div class="filter-buttons">
+                                    <button class="filter-btn" onclick="toggleFilterTag('GOLD')">Gold Members</button>
+                                    <button class="filter-btn" onclick="toggleFilterTag('HIGH_RETURN')">High Return</button>
+                                    <button class="filter-btn" onclick="toggleFilterTag('NEW')">New Customers</button>
+                                    <button class="filter-btn advanced" onclick="openAdvancedFilter()"><i class="fas fa-sliders-h"></i> Advanced</button>
+                                </div>
                             </div>
 
                             <button class="btn btn-add">+ Add New Customer</button>
@@ -98,7 +100,7 @@
                                             <td class="customer-info">
                                                 <div class="avatar">
                                                     <c:if test="${not empty c.name}">
-                                                        ${fn:toUpperCase(fn:substring(c.name,0,2))}
+                                                        ${fn:toUpperCase(fn:substring(c.name,0,1))}
                                                     </c:if>
                                                 </div>
                                                 <div>
@@ -312,200 +314,200 @@
             </div>
 
             <!-- ADVANCED FILTER MODAL -->
-<div id="advancedFilterModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Advanced Filter</h2>
-            <span class="close-btn" onclick="closeAdvancedFilter()">&times;</span>
-        </div>
-
-        <div class="form-section">
-            <div class="input-group">
-                <label>Loyalty Tier</label>
-                <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="loyaltyFilter" value="GOLD" />
-                        Gold
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="loyaltyFilter" value="SILVER" />
-                        Silver
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="loyaltyFilter" value="BRONZE" />
-                        Bronze
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="loyaltyFilter" value="BLACKLIST" />
-                        Blacklist
-                    </label>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Body Shape</label>
-                <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="bodyShapeFilter" value="HOURGLASS" />
-                        Hourglass
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="bodyShapeFilter" value="PEAR" />
-                        Pear
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="bodyShapeFilter" value="APPLE" />
-                        Apple
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="bodyShapeFilter" value="RECTANGLE" />
-                        Rectangle
-                    </label>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Preferred Size</label>
-                <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="sizeFilter" value="S" />
-                        Size S
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="sizeFilter" value="M" />
-                        Size M
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="sizeFilter" value="L" />
-                        Size L
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="sizeFilter" value="XL" />
-                        Size XL
-                    </label>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Return Rate</label>
-                <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="returnRateFilter" value="HIGH" />
-                        High (> 30%)
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="returnRateFilter" value="NORMAL" />
-                        Normal (≤ 30%)
-                    </label>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Style Tags</label>
-                <div class="checkbox-group checkbox-group-3">
-                    <c:forEach items="${styleTagList}" var="style">
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="styleTagFilter" value="${style.tagName}" />
-                            ${style.tagName}
-                        </label>
-                    </c:forEach>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="resetAdvancedFilter()">Reset</button>
-            <button type="button" class="btn-cancel" onclick="closeAdvancedFilter()">Cancel</button>
-            <button type="button" class="btn-save" onclick="applyAdvancedFilter()">Apply Filter</button>
-        </div>
-    </div>
-</div>
-
-
-<div id="customerPreview" class="preview-panel">
-    <div class="preview-content">
-
-        <div class="preview-header">
-            <h3>Customer Preview</h3>
-            <span class="close-preview" onclick="closePreview()">✕</span>
-        </div>
-
-        <div class="preview-body" id="previewViewMode">
-            <div class="preview-section">
-                <h4>Basic Information</h4>
-                <div class="preview-grid">
-                    <div class="preview-item">
-                        <span class="preview-label">Name</span>
-                        <span id="previewName" class="preview-value">-</span>
+            <div id="advancedFilterModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Advanced Filter</h2>
+                        <span class="close-btn" onclick="closeAdvancedFilter()">&times;</span>
                     </div>
-                    <div class="preview-item">
-                        <span class="preview-label">Phone</span>
-                        <span id="previewPhone" class="preview-value">-</span>
+
+                    <div class="form-section">
+                        <div class="input-group">
+                            <label>Loyalty Tier</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="loyaltyFilter" value="GOLD" />
+                                    Gold
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="loyaltyFilter" value="SILVER" />
+                                    Silver
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="loyaltyFilter" value="BRONZE" />
+                                    Bronze
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="loyaltyFilter" value="BLACKLIST" />
+                                    Blacklist
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Body Shape</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="bodyShapeFilter" value="HOURGLASS" />
+                                    Hourglass
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="bodyShapeFilter" value="PEAR" />
+                                    Pear
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="bodyShapeFilter" value="APPLE" />
+                                    Apple
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="bodyShapeFilter" value="RECTANGLE" />
+                                    Rectangle
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Preferred Size</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="sizeFilter" value="S" />
+                                    Size S
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="sizeFilter" value="M" />
+                                    Size M
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="sizeFilter" value="L" />
+                                    Size L
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="sizeFilter" value="XL" />
+                                    Size XL
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Return Rate</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="returnRateFilter" value="HIGH" />
+                                    High (> 30%)
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="returnRateFilter" value="NORMAL" />
+                                    Normal (≤ 30%)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Style Tags</label>
+                            <div class="checkbox-group checkbox-group-3">
+                                <c:forEach items="${styleTagList}" var="style">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="styleTagFilter" value="${style.tagName}" />
+                                        ${style.tagName}
+                                    </label>
+                                </c:forEach>
+                            </div>
+                        </div>
                     </div>
-                    <div class="preview-item">
-                        <span class="preview-label">Email</span>
-                        <span id="previewEmail" class="preview-value">-</span>
-                    </div>
-                    <div class="preview-item">
-                        <span class="preview-label">Gender</span>
-                        <span id="previewGender" class="preview-value">-</span>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="resetAdvancedFilter()">Reset</button>
+                        <button type="button" class="btn-cancel" onclick="closeAdvancedFilter()">Cancel</button>
+                        <button type="button" class="btn-save" onclick="applyAdvancedFilter()">Apply Filter</button>
                     </div>
                 </div>
             </div>
 
-            <div class="preview-section">
-                <h4>Fit Profile</h4>
-                <div class="preview-grid">
-                    <div class="preview-item">
-                        <span class="preview-label">Preferred Size</span>
-                        <span id="previewSize" class="preview-value">-</span>
+
+            <div id="customerPreview" class="preview-panel">
+                <div class="preview-content">
+
+                    <div class="preview-header">
+                        <h3>Customer Preview</h3>
+                        <span class="close-preview" onclick="closePreview()">✕</span>
                     </div>
-                    <div class="preview-item">
-                        <span class="preview-label">Body Shape</span>
-                        <span id="previewBodyShape" class="preview-value">-</span>
+
+                    <div class="preview-body" id="previewViewMode">
+                        <div class="preview-section">
+                            <h4>Basic Information</h4>
+                            <div class="preview-grid">
+                                <div class="preview-item">
+                                    <span class="preview-label">Name</span>
+                                    <span id="previewName" class="preview-value">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Phone</span>
+                                    <span id="previewPhone" class="preview-value">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Email</span>
+                                    <span id="previewEmail" class="preview-value">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Gender</span>
+                                    <span id="previewGender" class="preview-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-section">
+                            <h4>Fit Profile</h4>
+                            <div class="preview-grid">
+                                <div class="preview-item">
+                                    <span class="preview-label">Preferred Size</span>
+                                    <span id="previewSize" class="preview-value">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Body Shape</span>
+                                    <span id="previewBodyShape" class="preview-value">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Height (cm)</span>
+                                    <span id="previewHeight" class="preview-value">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Weight (kg)</span>
+                                    <span id="previewWeight" class="preview-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-section">
+                            <h4>Customer Status</h4>
+                            <div class="preview-grid">
+                                <div class="preview-item">
+                                    <span class="preview-label">Loyalty Tier</span>
+                                    <span id="previewLoyalty" class="preview-value loyalty-badge">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">RFM Score</span>
+                                    <span id="previewRFM" class="preview-value">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Return Rate</span>
+                                    <span id="previewReturnRate" class="preview-value">-</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="preview-item">
-                        <span class="preview-label">Height (cm)</span>
-                        <span id="previewHeight" class="preview-value">-</span>
+
+                    <!-- Edit Mode -->
+                    <div class="preview-body" id="previewEditMode" style="display: none;">
                     </div>
-                    <div class="preview-item">
-                        <span class="preview-label">Weight (kg)</span>
-                        <span id="previewWeight" class="preview-value">-</span>
+
+                    <div class="preview-footer" id="previewViewFooter">
                     </div>
+
+                    <div class="preview-footer" id="previewEditFooter" style="display: none;">
+                    </div>
+
                 </div>
             </div>
-
-            <div class="preview-section">
-                <h4>Customer Status</h4>
-                <div class="preview-grid">
-                    <div class="preview-item">
-                        <span class="preview-label">Loyalty Tier</span>
-                        <span id="previewLoyalty" class="preview-value loyalty-badge">-</span>
-                    </div>
-                    <div class="preview-item">
-                        <span class="preview-label">RFM Score</span>
-                        <span id="previewRFM" class="preview-value">-</span>
-                    </div>
-                    <div class="preview-item">
-                        <span class="preview-label">Return Rate</span>
-                        <span id="previewReturnRate" class="preview-value">-</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Mode -->
-        <div class="preview-body" id="previewEditMode" style="display: none;">
-        </div>
-
-        <div class="preview-footer" id="previewViewFooter">
-        </div>
-
-        <div class="preview-footer" id="previewEditFooter" style="display: none;">
-        </div>
-
-    </div>
-</div>
 
 
 
@@ -513,16 +515,19 @@
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
             <script src="${pageContext.request.contextPath}/js/CustomerList.js"></script>
             <script>
-                    /* ===== Trigger từ server ===== */
-                    const status = "${param.status}";
+                            /* ===== Trigger từ server ===== */
+                            const status = "${param.status}";
 
-                    if (status === "success") {
-                        showToast("success", "Create customer successfully");
-                    }
+                            if (status === "success") {
+                                showToast("success", "Create customer successfully");
+                            }
 
-                    if (status === "failed") {
-                        showToast("error", "Create customer failed");
-                    }
+                            if (status === "failed") {
+                                showToast("error", "Create customer failed");
+                            }
+
+
+                            
             </script>
         </body>
     </html>
