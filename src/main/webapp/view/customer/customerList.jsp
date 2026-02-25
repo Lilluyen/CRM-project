@@ -107,10 +107,7 @@
                                                 <span class="tag">${tag}</span>
                                             </c:forEach>
 
-                                            <!-- Nếu còn tag khác thì hiển thị dấu ... -->
-                                            <c:if test="${fn:length(c.styleTags) > 2}">
-                                                <span class="more">...</span>
-                                            </c:if>
+                                            
                                         </td>
 
                                         <!-- Return -->
