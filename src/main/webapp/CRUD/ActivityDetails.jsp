@@ -42,8 +42,8 @@
                 CRM System
             </div>
             <div class="flex gap-4">
-                <a href="/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
-                <a href="/activities/list" class="text-slate-600 dark:text-slate-400 hover:text-primary">Activities</a>
+                <a href="${pageContext.request.contextPath}/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
+                <a href="${pageContext.request.contextPath}/activities/list" class="text-slate-600 dark:text-slate-400 hover:text-primary">Activities</a>
             </div>
         </div>
     </nav>
@@ -52,7 +52,7 @@
 
         <!-- Breadcrumb -->
         <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-6">
-            <a href="/activities/list" class="hover:text-primary">Activities</a>
+            <a href="${pageContext.request.contextPath}/activities/list" class="hover:text-primary">Activities</a>
             <span class="material-symbols-outlined text-base">chevron_right</span>
             <span class="text-slate-900 dark:text-white">Activity Details</span>
         </div>
@@ -73,12 +73,12 @@
                     <p class="text-slate-500 mt-2">Activity ID: ${activity.activityId}</p>
                 </div>
                 <div class="flex gap-2">
-                    <a href="/CRUD/ActivityForm.jsp?id=${activity.activityId}&action=edit" 
+                    <a href="${pageContext.request.contextPath}/CRUD/ActivityForm.jsp?id=${activity.activityId}&action=edit" 
                        class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                         <span class="material-symbols-outlined">edit</span>
                         Edit
                     </a>
-                    <a href="/activities/list" 
+                    <a href="${pageContext.request.contextPath}/activities/list" 
                        class="flex items-center gap-2 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 transition">
                         <span class="material-symbols-outlined">arrow_back</span>
                         Back
