@@ -64,7 +64,7 @@ public class CustomerQueryDAO  {
                 """;
 
         try (
-                PreparedStatement stm = getConnection().prepareStatement(sql);
+                PreparedStatement stm = connection.prepareStatement(sql);
                 ResultSet rs = stm.executeQuery();) {
             while (rs.next()) {
                 CustomerListDTO dto = new CustomerListDTO();
