@@ -8,6 +8,6 @@
     <body>
         <h2>404 - Không tìm thấy trang</h2>
         <p>Đường dẫn bạn nhập không tồn tại.</p>
-        <a href="<%= request.getContextPath() %>/customer/list">Về trang chủ</a>
+        <a href="<%= request.getContextPath() %>/admin.jsp">Về trang chủ</a>
     </body>
 </html>
