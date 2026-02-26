@@ -66,4 +66,22 @@ public class CustomerDAO {
         }
     }
 
+    public Customer getCustomerById(int customerId, Connection connection) throws SQLException {
+        String sql = "SELECT * FROM Customers WHERE customer_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Customer customer = new Customer();
+                    customer.setCustomerId(rs.getInt("customer_id"));
+                    customer.setName(rs.getString("name"));
+                    customer.setPhone(rs.getString("phone"));
+                    customer.setEmail(rs.getString("email"));
+                    return customer;
+                }
+            }
+        }
+        return null;
+    }
+
 }

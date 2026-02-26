@@ -41,8 +41,8 @@
                 CRM System
             </div>
             <div class="flex gap-4">
-                <a href="/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
-                <a href="/activities/list" class="text-slate-600 dark:text-slate-400 hover:text-primary">Activities</a>
+                <a href="${pageContext.request.contextPath}/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
+                <a href="${pageContext.request.contextPath}/activities/list" class="text-slate-600 dark:text-slate-400 hover:text-primary">Activities</a>
             </div>
         </div>
     </nav>
@@ -51,7 +51,7 @@
 
         <!-- Breadcrumb -->
         <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-6">
-            <a href="/activities/list" class="hover:text-primary">Activities</a>
+            <a href="${pageContext.request.contextPath}/activities/list" class="hover:text-primary">Activities</a>
             <span class="material-symbols-outlined text-base">chevron_right</span>
             <span class="text-slate-900 dark:text-white">
                 <c:choose>
@@ -93,8 +93,17 @@
             </div>
 
             <!-- Activity Form -->
+            <c:choose>
+                <c:when test="${param.action == 'edit'}">
+                    <c:set var="formAction" value="${pageContext.request.contextPath}/activities/update" />
+                </c:when>
+                <c:otherwise>
+                    <c:set var="formAction" value="${pageContext.request.contextPath}/activities/create" />
+                </c:otherwise>
+            </c:choose>
+
             <form id="activityForm" method="post" 
-                  action="<c:choose><c:when test="${param.action == \"edit\"}">/activities/update</c:when><c:otherwise>/activities/create</c:otherwise></c:choose>"
+                  action="${formAction}"
                   class="space-y-6">
 
                 <!-- Hidden Activity ID for Edit -->
@@ -194,21 +203,7 @@
                         <p class="text-xs text-slate-500 mt-1">The ID of the related entity</p>
                     </div>
 
-                    <!-- Created By -->
-                    <div>
-                        <label for="createdBy" class="block text-sm font-medium text-slate-900 dark:text-slate-200 mb-2">
-                            <span class="text-red-500">*</span> Created By (User ID)
-                        </label>
-                        <input
-                            type="number"
-                            id="createdBy"
-                            name="createdBy"
-                            required
-                            placeholder="e.g., 1"
-                            class="w-full h-12 px-4 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-                        />
-                        <p class="text-xs text-slate-500 mt-1">The user ID who created this activity</p>
-                    </div>
+                    <!-- Created By is auto-filled from session; no input shown -->
 
                 </div>
 
@@ -229,7 +224,7 @@
                         </c:choose>
                     </button>
                     <a
-                        href="/activities/list"
+                        href="${pageContext.request.contextPath}/activities/list"
                         class="flex-1 h-12 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-300 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2"
                     >
                         <span class="material-symbols-outlined">close</span>
@@ -263,7 +258,6 @@
             const subject = document.getElementById('subject').value.trim();
             const description = document.getElementById('description').value.trim();
             const relatedId = document.getElementById('relatedId').value;
-            const createdBy = document.getElementById('createdBy').value;
 
             if (!subject) {
                 e.preventDefault();
@@ -283,11 +277,7 @@
                 return;
             }
 
-            if (!createdBy || createdBy <= 0) {
-                e.preventDefault();
-                alert('Please enter a valid user ID');
-                return;
-            }
+            // createdBy is provided by the server from session, no client input required
         });
     </script>
 
