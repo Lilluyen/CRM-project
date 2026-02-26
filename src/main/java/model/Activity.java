@@ -14,20 +14,22 @@ public class Activity {
     private Integer activityId;
     private String relatedType;
     private Integer relatedId;
+    private String relatedName;
     private String activityType;
     private String subject;
     private String description;
-    private Integer createdBy;
+    private User createdBy;
     private java.time.LocalDateTime activityDate;
     private java.time.LocalDateTime createdAt;
 
     public Activity() {
     }
 
-    public Activity(Integer activityId, String relatedType, Integer relatedId, String activityType, String subject, String description, Integer createdBy, LocalDateTime activityDate, LocalDateTime createdAt) {
+    public Activity(Integer activityId, String relatedType, Integer relatedId, String relatedName, String activityType, String subject, String description, User createdBy, LocalDateTime activityDate, LocalDateTime createdAt) {
         this.activityId = activityId;
         this.relatedType = relatedType;
         this.relatedId = relatedId;
+        this.relatedName = relatedName;
         this.activityType = activityType;
         this.subject = subject;
         this.description = description;
@@ -60,6 +62,14 @@ public class Activity {
         this.relatedId = relatedId;
     }
 
+    public String getRelatedName() {
+        return relatedName;
+    }
+
+    public void setRelatedName(String relatedName) {
+        this.relatedName = relatedName;
+    }
+
     public String getActivityType() {
         return activityType;
     }
@@ -84,11 +94,11 @@ public class Activity {
         this.description = description;
     }
 
-    public Integer getCreatedBy() {
+    public User getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Integer createdBy) {
+    public void setCreatedBy(User createdBy) {
         this.createdBy = createdBy;
     }
 

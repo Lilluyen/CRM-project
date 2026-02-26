@@ -20,6 +20,6 @@ public class CampaignReportController extends HttpServlet {
 
         CampaignReport report = reportService.generateReport(campaignId);
         request.setAttribute("report", report);
-        request.getRequestDispatcher("/marketing/campaign_report.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/marketing/campaign_report.jsp").forward(request, response);
     }
 }

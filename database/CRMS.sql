@@ -6,42 +6,51 @@ SQL SERVER – UNICODE / VIETNAMESE SAFE
 /* ================================
 DATABASE
 ================================ */
+USE master;
+GO
+
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'CRM_System')
+BEGIN
+    ALTER DATABASE CRM_System SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE CRM_System;
+END
+GO
+
 CREATE DATABASE CRM_System;
 GO
+
 USE CRM_System;
 GO
 
 /* ================================
 USERS & ROLES
 ================================ */
-CREATE TABLE Users (
-user_id        INT IDENTITY PRIMARY KEY,
-username       VARCHAR(50)  NOT NULL,
-password_hash  VARCHAR(255) NOT NULL,
-email          VARCHAR(100),
-full_name      NVARCHAR(100),
-phone          VARCHAR(20),
-status         VARCHAR(20),
-created_at     DATETIME DEFAULT GETDATE(),
-updated_at     DATETIME,
-last_login_at  DATETIME
-);
-
 CREATE TABLE Roles (
-role_id     INT IDENTITY PRIMARY KEY,
-role_name   VARCHAR(50) NOT NULL,
-description NVARCHAR(255),
-created_at  DATETIME DEFAULT GETDATE()
+    role_id     INT IDENTITY PRIMARY KEY,
+    role_name   VARCHAR(50) NOT NULL UNIQUE,
+    description NVARCHAR(255),
+    created_at  DATETIME DEFAULT GETDATE()
 );
 
-CREATE TABLE User_Roles (
-user_id     INT NOT NULL,
-role_id     INT NOT NULL,
-assigned_at DATETIME DEFAULT GETDATE(),
-CONSTRAINT pk_user_roles PRIMARY KEY (user_id, role_id),
-CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES Users(user_id),
-CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES Roles(role_id)
+CREATE TABLE Users (
+    user_id        INT IDENTITY PRIMARY KEY,
+    username       VARCHAR(50)  NOT NULL UNIQUE,
+    password_hash  VARCHAR(255) NOT NULL,
+    email          VARCHAR(100) UNIQUE,
+    full_name      NVARCHAR(100),
+    phone          VARCHAR(20),
+    
+    role_id        INT NOT NULL,  -- 👈 Gắn role trực tiếp
+    
+    status         VARCHAR(20) DEFAULT 'ACTIVE',
+    created_at     DATETIME DEFAULT GETDATE(),
+    updated_at     DATETIME,
+    last_login_at  DATETIME,
+
+    CONSTRAINT fk_users_role 
+        FOREIGN KEY (role_id) REFERENCES Roles(role_id)
 );
+
 
 /* ================================
 CUSTOMERS & CONTACTS
@@ -74,6 +83,17 @@ CREATE TABLE Customers (
     updated_at     DATETIME,
     
     CONSTRAINT fk_customers_owner FOREIGN KEY (owner_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE CustomerOTP (
+    customer_id INT PRIMARY KEY,
+    otp_hash NVARCHAR(255) NOT NULL,
+    otp_expired_at DATETIME2 NOT NULL,
+    failed_attempt INT DEFAULT 0,
+    send_count INT DEFAULT 0,
+    last_send DATETIME2 DEFAULT SYSDATETIME(),
+    CONSTRAINT fk_customerotp_customer
+        FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
 
 /* =============================================================

@@ -45,36 +45,36 @@ public class LoginController extends HttpServlet {
         }
 
         req.getSession().setAttribute("user", user);
-        req.getSession().setAttribute("roles", user.getRoles());
+        req.getSession().setAttribute("roles", user.getRole().getRoleId());
+        userDAO.updateLastLogin(user.getUserId());
 
-        String redirectUrl = getDashboardByRole(user.getRoles());
+        String redirectUrl = getDashboardByRole(user.getRole());
         resp.sendRedirect(req.getContextPath() + redirectUrl);
 
     }
 
-    private String getDashboardByRole(List<Role> roles) {
+    private String getDashboardByRole(Role role) {
 
-        for (Role role : roles) {
-            String roleName = role.getRoleName();
-
-            if (roleName == null)
-                continue;
-
-            switch (roleName.toUpperCase()) {
-                case "ADMIN":
-                    return "/admin.jsp";
-                case "SALES":
-                    return "/sale.jsp";
-                case "MARKETING":
-                    return "/marketing.jsp";
-                case "CS":
-                    return "/cs.jsp";
-                case "Customer":
-                    return "/customer.jsp";
-            }
+        if (role == null || role.getRoleName() == null) {
+            return "/dashboard";
         }
 
-        // fallback nếu role lạ
-        return "/dashboard";
+        switch (role.getRoleName().toUpperCase()) {
+
+            case "ADMIN":
+                return "/admin.jsp";
+
+            case "SALES":
+                return "/sale.jsp";
+
+            case "MARKETING":
+                return "/marketing.jsp";
+
+            case "CS":
+                return "/cs.jsp";
+
+            default:
+                return "/dashboard";
+        }
     }
 }

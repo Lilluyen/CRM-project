@@ -14,7 +14,7 @@ import model.StyleTag;
 import service.CustomerService;
 import util.ControllerUltil;
 
-@WebServlet(name = "CustomerListController", urlPatterns = { "/customer/list-customer" })
+@WebServlet(name = "CustomerListController", urlPatterns = { "/customers" })
 public class CustomerListController extends HttpServlet {
 
     @Override
@@ -48,22 +48,20 @@ public class CustomerListController extends HttpServlet {
             List<StyleTag> styleTagList = customerService.getListStyleTags();
             request.setAttribute("styleTagList", styleTagList);
             request.setAttribute("customerList", customerList);
-            request.getRequestDispatcher("/view/customer/customerList.jsp")
-                    .forward(request, response);
+            request.setAttribute("pageTitle", "Customer List | Clothes CRM");
+            request.setAttribute("contentPage", "customer/customerList.jsp");
 
-            return;
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
 
         } catch (SQLException e) {
             log("DB error", e);
             ControllerUltil.forwardError(request, response,
                     "Database error occurred while retrieving customer list.");
-            return;
 
         } catch (ServletException | IOException e) {
             log("View error", e);
             ControllerUltil.forwardError(request, response,
                     "Internal server error occurred while processing your request.");
-            return;
         }
     }
 }

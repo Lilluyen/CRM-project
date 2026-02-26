@@ -3,6 +3,7 @@ package controller.marketing;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,10 +11,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Campaign;
+import model.User;
 import service.CampaignService;
 
 @WebServlet("/marketing/campaign")
 public class CampaignController extends HttpServlet {
+
     private CampaignService campaignService = new CampaignService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -22,15 +25,23 @@ public class CampaignController extends HttpServlet {
         if ("create".equals(action)) {
             String name = request.getParameter("name");
             String description = request.getParameter("description");
-            BigDecimal budget = new BigDecimal(request.getParameter("budget"));
+            String budgetStr = request.getParameter("budget");
+
+            BigDecimal budget;
+
+            try {
+                budget = new BigDecimal(budgetStr);
+            } catch (Exception e) {
+                budget = BigDecimal.ZERO;
+            }
             LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
             LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
             String channel = request.getParameter("channel");
-            int createdBy = (Integer) request.getSession().getAttribute("userId");
+            int createdBy = ((User) request.getSession().getAttribute("user")).getUserId();
 
-            Campaign campaign = new Campaign(0, name, description, budget, startDate, endDate, 
-                                            channel, "ACTIVE", createdBy, null, null);
-            
+            Campaign campaign = new Campaign(0, name, description, budget, startDate, endDate,
+                    channel, "ACTIVE", createdBy, null, null);
+
             try {
                 int campaignId = campaignService.createCampaign(campaign);
                 response.sendRedirect("campaign?action=list");
@@ -48,14 +59,14 @@ public class CampaignController extends HttpServlet {
             String channel = request.getParameter("channel");
             String status = request.getParameter("status");
 
-            Campaign campaign = new Campaign(campaignId, name, description, budget, startDate, 
-                                            endDate, channel, status, 0, null, null);
-            
+            Campaign campaign = new Campaign(campaignId, name, description, budget, startDate,
+                    endDate, channel, status, 0, null, null);
+
             if (campaignService.updateCampaign(campaign)) {
                 response.sendRedirect("campaign?action=detail&id=" + campaignId);
             } else {
                 request.setAttribute("error", "Update failed");
-                request.getRequestDispatcher("/marketing/campaign_form.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
             }
         }
     }
@@ -64,14 +75,51 @@ public class CampaignController extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("list".equals(action) || action == null) {
-            var campaigns = campaignService.getAllCampaigns();
+            // ===== FIX: Lấy parameters search & status =====
+            String searchName = request.getParameter("search");
+            String status = request.getParameter("status");
+
+            List<Campaign> campaigns;
+
+            // Nếu có search hoặc filter status thì dùng search
+            if ((searchName != null && !searchName.trim().isEmpty())
+                    || (status != null && !status.trim().isEmpty())) {
+                campaigns = campaignService.searchCampaigns(searchName, status);
+
+                // ===== NEW: Nếu tìm thấy đúng 1 kết quả, auto-forward đến detail =====
+                if (campaigns.size() == 1) {
+                    Campaign campaign = campaigns.get(0);
+                    request.setAttribute("campaign", campaign);
+                    request.getRequestDispatcher("/view/marketing/campaign_detail.jsp").forward(request, response);
+                    return;
+                }
+
+            } else {
+                // Ngược lại lấy tất cả campaigns
+                campaigns = campaignService.getAllCampaigns();
+            }
+
             request.setAttribute("campaigns", campaigns);
-            request.getRequestDispatcher("/marketing/campaign_list.jsp").forward(request, response);
+            request.setAttribute("searchName", searchName);
+            request.setAttribute("filterStatus", status);
+            request.getRequestDispatcher("/view/marketing/campaign_list.jsp").forward(request, response);
         } else if ("detail".equals(action)) {
             int campaignId = Integer.parseInt(request.getParameter("id"));
-            var campaign = campaignService.getCampaignById(campaignId);
+            Campaign campaign = campaignService.getCampaignById(campaignId);
             request.setAttribute("campaign", campaign);
-            request.getRequestDispatcher("/marketing/campaign_detail.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/campaign_detail.jsp").forward(request, response);
+        } else if ("create".equals(action)) {
+            request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
+        } else if ("edit".equals(action)) {
+            int campaignId = Integer.parseInt(request.getParameter("id"));
+            Campaign campaign = campaignService.getCampaignById(campaignId);
+            request.setAttribute("campaign", campaign);
+            request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
         }
+        // else if ("delete".equals(action)) {
+        //     int campaignId = Integer.parseInt(request.getParameter("id"));
+        //     campaignService.deleteCampaign(campaignId);
+        //     response.sendRedirect("campaign?action=list");
+        // }
     }
 }

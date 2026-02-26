@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import model.Customer;
+import util.DBContext;
 
 public class CustomerDAO {
 
@@ -64,6 +65,55 @@ public class CustomerDAO {
                 return rs.next();
             }
         }
+    }
+
+    public Customer getCustomerById(int customerId, Connection connection) throws SQLException {
+        String sql = "SELECT * FROM Customers WHERE customer_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Customer customer = new Customer();
+                    customer.setCustomerId(rs.getInt("customer_id"));
+                    customer.setName(rs.getString("name"));
+                    customer.setPhone(rs.getString("phone"));
+                    customer.setEmail(rs.getString("email"));
+                    return customer;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Customer findByEmail(String email) throws SQLException {
+
+        String sql = "SELECT * FROM Customers WHERE email = ?";
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+            ps.setString(1, email);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Customer customer = new Customer();
+                    customer.setCustomerId(rs.getInt("customer_id"));
+                    customer.setName(rs.getString("name"));
+                    customer.setPhone(rs.getString("phone"));
+                    customer.setEmail(rs.getString("email"));
+
+                    if (rs.getDate("birthday") != null) {
+                        customer.setBirthday(rs.getDate("birthday").toLocalDate());
+                    }
+
+                    customer.setGender(rs.getString("gender"));
+                    customer.setAddress(rs.getString("address"));
+                    customer.setSocialLink(rs.getString("social_link"));
+
+                    return customer;
+                }
+            }
+        }
+
+        return null;
     }
 
 }

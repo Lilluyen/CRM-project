@@ -30,7 +30,8 @@ public class NeedLoginFilter extends HttpFilter {
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
                 || path.startsWith("/fonts/")
-                || path.startsWith("/assets/");
+                || path.startsWith("/assets/")
+                || path.startsWith("/customer/");
 
         if (isPublic) {
             chain.doFilter(request, response);

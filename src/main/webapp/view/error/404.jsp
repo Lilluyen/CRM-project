@@ -6,8 +6,8 @@
         <title>Page Not Found</title>
     </head>
     <body>
-        <h2>404 - Không tìm thấy trang</h2>
-        <p>Đường dẫn bạn nhập không tồn tại.</p>
-        <a href="<%= request.getContextPath() %>/customer/list">Về trang chủ</a>
+        <h2>404 - Page Not Found</h2>
+        <p>The path you entered does not exist.</p>
+        <a href="<%= request.getContextPath() %>/admin.jsp">Back to Home</a>
     </body>
 </html>
