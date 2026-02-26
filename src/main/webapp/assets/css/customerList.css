@@ -22,7 +22,7 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Sidebar Styling */
+/* Sidebar Styling
 .sidebar {
     background-color: var(--primary-navy);
     min-height: 100vh;
@@ -56,7 +56,7 @@ body {
 .sidebar ul li a:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
-}
+} */
 
 /* Content Area */
 .content {
@@ -199,7 +199,7 @@ td {
 
 th:nth-child(1),
 td:nth-child(1) {
-    width: 204.661px;
+    width: 225.661px;
 }
 
 /* Customer */
@@ -217,7 +217,7 @@ td:nth-child(3) {
 /* Fit */
 th:nth-child(4),
 td:nth-child(4) {
-    width: 189.401px;
+    width: 195.401px;
 }
 
 /* Styles */
@@ -1091,3 +1091,66 @@ td:nth-child(7) {
     height: 100%;
     z-index: -1;
 }
+
+/* ...existing code... */
+
+/* ===== PAGINATION STYLING ===== */
+#paginationControls {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+#paginationControls .btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+#paginationControls .btn-light {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+#paginationControls .btn-light:hover:not(:disabled) {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+#paginationControls .btn-light:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#paginationControls .btn-primary {
+    background: var(--accent-blue);
+    color: white;
+    border: 1px solid var(--accent-blue);
+}
+
+#paginationControls .btn-outline-secondary {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+#paginationControls .btn-outline-secondary:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+/* ...existing code... */

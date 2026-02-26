@@ -145,7 +145,8 @@ toast.addEventListener("mouseleave", () => {
 
 
 function viewCustomer(customerId) {
-    window.location.href = `${window.location.origin}/customer/detail?customerId=${customerId}`;
+    const contextPath = window.location.pathname.split("/")[1];
+    window.location.href = `/${contextPath}/customer/detail?customerId=${customerId}`;
 }
 
 // ===== PREVIEW FUNCTIONS =====
@@ -421,10 +422,6 @@ function matchesFilters(row) {
         if (returnRate <= 30) return false;
     }
 
-    // New Customers tag filter (có thể implement based on date)
-    if (activeFilters.tags.includes('NEW')) {
-        // TODO: Implement based on customer creation date
-    }
 
     // Style Tag filter
     if (activeFilters.styleTag.length > 0) {
@@ -445,3 +442,5 @@ document.addEventListener('DOMContentLoaded', function () {
         searchInput.addEventListener('keyup', applyFilters);
     }
 });
+
+
