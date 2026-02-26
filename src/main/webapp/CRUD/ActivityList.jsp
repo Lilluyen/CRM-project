@@ -42,8 +42,8 @@
                 CRM System
             </div>
             <div class="flex gap-4">
-                <a href="/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
-                <a href="/activities/list" class="text-primary font-medium">Activities</a>
+                <a href="${pageContext.request.contextPath}/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
+                <a href="${pageContext.request.contextPath}/activities/list" class="text-primary font-medium">Activities</a>
             </div>
         </div>
     </nav>
@@ -56,7 +56,7 @@
                 <h1 class="text-3xl font-bold dark:text-white">Activities</h1>
                 <p class="text-slate-500 mt-1">Total: ${totalActivities} activities</p>
             </div>
-            <a href="/CRUD/ActivityForm.jsp" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
+            <a href="${pageContext.request.contextPath}/CRUD/ActivityForm.jsp" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                 <span class="material-symbols-outlined">add</span>
                 New Activity
             </a>
@@ -109,11 +109,11 @@
                                         </td>
                                         <td class="px-6 py-4 text-sm">
                                             <div class="flex gap-2">
-                                                <a href="/activities/details?id=${activity.activityId}" 
+                                                <a href="${pageContext.request.contextPath}/activities/details?id=${activity.activityId}" 
                                                    class="text-primary hover:text-primary/80 transition flex items-center gap-1">
                                                     <span class="material-symbols-outlined text-base">visibility</span>
                                                 </a>
-                                                <a href="/CRUD/ActivityForm.jsp?id=${activity.activityId}&action=edit" 
+                                                <a href="${pageContext.request.contextPath}/CRUD/ActivityForm.jsp?id=${activity.activityId}&action=edit" 
                                                    class="text-primary hover:text-primary/80 transition flex items-center gap-1">
                                                     <span class="material-symbols-outlined text-base">edit</span>
                                                 </a>
@@ -132,7 +132,7 @@
                         </div>
                         <h3 class="text-lg font-semibold dark:text-white mb-2">No Activities Found</h3>
                         <p class="text-slate-500 dark:text-slate-400 mb-4">Start by creating your first activity</p>
-                        <a href="/CRUD/ActivityForm.jsp" class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
+                        <a href="${pageContext.request.contextPath}/CRUD/ActivityForm.jsp" class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                             <span class="material-symbols-outlined">add</span>
                             Create Activity
                         </a>
