@@ -82,7 +82,7 @@ public class CustomerVerifyOtpController extends HttpServlet {
 
         if (valid) {
 
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(request.getContextPath() + "/customer/my-tickets");
 
         } else {
 
