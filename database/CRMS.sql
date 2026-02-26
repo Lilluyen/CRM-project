@@ -51,6 +51,7 @@ CREATE TABLE Users (
         FOREIGN KEY (role_id) REFERENCES Roles(role_id)
 );
 
+
 /* ================================
 CUSTOMERS & CONTACTS
 ================================ */
@@ -82,6 +83,17 @@ CREATE TABLE Customers (
     updated_at     DATETIME,
     
     CONSTRAINT fk_customers_owner FOREIGN KEY (owner_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE CustomerOTP (
+    customer_id INT PRIMARY KEY,
+    otp_hash NVARCHAR(255) NOT NULL,
+    otp_expired_at DATETIME2 NOT NULL,
+    failed_attempt INT DEFAULT 0,
+    send_count INT DEFAULT 0,
+    last_send DATETIME2 DEFAULT SYSDATETIME(),
+    CONSTRAINT fk_customerotp_customer
+        FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
 
 /* =============================================================
