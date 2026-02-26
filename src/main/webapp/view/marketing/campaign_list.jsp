@@ -196,7 +196,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/">
-                <i class="bi bi-briefcase-fill"></i> CRM-Project
+                <i class="bi bi-graph-up"></i> CRM System
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -217,6 +217,13 @@
                         <a class="nav-link" href="${pageContext.request.contextPath}/marketing/report">
                             <i class="bi bi-graph-up"></i> Reports
                         </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> Marketing
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">              
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
                     </li>
                 </ul>
             </div>
