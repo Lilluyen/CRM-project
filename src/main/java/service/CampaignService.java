@@ -37,4 +37,11 @@ public class CampaignService {
     public List<Campaign> getActiveCampaigns() {
         return campaignDAO.getCampaignByStatus("ACTIVE");
     }
+
+    /**
+     * Tìm campaign theo tên và/hoặc status
+     */
+    public List<Campaign> searchCampaigns(String searchName, String status) {
+        return campaignDAO.searchCampaigns(searchName, status);
+    }
 }
