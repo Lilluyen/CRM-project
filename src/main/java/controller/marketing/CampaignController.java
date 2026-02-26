@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Campaign;
+import model.User;
 import service.CampaignService;
 
 @WebServlet("/marketing/campaign")
@@ -27,7 +28,7 @@ public class CampaignController extends HttpServlet {
             LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
             LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
             String channel = request.getParameter("channel");
-            int createdBy = (Integer) request.getSession().getAttribute("userId");
+            int createdBy = ((User) request.getSession().getAttribute("user")).getUserId();
 
             Campaign campaign = new Campaign(0, name, description, budget, startDate, endDate,
                     channel, "ACTIVE", createdBy, null, null);
