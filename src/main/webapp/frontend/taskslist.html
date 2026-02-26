@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+<meta name="description" content="POS - Bootstrap Admin Template">
+<meta name="keywords" content="admin, estimates, bootstrap, business, corporate, creative, invoice, html5, responsive, Projects">
+<meta name="author" content="Dreamguys - Bootstrap Admin Template">
+<meta name="robots" content="noindex, nofollow">
+<title>Dreams Pos admin template</title>
+
+<base href="/crm/frontend/">
+
+<link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.jpg">
+
+<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="assets/css/bootstrap-datetimepicker.min.css">
+
+<link rel="stylesheet" href="assets/css/animate.css">
+
+<link rel="stylesheet" href="assets/plugins/select2/css/select2.min.css">
+
+<link rel="stylesheet" href="assets/css/dataTables.bootstrap4.min.css">
+
+<link rel="stylesheet" href="assets/plugins/fontawesome/css/fontawesome.min.css">
+<link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
+
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="global-loader">
+<div class="whirly-loader"> </div>
+</div>
+
+<div class="main-wrapper">
+
+<div class="header">
+
+<div class="header-left active">
+<a href="index.html" class="logo">
+<img src="assets/img/logo.png" alt="">
+</a>
+<a href="index.html" class="logo-small">
+<img src="assets/img/logo-small.png" alt="">
+</a>
+<a id="toggle_btn" href="javascript:void(0);">
+</a>
+</div>
+
+<a id="mobile_btn" class="mobile_btn" href="#sidebar">
+<span class="bar-icon">
+<span></span>
+<span></span>
+<span></span>
+</span>
+</a>
+
+<ul class="nav user-menu">
+
+<li class="nav-item">
+<div class="top-nav-search">
+<a href="javascript:void(0);" class="responsive-search">
+<i class="fa fa-search"></i>
+</a>
+<form action="#">
+<div class="searchinputs">
+<input type="text" placeholder="Search Here ...">
+<div class="search-addon">
+<span><img src="assets/img/icons/closes.svg" alt="img"></span>
+</div>
+</div>
+<a class="btn" id="searchdiv"><img src="assets/img/icons/search.svg" alt="img"></a>
+</form>
+</div>
+</li>
+
+
+<li class="nav-item dropdown">
+<a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
+<img src="assets/img/icons/notification-bing.svg" alt="img"> <span class="badge rounded-pill">4</span>
+</a>
+<div class="dropdown-menu notifications">
+<div class="topnav-dropdown-header">
+<span class="notification-title">Notifications</span>
+<a href="javascript:void(0)" class="clear-noti"> Clear All </a>
+</div>
+<div class="noti-content">
+<ul class="notification-list">
+<li class="notification-message">
+<a href="activities.html">
+<div class="media d-flex">
+<span class="avatar flex-shrink-0">
+<img alt="" src="assets/img/profiles/avatar-02.jpg">
+</span>
+<div class="media-body flex-grow-1">
+<p class="noti-details"><span class="noti-title">John Doe</span> added new task <span class="noti-title">Patient appointment booking</span></p>
+<p class="noti-time"><span class="notification-time">4 mins ago</span></p>
+</div>
+</div>
+</a>
+</li>
+</ul>
+</div>
+<div class="topnav-dropdown-footer">
+<a href="activities.html">View all Notifications</a>
+</div>
+</div>
+</li>
+
+<li class="nav-item dropdown has-arrow main-drop">
+<a href="javascript:void(0);" class="dropdown-toggle nav-link userset" data-bs-toggle="dropdown">
+<span class="user-img"><img src="assets/img/profiles/avator1.jpg" alt="">
+<span class="status online"></span></span>
+</a>
+<div class="dropdown-menu menu-drop-user">
+<div class="profilename">
+<div class="profileset">
+<span class="user-img"><img src="assets/img/profiles/avator1.jpg" alt="">
+<span class="status online"></span></span>
+<div class="profilesets">
+<h6>John Doe</h6>
+<h5>Admin</h5>
+</div>
+</div>
+<hr class="m-0">
+<a class="dropdown-item" href="profile.html"> <i class="me-2" data-feather="user"></i> My Profile</a>
+<a class="dropdown-item" href="generalsettings.html"><i class="me-2" data-feather="settings"></i>Settings</a>
+<hr class="m-0">
+<a class="dropdown-item logout pb-0" href="signin.html"><img src="assets/img/icons/log-out.svg" class="me-2" alt="img">Logout</a>
+</div>
+</div>
+</li>
+</ul>
+
+
+<div class="dropdown mobile-user-menu">
+<a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+<div class="dropdown-menu dropdown-menu-right">
+<a class="dropdown-item" href="profile.html">My Profile</a>
+<a class="dropdown-item" href="generalsettings.html">Settings</a>
+<a class="dropdown-item" href="signin.html">Logout</a>
+</div>
+</div>
+
+</div>
+
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-inner slimscroll">
+<div id="sidebar-menu" class="sidebar-menu">
+<ul>
+<li>
+<a href="index.html"><img src="assets/img/icons/dashboard.svg" alt="img"><span> Dashboard</span> </a>
+</li>
+<li class="submenu">
+<a href="javascript:void(0);"><span> Activities</span> <span class="menu-arrow"></span></a>
+<ul>
+<li><a href="activitieslist.html">Activities List</a></li>
+<li><a href="activitiescreate.html">Create Activity</a></li>
+<li><a href="activitiesupdate.html">Update Activity</a></li>
+<li><a href="activitiesdetails.html">Activitiy Details</a></li>
+</ul>
+</li>
+<li class="submenu">
+<a href="javascript:void(0);"><span> Tasks</span> <span class="menu-arrow"></span></a>
+<ul>
+<li><a href="taskslist.html" class="active">Task List</a></li>
+<li><a href="taskscreate.html">Create Task</a></li>
+<li><a href="tasksupdate.html">Update Task</a></li>
+<li><a href="tasksdetails.html">Task Details</a></li>
+<li><a href="taskstrackprogress.html">Track Task Progress</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>Task List</h4>
+<h6>View and manage all tasks</h6>
+</div>
+<div class="page-btn">
+<a href="taskscreate.html" class="btn btn-added">
+<img src="assets/img/icons/plus.svg" alt="img"> Create Task
+</a>
+</div>
+</div>
+
+<!-- Filter Section -->
+<div class="card">
+<div class="card-body">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label>Sort By</label>
+<select class="select" id="sortFilter">
+<option value="">All</option>
+<option value="deadline">Due Date</option>
+<option value="status">Status</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<button type="button" class="btn btn-success" onclick="applyFilters()">Apply Filter</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Task List Table -->
+<div class="card">
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-striped" id="tasksTable">
+<thead>
+<tr>
+<th>Task ID</th>
+<th>Title</th>
+<th>Description</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Due Date</th>
+<th>Related Type</th>
+<th>Assigned To</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="tasksList">
+<tr>
+<td colspan="9" class="text-center">Loading tasks...</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- Pagination -->
+<div class="row">
+<div class="col-md-12">
+<nav aria-label="Page navigation">
+<ul class="pagination justify-content-center">
+<li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+<li class="page-item active"><a class="page-link" href="#">1</a></li>
+<li class="page-item"><a class="page-link" href="#">2</a></li>
+<li class="page-item"><a class="page-link" href="#">Next</a></li>
+</ul>
+</nav>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+
+<script src="assets/js/jquery-3.6.0.min.js"></script>
+
+<script src="assets/js/feather.min.js"></script>
+
+<script src="assets/js/jquery.slimscroll.min.js"></script>
+
+<script src="assets/js/jquery.dataTables.min.js"></script>
+<script src="assets/js/dataTables.bootstrap4.min.js"></script>
+
+<script src="assets/js/bootstrap.bundle.min.js"></script>
+
+<script src="assets/plugins/select2/js/select2.min.js"></script>
+
+<script src="assets/js/moment.min.js"></script>
+<script src="assets/js/bootstrap-datetimepicker.min.js"></script>
+
+<script src="assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script src="assets/plugins/sweetalert/sweetalerts.min.js"></script>
+
+<script src="assets/js/script.js"></script>
+
+<script>
+/**
+ * TASK MANAGEMENT - CLIENT-SIDE RENDERING
+ * 
+ * Responsibilities:
+ * - Fetch JSON data from /api/tasks/list endpoint
+ * - Parse JSON response (which follows JsonUtility response format)
+ * - Render task data to HTML table
+ * - Handle user interactions (filters, delete, etc.)
+ * 
+ * Note: Server returns: { success: true, data: [...], message: "OK" }
+ */
+
+// ============================================================
+// 1. INITIALIZATION - Load tasks when page loads
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Tasks page loaded - fetching tasks...');
+    loadTasks();
+});
+
+// ============================================================
+// 2. FETCH TASKS FROM API
+// ============================================================
+/**
+ * Fetch tasks from the REST endpoint with optional sorting.
+ * Expects JSON response in format: { success: true, data: [...], message: "OK" }
+ */
+function loadTasks() {
+    try {
+        // Build URL with query parameters
+        const sort = document.getElementById('sortFilter').value;
+        let url = '/crm/api/tasks/list';
+        
+        if (sort) {
+            url += '?sort=' + encodeURIComponent(sort);
+        }
+
+        // Show loading state
+        setLoadingState(true);
+
+        // Fetch from server
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(handleHttpResponse)              // Handle HTTP status
+        .then(parseJsonResponse)               // Parse JSON body
+        .then(validateApiResponse)             // Validate API response structure
+        .then(response => {
+            const tasks = response.data || [];
+            renderTasksTable(tasks);
+        })
+        .catch(handleError);
+
+    } catch (error) {
+        console.error('[loadTasks] Unexpected error:', error);
+        showErrorMessage('An unexpected error occurred. Please refresh the page.');
+        setLoadingState(false);
+    }
+}
+
+// ============================================================
+// 3. HTTP RESPONSE HANDLER
+// ============================================================
+/**
+ * Handle HTTP response status codes.
+ * If not OK, reject the promise with appropriate error.
+ */
+function handleHttpResponse(response) {
+    if (!response.ok) {
+        const statusText = response.statusText || 'Unknown error';
+        throw new Error(`HTTP ${response.status}: ${statusText}`);
+    }
+    return response;
+}
+
+// ============================================================
+// 4. JSON PARSER
+// ============================================================
+/**
+ * Parse JSON response body.
+ * Throws error if JSON is malformed.
+ */
+function parseJsonResponse(response) {
+    try {
+        return response.json();
+    } catch (error) {
+        throw new Error('Invalid JSON response from server: ' + error.message);
+    }
+}
+
+// ============================================================
+// 5. API RESPONSE VALIDATOR
+// ============================================================
+/**
+ * Validate that the API response follows the expected structure:
+ * { success: true, data: [...], message: "OK" }
+ * 
+ * Follows JsonUtility response format.
+ */
+function validateApiResponse(response) {
+    if (!response) {
+        throw new Error('Empty response from server');
+    }
+
+    if (response.success === false) {
+        throw new Error(`Server returned error: ${response.message || 'Unknown error'}`);
+    }
+
+    if (typeof response.success !== 'boolean') {
+        throw new Error('Invalid API response format: missing or invalid "success" field');
+    }
+
+    if (!Array.isArray(response.data)) {
+        throw new Error('Invalid API response format: data is not an array');
+    }
+
+    return response;
+}
+
+// ============================================================
+// 6. RENDER TASKS TABLE
+// ============================================================
+/**
+ * Render task list to HTML table.
+ * This is where all presentation logic lives.
+ */
+function renderTasksTable(tasks) {
+    setLoadingState(false);
+
+    const tasksList = document.getElementById('tasksList');
+
+    // Handle empty state
+    if (!tasks || tasks.length === 0) {
+        tasksList.innerHTML = '<tr><td colspan="9" class="text-center">No tasks found</td></tr>';
+        return;
+    }
+
+    // Clear previous content
+    tasksList.innerHTML = '';
+
+    // Render each task as a table row
+    tasks.forEach(task => {
+        const row = createTaskRow(task);
+        tasksList.appendChild(row);
+    });
+
+    console.log(`Rendered ${tasks.length} tasks`);
+}
+
+// ============================================================
+// 7. CREATE TASK ROW
+// ============================================================
+/**
+ * Create a <tr> element for a single task.
+ * Encapsulates all presentation logic for a task row.
+ */
+function createTaskRow(task) {
+    const row = document.createElement('tr');
+
+    // Determine badge CSS classes based on priority and status
+    const priorityClass = getPriorityBadgeClass(task.priority);
+    const statusClass = getStatusBadgeClass(task.status);
+
+    // Build HTML content
+    row.innerHTML = `
+        <td>
+            <span class="task-id">${escapeHtml(task.taskId || '-')}</span>
+        </td>
+        <td>
+            <span class="task-title">${escapeHtml(task.title || '-')}</span>
+        </td>
+        <td>
+            <span class="task-description" title="${escapeHtml(task.description || '')}">
+                ${truncateText(task.description, 50)}
+            </span>
+        </td>
+        <td>
+            <span class="badge ${priorityClass}">
+                ${escapeHtml(task.priority || 'UNKNOWN')}
+            </span>
+        </td>
+        <td>
+            <span class="badge ${statusClass}">
+                ${escapeHtml(formatStatus(task.status))}
+            </span>
+        </td>
+        <td>
+            ${formatDate(task.dueDate)}
+        </td>
+        <td>
+            ${escapeHtml(capitalizeFirst(task.relatedType) || '-')}
+        </td>
+        <td>
+            ${escapeHtml(task.assignedToName || task.assignedTo || '-')}
+        </td>
+        <td>
+            <div class="action-buttons">
+                <a href="tasksdetails.html?id=${task.taskId}" 
+                   class="btn btn-sm btn-info" 
+                   title="View task details">
+                    View
+                </a>
+                <a href="tasksupdate.html?id=${task.taskId}" 
+                   class="btn btn-sm btn-warning" 
+                   title="Edit task">
+                    Edit
+                </a>
+                <button type="button" 
+                        class="btn btn-sm btn-danger" 
+                        onclick="deleteTask(${task.taskId})"
+                        title="Delete task">
+                    Delete
+                </button>
+            </div>
+        </td>
+    `;
+
+    return row;
+}
+
+// ============================================================
+// 8. UTILITY FUNCTIONS - FORMATTING
+// ============================================================
+
+/**
+ * Get CSS badge class for priority level.
+ */
+function getPriorityBadgeClass(priority) {
+    switch (priority) {
+        case 'HIGH':
+            return 'badge-danger';
+        case 'MEDIUM':
+            return 'badge-warning';
+        case 'LOW':
+            return 'badge-success';
+        default:
+            return 'badge-info';
+    }
+}
+
+/**
+ * Get CSS badge class for task status.
+ */
+function getStatusBadgeClass(status) {
+    switch (status) {
+        case 'COMPLETED':
+        case 'DONE':
+            return 'badge-success';
+        case 'IN_PROGRESS':
+            return 'badge-info';
+        case 'PENDING':
+        case 'TODO':
+            return 'badge-warning';
+        case 'CANCELLED':
+            return 'badge-secondary';
+        default:
+            return 'badge-light';
+    }
+}
+
+/**
+ * Format status string: convert underscores to spaces, capitalize words.
+ * Example: "IN_PROGRESS" → "In Progress"
+ */
+function formatStatus(status) {
+    if (!status) return '-';
+    
+    return status
+        .split('_')
+        .map(word => capitalizeFirst(word))
+        .join(' ');
+}
+
+/**
+ * Format date string: convert ISO format to readable format.
+ * Handles null/undefined gracefully.
+ */
+function formatDate(dateString) {
+    if (!dateString) return '-';
+
+    try {
+        const date = new Date(dateString);
+        
+        // Validate date
+        if (isNaN(date.getTime())) {
+            return dateString; // Return original if invalid
+        }
+
+        // Format as YYYY-MM-DD
+        return date.toISOString().split('T')[0];
+    } catch (error) {
+        console.warn('Failed to format date:', dateString, error);
+        return dateString;
+    }
+}
+
+/**
+ * Capitalize first letter of a string.
+ */
+function capitalizeFirst(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+/**
+ * Escape HTML special characters to prevent XSS.
+ * Important for security when rendering user data.
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Truncate text to specified length and add ellipsis.
+ */
+function truncateText(text, maxLength) {
+    if (!text) return '-';
+    if (text.length <= maxLength) return escapeHtml(text);
+    return escapeHtml(text.substring(0, maxLength)) + '...';
+}
+
+// ============================================================
+// 9. UI STATE HANDLERS
+// ============================================================
+
+/**
+ * Show/hide loading state.
+ */
+function setLoadingState(isLoading) {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.style.display = isLoading ? 'flex' : 'none';
+    }
+}
+
+/**
+ * Show error message to user.
+ */
+function showErrorMessage(message) {
+    const tasksList = document.getElementById('tasksList');
+    tasksList.innerHTML = `
+        <tr>
+            <td colspan="9" class="text-center text-danger">
+                <strong>Error:</strong> ${escapeHtml(message)}
+            </td>
+        </tr>
+    `;
+}
+
+// ============================================================
+// 10. USER INTERACTIONS
+// ============================================================
+
+/**
+ * Apply filter and reload tasks.
+ * Called when "Apply Filter" button is clicked.
+ */
+function applyFilters() {
+    console.log('Applying filters...');
+    loadTasks();
+}
+
+/**
+ * Delete a task by ID.
+ * Confirms with user before deleting.
+ */
+function deleteTask(taskId) {
+    if (!taskId || taskId <= 0) {
+        alert('Invalid task ID');
+        return;
+    }
+
+    // Confirm with user
+    if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        setLoadingState(true);
+
+        fetch(`/CRM-project/api/tasks/delete?id=${taskId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(handleHttpResponse)
+        .then(parseJsonResponse)
+        .then(response => {
+            console.log('Delete response:', response);
+            alert('Task deleted successfully');
+            loadTasks(); // Reload list
+        })
+        .catch(error => {
+            console.error('Error deleting task:', error);
+            alert('Failed to delete task: ' + error.message);
+            setLoadingState(false);
+        });
+
+    } catch (error) {
+        console.error('[deleteTask] Unexpected error:', error);
+        alert('An unexpected error occurred');
+        setLoadingState(false);
+    }
+}
+
+// ============================================================
+// 11. ERROR HANDLER
+// ============================================================
+
+/**
+ * Central error handler for all failed requests.
+ */
+function handleError(error) {
+    console.error('[handleError] Error:', error);
+    setLoadingState(false);
+
+    let userMessage = 'Failed to load tasks. Please try again.';
+
+    if (error.message.includes('HTTP')) {
+        if (error.message.includes('401') || error.message.includes('403')) {
+            userMessage = 'You do not have permission to view tasks. Please log in again.';
+        } else if (error.message.includes('404')) {
+            userMessage = 'Task service is not available.';
+        } else if (error.message.includes('500')) {
+            userMessage = 'Server error. Please try again later.';
+        }
+    } else if (error.message.includes('JSON')) {
+        userMessage = 'Server returned invalid data. Please refresh and try again.';
+    }
+
+    showErrorMessage(userMessage);
+}
+</script>
+</body>
+</html>
