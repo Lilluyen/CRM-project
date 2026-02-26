@@ -7,7 +7,9 @@ import java.util.List;
 import dao.CategoryDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import model.Category;
 import util.DBContext;
 
@@ -24,18 +26,35 @@ public class ViewCategoryListController extends HttpServlet {
             CategoryDAO dao = new CategoryDAO(conn);
 
             String search = request.getParameter("search");
-            if (search == null) search = "";
+            String status = request.getParameter("status");
 
-            List<Category> list = dao.getCategoryList(search);
+            int page = 1;
+            int pageSize = 5;
+
+            String pageParam = request.getParameter("page");
+            if (pageParam != null) {
+                page = Integer.parseInt(pageParam);
+            }
+
+            List<Category> list =
+                dao.getCategoryList(search, status, page, pageSize);
+
+            int total = dao.countCategories(search, status);
+            int totalPages =
+                (int) Math.ceil((double) total / pageSize);
 
             request.setAttribute("categoryList", list);
+            request.setAttribute("search", search);
+            request.setAttribute("status", status);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
 
             request.getRequestDispatcher(
-                    "/view/sale/category/categoryList.jsp")
-                    .forward(request, response);
+                "/view/sale/category/categoryList.jsp"
+            ).forward(request, response);
 
         } catch (Exception e) {
-            throw new ServletException("Error loading category list", e);
+            throw new ServletException(e);
         }
     }
 }
