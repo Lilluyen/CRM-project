@@ -73,7 +73,7 @@
                     <p class="text-slate-500 mt-2">Activity ID: ${activity.activityId}</p>
                 </div>
                 <div class="flex gap-2">
-                    <a href="${pageContext.request.contextPath}/CRUD/ActivityForm.jsp?id=${activity.activityId}&action=edit" 
+                    <a href="${pageContext.request.contextPath}/activities/details?id=${activity.activityId}&action=edit" 
                        class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                         <span class="material-symbols-outlined">edit</span>
                         Edit
@@ -101,11 +101,11 @@
                 <!-- Related To Card -->
                 <div class="bg-white dark:bg-slate-900 rounded-xl shadow border dark:border-slate-800 p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400">Related Type</h3>
+                        <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400">Related To</h3>
                         <span class="material-symbols-outlined text-primary text-base">link</span>
                     </div>
-                    <p class="text-lg font-bold dark:text-white">${activity.relatedType}</p>
-                    <p class="text-sm text-slate-500 mt-2">ID: ${activity.relatedId}</p>
+                    <p class="text-lg font-bold dark:text-white">${activity.relatedName}</p>
+                    <p class="text-sm text-slate-500 mt-2">${activity.relatedType} #${activity.relatedId}</p>
                 </div>
 
                 <!-- Created By Card -->
@@ -114,7 +114,13 @@
                         <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400">Created By</h3>
                         <span class="material-symbols-outlined text-primary text-base">person</span>
                     </div>
-                    <p class="text-lg font-bold dark:text-white">${activity.createdBy}</p>
+                    <p class="text-lg font-bold dark:text-white">
+                        <c:choose>
+                            <c:when test="${not empty activity.createdBy.fullName}">${activity.createdBy.fullName}</c:when>
+                            <c:when test="${not empty activity.createdBy.username}">${activity.createdBy.username}</c:when>
+                            <c:otherwise>Unknown</c:otherwise>
+                        </c:choose>
+                    </p>
                 </div>
 
             </div>
@@ -136,7 +142,7 @@
                         <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Activity Date</h3>
                         <div class="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                             <span class="material-symbols-outlined text-primary">access_time</span>
-                            <fmt:formatDate value="${activity.activityDate}" pattern="MMM dd, yyyy HH:mm:ss"/>
+                            ${activity.activityDate}
                         </div>
                     </div>
 
@@ -145,7 +151,7 @@
                             <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Created At</h3>
                             <div class="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                 <span class="material-symbols-outlined text-primary">schedule</span>
-                                <fmt:formatDate value="${activity.createdAt}" pattern="MMM dd, yyyy HH:mm:ss"/>
+                                ${activity.createdAt}
                             </div>
                         </div>
                     </c:if>

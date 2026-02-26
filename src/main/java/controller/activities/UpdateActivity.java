@@ -58,4 +58,21 @@ public class UpdateActivity extends HttpServlet {
             request.getRequestDispatcher("/view/error/500.jsp").forward(request, response);
         }
     }
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        int activityId = Integer.parseInt(req.getParameter("id"));
+        try {
+            Connection connection = DBContext.getConnection();
+            ActivityDAO activityDAO = new ActivityDAO(connection);
+            Activity activity = activityDAO.getActivityById(activityId);
+            req.setAttribute("activity", activity);
+            connection.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            req.setAttribute("error", "Error: " + e.getMessage());
+            req.getRequestDispatcher("/view/error/500.jsp").forward(req, resp);
+            return;
+        }
+        req.getRequestDispatcher("/view/activities/ActivityForm.jsp").forward(req, resp);
+    }
 }
