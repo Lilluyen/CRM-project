@@ -3,7 +3,8 @@ VALUES
 ('ADMIN', 'Quản trị hệ thống'),
 ('SALE', 'Nhân viên kinh doanh'),
 ('MARKETING', 'Nhân viên marketing'),
-('CS', 'Customer Support');
+('CS', 'Customer Support'),
+('MANAGER', 'Quản lý');
 
 INSERT INTO Roles (role_name, description)
 VALUES
