@@ -3,6 +3,7 @@ package controller.customer;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import model.Customer;
 import service.CustomerOtpService;
 
 import java.io.IOException;
@@ -22,13 +23,28 @@ public class CustomerVerifyOtpController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Kiểm tra có email trong session không
-        String email = (String) request.getSession().getAttribute("otp_email");
+        HttpSession session = request.getSession();
 
-        if (email == null) {
+        // Kiểm tra có email trong session không
+        Customer customer = (Customer) session.getAttribute("customer");
+
+        if (customer == null) {
             // Nếu chưa gửi OTP mà vào thẳng thì quay lại request
             response.sendRedirect(request.getContextPath() + "/customer/request-otp");
             return;
+        }
+
+        String error = (String) session.getAttribute("error");
+        String success = (String) session.getAttribute("success");
+
+        if (error != null) {
+            request.setAttribute("error", error);
+            session.removeAttribute("error");
+        }
+
+        if (success != null) {
+            request.setAttribute("success", success);
+            session.removeAttribute("success");
         }
 
         request.getRequestDispatcher("/verify-otp.jsp")
@@ -39,28 +55,37 @@ public class CustomerVerifyOtpController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String otp = request.getParameter("d1")
-                + request.getParameter("d2")
-                + request.getParameter("d3")
-                + request.getParameter("d4")
-                + request.getParameter("d5")
-                + request.getParameter("d6");
+        String otp = request.getParameter("otp");
 
-        String email = (String) request.getSession().getAttribute("otp_email");
+        if (otp == null || !otp.matches("\\d{6}")) {
+            request.setAttribute("error", "OTP phải gồm đúng 6 chữ số.");
+            request.getRequestDispatcher("/verify-otp.jsp")
+                    .forward(request, response);
+            return;
+        }
 
-        // TODO: gọi otpService.verifyOtp(email, otp)
+        Customer customer = (Customer) request.getSession().getAttribute("customer");
 
-        boolean valid = false;
+        if (customer == null) {
+            response.sendRedirect(request.getContextPath() + "/customer/request-otp");
+            return;
+        }
+
+        String email = customer.getEmail();
+
+        boolean valid;
         try {
             valid = otpService.verifyOtp(email, otp);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new ServletException(e);
         }
 
         if (valid) {
-            request.getSession().removeAttribute("otp_email");
+
             response.sendRedirect(request.getContextPath() + "/login");
+
         } else {
+
             request.setAttribute("error", "Invalid or expired OTP.");
             request.getRequestDispatcher("/verify-otp.jsp")
                     .forward(request, response);

@@ -57,7 +57,6 @@
                     <div class="col">
                         <h3 class="page-title">Email Verification</h3>
                         <ul class="breadcrumb">
-                            <li class="breadcrumb-item">Customer</li>
                             <li class="breadcrumb-item active">Send OTP</li>
                         </ul>
                     </div>

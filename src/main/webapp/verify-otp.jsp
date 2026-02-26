@@ -18,16 +18,6 @@
           href="${pageContext.request.contextPath}/assets/plugins/fontawesome/css/all.min.css">
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/assets/css/style.css">
-
-    <style>
-        .otp-input {
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            font-size: 20px;
-            margin: 5px;
-        }
-    </style>
 </head>
 
 <body>
@@ -43,9 +33,35 @@
         </div>
     </div>
 
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-inner slimscroll">
+            <div id="sidebar-menu" class="sidebar-menu">
+                <ul>
+                    <li>
+                        <a href="#"><i data-feather="mail"></i>
+                            <span>Email Verification</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <!-- PAGE CONTENT -->
     <div class="page-wrapper">
         <div class="content container-fluid">
+
+            <div class="page-header">
+                <div class="row">
+                    <div class="col">
+                        <h3 class="page-title">Email Verification</h3>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item active">Verify Your Email</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
             <div class="row justify-content-center mt-5">
                 <div class="col-lg-6">
@@ -86,13 +102,17 @@
                             <form action="${pageContext.request.contextPath}/customer/verify-otp"
                                   method="post">
 
-                                <div class="d-flex justify-content-center mb-4">
-                                    <input type="text" maxlength="1" class="form-control otp-input" name="d1" required>
-                                    <input type="text" maxlength="1" class="form-control otp-input" name="d2" required>
-                                    <input type="text" maxlength="1" class="form-control otp-input" name="d3" required>
-                                    <input type="text" maxlength="1" class="form-control otp-input" name="d4" required>
-                                    <input type="text" maxlength="1" class="form-control otp-input" name="d5" required>
-                                    <input type="text" maxlength="1" class="form-control otp-input" name="d6" required>
+                                <div class="mb-4">
+                                    <input type="text"
+                                           class="form-control text-center"
+                                           name="otp"
+                                           maxlength="6"
+                                           pattern="\d{6}"
+                                           inputmode="numeric"
+                                           autocomplete="one-time-code"
+                                           placeholder="Enter 6-digit OTP"
+                                           required
+                                           style="font-size: 22px; letter-spacing: 8px;">
                                 </div>
 
                                 <button type="submit" class="btn btn-success w-100">
@@ -105,9 +125,10 @@
                             <div class="mt-3">
                                 <small>
                                     Didn't receive code?
-                                    <a href="${pageContext.request.contextPath}/customer/request-otp">
-                                        Resend
-                                    </a>
+                                    <form action="${pageContext.request.contextPath}/customer/resend-otp" method="post"
+                                          style="display:inline;">
+                                        <button type="submit" class="btn btn-link p-0">Resend</button>
+                                    </form>
                                 </small>
                             </div>
 
@@ -128,21 +149,11 @@
 <script src="${pageContext.request.contextPath}/assets/js/script.js"></script>
 
 <script>
-    // Auto focus next input
-    const inputs = document.querySelectorAll(".otp-input");
-
-    inputs.forEach((input, index) => {
-        input.addEventListener("keyup", function () {
-            if (this.value.length === 1 && index < inputs.length - 1) {
-                inputs[index + 1].focus();
-            }
-        });
-
-        // Chỉ cho nhập số
-        input.addEventListener("input", function () {
+    // Chỉ cho nhập số
+    document.querySelector("input[name='otp']")
+        .addEventListener("input", function () {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
-    });
 </script>
 
 </body>

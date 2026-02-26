@@ -10,6 +10,7 @@ import util.EmailService;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 
@@ -18,6 +19,8 @@ public class CustomerOtpService {
     private static final int OTP_EXPIRE_MINUTES = 5;
     private static final int MAX_FAILED_ATTEMPT = 5;
     private static final int RESEND_COOLDOWN_SECONDS = 60;
+    private static final int MAX_SEND_PER_WINDOW = 5;
+    private static final int BLOCK_MINUTES = 30;
 
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final CustomerOtpDAO otpDAO = new CustomerOtpDAO();
@@ -35,25 +38,65 @@ public class CustomerOtpService {
 
         CustomerOtp existingOtp = otpDAO.findByCustomerId(customer.getCustomerId());
 
-        // Kiểm tra cooldown 60s
+        LocalDateTime now = LocalDateTime.now();
+
         if (existingOtp != null) {
-            long seconds = java.time.Duration.between(
+
+            // 1️⃣ Nếu đã gửi >= 5 lần
+            if (existingOtp.getSendCount() >= MAX_SEND_PER_WINDOW) {
+
+                long minutesSinceLastSend = Duration.between(
+                        existingOtp.getLastSend(),
+                        now
+                ).toMinutes();
+
+                // Nếu chưa đủ 30 phút thì block
+                long secondsSinceLastSend = Duration.between(
+                        existingOtp.getLastSend(),
+                        now
+                ).getSeconds();
+
+                long blockSeconds = BLOCK_MINUTES * 60;
+                long remainingBlockSeconds = blockSeconds - secondsSinceLastSend;
+
+                if (remainingBlockSeconds > 0) {
+
+                    long minutes = remainingBlockSeconds / 60;
+                    long seconds = remainingBlockSeconds % 60;
+
+                    throw new Exception(
+                            "Bạn đã gửi OTP quá 5 lần. Vui lòng thử lại sau "
+                                    + minutes + " phút "
+                                    + seconds + " giây."
+                    );
+                }
+
+                // Nếu đã đủ 30 phút → reset
+                existingOtp.setSendCount(0);
+            }
+
+            // 2️⃣ Kiểm tra cooldown 60 giây
+            long seconds = Duration.between(
                     existingOtp.getLastSend(),
-                    LocalDateTime.now()
+                    now
             ).getSeconds();
 
             if (seconds < RESEND_COOLDOWN_SECONDS) {
-                throw new Exception("Vui lòng chờ trước khi gửi lại OTP.");
+
+                long remainingSeconds = RESEND_COOLDOWN_SECONDS - seconds;
+
+                throw new Exception(
+                        "Vui lòng chờ " + remainingSeconds
+                                + " giây trước khi gửi lại OTP."
+                );
             }
         }
 
-        // Tạo OTP 6 số
+        // 3️⃣ Tạo OTP
         String rawOtp = generateOtp();
-
-        // Hash OTP
         String hashedOtp = hashOtp("123456");
 
-        LocalDateTime expireTime = LocalDateTime.now().plusMinutes(OTP_EXPIRE_MINUTES);
+        LocalDateTime expireTime = now.plusMinutes(5);
 
         if (existingOtp == null) {
             CustomerOtp newOtp = new CustomerOtp();
@@ -62,21 +105,23 @@ public class CustomerOtpService {
             newOtp.setOtpExpiredAt(expireTime);
             newOtp.setFailedAttempt(0);
             newOtp.setSendCount(1);
-            newOtp.setLastSend(LocalDateTime.now());
+            newOtp.setLastSend(now);
 
             otpDAO.insertOTP(newOtp);
+
         } else {
+
             existingOtp.setOtpHash(hashedOtp);
             existingOtp.setOtpExpiredAt(expireTime);
             existingOtp.setFailedAttempt(0);
             existingOtp.setSendCount(existingOtp.getSendCount() + 1);
-            existingOtp.setLastSend(LocalDateTime.now());
+            existingOtp.setLastSend(now);
 
             otpDAO.updateOTP(existingOtp);
         }
 
-        // Gửi mail (bạn tự implement MailService)
-        //sendOtpEmail(customer.getEmail(), rawOtp);
+        // Gửi email
+        // sendOtpEmail(customer.getEmail(), rawOtp);
     }
 
     /* =============================
