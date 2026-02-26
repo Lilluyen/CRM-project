@@ -436,7 +436,7 @@
                     </div>
                     <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
                         <c:if test="${pagination.hasPreviousPage()}">
-                            <a href="<c:url value='/marketing/campaign?action=list&page=${pagination.currentPage - 1}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
+                            <a href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${pagination.currentPage - 1}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}"
                                style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">
                                 <i class="bi bi-chevron-left"></i> Trước
                             </a>
@@ -454,7 +454,7 @@
                         <c:set var="endPage" value="${Math.min(totalPages, currentPage + 2)}"/>
 
                         <c:if test="${startPage > 1}">
-                            <a href="<c:url value='/marketing/campaign?action=list&page=1${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
+                            <a href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=1${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}" 
                                style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">1</a>
                             <c:if test="${startPage > 2}">
                                 <span style="padding: 6px 10px;">...</span>
@@ -467,7 +467,7 @@
                                     <span style="padding: 6px 10px; border: 1px solid #0066cc; background-color: #0066cc; color: white; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500;">${page}</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <a href="<c:url value='/marketing/campaign?action=list&page=${page}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
+                                    <a href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${page}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}" 
                                        style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">${page}</a>
                                 </c:otherwise>
                             </c:choose>
@@ -477,12 +477,12 @@
                             <c:if test="${endPage < totalPages - 1}">
                                 <span style="padding: 6px 10px;">...</span>
                             </c:if>
-                            <a href="<c:url value='/marketing/campaign?action=list&page=${totalPages}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
+                            <a href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${totalPages}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}" 
                                style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">${totalPages}</a>
                         </c:if>
 
                         <c:if test="${pagination.hasNextPage()}">
-                            <a href="<c:url value='/marketing/campaign?action=list&page=${pagination.currentPage + 1}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
+                            <a href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${pagination.currentPage + 1}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}" 
                                style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">
                                 Tiếp <i class="bi bi-chevron-right"></i>
                             </a>
