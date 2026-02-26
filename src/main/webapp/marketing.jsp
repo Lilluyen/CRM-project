@@ -6,6 +6,10 @@
 <title>Marketing Home</title>
 </head>
 <body>
-<h2>Marketing Home</h2>
+    <%
+    // Forward trực tiếp đến campaign list mà không hiển thị trang này
+    request.getRequestDispatcher("/marketing/campaign?action=list").forward(request, response);
+%>
+<!-- <h2>Marketing Home</h2> -->
 </body>
 </html>
