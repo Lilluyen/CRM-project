@@ -6,6 +6,6 @@
         <title>Manager Home</title>
     </head>
     <body>
-
+    <h2>Manager Home</h2>
     </body>
 </html>

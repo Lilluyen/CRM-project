@@ -41,8 +41,8 @@
                 CRM System
             </div>
             <div class="flex gap-4">
-                <a href="/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
-                <a href="/activities/list" class="text-slate-600 dark:text-slate-400 hover:text-primary">Activities</a>
+                <a href="${pageContext.request.contextPath}/" class="text-slate-600 dark:text-slate-400 hover:text-primary">Dashboard</a>
+                <a href="${pageContext.request.contextPath}/activities/list" class="text-slate-600 dark:text-slate-400 hover:text-primary">Activities</a>
             </div>
         </div>
     </nav>
@@ -51,7 +51,7 @@
 
         <!-- Breadcrumb -->
         <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-6">
-            <a href="/activities/list" class="hover:text-primary">Activities</a>
+            <a href="${pageContext.request.contextPath}/activities/list" class="hover:text-primary">Activities</a>
             <span class="material-symbols-outlined text-base">chevron_right</span>
             <span class="text-slate-900 dark:text-white">
                 <c:choose>
@@ -224,7 +224,7 @@
                         </c:choose>
                     </button>
                     <a
-                        href="/activities/list"
+                        href="${pageContext.request.contextPath}/activities/list"
                         class="flex-1 h-12 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-300 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2"
                     >
                         <span class="material-symbols-outlined">close</span>

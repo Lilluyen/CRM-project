@@ -1,8 +1,6 @@
 package model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class User {
 
@@ -16,15 +14,16 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime lastLoginAt;
-
-    private List<Role> roles = new ArrayList<>();
+    private Role role;
 
     public User() {
     }
 
     public User(int userId, String username, String passwordHash, String email,
-            String fullName, String phone, String status,
-            LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime lastLoginAt) {
+                String fullName, String phone, String status,
+                LocalDateTime createdAt, LocalDateTime updatedAt,
+                LocalDateTime lastLoginAt, Role role) {
+
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -35,14 +34,17 @@ public class User {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.lastLoginAt = lastLoginAt;
+        this.role = role;
     }
 
-    public List<Role> getRoles() {
-        return roles;
+    // ===== Getter & Setter =====
+
+    public Role getRole() {
+        return role;
     }
 
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public int getUserId() {
@@ -124,4 +126,5 @@ public class User {
     public void setLastLoginAt(LocalDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
     }
+
 }
