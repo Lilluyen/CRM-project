@@ -2,6 +2,8 @@ package dao;
 
 import model.Activity;
 import model.User;
+import model.Customer;
+import model.Lead;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,6 +125,13 @@ public class ActivityDAO {
         activity.setActivityType(rs.getString("activity_type"));
         activity.setSubject(rs.getString("subject"));
         activity.setDescription(rs.getString("description"));
+        
+        // Fetch related name based on related type
+        String relatedType = rs.getString("related_type");
+        int relatedId = rs.getInt("related_id");
+        String relatedName = getRelatedName(relatedType, relatedId);
+        activity.setRelatedName(relatedName);
+        
         int createdById = rs.getInt("created_by");
         if (!rs.wasNull() && createdById > 0) {
             // fetch user details (may use separate connection internally)
@@ -144,5 +153,30 @@ public class ActivityDAO {
         }
 
         return activity;
+    }
+    
+    // =============================
+    // Get Related Name
+    // =============================
+    private String getRelatedName(String relatedType, int relatedId) {
+        if (relatedType == null || relatedType.isEmpty()) {
+            return "Unknown";
+        }
+        
+        try {
+            if ("customer".equalsIgnoreCase(relatedType)) {
+                CustomerDAO customerDAO = new CustomerDAO();
+                Customer customer = customerDAO.getCustomerById(relatedId, connection);
+                return customer != null ? customer.getName() : "Customer #" + relatedId;
+            } else if ("lead".equalsIgnoreCase(relatedType)) {
+                LeadDAO leadDAO = new LeadDAO();
+                Lead lead = leadDAO.getLeadById(relatedId);
+                return lead != null ? lead.getFullName() : "Lead #" + relatedId;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return "Unknown";
     }
 }

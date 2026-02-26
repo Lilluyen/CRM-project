@@ -32,7 +32,7 @@ public class ViewActivityDetails extends HttpServlet {
                 request.setAttribute("activity", activity);
                 
                 // Forward to JSP for display
-                request.getRequestDispatcher("/activities/ActivityDetails.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/activities/ActivityDetails.jsp").forward(request, response);
             } else {
                 request.setAttribute("error", "Activity not found!");
                 request.getRequestDispatcher("/view/error/404.jsp").forward(request, response);

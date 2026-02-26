@@ -68,7 +68,7 @@ public class CreateActivity extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("/activities/ActivityForm.jsp").forward(req, resp);
+        req.getRequestDispatcher("/view/activities/ActivityForm.jsp").forward(req, resp);
     }
     
 }

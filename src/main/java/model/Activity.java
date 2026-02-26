@@ -14,6 +14,7 @@ public class Activity {
     private Integer activityId;
     private String relatedType;
     private Integer relatedId;
+    private String relatedName;
     private String activityType;
     private String subject;
     private String description;
@@ -24,10 +25,11 @@ public class Activity {
     public Activity() {
     }
 
-    public Activity(Integer activityId, String relatedType, Integer relatedId, String activityType, String subject, String description, User createdBy, LocalDateTime activityDate, LocalDateTime createdAt) {
+    public Activity(Integer activityId, String relatedType, Integer relatedId, String relatedName, String activityType, String subject, String description, User createdBy, LocalDateTime activityDate, LocalDateTime createdAt) {
         this.activityId = activityId;
         this.relatedType = relatedType;
         this.relatedId = relatedId;
+        this.relatedName = relatedName;
         this.activityType = activityType;
         this.subject = subject;
         this.description = description;
@@ -58,6 +60,14 @@ public class Activity {
 
     public void setRelatedId(Integer relatedId) {
         this.relatedId = relatedId;
+    }
+
+    public String getRelatedName() {
+        return relatedName;
+    }
+
+    public void setRelatedName(String relatedName) {
+        this.relatedName = relatedName;
     }
 
     public String getActivityType() {
