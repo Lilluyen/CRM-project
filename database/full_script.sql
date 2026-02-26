@@ -1,5 +1,13 @@
-﻿USE [master]
+﻿USE master;
 GO
+
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'CRM_System')
+BEGIN
+    ALTER DATABASE CRM_System SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE CRM_System;
+END
+GO
+
 /****** Object:  Database [CRM_System]    Script Date: 2/25/2026 3:19:47 PM ******/
 CREATE DATABASE [CRM_System]
  CONTAINMENT = NONE
@@ -510,43 +518,33 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[User_Roles]    Script Date: 2/25/2026 3:19:47 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[User_Roles](
-	[user_id] [int] NOT NULL,
-	[role_id] [int] NOT NULL,
-	[assigned_at] [datetime] NULL,
- CONSTRAINT [pk_user_roles] PRIMARY KEY CLUSTERED 
-(
-	[user_id] ASC,
-	[role_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+
 /****** Object:  Table [dbo].[Users]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Users](
-	[user_id] [int] IDENTITY(1,1) NOT NULL,
-	[username] [varchar](50) NOT NULL,
-	[password_hash] [varchar](255) NOT NULL,
-	[email] [varchar](100) NULL,
-	[full_name] [nvarchar](100) NULL,
-	[phone] [varchar](20) NULL,
-	[status] [varchar](20) NULL,
-	[created_at] [datetime] NULL,
-	[updated_at] [datetime] NULL,
-	[last_login_at] [datetime] NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[user_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+	[user_id] INT IDENTITY(1,1) NOT NULL,
+	[username] VARCHAR(50) NOT NULL,
+	[password_hash] VARCHAR(255) NOT NULL,
+	[email] VARCHAR(100) NULL,
+	[full_name] NVARCHAR(100) NULL,
+	[phone] VARCHAR(20) NULL,
+	[role_id] INT NOT NULL,
+	[status] VARCHAR(20) NULL,
+	[created_at] DATETIME DEFAULT GETDATE(),
+	[updated_at] DATETIME NULL,
+	[last_login_at] DATETIME NULL,
+
+PRIMARY KEY CLUSTERED ([user_id] ASC),
+
+CONSTRAINT uq_users_username UNIQUE (username),
+
+CONSTRAINT fk_users_role 
+	FOREIGN KEY (role_id) 
+	REFERENCES Roles(role_id)
+);
 GO
 /****** Object:  Table [dbo].[Virtual_Wardrobe]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
@@ -609,10 +607,11 @@ SET IDENTITY_INSERT [dbo].[Customers] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Roles] ON 
 
-INSERT [dbo].[Roles] ([role_id], [role_name], [description], [created_at]) VALUES (1, N'ADMIN', N'Qu?n tr? h? th?ng', CAST(N'2026-02-25T10:48:57.280' AS DateTime))
+INSERT [dbo].[Roles] ([role_id], [role_name], [description], [created_at]) VALUES (1, N'ADMIN', N'Quản trị hệ thống', CAST(N'2026-02-25T10:48:57.280' AS DateTime))
 INSERT [dbo].[Roles] ([role_id], [role_name], [description], [created_at]) VALUES (2, N'SALE', N'Nhân viên kinh doanh', CAST(N'2026-02-25T10:48:57.280' AS DateTime))
 INSERT [dbo].[Roles] ([role_id], [role_name], [description], [created_at]) VALUES (3, N'MARKETING', N'Nhân viên marketing', CAST(N'2026-02-25T10:48:57.280' AS DateTime))
 INSERT [dbo].[Roles] ([role_id], [role_name], [description], [created_at]) VALUES (4, N'CS', N'Customer Support', CAST(N'2026-02-25T10:48:57.280' AS DateTime))
+INSERT [dbo].[Roles] ([role_id], [role_name], [description], [created_at]) VALUES (5, N'MANAGER', N'Quản lý', CAST(N'2026-02-25T10:48:57.280' AS DateTime))
 SET IDENTITY_INSERT [dbo].[Roles] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Style_Tags] ON 
@@ -627,19 +626,22 @@ INSERT [dbo].[Style_Tags] ([tag_id], [tag_name], [category]) VALUES (7, N'#Silk'
 INSERT [dbo].[Style_Tags] ([tag_id], [tag_name], [category]) VALUES (8, N'#Denim', N'Material')
 SET IDENTITY_INSERT [dbo].[Style_Tags] OFF
 GO
-INSERT [dbo].[User_Roles] ([user_id], [role_id], [assigned_at]) VALUES (1, 1, CAST(N'2026-02-25T10:48:57.290' AS DateTime))
-INSERT [dbo].[User_Roles] ([user_id], [role_id], [assigned_at]) VALUES (2, 2, CAST(N'2026-02-25T10:48:57.290' AS DateTime))
-INSERT [dbo].[User_Roles] ([user_id], [role_id], [assigned_at]) VALUES (2, 3, CAST(N'2026-02-25T10:48:57.297' AS DateTime))
-INSERT [dbo].[User_Roles] ([user_id], [role_id], [assigned_at]) VALUES (3, 3, CAST(N'2026-02-25T10:48:57.293' AS DateTime))
-INSERT [dbo].[User_Roles] ([user_id], [role_id], [assigned_at]) VALUES (4, 4, CAST(N'2026-02-25T10:48:57.293' AS DateTime))
-GO
+
 SET IDENTITY_INSERT [dbo].[Users] ON 
 
-INSERT [dbo].[Users] ([user_id], [username], [password_hash], [email], [full_name], [phone], [status], [created_at], [updated_at], [last_login_at]) VALUES (1, N'admin', N'$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG', N'admin@crm.com', N'Admin', N'0900000001', N'ACTIVE', CAST(N'2026-02-25T10:48:57.290' AS DateTime), NULL, NULL)
-INSERT [dbo].[Users] ([user_id], [username], [password_hash], [email], [full_name], [phone], [status], [created_at], [updated_at], [last_login_at]) VALUES (2, N'sale01', N'$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG', N'sale01@crm.com', N'Sale', N'0900000002', N'ACTIVE', CAST(N'2026-02-25T10:48:57.290' AS DateTime), NULL, NULL)
-INSERT [dbo].[Users] ([user_id], [username], [password_hash], [email], [full_name], [phone], [status], [created_at], [updated_at], [last_login_at]) VALUES (3, N'mkt01', N'$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG', N'mkt01@crm.com', N'Marketing', N'0900000003', N'ACTIVE', CAST(N'2026-02-25T10:48:57.290' AS DateTime), NULL, NULL)
-INSERT [dbo].[Users] ([user_id], [username], [password_hash], [email], [full_name], [phone], [status], [created_at], [updated_at], [last_login_at]) VALUES (4, N'cs01', N'$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG', N'cs01@crm.com', N'CS', N'0900000004', N'ACTIVE', CAST(N'2026-02-25T10:48:57.290' AS DateTime), NULL, NULL)
-INSERT [dbo].[Users] ([user_id], [username], [password_hash], [email], [full_name], [phone], [status], [created_at], [updated_at], [last_login_at]) VALUES (5, N'locked_user', N'$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG', N'lock@crm.com', N'User B? Khóa', N'0900000005', N'LOCKED', CAST(N'2026-02-25T10:48:57.290' AS DateTime), NULL, NULL)
+INSERT [dbo].[Users]
+([user_id],[username],[password_hash],[email],[full_name],[phone],[role_id],[status],[created_at])
+VALUES
+(1,'admin','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','admin@crm.com','Admin','0900000001',1,'ACTIVE',GETDATE()),
+
+(2,'sale01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','sale01@crm.com','Sale','0900000002',2,'ACTIVE',GETDATE()),
+
+(3,'mkt01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','mkt01@crm.com','Marketing','0900000003',3,'ACTIVE',GETDATE()),
+
+(4,'cs01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','cs01@crm.com','CS','0900000004',4,'ACTIVE',GETDATE()),
+
+(5,'manager01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','manager@crm.com','Manager','0900000005',5,'ACTIVE',GETDATE());
+
 SET IDENTITY_INSERT [dbo].[Users] OFF
 GO
 SET ANSI_PADDING ON
@@ -703,8 +705,6 @@ GO
 ALTER TABLE [dbo].[Tasks] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Tickets] ADD  DEFAULT (getdate()) FOR [created_at]
-GO
-ALTER TABLE [dbo].[User_Roles] ADD  DEFAULT (getdate()) FOR [assigned_at]
 GO
 ALTER TABLE [dbo].[Users] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
@@ -829,16 +829,6 @@ ALTER TABLE [dbo].[Tickets]  WITH CHECK ADD  CONSTRAINT [fk_tickets_user] FOREIG
 REFERENCES [dbo].[Users] ([user_id])
 GO
 ALTER TABLE [dbo].[Tickets] CHECK CONSTRAINT [fk_tickets_user]
-GO
-ALTER TABLE [dbo].[User_Roles]  WITH CHECK ADD  CONSTRAINT [fk_user_roles_role] FOREIGN KEY([role_id])
-REFERENCES [dbo].[Roles] ([role_id])
-GO
-ALTER TABLE [dbo].[User_Roles] CHECK CONSTRAINT [fk_user_roles_role]
-GO
-ALTER TABLE [dbo].[User_Roles]  WITH CHECK ADD  CONSTRAINT [fk_user_roles_user] FOREIGN KEY([user_id])
-REFERENCES [dbo].[Users] ([user_id])
-GO
-ALTER TABLE [dbo].[User_Roles] CHECK CONSTRAINT [fk_user_roles_user]
 GO
 ALTER TABLE [dbo].[Virtual_Wardrobe]  WITH CHECK ADD  CONSTRAINT [fk_wardrobe_cust] FOREIGN KEY([customer_id])
 REFERENCES [dbo].[Customers] ([customer_id])
