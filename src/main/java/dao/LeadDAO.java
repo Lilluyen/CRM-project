@@ -147,6 +147,71 @@ public class LeadDAO {
         }
         return leads;
     }
+    public boolean isDuplicate(String email, String phone) {
+        String sql = "SELECT COUNT(*) FROM Leads WHERE email = ? OR phone = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setString(2, phone != null ? phone : "");
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Import batch leads (dùng transaction)
+     * @return số leads được import thành công
+     */
+    public int importLeads(List<Lead> leads) throws Exception {
+        String sql = "INSERT INTO Leads(full_name, email, phone, company_name, interest, source, status, score, created_at, updated_at) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        int importedCount = 0;
+        Connection conn = null;
+
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (Lead lead : leads) {
+                    ps.setString(1, lead.getFullName());
+                    ps.setString(2, lead.getEmail());
+                    ps.setString(3, lead.getPhone());
+                    ps.setString(4, lead.getCompanyName());
+                    ps.setString(5, lead.getInterest());
+                    ps.setString(6, lead.getSource());
+                    ps.setString(7, lead.getStatus());
+                    ps.setInt(8, lead.getScore());
+                    ps.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
+                    ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+
+                    ps.addBatch();
+                }
+
+                int[] results = ps.executeBatch();
+                importedCount = results.length;
+
+                conn.commit(); // Commit transaction
+            } catch (Exception e) {
+                conn.rollback(); // Rollback if error
+                throw e;
+            }
+
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
+
+        return importedCount;
+    }
 
     // Map dữ liệu từ ResultSet sang đối tượng Lead
     private Lead mapResultSetToLead(ResultSet rs) throws SQLException {
