@@ -48,9 +48,10 @@ public class CustomerListController extends HttpServlet {
             List<StyleTag> styleTagList = customerService.getListStyleTags();
             request.setAttribute("styleTagList", styleTagList);
             request.setAttribute("customerList", customerList);
-            request.getRequestDispatcher("/view/customer/customerList.jsp")
-                    .forward(request, response);
+            request.setAttribute("pageTitle", "Customer List | Clothes CRM");
+            request.setAttribute("contentPage", "customer/customerList.jsp");
 
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
 
         } catch (SQLException e) {
             log("DB error", e);

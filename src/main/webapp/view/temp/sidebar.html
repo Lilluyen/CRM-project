@@ -1,175 +1,273 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="keywords"
+      content="admin, estimates, bootstrap, business, corporate, creative, invoice, html5, responsive, Projects" />
+    <meta name="author" content="Dreamguys - Bootstrap Admin Template" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Dreams Pos admin template</title>
+
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/img/favicon.jpg" />
+
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <style>
-      :root {
-        --side-bg: #111827;
-        --item-hover: #1f2937;
-        --accent: #f59e0b; /* Màu vàng Gold thời trang */
-        --ai-gradient: linear-gradient(45deg, #8b5cf6, #3b82f6);
-        --text-dim: #9ca3af;
-      }
-      body {
-        margin: 0;
-        font-family: "Inter", sans-serif;
-        display: flex;
-      }
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/css/bootstrap.min.css" />
 
-      .sidebar {
-        width: 280px;
-        background: var(--side-bg);
-        height: 100vh;
-        color: white;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-      }
+    <link
+      rel="stylesheet"
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/css/animate.css" />
 
-      .logo {
-        padding: 30px;
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        border-bottom: 1px solid #374151;
-      }
-      .logo span {
-        color: var(--accent);
-      }
+    <link
+      rel="stylesheet"
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/plugins/select2/css/select2.min.css" />
 
-      .nav-section {
-        padding: 20px 15px 10px;
-        font-size: 11px;
-        color: var(--text-dim);
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-      }
+    <link
+      rel="stylesheet"
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/css/dataTables.bootstrap4.min.css" />
 
-      .nav-item {
-        padding: 12px 20px;
-        display: flex;
-        align-items: center;
-        text-decoration: none;
-        color: #d1d5db;
-        transition: 0.3s;
-        border-radius: 8px;
-        margin: 2px 10px;
-        cursor: pointer;
-      }
-      .nav-item:hover {
-        background: var(--item-hover);
-        color: white;
-      }
-      .nav-item i {
-        margin-right: 15px;
-        width: 20px;
-        font-size: 18px;
-        color: var(--accent);
-      }
+    <link
+      rel="stylesheet"
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/plugins/fontawesome/css/fontawesome.min.css" />
+    <link
+      rel="stylesheet"
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/plugins/fontawesome/css/all.min.css" />
 
-      .sub-menu {
-        margin-left: 45px;
-        border-left: 1px solid #374151;
-        padding-left: 10px;
-        margin-bottom: 10px;
-      }
-      .sub-item {
-        padding: 8px 15px;
-        font-size: 13.5px;
-        color: var(--text-dim);
-        display: block;
-        text-decoration: none;
-        transition: 0.2s;
-      }
-      .sub-item:hover {
-        color: var(--accent);
-      }
-
-      .badge-new {
-        background: #ef4444;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-left: auto;
-      }
-      .badge-ai {
-        background: var(--ai-gradient);
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-left: auto;
-        color: white;
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="../../Inventory-Management-Admin-Dashboard-main/assets/css/style.css" />
+    <title>Document</title>
   </head>
   <body>
-    <div class="sidebar">
-      <div class="logo">FASHION<span>CRM</span></div>
-
-      <a class="nav-item"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-
-      <div class="nav-section">Marketing & Growth</div>
-      <div class="nav-item"><i class="fa-solid fa-bullhorn"></i> Marketing</div>
-      <div class="sub-menu">
-        <a href="#" class="sub-item">Campaigns</a>
-        <a href="#" class="sub-item"
-          >Lead Scoring <span class="badge-new">99+</span></a
-        >
-      </div>
-
-      <div class="nav-section">Commerce</div>
-      <div class="nav-item">
-        <i class="fa-solid fa-file-invoice-dollar"></i> Sales & Orders
-      </div>
-      <div class="sub-menu">
-        <a href="#" class="sub-item">Sales Pipeline (Kanban)</a>
-        <a href="#" class="sub-item">Sản phẩm & Tồn kho</a>
-      </div>
-
-      <div class="nav-section">Insights & Core</div>
-      <div class="nav-item" style="background: var(--item-hover); color: white">
-        <i class="fa-solid fa-user-astronaut"></i> <b>Customer Core</b>
-      </div>
-      <div class="sub-menu">
-        <a href="#" class="sub-item">Danh sách khách 360°</a>
-        <a href="#" class="sub-item"
-          >Hồ sơ số đo <span class="badge-ai">Smart Size</span></a
-        >
-        <a href="#" class="sub-item"
-          >Phân nhóm RFM <span class="badge-ai">AI</span></a
-        >
-        <a href="#" class="sub-item">Tủ đồ ảo (Wardrobe)</a>
-      </div>
-
-      <div class="nav-section">Communication</div>
-      <div class="nav-item">
-        <i class="fa-solid fa-comment-dots"></i> Activities
-      </div>
-      <div class="sub-menu">
-        <a href="#" class="sub-item">Lịch nhắc & Task</a>
-        <a href="#" class="sub-item">Omnichannel Chat</a>
-      </div>
-
-      <div class="nav-section">After Sales</div>
-      <div class="nav-item">
-        <i class="fa-solid fa-hand-holding-heart"></i> Customer Success
-      </div>
-      <div class="sub-menu">
-        <a href="#" class="sub-item">Đổi trả & Sửa đồ</a>
-        <a href="#" class="sub-item"
-          >Risk Monitoring <span class="badge-new">Check</span></a
-        >
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-inner slimscroll">
+        <div id="sidebar-menu" class="sidebar-menu">
+          <ul>
+            <li>
+              <a href="index.html"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/dashboard.svg"
+                  alt="img" /><span> Dashboard</span>
+              </a>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/product.svg"
+                  alt="img" /><span> Product</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="productlist.html">Product List</a></li>
+                <li><a href="addproduct.html">Add Product</a></li>
+                <li><a href="categorylist.html">Category List</a></li>
+                <li><a href="addcategory.html">Add Category</a></li>
+                <li><a href="subcategorylist.html">Sub Category List</a></li>
+                <li><a href="subaddcategory.html">Add Sub Category</a></li>
+                <li><a href="brandlist.html">Brand List</a></li>
+                <li><a href="addbrand.html">Add Brand</a></li>
+                <li><a href="importproduct.html">Import Products</a></li>
+                <li><a href="barcode.html">Print Barcode</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/sales1.svg"
+                  alt="img" /><span> Sales</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="saleslist.html">Sales List</a></li>
+                <li><a href="pos.html">POS</a></li>
+                <li><a href="pos.html">New Sales</a></li>
+                <li><a href="salesreturnlists.html">Sales Return List</a></li>
+                <li>
+                  <a href="createsalesreturns.html">New Sales Return</a>
+                </li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/purchase1.svg"
+                  alt="img" /><span> Purchase</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="purchaselist.html">Purchase List</a></li>
+                <li><a href="addpurchase.html">Add Purchase</a></li>
+                <li><a href="importpurchase.html">Import Purchase</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/expense1.svg"
+                  alt="img" /><span> Expense</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="expenselist.html">Expense List</a></li>
+                <li><a href="createexpense.html">Add Expense</a></li>
+                <li><a href="expensecategory.html">Expense Category</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/quotation1.svg"
+                  alt="img" /><span> Quotation</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="quotationList.html">Quotation List</a></li>
+                <li><a href="addquotation.html">Add Quotation</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/transfer1.svg"
+                  alt="img" /><span> Transfer</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="transferlist.html">Transfer List</a></li>
+                <li><a href="addtransfer.html">Add Transfer </a></li>
+                <li><a href="importtransfer.html">Import Transfer </a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/return1.svg"
+                  alt="img" /><span> Return</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="salesreturnlist.html">Sales Return List</a></li>
+                <li>
+                  <a href="createsalesreturn.html">Add Sales Return </a>
+                </li>
+                <li>
+                  <a href="purchasereturnlist.html">Purchase Return List</a>
+                </li>
+                <li>
+                  <a href="createpurchasereturn.html">Add Purchase Return </a>
+                </li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/users1.svg"
+                  alt="img" /><span> People</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="customerlist.html">Customer List</a></li>
+                <li><a href="addcustomer.html">Add Customer </a></li>
+                <li><a href="supplierlist.html">Supplier List</a></li>
+                <li><a href="addsupplier.html">Add Supplier </a></li>
+                <li><a href="userlist.html">User List</a></li>
+                <li><a href="adduser.html">Add User</a></li>
+                <li><a href="storelist.html">Store List</a></li>
+                <li><a href="addstore.html">Add Store</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/places.svg"
+                  alt="img" /><span> Places</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="newcountry.html">New Country</a></li>
+                <li><a href="countrieslist.html">Countries list</a></li>
+                <li><a href="newstate.html">New State </a></li>
+                <li><a href="statelist.html">State list</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/time.svg"
+                  alt="img" /><span> Report</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li>
+                  <a href="purchaseorderreport.html">Purchase order report</a>
+                </li>
+                <li><a href="inventoryreport.html">Inventory Report</a></li>
+                <li><a href="salesreport.html">Sales Report</a></li>
+                <li><a href="invoicereport.html">Invoice Report</a></li>
+                <li><a href="purchasereport.html">Purchase Report</a></li>
+                <li><a href="supplierreport.html">Supplier Report</a></li>
+                <li><a href="customerreport.html">Customer Report</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/users1.svg"
+                  alt="img" /><span> Users</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="newuser.html">New User </a></li>
+                <li><a href="userlists.html">Users List</a></li>
+              </ul>
+            </li>
+            <li class="submenu">
+              <a href="javascript:void(0);"
+                ><img
+                  src="../../Inventory-Management-Admin-Dashboard-main/assets/img/icons/settings.svg"
+                  alt="img" /><span> Settings</span>
+                <span class="menu-arrow"></span
+              ></a>
+              <ul>
+                <li><a href="generalsettings.html">General Settings</a></li>
+                <li><a href="emailsettings.html">Email Settings</a></li>
+                <li><a href="paymentsettings.html">Payment Settings</a></li>
+                <li><a href="currencysettings.html">Currency Settings</a></li>
+                <li>
+                  <a href="grouppermissions.html" class="active"
+                    >Group Permissions</a
+                  >
+                </li>
+                <li><a href="taxrates.html">Tax Rates</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
-    <div style="padding: 50px; flex: 1">
-      <h1>Hệ thống CRM 5 Module</h1>
-      <p>
-        Sidebar này đã tích hợp đầy đủ các Use Case từ quản lý cơ bản đến thuật
-        toán AI chuyên sâu cho Fashion.
-      </p>
-    </div>
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/js/jquery-3.6.0.min.js"></script>
+
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/js/feather.min.js"></script>
+
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/js/jquery.slimscroll.min.js"></script>
+
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/js/jquery.dataTables.min.js"></script>
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/js/dataTables.bootstrap4.min.js"></script>
+
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/plugins/select2/js/select2.min.js"></script>
+
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/plugins/sweetalert/sweetalerts.min.js"></script>
+
+    <script src="../../Inventory-Management-Admin-Dashboard-main/assets/js/script.js"></script>
   </body>
 </html>

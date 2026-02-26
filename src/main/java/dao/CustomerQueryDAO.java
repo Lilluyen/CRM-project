@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
+import dto.CustomerDetailDTO;
 import dto.CustomerListDTO;
 
 public class CustomerQueryDAO {
@@ -95,4 +96,22 @@ public class CustomerQueryDAO {
         }
         return customerList;
     }
+
+    public int countTotalCustomers(Connection connection) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Customers";
+
+        try (PreparedStatement stm = connection.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public CustomerDetailDTO getCustomerDetail(int customerId, Connection connection) throws SQLException {
+        CustomerDetailDTO dto = null;
+        String sql = "";
+        return dto;
+    }
+
 }

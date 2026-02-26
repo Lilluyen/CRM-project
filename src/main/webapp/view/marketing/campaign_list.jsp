@@ -196,7 +196,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/">
-                <i class="bi bi-briefcase-fill"></i> CRM-Project
+                <i class="bi bi-graph-up"></i> CRM System
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -217,6 +217,13 @@
                         <a class="nav-link" href="${pageContext.request.contextPath}/marketing/report">
                             <i class="bi bi-graph-up"></i> Reports
                         </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> Marketing
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">              
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
                     </li>
                 </ul>
             </div>
@@ -258,244 +265,196 @@
 
         <!-- Filter Section -->
         <div class="filter-card mb-4">
+    <div class="card-body">
+        <h6 class="mb-3">
+            <i class="bi bi-funnel"></i> Tìm kiếm & Lọc
+        </h6>
+
+        <form method="GET"
+              action="${pageContext.request.contextPath}/marketing/campaign"
+              class="row g-3">
+
+            <input type="hidden" name="action" value="list">
+
+            <div class="col-md-5">
+                <label class="form-label">Tên campaign</label>
+                <input type="text"
+                       class="form-control"
+                       name="search"
+                       value="${searchName}"
+                       placeholder="Nhập tên campaign...">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Trạng thái</label>
+                <select class="form-select" name="status">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="ACTIVE" ${filterStatus == 'ACTIVE' ? 'selected' : ''}>Đang chạy</option>
+                    <option value="PLANNING" ${filterStatus == 'PLANNING' ? 'selected' : ''}>Lên kế hoạch</option>
+                    <option value="PAUSED" ${filterStatus == 'PAUSED' ? 'selected' : ''}>Tạm dừng</option>
+                    <option value="COMPLETED" ${filterStatus == 'COMPLETED' ? 'selected' : ''}>Kết thúc</option>
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<c:choose>
+
+    <%-- Search nhưng không có kết quả --%>
+    <c:when test="${empty campaigns and (not empty searchName or not empty filterStatus)}">
+        <div class="alert alert-warning">
+            Không tìm thấy campaign phù hợp.
+        </div>
+    </c:when>
+
+
+    <%-- Có campaign --%>
+    <c:when test="${not empty campaigns}">
+
+        <div class="stats-card">
             <div class="card-body">
-                <h6 class="mb-3"><i class="bi bi-funnel"></i> Tìm kiếm & Lọc</h6>
-                <form method="GET" action="/marketing/campaign" class="row g-3">
-                    <input type="hidden" name="action" value="list">
-
-                    <div class="col-md-5">
-                        <label for="searchName" class="form-label">Tên campaign</label>
-                        <input type="text" class="form-control" id="searchName" name="search"
-                               placeholder="Nhập tên campaign..." value="${param.search}">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label for="filterStatus" class="form-label">Trạng thái</label>
-                        <select class="form-select" id="filterStatus" name="status">
-                            <option value="">-- Tất cả trạng thái --</option>
-                            <option value="ACTIVE" ${param.status == 'ACTIVE' ? 'selected' : ''}>Đang chạy</option>
-                            <option value="PLANNING" ${param.status == 'PLANNING' ? 'selected' : ''}>Lên kế hoạch</option>
-                            <option value="PAUSED" ${param.status == 'PAUSED' ? 'selected' : ''}>Tạm dừng</option>
-                            <option value="COMPLETED" ${param.status == 'COMPLETED' ? 'selected' : ''}>Kết thúc</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-search"></i> Tìm kiếm
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                <div class="stats-number">${campaigns.size()}</div>
+                <div class="stats-label">
+                    <c:choose>
+                        <c:when test="${not empty searchName or not empty filterStatus}">
+                            Campaign tìm thấy
+                        </c:when>
+                        <c:otherwise>
+                            Tổng Campaign
+                        </c:otherwise>
+                    </c:choose>
+                </div>
             </div>
         </div>
 
-        <!-- Content -->
-        <c:choose>
-            <c:when test="${empty campaigns}">
-                <!-- Empty State -->
-                <div class="card border-0">
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <h5>Không có campaign nào</h5>
-                        <p>Bắt đầu bằng cách <a href="${pageContext.request.contextPath}/marketing/campaign?action=create" class="fw-bold">tạo campaign mới</a></p>
-                    </div>
-                </div>
-            </c:when>
+        <div class="card table-wrapper">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tên</th>
+                            <th>Trạng thái</th>
+                            <th>Ngân sách</th>
+                            <th>Kênh</th>
+                            <th>Thời gian</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 
-            <c:otherwise>
-                <!-- Statistics -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="stats-card">
-                            <div class="card-body">
-                                <div class="stats-number">${campaigns.size()}</div>
-                                <div class="stats-label">Tổng Campaign</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <c:forEach var="campaign" items="${campaigns}">
+                            <tr>
+                                <td>
+                                    <strong>${campaign.name}</strong><br>
+                                    <small class="text-muted">${campaign.description}</small>
+                                </td>
 
-                <!-- Table -->
-                <div class="card table-wrapper">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th style="width: 20%;">Tên Campaign</th>
-                                    <th style="width: 12%;">Trạng thái</th>
-                                    <th style="width: 12%;">Ngân sách</th>
-                                    <th style="width: 12%;">Kênh</th>
-                                    <th style="width: 20%;">Thời gian</th>
-                                    <th style="width: 24%;">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <c:forEach var="campaign" items="${campaigns}">
-                                    <tr>
-                                        <!-- Name & Description -->
-                                        <td>
-                                            <div class="fw-bold">${campaign.name}</div>
-                                            <small class="text-muted d-block text-truncate">${campaign.description}</small>
-                                        </td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${campaign.status == 'ACTIVE'}">
+                                            <span class="badge-status badge-active">Đang chạy</span>
+                                        </c:when>
+                                        <c:when test="${campaign.status == 'PLANNING'}">
+                                            <span class="badge-status badge-planning">Lên kế hoạch</span>
+                                        </c:when>
+                                        <c:when test="${campaign.status == 'PAUSED'}">
+                                            <span class="badge-status badge-paused">Tạm dừng</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge-status badge-completed">Kết thúc</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
 
-                                        <!-- Status Badge -->
-                                        <td>
-                                            <c:choose>
-                                                <c:when test="${campaign.status == 'ACTIVE'}">
-                                                    <span class="badge-status badge-active">
-                                                        <i class="bi bi-play-fill"></i> Đang chạy
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${campaign.status == 'PLANNING'}">
-                                                    <span class="badge-status badge-planning">
-                                                        <i class="bi bi-hourglass"></i> Lên kế hoạch
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${campaign.status == 'PAUSED'}">
-                                                    <span class="badge-status badge-paused">
-                                                        <i class="bi bi-pause-fill"></i> Tạm dừng
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${campaign.status == 'COMPLETED'}">
-                                                    <span class="badge-status badge-completed">
-                                                        <i class="bi bi-check-circle"></i> Kết thúc
-                                                    </span>
-                                                </c:when>
-                                            </c:choose>
-                                        </td>
+                                <td class="budget-amount">
+                                    <fmt:formatNumber value="${campaign.budget}"
+                                                      type="currency"
+                                                      currencySymbol="₫"
+                                                      maxFractionDigits="0"/>
+                                </td>
 
-                                        <!-- Budget -->
-                                        <td>
-                                            <span class="budget-amount">
-                                                <fmt:formatNumber value="${campaign.budget}" type="currency" 
-                                                                  currencySymbol="₫" maxFractionDigits="0"/>
-                                            </span>
-                                        </td>
+                                <td>
+                                    <span class="channel-badge">${campaign.channel}</span>
+                                </td>
 
-                                        <!-- Channel -->
-                                        <td>
-                                            <c:choose>
-                                                <c:when test="${campaign.channel == 'EMAIL'}">
-                                                    <span class="channel-badge"><i class="bi bi-envelope"></i> Email</span>
-                                                </c:when>
-                                                <c:when test="${campaign.channel == 'SOCIAL_MEDIA'}">
-                                                    <span class="channel-badge"><i class="bi bi-share"></i> Social</span>
-                                                </c:when>
-                                                <c:when test="${campaign.channel == 'SMS'}">
-                                                    <span class="channel-badge"><i class="bi bi-chat-dots"></i> SMS</span>
-                                                </c:when>
-                                                <c:when test="${campaign.channel == 'DIRECT_MAIL'}">
-                                                    <span class="channel-badge"><i class="bi bi-mailbox"></i> Mail</span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <span class="channel-badge">${campaign.channel}</span>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </td>
+                                <td class="date-range">
+                                    ${campaign.startDate}<br>
+                                    ${campaign.endDate}
+                                </td>
 
-                                        <!-- Date Range -->
-                                        <td>
-                                            <div class="date-range">
-                                                <i class="bi bi-calendar2-event"></i>
-                                                ${campaign.startDate} 
-                                                <br>
-                                                <i class="bi bi-calendar2-x"></i>
-                                                ${campaign.endDate}
-                                            </div>
-                                        </td>
+                                <td>
+                                    <a href="${pageContext.request.contextPath}/marketing/campaign?action=detail&id=${campaign.campaignId}"
+                                       class="btn btn-sm btn-outline-info">
+                                        Xem
+                                    </a>
 
-                                        <!-- Actions -->
-                                        <td>
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <a href="${pageContext.request.contextPath}/marketing/campaign?action=detail&id=${campaign.campaignId}"
-                                                   class="btn btn-outline-info btn-action" title="Xem chi tiết">
-                                                    <i class="bi bi-eye"></i> Xem
-                                                </a>
-                                                <a href="${pageContext.request.contextPath}/marketing/campaign?action=edit&id=${campaign.campaignId}"
-                                                   class="btn btn-outline-warning btn-action" title="Chỉnh sửa">
-                                                    <i class="bi bi-pencil"></i> Sửa
-                                                </a>
-                                        
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Pagination Info and Controls -->
-                <div style="background-color: #f8f9fa; padding: 15px; border-top: 1px solid #dee2e6; border-radius: 0 0 8px 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                    <div style="font-size: 14px; color: #495057;">
-                        Hiển thị <strong>${pagination.getStartItemNumber()}-${pagination.getEndItemNumber()}</strong> 
-                        của <strong>${pagination.totalItems}</strong> campaigns
-                    </div>
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
-                        <c:if test="${pagination.hasPreviousPage()}">
-                            <a href="<c:url value='/marketing/campaign?action=list&page=${pagination.currentPage - 1}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
-                               style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">
-                                <i class="bi bi-chevron-left"></i> Trước
-                            </a>
-                        </c:if>
-                        <c:if test="${!pagination.hasPreviousPage()}">
-                            <button style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #999; cursor: not-allowed; border-radius: 4px; font-size: 13px; opacity: 0.5;" disabled>
-                                <i class="bi bi-chevron-left"></i> Trước
-                            </button>
-                        </c:if>
-
-                        <!-- Page Numbers -->
-                        <c:set var="totalPages" value="${pagination.getTotalPages()}"/>
-                        <c:set var="currentPage" value="${pagination.currentPage}"/>
-                        <c:set var="startPage" value="${Math.max(1, currentPage - 2)}"/>
-                        <c:set var="endPage" value="${Math.min(totalPages, currentPage + 2)}"/>
-
-                        <c:if test="${startPage > 1}">
-                            <a href="<c:url value='/marketing/campaign?action=list&page=1${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
-                               style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">1</a>
-                            <c:if test="${startPage > 2}">
-                                <span style="padding: 6px 10px;">...</span>
-                            </c:if>
-                        </c:if>
-
-                        <c:forEach var="page" begin="${startPage}" end="${endPage}">
-                            <c:choose>
-                                <c:when test="${page == currentPage}">
-                                    <span style="padding: 6px 10px; border: 1px solid #0066cc; background-color: #0066cc; color: white; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500;">${page}</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <a href="<c:url value='/marketing/campaign?action=list&page=${page}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
-                                       style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">${page}</a>
-                                </c:otherwise>
-                            </c:choose>
+                                    <a href="${pageContext.request.contextPath}/marketing/campaign?action=edit&id=${campaign.campaignId}"
+                                       class="btn btn-sm btn-outline-warning">
+                                        Sửa
+                                    </a>
+                                </td>
+                            </tr>
                         </c:forEach>
 
-                        <c:if test="${endPage < totalPages}">
-                            <c:if test="${endPage < totalPages - 1}">
-                                <span style="padding: 6px 10px;">...</span>
-                            </c:if>
-                            <a href="<c:url value='/marketing/campaign?action=list&page=${totalPages}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
-                               style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">${totalPages}</a>
+                    </tbody>
+                </table>
+            </div>
+
+            <c:if test="${not empty pagination}">
+                <div class="p-3 d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        Hiển thị
+                        ${pagination.getStartItemNumber()} -
+                        ${pagination.getEndItemNumber()}
+                        / ${pagination.totalItems}
+                    </div>
+
+                    <div>
+                        <c:if test="${pagination.hasPreviousPage()}">
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${pagination.currentPage - 1}">
+                                Trước
+                            </a>
                         </c:if>
 
                         <c:if test="${pagination.hasNextPage()}">
-                            <a href="<c:url value='/marketing/campaign?action=list&page=${pagination.currentPage + 1}${not empty param.search ? '&search='.concat(param.search) : ''}${not empty param.status ? '&status='.concat(param.status) : ''}'/>" 
-                               style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #0066cc; cursor: pointer; border-radius: 4px; text-decoration: none; font-size: 13px;">
-                                Tiếp <i class="bi bi-chevron-right"></i>
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${pagination.currentPage + 1}">
+                                Tiếp
                             </a>
-                        </c:if>
-                        <c:if test="${!pagination.hasNextPage()}">
-                            <button style="padding: 6px 10px; border: 1px solid #dee2e6; background: white; color: #999; cursor: not-allowed; border-radius: 4px; font-size: 13px; opacity: 0.5;" disabled>
-                                Tiếp <i class="bi bi-chevron-right"></i>
-                            </button>
                         </c:if>
                     </div>
                 </div>
-            </c:otherwise>
-        </c:choose>
+            </c:if>
+
+        </div>
+
+    </c:when>
+
+
+    <%-- Không có campaign nào --%>
+    <c:otherwise>
+        <div class="card border-0">
+            <div class="empty-state text-center p-4">
+                <i class="bi bi-inbox" style="font-size:40px"></i>
+                <h5>Không có campaign nào</h5>
+                <a href="${pageContext.request.contextPath}/marketing/campaign?action=create"
+                   class="btn btn-primary mt-3">
+                    Tạo Campaign
+                </a>
+            </div>
+        </div>
+    </c:otherwise>
+
+</c:choose>
     </div>
 
     <!-- Delete Confirmation Modal -->
