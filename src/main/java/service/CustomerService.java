@@ -10,6 +10,7 @@ import dao.CustomerQueryDAO;
 import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import dto.CustomerListDTO;
+import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
 import model.StyleTag;
@@ -27,6 +28,10 @@ public class CustomerService {
 
                 if (customerDAO.existsByPhone(dto.getPhone(), conn)) {
                     throw new DuplicatePhoneException("Phone already exists");
+                }
+
+                if (customerDAO.existsByEmail(dto.getEmail(), conn)) {
+                    throw new DuplicateEmailException("Email already exists");
                 }
 
                 int newCustomerId = customerDAO.insertCustomer(CustomerMapper.toCustomer(dto, userId), conn);

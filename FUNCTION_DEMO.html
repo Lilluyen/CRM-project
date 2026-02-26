@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer List - Chức năng Action Menu & Preview</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background-color: #f8fafc;
+        padding: 40px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        color: #1e293b;
+      }
+
+      .note {
+        color: #64748b;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .demo-section {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .demo-section h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #1e293b;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background-color: #f1f5f9;
+      }
+
+      th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        color: #64748b;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      td {
+        padding: 16px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .customer-info {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+      }
+
+      .loyalty-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .loyalty-badge.gold {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .loyalty-badge.silver {
+        background-color: #f1f5f9;
+        color: #475569;
+      }
+
+      .loyalty-badge.black {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 4px 12px;
+        background-color: #dbeafe;
+        color: #0c4a6e;
+        border-radius: 6px;
+        font-size: 11px;
+        margin-right: 4px;
+      }
+
+      .progress {
+        width: 100%;
+        height: 6px;
+        background-color: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background-color: #10b981;
+        transition: width 0.3s ease;
+      }
+
+      .progress-bar.high-return {
+        background-color: #ef4444;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .actions i {
+        cursor: pointer;
+        color: #94a3b8;
+        transition: 0.2s;
+        font-size: 16px;
+      }
+
+      .actions i:hover {
+        color: #3b82f6;
+      }
+
+      .action-wrapper {
+        position: relative;
+        display: inline-block;
+      }
+
+      .action-menu {
+        display: none;
+        position: absolute;
+        right: -10px;
+        top: 100%;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        min-width: 120px;
+        z-index: 100;
+        margin-top: 4px;
+      }
+
+      .action-menu div {
+        padding: 10px 16px;
+        cursor: pointer;
+        font-size: 13px;
+        color: #374151;
+        transition: 0.2s;
+        border-bottom: 1px solid #f1f5f9;
+      }
+
+      .action-menu div:last-child {
+        border-bottom: none;
+      }
+
+      .action-menu div:hover {
+        background-color: #f8fafc;
+        color: #3b82f6;
+      }
+
+      .action-menu div:last-child:hover {
+        color: #ef4444;
+      }
+
+      /* Preview Panel */
+      .preview-panel {
+        position: fixed;
+        right: -500px;
+        top: 0;
+        width: 500px;
+        height: 100vh;
+        background: white;
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        transition: right 0.3s ease-out;
+        overflow-y: auto;
+      }
+
+      .preview-panel.show {
+        right: 0;
+        animation: slideInRight 0.3s ease-out;
+      }
+
+      .preview-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .preview-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .preview-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e293b;
+      }
+
+      .close-preview {
+        font-size: 24px;
+        cursor: pointer;
+        color: #94a3b8;
+        transition: 0.2s;
+      }
+
+      .close-preview:hover {
+        color: #64748b;
+      }
+
+      .preview-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+      }
+
+      .preview-section {
+        margin-bottom: 24px;
+      }
+
+      .preview-section h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .preview-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .preview-label {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .preview-value {
+        font-size: 13px;
+        color: #1e293b;
+      }
+
+      @keyframes slideInRight {
+        from {
+          right: -500px;
+          opacity: 0;
+        }
+        to {
+          right: 0;
+          opacity: 1;
+        }
+      }
+
+      .backdrop {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 998;
+      }
+
+      .backdrop.show {
+        display: block;
+      }
+
+      .code-section {
+        background-color: #f1f5f9;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 16px;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        color: #1e293b;
+        overflow-x: auto;
+      }
+
+      .highlight {
+        background-color: #fef08a;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>✨ Customer List - Chức năng Action Menu & Preview</h1>
+      <div class="note">
+        Đây là demo chức năng action menu (icon 3 chấm) với Preview và Delete
+      </div>
+
+      <div class="demo-section">
+        <h2>📋 Bảng Khách Hàng (Demo)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 240px">Customer</th>
+              <th style="width: 140px">Loyalty & RFM</th>
+              <th style="width: 140px">Fit Profile</th>
+              <th style="width: 120px">Styles</th>
+              <th style="width: 120px">Return Rate</th>
+              <th style="width: 100px">Last Purchase</th>
+              <th style="width: 60px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="customer-info">
+                <div class="avatar">A</div>
+                <div>
+                  <div><strong>Alice Johnson</strong></div>
+                  <div style="color: #94a3b8; font-size: 13px">0123456789</div>
+                </div>
+              </td>
+              <td>
+                <div class="loyalty-badge gold">GOLD</div>
+                <div style="color: #94a3b8; font-size: 12px; margin-top: 4px">
+                  RFM Score: 95
+                </div>
+              </td>
+              <td>
+                <div><strong>M</strong></div>
+                <div style="color: #94a3b8; font-size: 13px">Hourglass</div>
+              </td>
+              <td>
+                <span class="tag">Casual</span>
+                <span class="tag">Summer</span>
+              </td>
+              <td>
+                <div>15%</div>
+                <div class="progress">
+                  <div class="progress-bar" style="width: 15%"></div>
+                </div>
+              </td>
+              <td>2025-02-20</td>
+              <td class="actions">
+                <i
+                  class="fa-regular fa-eye"
+                  onclick="alert('View customer details for Alice')"
+                  title="View Details"
+                  >👁️</i
+                >
+                <div class="action-wrapper">
+                  <i
+                    class="fa-solid fa-ellipsis-vertical"
+                    onclick="toggleActionMenu(event)"
+                    title="More actions"
+                    >⋮</i
+                  >
+                  <div class="action-menu" style="display: none">
+                    <div onclick="openPreview(1)">Preview</div>
+                    <div onclick="deleteCustomer(1)">Delete</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="customer-info">
+                <div class="avatar">B</div>
+                <div>
+                  <div><strong>Bob Smith</strong></div>
+                  <div style="color: #94a3b8; font-size: 13px">0987654321</div>
+                </div>
+              </td>
+              <td>
+                <div class="loyalty-badge silver">SILVER</div>
+                <div style="color: #94a3b8; font-size: 12px; margin-top: 4px">
+                  RFM Score: 75
+                </div>
+              </td>
+              <td>
+                <div><strong>L</strong></div>
+                <div style="color: #94a3b8; font-size: 13px">Apple</div>
+              </td>
+              <td>
+                <span class="tag">Formal</span>
+              </td>
+              <td>
+                <div>32%</div>
+                <div class="progress">
+                  <div
+                    class="progress-bar high-return"
+                    style="width: 32%"></div>
+                </div>
+              </td>
+              <td>2025-02-15</td>
+              <td class="actions">
+                <i
+                  class="fa-regular fa-eye"
+                  onclick="alert('View customer details for Bob')"
+                  title="View Details"
+                  >👁️</i
+                >
+                <div class="action-wrapper">
+                  <i
+                    class="fa-solid fa-ellipsis-vertical"
+                    onclick="toggleActionMenu(event)"
+                    title="More actions"
+                    >⋮</i
+                  >
+                  <div class="action-menu" style="display: none">
+                    <div onclick="openPreview(2)">Preview</div>
+                    <div onclick="deleteCustomer(2)">Delete</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="demo-section">
+        <h2>🔑 Tính năng chính</h2>
+        <ul style="list-style: none; padding: 0">
+          <li style="padding: 10px 0; border-bottom: 1px solid #e2e8f0">
+            <strong>✅ Icon 3 chấm (⋮)</strong> - Khi click vào sẽ hiện menu với
+            2 action
+          </li>
+          <li style="padding: 10px 0; border-bottom: 1px solid #e2e8f0">
+            <strong>👁️ Preview</strong> - Click vào sẽ mở popup xem chi tiết
+            khách hàng
+          </li>
+          <li style="padding: 10px 0">
+            <strong>🗑️ Delete</strong> - Click vào sẽ xóa khách hàng (có xác
+            nhận)
+          </li>
+        </ul>
+      </div>
+
+      <div class="demo-section">
+        <h2>📝 Cách sử dụng</h2>
+        <ol style="padding-left: 20px; line-height: 1.8">
+          <li>
+            Click vào icon
+            <span
+              style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px"
+              >⋮</span
+            >
+            ở cuối hàng
+          </li>
+          <li>Menu sẽ hiện lên với 2 option: Preview và Delete</li>
+          <li>
+            Click <strong>Preview</strong> để xem chi tiết khách hàng trong
+            popup
+          </li>
+          <li>Click <strong>Delete</strong> để xóa (sẽ có xác nhận trước)</li>
+        </ol>
+      </div>
+
+      <div class="demo-section">
+        <h2>💻 Code JavaScript chính</h2>
+        <div class="code-section">
+          function <span class="highlight">toggleActionMenu</span>(event) {<br />
+          &nbsp;&nbsp;const menu =
+          event.target.closest('.action-wrapper').querySelector('.action-menu');<br />
+          &nbsp;&nbsp;if (menu) {<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;menu.style.display = menu.style.display ===
+          'none' ? 'flex' : 'none';<br />
+          &nbsp;&nbsp;}<br />
+          }<br /><br />
+          function <span class="highlight">openPreview</span>(customerId) {<br />
+          &nbsp;&nbsp;// Lấy dữ liệu khách hàng<br />
+          &nbsp;&nbsp;// Hiện popup xem chi tiết<br />
+          }<br /><br />
+          function <span class="highlight">deleteCustomer</span>(customerId)
+          {<br />
+          &nbsp;&nbsp;if (confirm('Bạn chắc chắn muốn xóa?')) {<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;// Call API xóa<br />
+          &nbsp;&nbsp;}<br />
+          }
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="backdrop show"
+      id="backdrop"
+      onclick="closePreviewPanel()"></div>
+
+    <!-- Preview Panel -->
+    <div class="preview-panel" id="previewPanel">
+      <div class="preview-content">
+        <div class="preview-header">
+          <h3>Customer Preview</h3>
+          <span class="close-preview" onclick="closePreviewPanel()">✕</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-section">
+            <h4>Basic Information</h4>
+            <div class="preview-grid">
+              <div class="preview-item">
+                <span class="preview-label">Name</span>
+                <span class="preview-value" id="previewName">-</span>
+              </div>
+              <div class="preview-item">
+                <span class="preview-label">Phone</span>
+                <span class="preview-value" id="previewPhone">-</span>
+              </div>
+            </div>
+          </div>
+          <div class="preview-section">
+            <h4>Fit Profile</h4>
+            <div class="preview-grid">
+              <div class="preview-item">
+                <span class="preview-label">Preferred Size</span>
+                <span class="preview-value" id="previewSize">-</span>
+              </div>
+              <div class="preview-item">
+                <span class="preview-label">Body Shape</span>
+                <span class="preview-value" id="previewBodyShape">-</span>
+              </div>
+            </div>
+          </div>
+          <div class="preview-section">
+            <h4>Customer Status</h4>
+            <div class="preview-grid">
+              <div class="preview-item">
+                <span class="preview-label">Loyalty Tier</span>
+                <span class="preview-value" id="previewLoyalty">-</span>
+              </div>
+              <div class="preview-item">
+                <span class="preview-label">Return Rate</span>
+                <span class="preview-value" id="previewReturnRate">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Mock data
+      const customers = {
+        1: {
+          name: "Alice Johnson",
+          phone: "0123456789",
+          size: "M",
+          bodyShape: "Hourglass",
+          loyalty: "GOLD",
+          returnRate: "15%",
+        },
+        2: {
+          name: "Bob Smith",
+          phone: "0987654321",
+          size: "L",
+          bodyShape: "Apple",
+          loyalty: "SILVER",
+          returnRate: "32%",
+        },
+      };
+
+      function toggleActionMenu(event) {
+        // Close all menus first
+        document.querySelectorAll(".action-menu").forEach((m) => {
+          if (
+            m !==
+            event.target
+              .closest(".action-wrapper")
+              .querySelector(".action-menu")
+          ) {
+            m.style.display = "none";
+          }
+        });
+
+        // Toggle current menu
+        const menu = event.target
+          .closest(".action-wrapper")
+          .querySelector(".action-menu");
+        if (menu) {
+          menu.style.display = menu.style.display === "none" ? "flex" : "none";
+          menu.style.flexDirection = "column";
+        }
+      }
+
+      function openPreview(customerId) {
+        const customer = customers[customerId];
+        if (!customer) return;
+
+        document.getElementById("previewName").textContent = customer.name;
+        document.getElementById("previewPhone").textContent = customer.phone;
+        document.getElementById("previewSize").textContent = customer.size;
+        document.getElementById("previewBodyShape").textContent =
+          customer.bodyShape;
+        document.getElementById("previewLoyalty").textContent =
+          customer.loyalty;
+        document.getElementById("previewReturnRate").textContent =
+          customer.returnRate;
+
+        const panel = document.getElementById("previewPanel");
+        const backdrop = document.getElementById("backdrop");
+        panel.classList.add("show");
+        backdrop.classList.add("show");
+
+        // Close menu
+        document
+          .querySelectorAll(".action-menu")
+          .forEach((m) => (m.style.display = "none"));
+      }
+
+      function closePreviewPanel() {
+        const panel = document.getElementById("previewPanel");
+        const backdrop = document.getElementById("backdrop");
+        panel.classList.remove("show");
+      }
+
+      function deleteCustomer(customerId) {
+        if (confirm("Are you sure you want to delete this customer?")) {
+          alert("Customer " + customerId + " deleted successfully!");
+          // In real app, call API
+        }
+      }
+
+      // Close menu when clicking outside
+      document.addEventListener("click", function (e) {
+        if (!e.target.closest(".action-wrapper")) {
+          document
+            .querySelectorAll(".action-menu")
+            .forEach((m) => (m.style.display = "none"));
+        }
+      });
+    </script>
+  </body>
+</html>
