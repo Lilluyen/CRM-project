@@ -12,7 +12,6 @@
             background-color: #f4f8fb;
         }
 
-        /* ===== KHUNG CHÍNH ===== */
         .container-box {
             width: 95%;
             margin: 30px auto;
@@ -28,11 +27,11 @@
             margin-bottom: 20px;
         }
 
-        /* ===== SEARCH BAR ===== */
         .top-bar {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            align-items: center;
         }
 
         .top-bar input, .top-bar select {
@@ -47,24 +46,14 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-        }
-
-        .btn-search {
-            background-color: #1976d2;
+            text-decoration: none;
             color: white;
         }
 
-        .btn-add {
-            background-color: #2e7d32;
-            color: white;
-        }
+        .btn-search { background-color: #1976d2; }
+        .btn-add { background-color: #2e7d32; }
+        .btn-export { background-color: #757575; }
 
-        .btn-export {
-            background-color: #757575;
-            color: white;
-        }
-
-        /* ===== TABLE ===== */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -110,15 +99,9 @@
             color: white;
         }
 
-        .edit-btn {
-            background: #1976d2;
-        }
+        .edit-btn { background: #1976d2; }
+        .delete-btn { background: #d32f2f; }
 
-        .delete-btn {
-            background: #d32f2f;
-        }
-
-        /* ===== PAGINATION ===== */
         .pagination {
             margin-top: 20px;
             text-align: center;
@@ -136,6 +119,7 @@
         .pagination a.active {
             background: #1976d2;
             color: white;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -146,11 +130,20 @@
 
     <h1>Category Management</h1>
 
-    <!-- SEARCH BAR -->
+    <!-- SEARCH + STATUS -->
     <form method="get" action="list" class="top-bar">
+
         <input type="text" name="search"
                placeholder="Search category..."
                value="${param.search}" />
+
+        <select name="status">
+            <option value="">All Status</option>
+            <option value="ACTIVE"
+                ${param.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+            <option value="INACTIVE"
+                ${param.status == 'INACTIVE' ? 'selected' : ''}>INACTIVE</option>
+        </select>
 
         <button type="submit" class="btn btn-search">Search</button>
 
@@ -175,10 +168,10 @@
 
         <c:forEach var="c" items="${categoryList}" varStatus="loop">
             <tr>
-                <!-- STT chạy đúng 1-2-3-4-5 -->
-                <td>${loop.index + 1}</td>
+                <!-- STT chạy liên tục qua các trang -->
+                <td>${(currentPage - 1) * 5 + loop.index + 1}</td>
 
-                <td>${c.name}</td>
+                <td>${c.categoryName}</td>
                 <td>${c.description}</td>
 
                 <td>
@@ -195,11 +188,11 @@
                 <td>${c.createdAt}</td>
 
                 <td>
-                    <a href="edit?id=${c.id}">
+                    <a href="edit?id=${c.categoryId}">
                         <button type="button" class="action-btn edit-btn">Edit</button>
                     </a>
 
-                    <a href="delete?id=${c.id}"
+                    <a href="delete?id=${c.categoryId}"
                        onclick="return confirm('Are you sure to delete this category?')">
                         <button type="button" class="action-btn delete-btn">Delete</button>
                     </a>
@@ -209,6 +202,16 @@
 
         </tbody>
     </table>
+
+    <!-- PAGINATION -->
+    <div class="pagination">
+        <c:forEach begin="1" end="${totalPages}" var="i">
+            <a href="list?page=${i}&search=${param.search}&status=${param.status}"
+               class="${i == currentPage ? 'active' : ''}">
+                ${i}
+            </a>
+        </c:forEach>
+    </div>
 
 </div>
 
