@@ -6,6 +6,6 @@
 <title>Admin Home</title>
 </head>
 <body>
-
+<h2>Admin Home</h2>
 </body>
 </html>
