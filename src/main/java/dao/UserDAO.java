@@ -198,4 +198,71 @@ public class UserDAO {
 
         return false;
     }
+
+    /*
+     * =========================
+     * FIND USER BY EMAIL
+     * =========================
+     */
+    public User findByEmail(String email) {
+
+        String sql = """
+        SELECT
+            u.user_id,
+            u.username,
+            u.password_hash,
+            u.email,
+            u.full_name,
+            u.phone,
+            u.status,
+            u.created_at,
+            u.updated_at,
+            u.last_login_at,
+            r.role_id,
+            r.role_name,
+            r.description
+        FROM Users u
+        LEFT JOIN Roles r ON u.role_id = r.role_id
+        WHERE u.email = ?
+    """;
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return mapUser(rs);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean updatePassword(int userId, String passwordHash) {
+
+        String sql = """
+        UPDATE Users
+        SET password_hash = ?,
+            updated_at = ?
+        WHERE user_id = ?
+    """;
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setString(1, passwordHash);
+            ps.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+            ps.setInt(3, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }
