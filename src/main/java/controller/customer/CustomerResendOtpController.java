@@ -35,7 +35,7 @@ public class CustomerResendOtpController extends HttpServlet {
             otpService.generateAndSendOtp(customer.getEmail());
 
             // dùng session để giữ message sau redirect
-            request.getSession().setAttribute("success", "OTP mới đã được gửi.");
+            request.getSession().setAttribute("success", "A new OTP has been sent.");
 
         } catch (Exception e) {
 

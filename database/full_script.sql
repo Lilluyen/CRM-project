@@ -555,6 +555,22 @@ CONSTRAINT fk_users_role
 	REFERENCES Roles(role_id)
 );
 GO
+
+CREATE TABLE [dbo].[UserOTP] (
+    user_id INT PRIMARY KEY,
+    otp_hash NVARCHAR(255) NOT NULL,
+    otp_expired_at DATETIME2 NOT NULL,
+    failed_attempt INT DEFAULT 0,
+    send_count INT DEFAULT 0,
+    last_send DATETIME2 DEFAULT SYSDATETIME(),
+    created_at DATETIME2 DEFAULT SYSDATETIME(),
+
+    CONSTRAINT fk_userotp_user
+        FOREIGN KEY (user_id)
+        REFERENCES [dbo].[Users](user_id)
+        ON DELETE CASCADE
+);
+GO
 /****** Object:  Table [dbo].[Virtual_Wardrobe]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -651,7 +667,9 @@ VALUES
 
 (5,'manager01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','manager@crm.com','Manager','0900000005',5,'ACTIVE',GETDATE()),
 
-(6,'blocked_user','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','blockeduser@gmail.com',N'Blocked Staff','0909999999',3,'LOCKED',GETDATE());
+(6,'blocked_user','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','blockeduser@gmail.com',N'Blocked Staff','0909999999',3,'LOCKED',GETDATE()),
+
+(7,'change_pass','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','changepass@gmail.com',N'User Change Pass','0909999999',1,'ACTIVE',GETDATE());
 
 SET IDENTITY_INSERT [dbo].[Users] OFF
 GO

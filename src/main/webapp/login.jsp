@@ -103,7 +103,10 @@
 
                 <!-- Remember -->
                 <div class="flex justify-between items-center">
-                    <a href="#" class="text-primary text-sm">Forgot password?</a>
+                    <a href="${pageContext.request.contextPath}/reset-password"
+                       class="text-primary text-sm hover:underline">
+                        Forgot password?
+                    </a>
                 </div>
 
                 <!-- Submit -->
