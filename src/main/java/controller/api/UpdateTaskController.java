@@ -21,12 +21,13 @@ import util.JsonUtility;
  * Responsibility: Update an existing task and return JSON response
  * 
  * Request: POST /api/tasks/update
- * Body: taskId, title, description, related_type, related_id, priority, due_date, status
+ * Body: taskId, title, description, related_type, related_id, priority,
+ * due_date, status
  * 
  * Response: {
- *   "success": true,
- *   "data": { taskId, title, ... },
- *   "message": "Task updated successfully"
+ * "success": true,
+ * "data": { taskId, title, ... },
+ * "message": "Task updated successfully"
  * }
  * 
  * Layer: CONTROLLER
@@ -41,7 +42,7 @@ public class UpdateTaskController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         // Set JSON response content type
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -61,24 +62,21 @@ public class UpdateTaskController extends HttpServlet {
             if (taskIdParam == null || taskIdParam.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(
-                    JsonUtility.createErrorResponse("Task ID is required")
-                );
+                        JsonUtility.createErrorResponse("Task ID is required"));
                 return;
             }
 
             if (title == null || title.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(
-                    JsonUtility.createErrorResponse("Title is required")
-                );
+                        JsonUtility.createErrorResponse("Title is required"));
                 return;
             }
 
             if (description == null || description.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(
-                    JsonUtility.createErrorResponse("Description is required")
-                );
+                        JsonUtility.createErrorResponse("Description is required"));
                 return;
             }
 
@@ -92,8 +90,7 @@ public class UpdateTaskController extends HttpServlet {
             } catch (NumberFormatException e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(
-                    JsonUtility.createErrorResponse("Invalid Task ID")
-                );
+                        JsonUtility.createErrorResponse("Invalid Task ID"));
                 return;
             }
 
@@ -103,8 +100,7 @@ public class UpdateTaskController extends HttpServlet {
             } catch (NumberFormatException e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(
-                    JsonUtility.createErrorResponse("Invalid Related ID")
-                );
+                        JsonUtility.createErrorResponse("Invalid Related ID"));
                 return;
             }
 
@@ -115,8 +111,7 @@ public class UpdateTaskController extends HttpServlet {
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(
-                    JsonUtility.createErrorResponse("Invalid date format. Use YYYY-MM-DD")
-                );
+                        JsonUtility.createErrorResponse("Invalid date format. Use YYYY-MM-DD"));
                 return;
             }
 
@@ -130,8 +125,7 @@ public class UpdateTaskController extends HttpServlet {
                 if (existingTask == null) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     response.getWriter().write(
-                        JsonUtility.createErrorResponse("Task not found")
-                    );
+                            JsonUtility.createErrorResponse("Task not found"));
                     return;
                 }
 
@@ -153,8 +147,7 @@ public class UpdateTaskController extends HttpServlet {
                 if (!success) {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     response.getWriter().write(
-                        JsonUtility.createErrorResponse("Failed to update task")
-                    );
+                            JsonUtility.createErrorResponse("Failed to update task"));
                     return;
                 }
 
@@ -178,8 +171,7 @@ public class UpdateTaskController extends HttpServlet {
 
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(
-                JsonUtility.createErrorResponse("Server error: " + e.getMessage())
-            );
+                    JsonUtility.createErrorResponse("Server error: " + e.getMessage()));
         }
     }
 }

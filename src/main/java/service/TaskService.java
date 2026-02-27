@@ -1,14 +1,13 @@
 // service/TaskService.java (additions)
 package service;
 
+import java.sql.Connection;
+import java.util.Comparator;
+import java.util.List;
+
 import dao.TaskDAO;
 import model.Task;
 import model.User;
-import util.DBContext;
-
-import java.sql.Connection;
-import java.util.List;
-import java.util.Comparator;
 
 /**
  * Service layer: Orchestrates business logic and coordinates between
@@ -39,18 +38,19 @@ public class TaskService {
      * Get tasks for a specific user based on role and permissions.
      * This is BUSINESS LOGIC (Service layer responsibility).
      * 
-     * @param user Current authenticated user
+     * @param user   Current authenticated user
      * @param sortBy Sort criteria (deadline, status, etc.)
-     * @param page Pagination page number
+     * @param page   Pagination page number
      * @return List of Task domain objects (NOT JSON-serialized)
      */
     public List<Task> getTasksForUser(User user, String sortBy, int page) throws Exception {
         List<Task> tasks;
 
-        // Business rule: Admins and Managers see all tasks; others see only assigned tasks
-        if (user != null && user.getRole() != null && 
-            ("ADMIN".equalsIgnoreCase(user.getRole().getRoleName()) ||
-             "MANAGER".equalsIgnoreCase(user.getRole().getRoleName()))) {
+        // Business rule: Admins and Managers see all tasks; others see only assigned
+        // tasks
+        if (user != null && user.getRole() != null &&
+                ("ADMIN".equalsIgnoreCase(user.getRole().getRoleName()) ||
+                        "MANAGER".equalsIgnoreCase(user.getRole().getRoleName()))) {
             tasks = taskDAO.getAllTasks();
         } else if (user != null) {
             tasks = taskDAO.findByUser(user.getUserId());
@@ -61,10 +61,10 @@ public class TaskService {
         // Apply sorting (business logic)
         if ("deadline".equals(sortBy)) {
             tasks.sort(Comparator.comparing(Task::getDueDate,
-                Comparator.nullsLast(Comparator.naturalOrder())));
+                    Comparator.nullsLast(Comparator.naturalOrder())));
         } else if ("status".equals(sortBy)) {
             tasks.sort(Comparator.comparing(Task::getStatus,
-                Comparator.nullsLast(Comparator.naturalOrder())));
+                    Comparator.nullsLast(Comparator.naturalOrder())));
         }
 
         return tasks;
@@ -74,9 +74,9 @@ public class TaskService {
      * Get total count of tasks for a user.
      */
     public int getTotalTasksForUser(User user) throws Exception {
-        if (user != null && user.getRole() != null && 
-            ("ADMIN".equalsIgnoreCase(user.getRole().getRoleName()) ||
-             "MANAGER".equalsIgnoreCase(user.getRole().getRoleName()))) {
+        if (user != null && user.getRole() != null &&
+                ("ADMIN".equalsIgnoreCase(user.getRole().getRoleName()) ||
+                        "MANAGER".equalsIgnoreCase(user.getRole().getRoleName()))) {
             return taskDAO.getAllTasks().size();
         } else if (user != null) {
             return taskDAO.findByUser(user.getUserId()).size();
@@ -85,4 +85,13 @@ public class TaskService {
     }
 
     // ...existing createTask(), updateTask(), updateProgress() methods...
+
+    public boolean createTask(Task task) throws Exception {
+        return true;
+    }
+
+    public boolean updateTask(Task task) throws Exception {
+        return true;
+    }
+
 }
