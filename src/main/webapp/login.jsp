@@ -57,6 +57,11 @@
                         ${error}
                 </div>
             </c:if>
+            <c:if test="${not empty param.error}">
+                <div class="mb-4 p-3 rounded bg-red-100 text-red-600 text-sm">
+                        ${param.error}
+                </div>
+            </c:if>
 
             <!-- LOGIN FORM -->
             <form action="login" method="post" class="space-y-4">
