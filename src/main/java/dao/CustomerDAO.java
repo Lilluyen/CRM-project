@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import dto.CustomerDetailDTO;
 import model.Customer;
 import util.DBContext;
 
@@ -137,6 +138,65 @@ public class CustomerDAO {
             ps.setInt(1, customerId);
             int affectedRows = ps.executeUpdate();
             return affectedRows > 0;
+        }
+    }
+
+    public CustomerDetailDTO getCustomerBase(Connection conn, int id) throws Exception {
+
+        String sql = """
+                    SELECT
+                        c.customer_id,
+                        c.name,
+                        c.phone,
+                        c.email,
+                        c.birthday,
+                        c.gender,
+                        c.address,
+                        c.social_link,
+                        c.customer_type,
+                        c.status,
+                        c.loyalty_tier,
+                        c.rfm_score,
+                        c.return_rate,
+                        c.last_purchase,
+                        u.full_name AS owner_name
+                    FROM Customers c
+                    LEFT JOIN Users u ON c.owner_id = u.user_id
+                    WHERE c.customer_id = ?
+                """;
+
+        try (var ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (var rs = ps.executeQuery()) {
+
+                if (!rs.next())
+                    return null;
+
+                CustomerDetailDTO dto = new CustomerDetailDTO();
+
+                dto.setCustomerId(rs.getInt("customer_id"));
+                dto.setName(rs.getString("name"));
+                dto.setPhone(rs.getString("phone"));
+                dto.setEmail(rs.getString("email"));
+                dto.setBirthday(rs.getDate("birthday").toLocalDate());
+                dto.setGender(rs.getString("gender"));
+                dto.setAddress(rs.getString("address"));
+                dto.setSocialLink(rs.getString("social_link"));
+                dto.setCustomerType(rs.getString("customer_type"));
+                dto.setStatus(rs.getString("status"));
+                dto.setLoyaltyTier(rs.getString("loyalty_tier"));
+                dto.setRfmScore(rs.getInt("rfm_score"));
+                dto.setReturnRate(rs.getDouble("return_rate"));
+                dto.setLastPurchase(
+                        rs.getTimestamp("last_purchase") != null
+                                ? rs.getTimestamp("last_purchase").toLocalDateTime()
+                                : null);
+                dto.setOwnerName(rs.getString("owner_name"));
+
+                return dto;
+            }
         }
     }
 
