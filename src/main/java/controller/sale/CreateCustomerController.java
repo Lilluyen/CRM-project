@@ -31,8 +31,6 @@ public class CreateCustomerController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // TODO Auto-generated method stub
 
-        CustomerService customerService = new CustomerService();
-
         try {
             List<StyleTag> styleTagList = customerService.getListStyleTags();
 

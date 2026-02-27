@@ -113,7 +113,18 @@
                         <label class="cf__label">Shoulder (cm)</label>
                         <input class="cf__input" type="number" step="0.1" name="shoulder" placeholder="Ex: 40.0">
                     </div>
+
                 </div>
+                     <div class="cf__field">
+                        <label class="cf__label">Body Shape</label>
+                        <select name="bodyShape" class="cf__input">
+                            <option value="HOURGLASS">Hourglass</option>
+                            <option value="PEAR">Pear</option>
+                            <option value="APPLE">Apple</option>
+                            <option value="RECTANGLE">Rectangle</option>
+                            <option value="INVERTED_TRIANGLE">Inverted Triangle</option>
+                        </select>
+                    </div>
             </section>
 
             <!-- STYLE -->

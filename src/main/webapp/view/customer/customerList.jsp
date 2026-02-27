@@ -64,7 +64,7 @@
                                 </c:if>
                             </div>
                             <div>
-                                <div><strong>${c.name}</strong></div>
+                                <div onclick="viewCustomer(${c.customerId})" style="cursor:pointer;"><strong>${c.name}</strong></div>
                                 <div class="muted">${c.phone}</div>
                             </div>
                         </td>

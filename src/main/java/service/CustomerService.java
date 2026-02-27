@@ -2,7 +2,10 @@ package service;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import dao.CustomerDAO;
 import dao.CustomerMeasurementDAO;
@@ -15,7 +18,6 @@ import dto.CustomerListDTO;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
-import model.Customer;
 import model.CustomerMeasurement;
 import model.StyleTag;
 import util.DBContext;
@@ -64,6 +66,60 @@ public class CustomerService {
 
     }
 
+    public void updateCustomer(CustomerCreateDTO dto, int customerId)
+            throws Exception {
+
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+
+                // ============================
+                // 1. CHECK DUPLICATE (exclude chính nó)
+                // ============================
+                if (customerDAO.existsByPhoneExcludeId(
+                        dto.getPhone(), customerId, conn)) {
+                    throw new DuplicatePhoneException("Phone already exists");
+                }
+
+                if (customerDAO.existsByEmailExcludeId(
+                        dto.getEmail(), customerId, conn)) {
+                    throw new DuplicateEmailException("Email already exists");
+                }
+
+                // ============================
+                // 2. UPDATE CUSTOMER INFO
+                // ============================
+                customerDAO.updateBasicInfo(
+                        CustomerMapper.toCustomer(dto, customerId),
+                        conn
+                );
+
+                // ============================
+                // 3. UPDATE STYLE SMART (KHÔNG XÓA HẾT)
+                // ============================
+                updateCustomerStylesSmart(
+                        customerId,
+                        dto.getStyleTags(),
+                        conn
+                );
+
+                // ============================
+                // 4. INSERT NEW MEASUREMENT VERSION
+                // ============================
+                customerMeasurementDAO.insertCustomerMeasurement(
+                        CustomerMapper.toCustomerMeasurement(dto, customerId),
+                        conn
+                );
+
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
     public List<CustomerListDTO> getCustomerList() throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
@@ -110,8 +166,9 @@ public class CustomerService {
         try (Connection conn = DBContext.getConnection()) {
 
             CustomerDetailDTO customer = customerDAO.getCustomerBase(conn, customerId);
-            if (customer == null)
+            if (customer == null) {
                 return null;
+            }
 
             CustomerMeasurement latestMeasurement = customerMeasurementDAO.getLatestMeasurement(conn, customerId);
 
@@ -125,4 +182,67 @@ public class CustomerService {
         }
     }
 
+    public List<StyleTag> getListStyleTagsByCustomerId(int customerId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+
+            List<StyleTag> styleTagList = customerStyleDAO.getAllStyleTags(conn);
+
+            return styleTagList;
+
+        } catch (Exception ex) {
+            throw new SQLException("Error fetching style tags for customer: " + ex.getMessage(), ex);
+        }
+    }
+
+    public void addStyleTagsToCustomer(int customerId, List<Integer> styleTagIds) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+
+                // Thêm các tag mới
+                if (styleTagIds != null && !styleTagIds.isEmpty()) {
+                    customerStyleDAO.insertCustomerStyles(conn, customerId, styleTagIds);
+                }
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+
+    }
+
+    private void updateCustomerStylesSmart(
+            int customerId,
+            List<Integer> newTagIds,
+            Connection conn) throws SQLException {
+
+        // Lấy tag hiện tại trong DB
+        List<Integer> currentTagIds
+                = customerStyleDAO.getTagIdsByCustomerId(conn, customerId);
+
+        Set<Integer> currentSet = new HashSet<>(currentTagIds);
+        Set<Integer> newSet = new HashSet<>(
+                newTagIds == null ? Collections.emptyList() : newTagIds
+        );
+
+        // =====================
+        // 1. XÓA những tag bị bỏ chọn
+        // =====================
+        for (Integer oldId : currentSet) {
+            if (!newSet.contains(oldId)) {
+                customerStyleDAO.deleteCustomerStyle(conn, customerId, oldId);
+            }
+        }
+
+        // =====================
+        // 2. THÊM tag mới
+        // =====================
+        for (Integer newId : newSet) {
+            if (!currentSet.contains(newId)) {
+                customerStyleDAO.insertCustomerStyle(conn, customerId, newId);
+            }
+        }
+    }
 }

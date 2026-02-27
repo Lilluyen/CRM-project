@@ -31,8 +31,8 @@ public class CustomerDAO {
 
             stmt.setDate(4,
                     java.sql.Date.valueOf(customer.getBirthday()) != null
-                            ? java.sql.Date.valueOf(customer.getBirthday())
-                            : null);
+                    ? java.sql.Date.valueOf(customer.getBirthday())
+                    : null);
             stmt.setString(5, customer.getGender() != null ? customer.getGender() : null);
             stmt.setString(6, customer.getAddress() != null ? customer.getAddress() : null);
             stmt.setString(7, customer.getSocialLink() != null ? customer.getSocialLink() : null);
@@ -171,8 +171,9 @@ public class CustomerDAO {
 
             try (var rs = ps.executeQuery()) {
 
-                if (!rs.next())
+                if (!rs.next()) {
                     return null;
+                }
 
                 CustomerDetailDTO dto = new CustomerDetailDTO();
 
@@ -191,8 +192,8 @@ public class CustomerDAO {
                 dto.setReturnRate(rs.getDouble("return_rate"));
                 dto.setLastPurchase(
                         rs.getTimestamp("last_purchase") != null
-                                ? rs.getTimestamp("last_purchase").toLocalDateTime()
-                                : null);
+                        ? rs.getTimestamp("last_purchase").toLocalDateTime()
+                        : null);
                 dto.setOwnerName(rs.getString("owner_name"));
 
                 return dto;
@@ -200,4 +201,77 @@ public class CustomerDAO {
         }
     }
 
+    public void updateBasicInfo(Customer customer, Connection conn)
+            throws SQLException {
+
+        String sql = """
+        UPDATE Customers
+        SET name = ?,
+            phone = ?,
+            email = ?,
+            birthday = ?,
+            gender = ?,
+            address = ?,
+            social_link = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE customer_id = ?
+    """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, customer.getName());
+            ps.setString(2, customer.getPhone());
+            ps.setString(3, customer.getEmail());
+
+            if (customer.getBirthday() != null) {
+                ps.setDate(4, java.sql.Date.valueOf(customer.getBirthday()));
+            } else {
+                ps.setNull(4, java.sql.Types.DATE);
+            }
+
+            ps.setString(5, customer.getGender());
+            ps.setString(6, customer.getAddress());
+            ps.setString(7, customer.getSocialLink());
+
+            ps.setInt(8, customer.getCustomerId());
+
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean existsByPhoneExcludeId(String phone, int customerId, Connection conn)
+            throws SQLException {
+
+        String sql = """
+        SELECT 1 FROM Customers
+        WHERE phone = ? AND customer_id <> ?
+    """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, customerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public boolean existsByEmailExcludeId(String email, int customerId, Connection conn)
+            throws SQLException {
+
+        String sql = """
+        SELECT 1 FROM Customers
+        WHERE email = ? AND customer_id <> ?
+    """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, customerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
 }
