@@ -1,4 +1,4 @@
-package controller.api;
+package controller.api.tasks;
 
 import dao.TaskDAO;
 import model.Task;

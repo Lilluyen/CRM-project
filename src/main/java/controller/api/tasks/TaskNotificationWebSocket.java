@@ -1,4 +1,4 @@
-package controller.api;
+package controller.api.tasks;
 
 import jakarta.websocket.server.ServerEndpoint;
 import jakarta.websocket.server.PathParam;

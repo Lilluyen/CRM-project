@@ -68,7 +68,7 @@ public class UpdateTask extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("/view/tasks/task-form.jsp").forward(req, resp);
+        req.getRequestDispatcher("/frontend/tasksupdate.html").forward(req, resp);
     }
     
 }

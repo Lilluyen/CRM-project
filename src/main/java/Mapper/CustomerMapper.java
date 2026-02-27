@@ -3,6 +3,7 @@ package mapper;
 import java.time.LocalDateTime;
 
 import dto.CustomerCreateDTO;
+import dto.CustomerDetailDTO;
 import model.Customer;
 import model.CustomerMeasurement;
 import model.User;
@@ -40,6 +41,33 @@ public class CustomerMapper {
         measurement.setBodyShape(dto.getBodyShape());
         measurement.setCustomerId(customerId);
         return measurement;
+    }
+
+    public static CustomerDetailDTO toDTO(Customer c) {
+
+        CustomerDetailDTO dto = new CustomerDetailDTO();
+
+        dto.setCustomerId(c.getCustomerId());
+        dto.setName(c.getName());
+        dto.setPhone(c.getPhone());
+        dto.setEmail(c.getEmail());
+        dto.setBirthday(c.getBirthday());
+        dto.setGender(c.getGender());
+        dto.setAddress(c.getAddress());
+        dto.setSocialLink(c.getSocialLink());
+
+        dto.setCustomerType(c.getCustomerType());
+        dto.setStatus(c.getStatus());
+        dto.setLoyaltyTier(c.getLoyaltyTier());
+        dto.setRfmScore(c.getRfmScore());
+        dto.setReturnRate(c.getReturnRate());
+        dto.setLastPurchase(c.getLastPurchase());
+
+        if (c.getOwner() != null) {
+            dto.setOwnerName(c.getOwner().getFullName());
+        }
+
+        return dto;
     }
 
 }

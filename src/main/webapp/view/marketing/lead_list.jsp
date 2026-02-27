@@ -465,10 +465,10 @@
                                     <td>${lead.source != null ? lead.source : '-'}</td>
                                     <td>
                                         <div class="action-buttons">
-                                            <button class="btn btn-sm btn-detail" onclick="viewLeadDetail(${lead.leadId})" title="Xem chi tiết">
+                                            <button class="btn btn-sm btn-detail" onclick="viewLeadDetail('${lead.leadId}')" title="Xem chi tiết">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-score" onclick="scoreModal(${lead.leadId}, ${lead.score})" title="Chấm điểm">
+                                            <button class="btn btn-sm btn-score" onclick="scoreModal('${lead.leadId}', '${lead.score}')" title="Chấm điểm">
                                                 <i class="bi bi-star"></i>
                                             </button>
                                         </div>

@@ -79,7 +79,7 @@
                         </li>
                         <li>
                             <a class="${page eq 'customer-detail' ? 'active' : ''}"
-                               href="${pageContext.request.contextPath}/customers/detail">
+                               href="${pageContext.request.contextPath}/customers">
                                 Customer View 360
                             </a>
                         </li>

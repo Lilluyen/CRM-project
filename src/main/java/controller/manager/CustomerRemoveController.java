@@ -22,7 +22,7 @@ public class CustomerRemoveController extends HttpServlet {
 
     /**
      * Xóa khách hàng theo ID
-     * GET: /customer/remove?id=123
+     * GET: /customers/remove?id=123
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

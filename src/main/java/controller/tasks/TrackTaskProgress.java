@@ -66,4 +66,8 @@ public class TrackTaskProgress extends HttpServlet {
             }
         }
     }
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/frontend/taskstrackprogress.html").forward(req, resp);
+    }
 }
