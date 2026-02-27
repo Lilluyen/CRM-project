@@ -66,6 +66,19 @@ public class CustomerDAO {
         }
     }
 
+    public boolean existsByEmail(String email, Connection conn) throws Exception {
+
+        String sql = "SELECT 1 FROM Customers WHERE email = ?";
+
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+
+            try (var rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
     public Customer getCustomerById(int customerId, Connection connection) throws SQLException {
         String sql = "SELECT * FROM Customers WHERE customer_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
