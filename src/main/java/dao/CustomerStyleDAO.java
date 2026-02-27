@@ -45,7 +45,7 @@ public class CustomerStyleDAO {
         try (PreparedStatement stm = connection.prepareStatement(sql);) {
             for (Integer tagId : tagIds) {
                 stm.setInt(1, customerId);
-                stm.setInt(3, tagId);
+                stm.setInt(2, tagId);
                 stm.addBatch();
             }
 

@@ -22,6 +22,7 @@ public class Task {
     private String status;
     private java.time.LocalDate dueDate;
     private java.time.LocalDateTime createdAt;
+    private Integer progress; // percentage 0-100, optional
 
     public Task() {
     }
@@ -37,6 +38,14 @@ public class Task {
         this.status = status;
         this.dueDate = dueDate;
         this.createdAt = createdAt;
+    }
+
+    public Integer getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
     }
 
     public Integer getTaskId() {

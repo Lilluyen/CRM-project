@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import model.Customer;
-import util.DBContext;
 
 public class CustomerDAO {
 
@@ -111,9 +110,20 @@ public class CustomerDAO {
                     return customer;
                 }
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return null;
+    }
+
+    public boolean deleteCustomerById(int customerId, Connection connection) throws SQLException {
+        String sql = "DELETE FROM Customers WHERE customer_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        }
     }
 
 }
