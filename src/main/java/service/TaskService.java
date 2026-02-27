@@ -84,5 +84,25 @@ public class TaskService {
         return 0;
     }
 
-    // ...existing createTask(), updateTask(), updateProgress() methods...
+    /**
+     * Create a new task.
+     */
+    public boolean createTask(Task task) throws Exception {
+        return taskDAO.createTask(task);
+    }
+
+    /**
+     * Update an existing task.
+     */
+    public boolean updateTask(Task task) throws Exception {
+        return taskDAO.updateTask(task);
+    }
+
+    /**
+     * Update progress of a task.
+     */
+    public boolean updateProgress(int taskId, int progress) throws Exception {
+        return taskDAO.updateProgress(taskId, progress);
+    }
+
 }

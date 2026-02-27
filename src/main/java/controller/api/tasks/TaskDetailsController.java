@@ -1,4 +1,4 @@
-package controller.api;
+package controller.api.tasks;
 
 import java.io.IOException;
 import java.sql.Connection;
