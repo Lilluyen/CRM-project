@@ -124,6 +124,8 @@ public class CustomerDAO {
                     return customer;
                 }
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return null;
