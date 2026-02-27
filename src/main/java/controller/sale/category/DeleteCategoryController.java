@@ -1,3 +1,5 @@
+package controller.sale.category;
+
 import java.io.IOException;
 import java.sql.Connection;
 
@@ -8,12 +10,13 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import util.DBContext;
+
 @WebServlet("/sale/category/delete")
 public class DeleteCategoryController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         try (Connection conn = DBContext.getConnection()) {

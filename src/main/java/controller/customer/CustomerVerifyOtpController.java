@@ -76,7 +76,7 @@ public class CustomerVerifyOtpController extends HttpServlet {
         boolean valid;
         try {
             valid = otpService.verifyOtp(email, otp);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
 

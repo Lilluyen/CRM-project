@@ -10,6 +10,7 @@ import dao.CustomerQueryDAO;
 import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import dto.CustomerListDTO;
+import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
 import model.StyleTag;
@@ -27,6 +28,10 @@ public class CustomerService {
 
                 if (customerDAO.existsByPhone(dto.getPhone(), conn)) {
                     throw new DuplicatePhoneException("Phone already exists");
+                }
+
+                if (customerDAO.existsByEmail(dto.getEmail(), conn)) {
+                    throw new DuplicateEmailException("Email already exists");
                 }
 
                 int newCustomerId = customerDAO.insertCustomer(CustomerMapper.toCustomer(dto, userId), conn);
@@ -69,4 +74,31 @@ public class CustomerService {
 
         }
     }
+
+    public boolean removeCustomer(int customerId) throws SQLException, Exception {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+                CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+                CustomerDAO customerDAO = new CustomerDAO();
+
+                // 1. Xóa tất cả dữ liệu liên quan (Style, Measurements, Wardrobe...)
+                customerQueryDAO.deleteCustomerRelatedData(customerId, conn);
+
+                // 2. Xóa customer chính
+                boolean deleted = customerDAO.deleteCustomerById(customerId, conn);
+
+                if (!deleted) {
+                    throw new SQLException("Không thể xóa khách hàng. Khách hàng không tồn tại.");
+                }
+
+                conn.commit();
+                return true;
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
 }

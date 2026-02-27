@@ -7,7 +7,6 @@ import model.Customer;
 import model.CustomerMeasurement;
 import model.User;
 
-
 public class CustomerMapper {
 
     public static Customer toCustomer(CustomerCreateDTO dto, int userId) {
@@ -43,5 +42,4 @@ public class CustomerMapper {
         return measurement;
     }
 
-    
 }

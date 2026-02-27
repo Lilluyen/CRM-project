@@ -67,6 +67,19 @@ public class CustomerDAO {
         }
     }
 
+    public boolean existsByEmail(String email, Connection conn) throws Exception {
+
+        String sql = "SELECT 1 FROM Customers WHERE email = ?";
+
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+
+            try (var rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
     public Customer getCustomerById(int customerId, Connection connection) throws SQLException {
         String sql = "SELECT * FROM Customers WHERE customer_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -111,9 +124,20 @@ public class CustomerDAO {
                     return customer;
                 }
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return null;
+    }
+
+    public boolean deleteCustomerById(int customerId, Connection connection) throws SQLException {
+        String sql = "DELETE FROM Customers WHERE customer_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        }
     }
 
 }

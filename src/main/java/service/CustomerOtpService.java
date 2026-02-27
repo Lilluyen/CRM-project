@@ -127,7 +127,7 @@ public class CustomerOtpService {
     /* =============================
        VERIFY OTP
        ============================= */
-    public boolean verifyOtp(String email, String inputOtp) throws SQLException {
+    public boolean verifyOtp(String email, String inputOtp) throws Exception {
 
         Customer customer = customerDAO.findByEmail(email);
         if (customer == null) return false;
