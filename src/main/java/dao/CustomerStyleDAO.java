@@ -78,4 +78,36 @@ public class CustomerStyleDAO {
         }
     }
 
+    public List<StyleTag> getStyleTags(Connection conn, int id)
+            throws Exception {
+
+        String sql = """
+                    SELECT t.*
+                    FROM Customer_Style_Map csm
+                    JOIN Style_Tags t ON csm.tag_id = t.tag_id
+                    WHERE csm.customer_id = ?
+                    ORDER BY t.category, t.tag_name
+                """;
+
+        List<StyleTag> tags = new ArrayList<>();
+
+        try (var ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (var rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    StyleTag tag = new StyleTag();
+                    tag.setTagId(rs.getInt("tag_id"));
+                    tag.setTagName(rs.getString("tag_name"));
+                    tag.setCategory(rs.getString("category"));
+                    tags.add(tag);
+                }
+            }
+        }
+
+        return tags;
+    }
+
 }
