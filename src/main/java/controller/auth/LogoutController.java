@@ -25,4 +25,9 @@ public class LogoutController extends HttpServlet {
 
         resp.sendRedirect(req.getContextPath() + "/login.jsp");
     }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doGet(req, resp);
+    }
 }
