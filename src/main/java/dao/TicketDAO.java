@@ -175,4 +175,88 @@ public class TicketDAO {
             ps.setObject(i + 1, params.get(i));
         }
     }
+
+    public boolean insert(Ticket ticket) {
+
+        String sql = "INSERT INTO Tickets (customer_id, subject, description, status, created_at) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setInt(1, ticket.getCustomerId());
+            ps.setString(2, ticket.getSubject());
+            ps.setString(3, ticket.getDescription());
+            ps.setString(4, ticket.getStatus());
+            ps.setObject(5, ticket.getCreatedAt());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public Ticket getTicketById(int id) {
+        String sql = "SELECT * FROM Tickets WHERE ticket_id = ?";
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Ticket t = new Ticket();
+                t.setTicketId(rs.getInt("ticket_id"));
+                t.setCustomerId(rs.getInt("customer_id"));
+                t.setSubject(rs.getString("subject"));
+                t.setDescription(rs.getString("description"));
+                t.setStatus(rs.getString("status"));
+                return t;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean updateTicket(int id, String subject, String description) {
+
+        String sql = "UPDATE Tickets SET subject = ?, description = ?, updated_at = GETDATE() "
+                + "WHERE ticket_id = ? AND status = 'OPEN'";
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setString(1, subject);
+            ps.setString(2, description);
+            ps.setInt(3, id);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean closeTicket(int ticketId) {
+
+        String sql = "UPDATE Tickets "
+                + "SET status = 'CLOSED', updated_at = GETDATE() "
+                + "WHERE ticket_id = ? AND status = 'OPEN'";
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setInt(1, ticketId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }

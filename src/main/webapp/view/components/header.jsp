@@ -6,7 +6,7 @@
       <div class="header-left active">
         <a href="index.html" class="logo">
           <img
-            src="${pageContext.request.contextPath}/Inventory-Management-Admin-Dashboard-main/assets/img/logo.png"
+            src="${pageContext.request.contextPath}/assets/img/logo.jpeg"
             alt="" />
         </a>
         <a href="index.html" class="logo-small">
@@ -268,7 +268,7 @@
                 ><i class="me-2" data-feather="settings"></i>Settings</a
               >
               <hr class="m-0" />
-              <a class="dropdown-item logout pb-0" href="signin.html"
+              <a class="dropdown-item logout pb-0" href="${pageContext.request.contextPath}/logout"
                 ><img
                   src="${pageContext.request.contextPath}/Inventory-Management-Admin-Dashboard-main/assets/img/icons/log-out.svg"
                   class="me-2"
@@ -290,7 +290,7 @@
         <div class="dropdown-menu dropdown-menu-right">
           <a class="dropdown-item" href="profile.html">My Profile</a>
           <a class="dropdown-item" href="generalsettings.html">Settings</a>
-          <a class="dropdown-item" href="signin.html">Logout</a>
+          <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a>
         </div>
       </div>
     </div>

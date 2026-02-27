@@ -37,7 +37,7 @@
 <div class="main-wrapper">
 
     <!-- HEADER -->
-    <div class="header d-flex align-items-center">
+    <div class="header d-flex align-items-center justify-content-between px-3">
 
         <div class="header-left">
             <a href="#" class="logo">
@@ -45,7 +45,7 @@
             </a>
         </div>
 
-        <div class="d-flex align-items-center ms-3">
+        <div class="d-flex align-items-center">
 
             <div class="me-3">
                 Welcome, <strong>${sessionScope.customer.name}</strong>
@@ -76,7 +76,7 @@
                                    class="active">My Tickets</a>
                             </li>
                             <li>
-                                <a href="#">Create Ticket</a>
+                                <a href="${pageContext.request.contextPath}/customer/create-ticket">Create Ticket</a>
                             </li>
                         </ul>
                     </li>
@@ -171,6 +171,24 @@
                 </div>
             </div>
 
+            <c:if test="${not empty sessionScope.updateErrors}">
+                <div class="alert alert-danger">
+                    <ul>
+                        <c:forEach var="e" items="${sessionScope.updateErrors}">
+                            <li>${e}</li>
+                        </c:forEach>
+                    </ul>
+                </div>
+                <c:remove var="updateErrors" scope="session"/>
+            </c:if>
+
+            <c:if test="${not empty sessionScope.successMessage}">
+                <div class="alert alert-success">
+                        ${sessionScope.successMessage}
+                </div>
+                <c:remove var="successMessage" scope="session"/>
+            </c:if>
+
             <!-- TABLE -->
             <div class="card">
                 <div class="card-body">
@@ -180,16 +198,17 @@
                             <thead>
                             <tr>
                                 <th>
-                                    <form method="get" action="${pageContext.request.contextPath}/customer/my-tickets" style="display:inline;">
+                                    <form method="get" action="${pageContext.request.contextPath}/customer/my-tickets"
+                                          style="display:inline;">
 
                                         <!-- giữ filter -->
-                                        <input type="hidden" name="subject" value="${subject}" />
-                                        <input type="hidden" name="status" value="${status}" />
-                                        <input type="hidden" name="page" value="1" />
+                                        <input type="hidden" name="subject" value="${subject}"/>
+                                        <input type="hidden" name="status" value="${status}"/>
+                                        <input type="hidden" name="page" value="1"/>
 
                                         <!-- toggle sort -->
                                         <input type="hidden" name="sort"
-                                               value="${sort == 'id_asc' ? 'id_desc' : 'id_asc'}" />
+                                               value="${sort == 'id_asc' ? 'id_desc' : 'id_asc'}"/>
 
                                         ID
 
@@ -206,14 +225,15 @@
                                 <th>Subject</th>
                                 <th>Status</th>
                                 <th>
-                                    <form method="get" action="${pageContext.request.contextPath}/customer/my-tickets" style="display:inline;">
+                                    <form method="get" action="${pageContext.request.contextPath}/customer/my-tickets"
+                                          style="display:inline;">
 
-                                        <input type="hidden" name="subject" value="${subject}" />
-                                        <input type="hidden" name="status" value="${status}" />
-                                        <input type="hidden" name="page" value="1" />
+                                        <input type="hidden" name="subject" value="${subject}"/>
+                                        <input type="hidden" name="status" value="${status}"/>
+                                        <input type="hidden" name="page" value="1"/>
 
                                         <input type="hidden" name="sort"
-                                               value="${sort == 'created_asc' ? 'created_desc' : 'created_asc'}" />
+                                               value="${sort == 'created_asc' ? 'created_desc' : 'created_asc'}"/>
 
                                         Created At
 
@@ -228,14 +248,15 @@
                                     </form>
                                 </th>
                                 <th>
-                                    <form method="get" action="${pageContext.request.contextPath}/customer/my-tickets" style="display:inline;">
+                                    <form method="get" action="${pageContext.request.contextPath}/customer/my-tickets"
+                                          style="display:inline;">
 
-                                        <input type="hidden" name="subject" value="${subject}" />
-                                        <input type="hidden" name="status" value="${status}" />
-                                        <input type="hidden" name="page" value="1" />
+                                        <input type="hidden" name="subject" value="${subject}"/>
+                                        <input type="hidden" name="status" value="${status}"/>
+                                        <input type="hidden" name="page" value="1"/>
 
                                         <input type="hidden" name="sort"
-                                               value="${sort == 'updated_asc' ? 'updated_desc' : 'updated_asc'}" />
+                                               value="${sort == 'updated_asc' ? 'updated_desc' : 'updated_asc'}"/>
 
                                         Updated At
 
@@ -249,6 +270,7 @@
 
                                     </form>
                                 </th>
+                                <th>Action</th>
                             </tr>
                             </thead>
 
@@ -286,13 +308,168 @@
                                             </td>
                                             <td>${t.createdAtFormatted}</td>
                                             <td>${t.updatedAtFormatted}</td>
+                                            <td>
+
+                                                <!-- VIEW -->
+                                                <button class="btn btn-sm btn-info"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#viewModal${t.ticketId}">
+                                                    View
+                                                </button>
+
+                                                <!-- EDIT only if OPEN -->
+                                                <c:if test="${t.status == 'OPEN'}">
+                                                    <button class="btn btn-sm btn-warning"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editModal${t.ticketId}">
+                                                        Edit
+                                                    </button>
+
+                                                    <!-- Close -->
+                                                    <form action="${pageContext.request.contextPath}/customer/close-ticket"
+                                                          method="post"
+                                                          style="display:inline;"
+                                                          onsubmit="return confirm('Are you sure to close this ticket?');">
+
+                                                        <input type="hidden" name="ticketId"
+                                                               value="${t.ticketId}" />
+
+                                                        <button type="submit"
+                                                                class="btn btn-sm btn-danger">
+                                                            Close Ticket
+                                                        </button>
+
+                                                    </form>
+
+                                                </c:if>
+
+                                            </td>
                                         </tr>
+                                        <!-- VIEW MODAL -->
+                                        <div class="modal fade" id="viewModal${t.ticketId}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">
+                                                            Ticket #${t.ticketId}
+                                                        </h5>
+                                                        <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal"></button>
+                                                    </div>
+
+                                                    <div class="modal-body">
+
+                                                        <div class="mb-3">
+                                                            <strong>Subject:</strong>
+                                                            <p>${t.subject}</p>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <strong>Description:</strong>
+                                                            <p>${t.description}</p>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong>Status:</strong>
+                                                                <p>${t.status}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong>Created At:</strong>
+                                                                <p>${t.createdAtFormatted}</p>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Updated At:</strong>
+                                                                <p>${t.updatedAtFormatted}</p>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button"
+                                                                class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">
+                                                            Close
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- EDIT MODAL -->
+                                        <c:if test="${t.status == 'OPEN'}">
+                                            <div class="modal fade" id="editModal${t.ticketId}" tabindex="-1">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+
+                                                        <form action="${pageContext.request.contextPath}/customer/update-ticket"
+                                                              method="post">
+
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">
+                                                                    Edit Ticket #${t.ticketId}
+                                                                </h5>
+                                                                <button type="button" class="btn-close"
+                                                                        data-bs-dismiss="modal"></button>
+                                                            </div>
+
+                                                            <div class="modal-body">
+
+                                                                <!-- Hidden ID -->
+                                                                <input type="hidden" name="ticketId"
+                                                                       value="${t.ticketId}"/>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Subject</label>
+                                                                    <input type="text"
+                                                                           name="subject"
+                                                                           class="form-control"
+                                                                           value="${t.subject}"
+                                                                           required/>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Description</label>
+                                                                    <textarea name="description"
+                                                                              rows="5"
+                                                                              class="form-control"
+                                                                              required>${t.description}</textarea>
+                                                                </div>
+
+                                                            </div>
+
+                                                            <div class="modal-footer">
+
+                                                                <button type="submit"
+                                                                        class="btn btn-primary">
+                                                                    Update
+                                                                </button>
+
+                                                                <button type="button"
+                                                                        class="btn btn-secondary"
+                                                                        data-bs-dismiss="modal">
+                                                                    Cancel
+                                                                </button>
+
+                                                            </div>
+
+                                                        </form>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </c:if>
                                     </c:forEach>
                                 </c:when>
 
                                 <c:otherwise>
                                     <tr>
-                                        <td colspan="5" class="text-center">
+                                        <td colspan="6" class="text-center">
                                             No tickets found
                                         </td>
                                     </tr>
