@@ -26,6 +26,7 @@ public class NeedLoginFilter extends HttpFilter {
         // ✅ Các URL KHÔNG cần login
         boolean isPublic = path.equals("/login")
                 || path.equals("/logout")
+                || path.equals("/reset-password")
                 || path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
