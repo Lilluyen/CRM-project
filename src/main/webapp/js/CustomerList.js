@@ -348,7 +348,7 @@ function renderTable() {
             <td class="actions">
                 <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${customer.customerId})"></i>
                 <div class="action-wrapper">
-                    <i class="fa-solid fa-ellipsis-vertical" onclick="toggleActionMenu(this)"></i>
+                    <i class="fa-solid fa-ellipsis-vertical" onclick="toggleMenu(this)"></i>
                     <div class="action-menu" style="display: none;">
                         <div onclick="openPreview(${customer.customerId})">Preview</div>
                         <div onclick="deleteCustomer(${customer.customerId})">Delete</div>
@@ -490,24 +490,16 @@ function closePreview() {
 function deleteCustomer(customerId) {
     if (confirm('Are you sure you want to delete this customer?')) {
         // Make API call to delete
-        fetch(`/customers/delete/${customerId}`, { method: 'DELETE' })
-            .then(response => {
-                if (response.ok) {
-                    showToast('Customer deleted successfully', 'success');
-                    loadCustomerDataFromTable();
-                    applyFilters();
-                } else {
-                    showToast('Failed to delete customer', 'error');
-                }
-            })
-            .catch(err => {
-                showToast('Error deleting customer', 'error');
-            });
+        const ctx = window.__CTX__ || ""; // fallback nếu quên inject
+
+        const url = `${ctx}/customers/remove?customerId=${encodeURIComponent(customerId)}`;
+
+        window.location.href = url; // chuyển trang
     }
 }
 
 // ===== ACTION MENU =====
-function toggleActionMenu(element) {
+function toggleMenu(element) {
     const menu = element.closest('.action-wrapper').querySelector('.action-menu');
     if (menu) {
         const isVisible = menu.style.display !== 'none';

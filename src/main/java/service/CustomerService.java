@@ -74,4 +74,31 @@ public class CustomerService {
 
         }
     }
+
+    public boolean removeCustomer(int customerId) throws SQLException, Exception {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+                CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+                CustomerDAO customerDAO = new CustomerDAO();
+
+                // 1. Xóa tất cả dữ liệu liên quan (Style, Measurements, Wardrobe...)
+                customerQueryDAO.deleteCustomerRelatedData(customerId, conn);
+
+                // 2. Xóa customer chính
+                boolean deleted = customerDAO.deleteCustomerById(customerId, conn);
+
+                if (!deleted) {
+                    throw new SQLException("Không thể xóa khách hàng. Khách hàng không tồn tại.");
+                }
+
+                conn.commit();
+                return true;
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
 }
