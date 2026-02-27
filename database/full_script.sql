@@ -1,4 +1,4 @@
-﻿USE master;
+﻿﻿USE master;
 GO
 
 IF EXISTS (SELECT * FROM sys.databases WHERE name = 'CRM_System')
@@ -11,6 +11,7 @@ GO
 /****** Object:  Database [CRM_System]    Script Date: 2/25/2026 3:19:47 PM ******/
 CREATE DATABASE [CRM_System]
  CONTAINMENT = NONE
+
 GO
 ALTER DATABASE [CRM_System] SET COMPATIBILITY_LEVEL = 160
 GO
@@ -299,6 +300,17 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+CREATE TABLE CustomerOTP (
+    customer_id INT PRIMARY KEY,
+    otp_hash NVARCHAR(255) NOT NULL,
+    otp_expired_at DATETIME2 NOT NULL,
+    failed_attempt INT DEFAULT 0,
+    send_count INT DEFAULT 0,
+    last_send DATETIME2 DEFAULT SYSDATETIME(),
+    CONSTRAINT fk_customerotp_customer
+        FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+);
 /****** Object:  Table [dbo].[Deal_Products]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -583,7 +595,7 @@ INSERT [dbo].[Customer_Style_Map] ([customer_id], [tag_id]) VALUES (13, 6)
 GO
 SET IDENTITY_INSERT [dbo].[Customers] ON 
 
-INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (1, N'Nguyễn Lan Anh', N'0901234561', N'lananh@gmail.com', CAST(N'1995-05-15' AS Date), N'Nữ', NULL, NULL, N'INDIVIDUAL', N'ACTIVE', N'GOLD', 545, CAST(2.50 AS Decimal(5, 2)), CAST(N'2024-05-10T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
+INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (1, N'Nguyễn Lan Anh', N'0901234561', N'vuongtdhe163696@fpt.edu.vn', CAST(N'1995-05-15' AS Date), N'Nữ', NULL, NULL, N'INDIVIDUAL', N'ACTIVE', N'GOLD', 545, CAST(2.50 AS Decimal(5, 2)), CAST(N'2024-05-10T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
 INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (2, N'Trần Minh Tú', N'0901234562', N'minhtu@gmail.com', CAST(N'1992-10-20' AS Date), N'Nam', NULL, NULL, N'INDIVIDUAL', N'ACTIVE', N'SILVER', 433, CAST(5.00 AS Decimal(5, 2)), CAST(N'2024-04-20T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
 INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (3, N'Lê Thị Hoa', N'0901234563', N'hoale@gmail.com', CAST(N'1998-02-14' AS Date), N'Nữ', NULL, NULL, N'INDIVIDUAL', N'BLACKLIST', N'BRONZE', 155, CAST(45.50 AS Decimal(5, 2)), CAST(N'2024-01-15T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
 INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (4, N'Phạm Hoàng Nam', N'0901234564', N'nampham@gmail.com', CAST(N'1990-12-01' AS Date), N'Nam', NULL, NULL, N'INDIVIDUAL', N'ACTIVE', N'GOLD', 554, CAST(0.00 AS Decimal(5, 2)), CAST(N'2024-05-18T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
@@ -637,12 +649,162 @@ VALUES
 
 (4,'cs01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','cs01@crm.com','CS','0900000004',4,'ACTIVE',GETDATE()),
 
-(5,'manager01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','manager@crm.com','Manager','0900000005',5,'ACTIVE',GETDATE());
+(5,'manager01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','manager@crm.com','Manager','0900000005',5,'ACTIVE',GETDATE()),
+
+(6,'blocked_user','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','blockeduser@gmail.com',N'Blocked Staff','0909999999',3,'LOCKED',GETDATE());
 
 SET IDENTITY_INSERT [dbo].[Users] OFF
 GO
 SET ANSI_PADDING ON
 GO
+
+INSERT INTO Tickets (
+    customer_id,
+    subject,
+    description,
+    priority,
+    status,
+    assigned_to,
+    created_at,
+    updated_at
+)
+VALUES
+
+-- 1
+(1, N'Lỗi gửi OTP nhiều lần',
+ N'Hệ thống gửi OTP quá nhiều lần.',
+ 'MEDIUM',
+ 'OPEN',
+ NULL,
+ DATEADD(HOUR, -2, GETDATE()),
+ DATEADD(HOUR, -2, GETDATE())),
+
+-- 2
+(1, N'Không nhận được email xác nhận',
+ N'Tôi không nhận được email kích hoạt tài khoản.',
+ 'HIGH',
+ 'OPEN',
+ 1,
+ DATEADD(HOUR, -5, GETDATE()),
+ DATEADD(HOUR, -4, GETDATE())),
+
+-- 3
+(1, N'Tài khoản bị khóa',
+ N'Tôi đăng nhập sai nhiều lần và bị khóa.',
+ 'HIGH',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(DAY, -1, GETDATE()),
+ GETDATE()),
+
+-- 4
+(1, N'Không cập nhật được thông tin cá nhân',
+ N'Tôi không thể sửa số điện thoại.',
+ 'LOW',
+ 'OPEN',
+ NULL,
+ DATEADD(DAY, -2, GETDATE()),
+ DATEADD(DAY, -2, GETDATE())),
+
+-- 5
+(1, N'Yêu cầu hoàn tiền',
+ N'Tôi muốn hoàn tiền cho đơn hàng #1234.',
+ 'HIGH',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(DAY, -3, GETDATE()),
+ GETDATE()),
+
+-- 6
+(1, N'Giao hàng chậm',
+ N'Đơn hàng của tôi bị giao trễ 5 ngày.',
+ 'MEDIUM',
+ 'RESOLVED',
+ 1,
+ DATEADD(DAY, -6, GETDATE()),
+ DATEADD(DAY, -5, GETDATE())),
+
+-- 7
+(1, N'Sản phẩm bị lỗi',
+ N'Sản phẩm nhận được bị hỏng.',
+ 'HIGH',
+ 'RESOLVED',
+ 1,
+ DATEADD(DAY, -7, GETDATE()),
+ DATEADD(DAY, -6, GETDATE())),
+
+-- 8
+(1, N'Yêu cầu xuất hóa đơn',
+ N'Tôi cần xuất hóa đơn VAT.',
+ 'LOW',
+ 'CLOSED',
+ 1,
+ DATEADD(DAY, -10, GETDATE()),
+ DATEADD(DAY, -9, GETDATE())),
+
+-- 9
+(2, N'Đổi mật khẩu không thành công',
+ N'Tôi không đổi được mật khẩu.',
+ 'MEDIUM',
+ 'OPEN',
+ NULL,
+ DATEADD(DAY, -1, GETDATE()),
+ DATEADD(DAY, -1, GETDATE())),
+
+-- 10
+(3, N'App bị crash',
+ N'Ứng dụng bị crash khi mở.',
+ 'HIGH',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(HOUR, -10, GETDATE()),
+ GETDATE()),
+
+-- 11
+(1, N'Tư vấn sản phẩm',
+ N'Tôi cần tư vấn sản phẩm mới.',
+ 'LOW',
+ 'OPEN',
+ NULL,
+ DATEADD(DAY, -4, GETDATE()),
+ DATEADD(DAY, -4, GETDATE())),
+
+-- 12
+(1, N'Không thêm được địa chỉ giao hàng',
+ N'Hệ thống báo lỗi khi thêm địa chỉ.',
+ 'MEDIUM',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(DAY, -2, GETDATE()),
+ GETDATE()),
+
+-- 13
+(1, N'Yêu cầu hủy đơn hàng',
+ N'Tôi muốn hủy đơn trước khi giao.',
+ 'HIGH',
+ 'RESOLVED',
+ 1,
+ DATEADD(DAY, -8, GETDATE()),
+ DATEADD(DAY, -7, GETDATE())),
+
+-- 14
+(1, N'Lỗi hiển thị trên mobile',
+ N'Giao diện mobile bị vỡ layout.',
+ 'LOW',
+ 'OPEN',
+ NULL,
+ DATEADD(HOUR, -3, GETDATE()),
+ DATEADD(HOUR, -3, GETDATE())),
+
+-- 15
+(1, N'Không áp dụng được mã giảm giá',
+ N'Tôi nhập mã nhưng hệ thống báo sai.',
+ 'MEDIUM',
+ 'CLOSED',
+ 1,
+ DATEADD(DAY, -12, GETDATE()),
+ DATEADD(DAY, -11, GETDATE()));
+
 /****** Object:  Index [UQ__Customer__B43B145F1294BDA2]    Script Date: 2/25/2026 3:19:47 PM ******/
 ALTER TABLE [dbo].[Customers] ADD UNIQUE NONCLUSTERED 
 (
@@ -834,4 +996,3 @@ USE [master]
 GO
 ALTER DATABASE [CRM_System] SET  READ_WRITE 
 GO
-

@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import model.Customer;
+import util.DBContext;
 
 public class CustomerDAO {
 
