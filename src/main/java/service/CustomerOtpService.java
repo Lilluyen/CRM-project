@@ -33,7 +33,7 @@ public class CustomerOtpService {
         Customer customer = customerDAO.findByEmail(email);
 
         if (customer == null) {
-            throw new Exception("Email không tồn tại trong hệ thống.");
+            throw new Exception("The email does not exist in the system.");
         }
 
         CustomerOtp existingOtp = otpDAO.findByCustomerId(customer.getCustomerId());
@@ -65,9 +65,9 @@ public class CustomerOtpService {
                     long seconds = remainingBlockSeconds % 60;
 
                     throw new Exception(
-                            "Bạn đã gửi OTP quá 5 lần. Vui lòng thử lại sau "
-                                    + minutes + " phút "
-                                    + seconds + " giây."
+                            "You have requested the OTP more than 5 times. Please try again after "
+                                    + minutes + " minutes "
+                                    + seconds + " seconds."
                     );
                 }
 
@@ -86,8 +86,8 @@ public class CustomerOtpService {
                 long remainingSeconds = RESEND_COOLDOWN_SECONDS - seconds;
 
                 throw new Exception(
-                        "Vui lòng chờ " + remainingSeconds
-                                + " giây trước khi gửi lại OTP."
+                        "Please wait " + remainingSeconds
+                                + " seconds before requesting a new OTP."
                 );
             }
         }
