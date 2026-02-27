@@ -69,8 +69,7 @@
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            req.setAttribute("mode", "create");
-            req.getRequestDispatcher("/view/tasks/task-form.jsp").forward(req, resp);
+            req.getRequestDispatcher("/frontend/taskscreate.html").forward(req, resp);
         }
 
     }

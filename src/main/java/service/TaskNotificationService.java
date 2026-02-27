@@ -1,6 +1,6 @@
 package service;
 
-import controller.api.TaskNotificationWebSocket;
+import controller.api.tasks.TaskNotificationWebSocket;
 import dao.TaskDAO;
 import model.Task;
 import java.sql.Connection;
