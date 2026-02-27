@@ -7,5 +7,14 @@
 </head>
 <body>
 <h2>Sale Home</h2>
+<!-- Hiển thị tên người dùng -->
+<p>
+    Welcome, <strong>${sessionScope.user.fullName}</strong>
+</p>
+
+<!-- Nút Logout -->
+<form action="${pageContext.request.contextPath}/logout" method="post">
+    <button type="submit">Logout</button>
+</form>
 </body>
 </html>
