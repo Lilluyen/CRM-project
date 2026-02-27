@@ -1,13 +1,15 @@
 package controller.manager;
 
+import java.io.IOException;
+
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import service.CustomerService;
 import util.ControllerUltil;
-
-import java.io.IOException;
 
 @WebServlet(name = "CustomerDetailController", urlPatterns = { "/customers/detail" })
 public class CustomerDetailController extends HttpServlet {

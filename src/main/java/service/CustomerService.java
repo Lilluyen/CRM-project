@@ -109,7 +109,7 @@ public class CustomerService {
     public CustomerDetailDTO getCustomerDetail(int customerId) throws Exception {
         try (Connection conn = DBContext.getConnection()) {
 
-            Customer customer = customerDAO.getCustomerById(customerId, conn);
+            CustomerDetailDTO customer = customerDAO.getCustomerBase(conn, customerId);
             if (customer == null)
                 return null;
 
@@ -117,11 +117,11 @@ public class CustomerService {
 
             List<StyleTag> styleTags = customerStyleDAO.getStyleTags(conn, customerId);
 
-            CustomerDetailDTO dto = CustomerMapper.toDTO(customer);
-            dto.setLatestMeasurement(latestMeasurement);
-            dto.setStyleTags(styleTags);
+            // CustomerDetailDTO dto = CustomerMapper.toDTO(customer);
+            customer.setLatestMeasurement(latestMeasurement);
+            customer.setStyleTags(styleTags);
 
-            return dto;
+            return customer;
         }
     }
 
