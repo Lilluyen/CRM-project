@@ -3,6 +3,7 @@ package controller.marketing;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -24,7 +25,15 @@ public class CampaignController extends HttpServlet {
         if ("create".equals(action)) {
             String name = request.getParameter("name");
             String description = request.getParameter("description");
-            BigDecimal budget = new BigDecimal(request.getParameter("budget"));
+            String budgetStr = request.getParameter("budget");
+
+            BigDecimal budget;
+
+            try {
+                budget = new BigDecimal(budgetStr);
+            } catch (Exception e) {
+                budget = BigDecimal.ZERO;
+            }
             LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
             LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
             String channel = request.getParameter("channel");
@@ -66,8 +75,33 @@ public class CampaignController extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("list".equals(action) || action == null) {
-            java.util.List<Campaign> campaigns = campaignService.getAllCampaigns();
+            // ===== FIX: Lấy parameters search & status =====
+            String searchName = request.getParameter("search");
+            String status = request.getParameter("status");
+
+            List<Campaign> campaigns;
+
+            // Nếu có search hoặc filter status thì dùng search
+            if ((searchName != null && !searchName.trim().isEmpty())
+                    || (status != null && !status.trim().isEmpty())) {
+                campaigns = campaignService.searchCampaigns(searchName, status);
+
+                // ===== NEW: Nếu tìm thấy đúng 1 kết quả, auto-forward đến detail =====
+                if (campaigns.size() == 1) {
+                    Campaign campaign = campaigns.get(0);
+                    request.setAttribute("campaign", campaign);
+                    request.getRequestDispatcher("/view/marketing/campaign_detail.jsp").forward(request, response);
+                    return;
+                }
+
+            } else {
+                // Ngược lại lấy tất cả campaigns
+                campaigns = campaignService.getAllCampaigns();
+            }
+
             request.setAttribute("campaigns", campaigns);
+            request.setAttribute("searchName", searchName);
+            request.setAttribute("filterStatus", status);
             request.getRequestDispatcher("/view/marketing/campaign_list.jsp").forward(request, response);
         } else if ("detail".equals(action)) {
             int campaignId = Integer.parseInt(request.getParameter("id"));

@@ -486,7 +486,7 @@ CREATE TABLE [dbo].[Tasks](
 	[assigned_to] [int] NULL,
 	[priority] [varchar](20) NULL,
 	[status] [varchar](20) NULL,
-	[due_date] [date] NULL,
+	[due_date] [datetime] NULL,
 	[created_at] [datetime] NULL,
 PRIMARY KEY CLUSTERED 
 (
@@ -598,8 +598,8 @@ INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [
 INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (13, N'Sơn Tùng MTP', N'0901234573', N'tungmtp@gmail.com', CAST(N'1994-07-05' AS Date), N'Nam', NULL, NULL, N'INDIVIDUAL', N'ACTIVE', N'SILVER', 455, CAST(12.00 AS Decimal(5, 2)), CAST(N'2024-05-10T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
 INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (14, N'Hòa Minzy', N'0901234574', N'hoaminzy@gmail.com', CAST(N'1995-05-31' AS Date), N'Nữ', NULL, NULL, N'INDIVIDUAL', N'ACTIVE', N'BRONZE', 311, CAST(5.00 AS Decimal(5, 2)), CAST(N'2024-04-15T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
 INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (15, N'Đen Vâu', N'0901234575', N'denvau@gmail.com', CAST(N'1989-05-13' AS Date), N'Nam', NULL, NULL, N'INDIVIDUAL', N'ACTIVE', N'SILVER', 322, CAST(2.00 AS Decimal(5, 2)), CAST(N'2024-03-20T00:00:00.000' AS DateTime), NULL, CAST(N'2026-02-20T21:58:51.823' AS DateTime), NULL)
-INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (16, N'Hoàng Văn Luyến', N'0956451847', N'hoangluye@gmail.com', CAST(N'2026-02-19' AS Date), N'MALE', N'', N'', N'INDIVIDUAL', N'ACTIVE', N'BRONZE', 0, CAST(0.00 AS Decimal(5, 2)), NULL, 1, CAST(N'2026-02-25T11:52:38.477' AS DateTime), NULL)
-INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (19, N'Hoàng Văn Long', N'0956451848', N'hoangluyeert@gmail.com', CAST(N'2026-02-19' AS Date), N'MALE', N'grdgrd', N'grdgr', N'INDIVIDUAL', N'ACTIVE', N'BRONZE', 0, CAST(0.00 AS Decimal(5, 2)), NULL, 1, CAST(N'2026-02-25T12:57:14.250' AS DateTime), NULL)
+INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (16, N'Hoàng Văn Luyến', N'0956451847', N'hoangluye@gmail.com', CAST(N'2026-02-19' AS Date), N'Nam', N'', N'', N'INDIVIDUAL', N'ACTIVE', N'BRONZE', 0, CAST(0.00 AS Decimal(5, 2)), NULL, 1, CAST(N'2026-02-25T11:52:38.477' AS DateTime), NULL)
+INSERT [dbo].[Customers] ([customer_id], [name], [phone], [email], [birthday], [gender], [address], [social_link], [customer_type], [status], [loyalty_tier], [rfm_score], [return_rate], [last_purchase], [owner_id], [created_at], [updated_at]) VALUES (19, N'Hoàng Văn Long', N'0956451848', N'hoangluyeert@gmail.com', CAST(N'2026-02-19' AS Date), N'Nam', N'grdgrd', N'grdgr', N'INDIVIDUAL', N'ACTIVE', N'BRONZE', 0, CAST(0.00 AS Decimal(5, 2)), NULL, 1, CAST(N'2026-02-25T12:57:14.250' AS DateTime), NULL)
 SET IDENTITY_INSERT [dbo].[Customers] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Roles] ON 
@@ -702,8 +702,6 @@ GO
 ALTER TABLE [dbo].[Tasks] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Tickets] ADD  DEFAULT (getdate()) FOR [created_at]
-GO
-ALTER TABLE [dbo].[Users] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Virtual_Wardrobe] ADD  DEFAULT (getdate()) FOR [bought_at]
 GO
