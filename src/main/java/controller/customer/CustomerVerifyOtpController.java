@@ -58,7 +58,7 @@ public class CustomerVerifyOtpController extends HttpServlet {
         String otp = request.getParameter("otp");
 
         if (otp == null || !otp.matches("\\d{6}")) {
-            request.setAttribute("error", "OTP phải gồm đúng 6 chữ số.");
+            request.setAttribute("error", "The OTP must consist of exactly 6 digits.");
             request.getRequestDispatcher("/verify-otp.jsp")
                     .forward(request, response);
             return;
