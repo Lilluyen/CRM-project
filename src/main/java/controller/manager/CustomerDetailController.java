@@ -47,6 +47,7 @@ public class CustomerDetailController extends HttpServlet {
             request.setAttribute("pageTitle", "Customer Detail | Clothes CRM");
             request.setAttribute("contentPage", "customer/customer_detail.jsp");
             request.setAttribute("pageCss", "customer_detail.css");
+            // request.setAttribute("pageJs", "customer_detail.js");
             request.setAttribute("page", "customer-detail");
 
             request.getRequestDispatcher("/view/layout.jsp")

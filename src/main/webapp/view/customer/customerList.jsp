@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="customerTable">
         <table>
             <thead>
                 <tr>
@@ -53,7 +53,7 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="customerTableBody">
                 <c:forEach var="c" items="${customerList}">
                     <tr class="card-body-row">
 
@@ -103,26 +103,40 @@
 
                         <td>${c.lastPurchase}</td>
 
+
                         <td class="actions">
                             <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
                             <div class="action-wrapper">
                                 <i class="fa-solid fa-ellipsis-vertical"
                                    onclick="toggleMenu(this)"></i>
 
-                                <div class="action-menu">
+                                <div class="action-menu" id="customerMenuAction">
                                     <div onclick="openPreview(${c.customerId})">Preview</div>
                                     <div onclick="deleteCustomer(${c.customerId})">Delete</div>
                                 </div>
                             </div>
                         </td>
+                        <td style="display: none;">${c.email}</td>
+                        <td style="display: none;">${c.gender}</td>
+                        <td style="display: none;">${c.height}</td>
+                        <td style="display: none;">${c.weight}</td>
                     </tr> 
                 </c:forEach>
             </tbody>
+
+
         </table>
+        <!-- pagination controls -->
+        <div id="paginationControls" style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+            <c:forEach begin="1" end="${totalPages}" var="i">
+                <button onclick="loadPage(${i})" class="${i == currentPage ? 'active' : ''}"> 
+                    ${i}
+                </button> 
+            </c:forEach>
+        </div>
     </div>
 
-    <!-- pagination controls -->
-    <div id="paginationControls" style="margin-top:16px;display:flex;gap:8px;justify-content:center;"></div>
+
 
 
 
@@ -326,13 +340,12 @@
             </div>
         </div>
     </div>
-    
 
-<script>
-    window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
-    window.__CTX__ = "${pageContext.request.contextPath}";
-</script>
-<script src="${pageContext.request.contextPath}/js/CustomerList.js"></script>
+
+    <script>
+        window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
+        window.__CTX__ = "${pageContext.request.contextPath}";
+    </script>
 
 
 

@@ -22,41 +22,7 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Sidebar Styling
-.sidebar {
-    background-color: var(--primary-navy);
-    min-height: 100vh;
-    padding: 2rem 1rem;
-    color: white;
-}
 
-.sidebar h2 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    padding-left: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-}
-
-.sidebar ul li a {
-    color: #94a3b8;
-    text-decoration: none;
-    display: block;
-    padding: 12px 1rem;
-    border-radius: 8px;
-    transition: 0.3s;
-}
-
-.sidebar ul li a:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-} */
 
 /* Content Area */
 .content {
@@ -202,6 +168,7 @@ th {
 td {
     padding: 18px 15px;
     border-bottom: 1px solid #f1f5f9;
+    height: 105px;
     vertical-align: middle;
 }
 
@@ -353,6 +320,11 @@ td:nth-child(7) {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     min-width: 120px;
     z-index: 100;
+}
+
+.action-menu.show {
+    display: flex;
+    flex-direction: column;
 }
 
 .action-menu div {

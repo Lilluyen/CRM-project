@@ -14,7 +14,7 @@ import dao.CustomerSegmentDAO;
 import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
-import dto.CustomerListDTO;
+import dto.CustomerPageResult;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
@@ -120,10 +120,10 @@ public class CustomerService {
         }
     }
 
-    public List<CustomerListDTO> getCustomerList() throws SQLException {
+    public CustomerPageResult  getCustomerList(int page, int size) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
-            List<CustomerListDTO> customerList = customerQueryDAO.getCustomerList(conn);
+            CustomerPageResult customerList = customerQueryDAO.getCustomerList(conn, page, size);
             return customerList;
 
         }

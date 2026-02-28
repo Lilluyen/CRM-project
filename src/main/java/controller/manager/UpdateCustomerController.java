@@ -1,18 +1,20 @@
 package controller.manager;
 
-import dto.CustomerCreateDTO;
-import exception.DuplicateEmailException;
-import exception.DuplicatePhoneException;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-import service.CustomerService;
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+
+import dto.CustomerCreateDTO;
+import exception.DuplicateEmailException;
+import exception.DuplicatePhoneException;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import service.CustomerService;
 
 @WebServlet(name = "UpdateCustomerController", urlPatterns = { "/customers/edit" })
 public class UpdateCustomerController extends HttpServlet {
@@ -43,6 +45,7 @@ public class UpdateCustomerController extends HttpServlet {
             request.setAttribute("pageTitle", "Customer Edit | Clothes CRM");
             request.setAttribute("contentPage", "customer/edit_customer.jsp");
             request.setAttribute("pageCss", "customer-add.css");
+            // request.setAttribute("pageJs", "customer-edit.js");
             request.setAttribute("page", "customer-add");
 
             request.getRequestDispatcher("/view/layout.jsp")
@@ -71,13 +74,16 @@ public class UpdateCustomerController extends HttpServlet {
 
         // Trim trước khi validate
         String name = request.getParameter("name") != null
-                ? request.getParameter("name").trim() : null;
+                ? request.getParameter("name").trim()
+                : null;
 
         String phone = request.getParameter("phone") != null
-                ? request.getParameter("phone").trim() : null;
+                ? request.getParameter("phone").trim()
+                : null;
 
         String email = request.getParameter("email") != null
-                ? request.getParameter("email").trim() : null;
+                ? request.getParameter("email").trim()
+                : null;
 
         String gender = request.getParameter("gender");
         String birthdayRaw = request.getParameter("birthday");
