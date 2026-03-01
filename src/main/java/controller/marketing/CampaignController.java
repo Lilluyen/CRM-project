@@ -19,16 +19,33 @@ public class CampaignController extends HttpServlet {
 
     private CampaignService campaignService = new CampaignService();
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    // ======================================================================
+    // Helper: thiết lập các attribute cho layout.jsp rồi forward
+    // ======================================================================
+    private void forwardWithLayout(HttpServletRequest request, HttpServletResponse response,
+                                   String contentPage, String pageTitle)
+            throws ServletException, IOException {
+        request.setAttribute("contentPage", contentPage);
+        request.setAttribute("pageTitle",   pageTitle);
+        request.setAttribute("pageCss",     "campaign.css"); // /assets/css/campaign.css
+        request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+    }
+
+    // ======================================================================
+    // POST
+    // ======================================================================
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
         String action = request.getParameter("action");
 
         if ("create".equals(action)) {
             try {
-                String name = request.getParameter("name");
+                String name        = request.getParameter("name");
                 String description = request.getParameter("description");
-                String budgetStr = request.getParameter("budget");
+                String budgetStr   = request.getParameter("budget");
 
-                // Kiểm tra required fields
                 if (name == null || name.trim().isEmpty()) {
                     throw new IllegalArgumentException("Tên campaign không được để trống.");
                 }
@@ -44,9 +61,8 @@ public class CampaignController extends HttpServlet {
                 }
 
                 LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
-                LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+                LocalDate endDate   = LocalDate.parse(request.getParameter("endDate"));
 
-                // Kiểm tra date logic
                 if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
                     throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
                 }
@@ -61,20 +77,24 @@ public class CampaignController extends HttpServlet {
                 Campaign campaign = new Campaign(0, name, description, budget, startDate, endDate,
                         channel, "ACTIVE", createdBy, null, null);
 
-                int campaignId = campaignService.createCampaign(campaign);
+                campaignService.createCampaign(campaign);
                 response.sendRedirect("campaign?action=list");
+
             } catch (Exception e) {
                 request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
+                forwardWithLayout(request, response,
+                        "/view/marketing/campaign/campaign_form.jsp",
+                        "Tạo Campaign - CRM");
             }
-        } else if ("update".equals(action)) {
-            try {
-                int campaignId = Integer.parseInt(request.getParameter("campaignId"));
-                String name = request.getParameter("name");
-                String description = request.getParameter("description");
-                String budgetStr = request.getParameter("budget");
 
-                // Kiểm tra required fields
+        } else if ("update".equals(action)) {
+            int campaignId = 0;
+            try {
+                campaignId = Integer.parseInt(request.getParameter("campaignId"));
+                String name        = request.getParameter("name");
+                String description = request.getParameter("description");
+                String budgetStr   = request.getParameter("budget");
+
                 if (name == null || name.trim().isEmpty()) {
                     throw new IllegalArgumentException("Tên campaign không được để trống.");
                 }
@@ -90,9 +110,8 @@ public class CampaignController extends HttpServlet {
                 }
 
                 LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
-                LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+                LocalDate endDate   = LocalDate.parse(request.getParameter("endDate"));
 
-                // Kiểm tra date logic
                 if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
                     throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
                 }
@@ -115,61 +134,80 @@ public class CampaignController extends HttpServlet {
                 } else {
                     throw new Exception("Cập nhật campaign thất bại.");
                 }
+
             } catch (Exception e) {
-                // Lấy campaign cũ để hiển thị lại form với dữ liệu
-                int campaignId = Integer.parseInt(request.getParameter("campaignId"));
                 Campaign campaign = campaignService.getCampaignById(campaignId);
                 request.setAttribute("campaign", campaign);
                 request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
+                forwardWithLayout(request, response,
+                        "/view/marketing/campaign/campaign_form.jsp",
+                        "Chỉnh sửa Campaign - CRM");
             }
         }
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    // ======================================================================
+    // GET
+    // ======================================================================
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
         String action = request.getParameter("action");
 
         if ("list".equals(action) || action == null) {
-            // ===== FIX: Lấy parameters search & status =====
+
             String searchName = request.getParameter("search");
-            String status = request.getParameter("status");
+            String status     = request.getParameter("status");
 
             List<Campaign> campaigns;
 
-            // Nếu có search hoặc filter status thì dùng search
             if ((searchName != null && !searchName.trim().isEmpty())
                     || (status != null && !status.trim().isEmpty())) {
+
                 campaigns = campaignService.searchCampaigns(searchName, status);
 
-                // ===== NEW: Nếu tìm thấy đúng 1 kết quả, auto-forward đến detail =====
+                // Nếu tìm thấy đúng 1 kết quả, auto-forward đến detail
                 if (campaigns.size() == 1) {
                     Campaign campaign = campaigns.get(0);
                     request.setAttribute("campaign", campaign);
-                    request.getRequestDispatcher("/view/marketing/campaign/campaign_detail.jsp").forward(request, response);
+                    forwardWithLayout(request, response,
+                            "/view/marketing/campaign/campaign_detail.jsp",
+                            campaign.getName() + " - CRM");
                     return;
                 }
 
             } else {
-                // Ngược lại lấy tất cả campaigns
                 campaigns = campaignService.getAllCampaigns();
             }
 
-            request.setAttribute("campaigns", campaigns);
-            request.setAttribute("searchName", searchName);
+            request.setAttribute("campaigns",    campaigns);
+            request.setAttribute("searchName",   searchName);
             request.setAttribute("filterStatus", status);
-            request.getRequestDispatcher("/view/marketing/campaign/campaign_list.jsp").forward(request, response);
+            forwardWithLayout(request, response,
+                    "/view/marketing/campaign/campaign_list.jsp",
+                    "Quản lý Campaign - CRM");
+
         } else if ("detail".equals(action)) {
-            int campaignId = Integer.parseInt(request.getParameter("id"));
-            Campaign campaign = campaignService.getCampaignById(campaignId);
+            int      campaignId = Integer.parseInt(request.getParameter("id"));
+            Campaign campaign   = campaignService.getCampaignById(campaignId);
             request.setAttribute("campaign", campaign);
-            request.getRequestDispatcher("/view/marketing/campaign/campaign_detail.jsp").forward(request, response);
+            forwardWithLayout(request, response,
+                    "/view/marketing/campaign/campaign_detail.jsp",
+                    campaign.getName() + " - CRM");
+
         } else if ("create".equals(action)) {
-            request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
+            forwardWithLayout(request, response,
+                    "/view/marketing/campaign/campaign_form.jsp",
+                    "Tạo Campaign Mới - CRM");
+
         } else if ("edit".equals(action)) {
-            int campaignId = Integer.parseInt(request.getParameter("id"));
-            Campaign campaign = campaignService.getCampaignById(campaignId);
+            int      campaignId = Integer.parseInt(request.getParameter("id"));
+            Campaign campaign   = campaignService.getCampaignById(campaignId);
             request.setAttribute("campaign", campaign);
-            request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
+            forwardWithLayout(request, response,
+                    "/view/marketing/campaign/campaign_form.jsp",
+                    "Chỉnh sửa Campaign - CRM");
         }
         // else if ("delete".equals(action)) {
         //     int campaignId = Integer.parseInt(request.getParameter("id"));
