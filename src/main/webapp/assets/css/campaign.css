@@ -1,0 +1,692 @@
+/* ====================================
+ * CAMPAIGN MODULE - STYLES
+ * Marketing Campaign Management UI
+ * ==================================== */
+
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --secondary-color: #6c757d;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* ====================================
+ * GENERAL STYLES
+ * ==================================== */
+
+body {
+    background-color: var(--light-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ====================================
+ * NAVBAR & NAVIGATION
+ * ==================================== */
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* ====================================
+ * PAGE HEADER
+ * ==================================== */
+
+.page-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 10px 10px;
+}
+
+.page-header h1 {
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 0;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    opacity: 0.95;
+}
+
+/* ====================================
+ * BREADCRUMB
+ * ==================================== */
+
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.breadcrumb-item.active {
+    color: #667eea;
+    font-weight: 500;
+}
+
+/* ====================================
+ * CARDS
+ * ==================================== */
+
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: var(--light-color);
+    border-bottom: 2px solid #dee2e6;
+    border-radius: 8px 8px 0 0;
+    padding: 1.5rem;
+}
+
+.card-header h5 {
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* ====================================
+ * FILTER CARD (SEARCH & FILTER)
+ * ==================================== */
+
+.filter-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.filter-card .card-body {
+    padding: 1.5rem;
+}
+
+.filter-card h6 {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+/* ====================================
+ * TABLE WRAPPER (CAMPAIGN LIST)
+ * ==================================== */
+
+.table-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead {
+    background-color: var(--light-color);
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table tbody tr:hover {
+    background-color: var(--light-color);
+}
+
+/* ====================================
+ * BADGES & STATUS
+ * ==================================== */
+
+.badge-status {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.badge-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-planning {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-paused {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-completed {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.channel-badge {
+    display: inline-block;
+    padding: 0.35rem 0.6rem;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #495057;
+    font-weight: 500;
+}
+
+/* ====================================
+ * BUDGET & AMOUNTS
+ * ==================================== */
+
+.budget-amount {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* ====================================
+ * BUTTONS
+ * ==================================== */
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+    margin: 0 2px;
+    border-radius: 4px;
+}
+
+.btn-action {
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-large {
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-save {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #218838;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+.btn-delete {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+    color: white;
+}
+
+.btn-primary-custom {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.btn-primary-custom:hover {
+    background-color: #0b5ed7;
+    color: white;
+}
+
+.btn-warning-custom {
+    background-color: var(--warning-color);
+    color: #000;
+    border: none;
+}
+
+.btn-warning-custom:hover {
+    background-color: #ffb800;
+    color: #000;
+}
+
+.btn-danger-custom {
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+}
+
+.btn-danger-custom:hover {
+    background-color: #bb2d3b;
+    color: white;
+}
+
+.btn-secondary-custom {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+}
+
+.btn-secondary-custom:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+/* ====================================
+ * EMPTY STATE
+ * ==================================== */
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #ccc;
+    margin-bottom: 1rem;
+}
+
+.empty-state h5 {
+    color: var(--secondary-color);
+    font-weight: 500;
+}
+
+.empty-state p {
+    color: #999;
+    margin-bottom: 1rem;
+}
+
+/* ====================================
+ * DATE RANGE & OTHER TEXT
+ * ==================================== */
+
+.date-range {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    line-height: 1.6;
+}
+
+/* ====================================
+ * STATS CARD (CAMPAIGN LIST)
+ * ==================================== */
+
+.stats-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.stats-card .card-body {
+    padding: 1.5rem;
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stats-label {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    margin-top: 0.5rem;
+}
+
+/* ====================================
+ * FORM STYLES (CREATE/EDIT)
+ * ==================================== */
+
+.form-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section h5 {
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--danger-color);
+}
+
+.invalid-feedback {
+    display: block;
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+    margin-top: 0.25rem;
+}
+
+.required::after {
+    content: " *";
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.date-input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e9ecef;
+}
+
+.field-group {
+    margin-bottom: 1.5rem;
+}
+
+.currency-helper {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* ====================================
+ * DETAIL PAGE STYLES
+ * ==================================== */
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    align-items: start;
+}
+
+.detail-label {
+    color: var(--secondary-color);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.detail-value {
+    color: var(--dark-color);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.description-box {
+    background-color: var(--light-color);
+    padding: 1.5rem;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+    color: #495057;
+    line-height: 1.6;
+}
+
+/* ====================================
+ * STATS GRID (DETAIL PAGE)
+ * ==================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* ====================================
+ * TIMELINE (DETAIL PAGE)
+ * ==================================== */
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #667eea, transparent);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding-left: 2rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2.25rem;
+    top: 0.25rem;
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--light-color);
+}
+
+.timeline-date {
+    color: var(--secondary-color);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.timeline-text {
+    color: #495057;
+    margin-top: 0.25rem;
+}
+
+/* ====================================
+ * ACTION BUTTONS (DETAIL PAGE)
+ * ==================================== */
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn-large {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* ====================================
+ * PROGRESS BAR
+ * ==================================== */
+
+.progress-bar-custom {
+    background: var(--gradient-primary);
+}
+
+/* ====================================
+ * ALERTS
+ * ==================================== */
+
+.alert {
+    border-radius: 4px;
+    border: none;
+}
+
+/* ====================================
+ * FOOTER
+ * ==================================== */
+
+.footer {
+    background-color: var(--light-color);
+    border-top: 1px solid #dee2e6;
+    padding: 2rem 0;
+    margin-top: 3rem;
+    color: var(--secondary-color);
+    text-align: center;
+}
+
+/* ====================================
+ * RESPONSIVE DESIGN
+ * ==================================== */
+
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .date-input-group {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons .btn-large {
+        width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button,
+    .form-actions a {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .btn-icon {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}

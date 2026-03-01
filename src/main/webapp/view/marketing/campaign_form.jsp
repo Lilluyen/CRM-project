@@ -8,189 +8,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${campaign.campaignId != null ? 'Chỉnh sửa' : 'Tạo'} Campaign - CRM</title>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .navbar {
-            box-shadow: 0 2px 4px rgba(0,0,0,.1);
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 0 0 10px 10px;
-        }
-
-        .page-header h1 {
-            font-weight: 700;
-            font-size: 2rem;
-        }
-
-        .form-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .form-section {
-            margin-bottom: 2rem;
-        }
-
-        .form-section h5 {
-            color: #667eea;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .form-group label {
-            font-weight: 500;
-            color: #495057;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-control,
-        .form-select {
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-
-        .form-control.is-invalid,
-        .form-select.is-invalid {
-            border-color: #dc3545;
-        }
-
-        .invalid-feedback {
-            display: block;
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-
-        .form-text {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .required::after {
-            content: " *";
-            color: #dc3545;
-            font-weight: bold;
-        }
-
-        .date-input-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            padding-top: 1.5rem;
-            border-top: 2px solid #e9ecef;
-        }
-
-        .btn-large {
-            padding: 0.75rem 2rem;
-            font-weight: 500;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-large:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,.15);
-        }
-
-        .btn-save {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .btn-save:hover {
-            background-color: #218838;
-            color: white;
-        }
-
-        .btn-cancel {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-cancel:hover {
-            background-color: #5a6268;
-            color: white;
-        }
-
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background-color: #c82333;
-            color: white;
-        }
-
-        .alert {
-            border-radius: 4px;
-            border: none;
-        }
-
-        .breadcrumb {
-            background-color: transparent;
-            padding: 0;
-            margin-bottom: 1.5rem;
-        }
-
-        .breadcrumb-item.active {
-            color: #667eea;
-            font-weight: 500;
-        }
-
-        .field-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .currency-helper {
-            font-size: 0.875rem;
-            color: #6c757d;
-            display: block;
-            margin-top: 0.25rem;
-        }
-
-        .footer {
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-            padding: 2rem 0;
-            margin-top: 3rem;
-            color: #6c757d;
-            text-align: center;
-        }
-    </style>
+    
+    <!-- Campaign CSS -->
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/campaign.css">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -419,60 +247,59 @@
         </div>
     </div>
 
+<script>
+    const form = document.getElementById('campaignForm');
+    let deleteModal;
+    let campaignId;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        campaignId = <c:out value="${campaign.campaignId != null ? campaign.campaignId : 'null'}"/>;
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        
+        // Form validation
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+
+        // Date validation
+        validateDates();
+        document.getElementById('startDate').addEventListener('change', validateDates);
+        document.getElementById('endDate').addEventListener('change', validateDates);
+    });
+
+    function validateDates() {
+        const startDate = new Date(document.getElementById('startDate').value);
+        const endDate = new Date(document.getElementById('endDate').value);
+
+        if (startDate && endDate && endDate < startDate) {
+            document.getElementById('endDate').classList.add('is-invalid');
+            document.getElementById('endDate').parentElement.querySelector('.invalid-feedback').textContent = 
+                'Ngày kết thúc phải sau ngày bắt đầu.';
+        } else {
+            document.getElementById('endDate').classList.remove('is-invalid');
+        }
+    }
+
+    // Format budget input
+    document.getElementById('budget').addEventListener('input', function() {
+        if (this.value) {
+            this.value = Math.abs(this.value);
+        }
+    });
+</script>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container-fluid">
-            <p class="mb-0">&copy; 2026 CRM-Project v1.0 | Phòng Marketing</p>
+            <p class="mb-0">&copy; 2026 CRM-Project v1.0 | Marketing Module</p>
         </div>
     </footer>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const form = document.getElementById('campaignForm');
-        let deleteModal;
-        let campaignId;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            campaignId = <c:out value="${campaign.campaignId != null ? campaign.campaignId : 'null'}"/>;
-            deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            
-            // Form validation
-            form.addEventListener('submit', function(event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-
-            // Date validation
-            validateDates();
-            document.getElementById('startDate').addEventListener('change', validateDates);
-            document.getElementById('endDate').addEventListener('change', validateDates);
-        });
-
-        function validateDates() {
-            const startDate = new Date(document.getElementById('startDate').value);
-            const endDate = new Date(document.getElementById('endDate').value);
-
-            if (startDate && endDate && endDate < startDate) {
-                document.getElementById('endDate').classList.add('is-invalid');
-                document.getElementById('endDate').parentElement.querySelector('.invalid-feedback').textContent = 
-                    'Ngày kết thúc phải sau ngày bắt đầu.';
-            } else {
-                document.getElementById('endDate').classList.remove('is-invalid');
-            }
-        }
-
-
-
-        // Format budget input
-        document.getElementById('budget').addEventListener('input', function() {
-            if (this.value) {
-                this.value = Math.abs(this.value);
-            }
-        });
-    </script>
 </body>
 </html>
