@@ -49,7 +49,7 @@ public class LeadController extends HttpServlet {
                 }
             } catch (Exception e) {
                 request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("/view/marketing/lead_list.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/marketing/lead/lead_list.jsp").forward(request, response);
             }
         }
     }
@@ -61,13 +61,13 @@ public class LeadController extends HttpServlet {
             List<Lead> leads = leadService.getAllLeads();
             request.setAttribute("leads", leads);
             // ===== FIX: Sửa đường dẫn =====
-            request.getRequestDispatcher("/view/marketing/lead_list.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/lead/lead_list.jsp").forward(request, response);
         } else if ("byCampaign".equals(action)) {
             int campaignId = Integer.parseInt(request.getParameter("campaignId"));
             List<Lead> leads = campaignLeadService.getLeadsByCampaignId(campaignId);
             request.setAttribute("leads", leads);
             request.setAttribute("campaignId", campaignId);
-            request.getRequestDispatcher("/view/marketing/lead_by_campaign.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/lead/lead_by_campaign.jsp").forward(request, response);
         }
     }
 }

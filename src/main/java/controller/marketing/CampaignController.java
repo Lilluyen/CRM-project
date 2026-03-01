@@ -65,7 +65,7 @@ public class CampaignController extends HttpServlet {
                 response.sendRedirect("campaign?action=list");
             } catch (Exception e) {
                 request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
             }
         } else if ("update".equals(action)) {
             try {
@@ -121,7 +121,7 @@ public class CampaignController extends HttpServlet {
                 Campaign campaign = campaignService.getCampaignById(campaignId);
                 request.setAttribute("campaign", campaign);
                 request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
             }
         }
     }
@@ -145,7 +145,7 @@ public class CampaignController extends HttpServlet {
                 if (campaigns.size() == 1) {
                     Campaign campaign = campaigns.get(0);
                     request.setAttribute("campaign", campaign);
-                    request.getRequestDispatcher("/view/marketing/campaign_detail.jsp").forward(request, response);
+                    request.getRequestDispatcher("/view/marketing/campaign/campaign_detail.jsp").forward(request, response);
                     return;
                 }
 
@@ -157,19 +157,19 @@ public class CampaignController extends HttpServlet {
             request.setAttribute("campaigns", campaigns);
             request.setAttribute("searchName", searchName);
             request.setAttribute("filterStatus", status);
-            request.getRequestDispatcher("/view/marketing/campaign_list.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/campaign/campaign_list.jsp").forward(request, response);
         } else if ("detail".equals(action)) {
             int campaignId = Integer.parseInt(request.getParameter("id"));
             Campaign campaign = campaignService.getCampaignById(campaignId);
             request.setAttribute("campaign", campaign);
-            request.getRequestDispatcher("/view/marketing/campaign_detail.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/campaign/campaign_detail.jsp").forward(request, response);
         } else if ("create".equals(action)) {
-            request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
         } else if ("edit".equals(action)) {
             int campaignId = Integer.parseInt(request.getParameter("id"));
             Campaign campaign = campaignService.getCampaignById(campaignId);
             request.setAttribute("campaign", campaign);
-            request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp").forward(request, response);
         }
         // else if ("delete".equals(action)) {
         //     int campaignId = Integer.parseInt(request.getParameter("id"));

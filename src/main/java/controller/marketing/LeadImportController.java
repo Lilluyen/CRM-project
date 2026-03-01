@@ -27,7 +27,7 @@ public class LeadImportController extends HttpServlet {
     // ===== GET: Show import form =====
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/view/marketing/lead_import.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/marketing/lead/lead_import.jsp").forward(request, response);
     }
 
     // ===== POST: Handle file upload =====
