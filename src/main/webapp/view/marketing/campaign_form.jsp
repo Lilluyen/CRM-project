@@ -258,38 +258,127 @@
         
         // Form validation
         form.addEventListener('submit', function(event) {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Kiểm tra validation
+            if (validateForm()) {
+                // Nếu hợp lệ, thì submit form
+                form.submit();
+            } else {
+                // Nếu không hợp lệ, hiển thị lỗi
+                form.classList.add('was-validated');
+                scrollToFirstError();
             }
-            form.classList.add('was-validated');
         }, false);
 
-        // Date validation
+        // Date validation real-time
         validateDates();
         document.getElementById('startDate').addEventListener('change', validateDates);
         document.getElementById('endDate').addEventListener('change', validateDates);
+        
+        // Budget validation
+        document.getElementById('budget').addEventListener('input', function() {
+            if (this.value) {
+                this.value = Math.abs(this.value);
+            }
+        });
     });
 
-    function validateDates() {
-        const startDate = new Date(document.getElementById('startDate').value);
-        const endDate = new Date(document.getElementById('endDate').value);
+    function validateForm() {
+        // Lấy tất cả required fields
+        const name = document.getElementById('name').value.trim();
+        const channel = document.getElementById('channel').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const budget = document.getElementById('budget').value;
+        
+        // Kiểm tra required fields
+        if (!name) {
+            showFieldError('name', 'Vui lòng nhập tên campaign.');
+            return false;
+        }
+        
+        if (!channel) {
+            showFieldError('channel', 'Vui lòng chọn kênh marketing.');
+            return false;
+        }
+        
+        if (!startDate) {
+            showFieldError('startDate', 'Vui lòng chọn ngày bắt đầu.');
+            return false;
+        }
+        
+        if (!endDate) {
+            showFieldError('endDate', 'Vui lòng chọn ngày kết thúc.');
+            return false;
+        }
+        
+        if (!budget || parseFloat(budget) <= 0) {
+            showFieldError('budget', 'Vui lòng nhập ngân sách hợp lệ (> 0).');
+            return false;
+        }
+        
+        // Kiểm tra date logic
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
+        
+        if (endDateObj <= startDateObj) {
+            showFieldError('endDate', 'Ngày kết thúc phải sau ngày bắt đầu.');
+            return false;
+        }
+        
+        // Edit mode: check status
+        if (campaignId != null) {
+            const status = document.getElementById('status').value;
+            if (!status) {
+                showFieldError('status', 'Vui lòng chọn trạng thái.');
+                return false;
+            }
+        }
+        
+        return true;
+    }
 
-        if (startDate && endDate && endDate < startDate) {
-            document.getElementById('endDate').classList.add('is-invalid');
-            document.getElementById('endDate').parentElement.querySelector('.invalid-feedback').textContent = 
-                'Ngày kết thúc phải sau ngày bắt đầu.';
-        } else {
-            document.getElementById('endDate').classList.remove('is-invalid');
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('is-invalid');
+            const feedback = field.parentElement.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.textContent = message;
+            }
         }
     }
 
-    // Format budget input
-    document.getElementById('budget').addEventListener('input', function() {
-        if (this.value) {
-            this.value = Math.abs(this.value);
+    function validateDates() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const endDateField = document.getElementById('endDate');
+        
+        if (startDate && endDate) {
+            const startDateObj = new Date(startDate);
+            const endDateObj = new Date(endDate);
+            
+            if (endDateObj <= startDateObj) {
+                endDateField.classList.add('is-invalid');
+                const feedback = endDateField.parentElement.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.textContent = 'Ngày kết thúc phải sau ngày bắt đầu.';
+                }
+            } else {
+                endDateField.classList.remove('is-invalid');
+            }
         }
-    });
+    }
+
+    function scrollToFirstError() {
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
+    }
 </script>
 
     <!-- Footer -->

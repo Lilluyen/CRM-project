@@ -23,49 +23,104 @@ public class CampaignController extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("create".equals(action)) {
-            String name = request.getParameter("name");
-            String description = request.getParameter("description");
-            String budgetStr = request.getParameter("budget");
-
-            BigDecimal budget;
-
             try {
-                budget = new BigDecimal(budgetStr);
-            } catch (Exception e) {
-                budget = BigDecimal.ZERO;
-            }
-            LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
-            LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
-            String channel = request.getParameter("channel");
-            int createdBy = ((User) request.getSession().getAttribute("user")).getUserId();
+                String name = request.getParameter("name");
+                String description = request.getParameter("description");
+                String budgetStr = request.getParameter("budget");
 
-            Campaign campaign = new Campaign(0, name, description, budget, startDate, endDate,
-                    channel, "ACTIVE", createdBy, null, null);
+                // Kiểm tra required fields
+                if (name == null || name.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Tên campaign không được để trống.");
+                }
 
-            try {
+                BigDecimal budget;
+                try {
+                    budget = new BigDecimal(budgetStr);
+                    if (budget.compareTo(BigDecimal.ZERO) <= 0) {
+                        throw new IllegalArgumentException("Ngân sách phải lớn hơn 0.");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Ngân sách không hợp lệ.");
+                }
+
+                LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
+                LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+
+                // Kiểm tra date logic
+                if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
+                    throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
+                }
+
+                String channel = request.getParameter("channel");
+                if (channel == null || channel.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Kênh marketing không được để trống.");
+                }
+
+                int createdBy = ((User) request.getSession().getAttribute("user")).getUserId();
+
+                Campaign campaign = new Campaign(0, name, description, budget, startDate, endDate,
+                        channel, "ACTIVE", createdBy, null, null);
+
                 int campaignId = campaignService.createCampaign(campaign);
                 response.sendRedirect("campaign?action=list");
             } catch (Exception e) {
                 request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("/marketing/campaign_form.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
             }
         } else if ("update".equals(action)) {
-            int campaignId = Integer.parseInt(request.getParameter("campaignId"));
-            String name = request.getParameter("name");
-            String description = request.getParameter("description");
-            BigDecimal budget = new BigDecimal(request.getParameter("budget"));
-            LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
-            LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
-            String channel = request.getParameter("channel");
-            String status = request.getParameter("status");
+            try {
+                int campaignId = Integer.parseInt(request.getParameter("campaignId"));
+                String name = request.getParameter("name");
+                String description = request.getParameter("description");
+                String budgetStr = request.getParameter("budget");
 
-            Campaign campaign = new Campaign(campaignId, name, description, budget, startDate,
-                    endDate, channel, status, 0, null, null);
+                // Kiểm tra required fields
+                if (name == null || name.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Tên campaign không được để trống.");
+                }
 
-            if (campaignService.updateCampaign(campaign)) {
-                response.sendRedirect("campaign?action=detail&id=" + campaignId);
-            } else {
-                request.setAttribute("error", "Update failed");
+                BigDecimal budget;
+                try {
+                    budget = new BigDecimal(budgetStr);
+                    if (budget.compareTo(BigDecimal.ZERO) <= 0) {
+                        throw new IllegalArgumentException("Ngân sách phải lớn hơn 0.");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Ngân sách không hợp lệ.");
+                }
+
+                LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
+                LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+
+                // Kiểm tra date logic
+                if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
+                    throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
+                }
+
+                String channel = request.getParameter("channel");
+                if (channel == null || channel.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Kênh marketing không được để trống.");
+                }
+
+                String status = request.getParameter("status");
+                if (status == null || status.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Trạng thái không được để trống.");
+                }
+
+                Campaign campaign = new Campaign(campaignId, name, description, budget, startDate,
+                        endDate, channel, status, 0, null, null);
+
+                if (campaignService.updateCampaign(campaign)) {
+                    response.sendRedirect("campaign?action=detail&id=" + campaignId);
+                } else {
+                    throw new Exception("Cập nhật campaign thất bại.");
+                }
+            } catch (Exception e) {
+                // Lấy campaign cũ để hiển thị lại form với dữ liệu
+                int campaignId = Integer.parseInt(request.getParameter("campaignId"));
+                Campaign campaign = campaignService.getCampaignById(campaignId);
+                request.setAttribute("campaign", campaign);
+                request.setAttribute("error", e.getMessage());
                 request.getRequestDispatcher("/view/marketing/campaign_form.jsp").forward(request, response);
             }
         }
