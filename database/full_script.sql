@@ -1,4 +1,4 @@
-﻿﻿USE master;
+﻿USE master
 GO
 
 IF EXISTS (SELECT * FROM sys.databases WHERE name = 'CRM_System')
@@ -398,21 +398,42 @@ GO
 /****** Object:  Table [dbo].[Notifications]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 CREATE TABLE [dbo].[Notifications](
-	[notification_id] [int] IDENTITY(1,1) NOT NULL,
-	[user_id] [int] NULL,
-	[title] [nvarchar](100) NULL,
-	[content] [nvarchar](max) NULL,
-	[type] [varchar](20) NULL,
-	[is_read] [bit] NULL,
-	[created_at] [datetime] NULL,
-PRIMARY KEY CLUSTERED 
+    [notification_id] INT IDENTITY(1,1) NOT NULL,
+    [title] NVARCHAR(200) NOT NULL,
+    [content] NVARCHAR(MAX) NULL,
+    [type] VARCHAR(30) NULL,
+    [related_type] VARCHAR(50) NULL,
+    [related_id] INT NULL,
+    [created_at] DATETIME NOT NULL CONSTRAINT [DF_Notifications_CreatedAt] DEFAULT (GETDATE()),
+ CONSTRAINT [PK_Notifications] PRIMARY KEY CLUSTERED 
 (
-	[notification_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [notification_id] ASC
+) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Notification_Recipients](
+    [notification_id] INT NOT NULL,
+    [user_id] INT NOT NULL,
+    [is_read] BIT NOT NULL CONSTRAINT [DF_NotificationRecipients_IsRead] DEFAULT (0),
+    [read_at] DATETIME NULL,
+ CONSTRAINT [PK_Notification_Recipients] PRIMARY KEY CLUSTERED 
+(
+    [notification_id] ASC,
+    [user_id] ASC
+) ON [PRIMARY]
+) ON [PRIMARY]
 GO
 /****** Object:  Table [dbo].[Products]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
@@ -487,25 +508,68 @@ GO
 /****** Object:  Table [dbo].[Tasks]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 CREATE TABLE [dbo].[Tasks](
-	[task_id] [int] IDENTITY(1,1) NOT NULL,
-	[title] [nvarchar](100) NULL,
-	[description] [nvarchar](max) NULL,
-	[related_type] [varchar](50) NULL,
-	[related_id] [int] NULL,
-	[assigned_to] [int] NULL,
-	[priority] [varchar](20) NULL,
-	[status] [varchar](20) NULL,
-	[due_date] [date] NULL,
-	[created_at] [datetime] NULL,
-PRIMARY KEY CLUSTERED 
+    [task_id] INT IDENTITY(1,1) NOT NULL,
+    [title] NVARCHAR(200) NOT NULL,
+    [description] NVARCHAR(MAX) NULL,
+    [status] VARCHAR(30) NOT NULL CONSTRAINT [DF_Tasks_Status] DEFAULT ('Pending'),
+    [priority] VARCHAR(20) NOT NULL CONSTRAINT [DF_Tasks_Priority] DEFAULT ('Medium'),
+    [due_date] DATETIME NULL,
+    [progress] INT NOT NULL CONSTRAINT [DF_Tasks_Progress] DEFAULT (0),
+    [created_by] INT NOT NULL,
+    [created_at] DATETIME NOT NULL CONSTRAINT [DF_Tasks_CreatedAt] DEFAULT (GETDATE()),
+    [updated_at] DATETIME NULL,
+ CONSTRAINT [PK_Tasks] PRIMARY KEY CLUSTERED 
 (
-	[task_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [task_id] ASC
+) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Task_Assignees](
+    [task_id] INT NOT NULL,
+    [user_id] INT NOT NULL,
+    [assigned_at] DATETIME NOT NULL CONSTRAINT [DF_TaskAssignees_AssignedAt] DEFAULT (GETDATE()),
+ CONSTRAINT [PK_Task_Assignees] PRIMARY KEY CLUSTERED 
+(
+    [task_id] ASC,
+    [user_id] ASC
+) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Task_History](
+    [history_id] INT IDENTITY(1,1) NOT NULL,
+    [task_id] INT NOT NULL,
+    [changed_by] INT NOT NULL,
+    [field_name] VARCHAR(50) NOT NULL,
+    [old_value] NVARCHAR(500) NULL,
+    [new_value] NVARCHAR(500) NULL,
+    [changed_at] DATETIME NOT NULL CONSTRAINT [DF_TaskHistory_ChangedAt] DEFAULT (GETDATE()),
+ CONSTRAINT [PK_Task_History] PRIMARY KEY CLUSTERED 
+(
+    [history_id] ASC
+) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
 /****** Object:  Table [dbo].[Tickets]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -851,18 +915,14 @@ ALTER TABLE [dbo].[Feedbacks] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Leads] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
-ALTER TABLE [dbo].[Notifications] ADD  DEFAULT ((0)) FOR [is_read]
-GO
-ALTER TABLE [dbo].[Notifications] ADD  DEFAULT (getdate()) FOR [created_at]
-GO
+
 ALTER TABLE [dbo].[Products] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Roles] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Service_Reports] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
-ALTER TABLE [dbo].[Tasks] ADD  DEFAULT (getdate()) FOR [created_at]
-GO
+
 ALTER TABLE [dbo].[Tickets] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Virtual_Wardrobe] ADD  DEFAULT (getdate()) FOR [bought_at]
@@ -967,15 +1027,33 @@ REFERENCES [dbo].[Users] ([user_id])
 GO
 ALTER TABLE [dbo].[Leads] CHECK CONSTRAINT [fk_leads_user]
 GO
-ALTER TABLE [dbo].[Notifications]  WITH CHECK ADD  CONSTRAINT [fk_notifications_user] FOREIGN KEY([user_id])
+
+ALTER TABLE [dbo].[Notification_Recipients]  WITH CHECK ADD  
+CONSTRAINT [fk_nr_notification] FOREIGN KEY([notification_id])
+REFERENCES [dbo].[Notifications] ([notification_id])
+GO
+ALTER TABLE [dbo].[Notification_Recipients] CHECK CONSTRAINT [fk_nr_notification]
+GO
+
+ALTER TABLE [dbo].[Notification_Recipients]  WITH CHECK ADD  
+CONSTRAINT [fk_nr_user] FOREIGN KEY([user_id])
 REFERENCES [dbo].[Users] ([user_id])
 GO
-ALTER TABLE [dbo].[Notifications] CHECK CONSTRAINT [fk_notifications_user]
+ALTER TABLE [dbo].[Notification_Recipients] CHECK CONSTRAINT [fk_nr_user]
 GO
-ALTER TABLE [dbo].[Tasks]  WITH CHECK ADD  CONSTRAINT [fk_tasks_user] FOREIGN KEY([assigned_to])
+
+ALTER TABLE [dbo].[Task_Assignees]  WITH CHECK ADD  
+CONSTRAINT [fk_ta_task] FOREIGN KEY([task_id])
+REFERENCES [dbo].[Tasks] ([task_id])
+GO
+ALTER TABLE [dbo].[Task_Assignees] CHECK CONSTRAINT [fk_ta_task]
+GO
+
+ALTER TABLE [dbo].[Task_Assignees]  WITH CHECK ADD  
+CONSTRAINT [fk_ta_user] FOREIGN KEY([user_id])
 REFERENCES [dbo].[Users] ([user_id])
 GO
-ALTER TABLE [dbo].[Tasks] CHECK CONSTRAINT [fk_tasks_user]
+ALTER TABLE [dbo].[Task_Assignees] CHECK CONSTRAINT [fk_ta_user]
 GO
 ALTER TABLE [dbo].[Tickets]  WITH CHECK ADD  CONSTRAINT [fk_tickets_customer] FOREIGN KEY([customer_id])
 REFERENCES [dbo].[Customers] ([customer_id])

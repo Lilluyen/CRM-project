@@ -107,3 +107,66 @@ VALUES
 (5, N'Thắc mắc về chương trình khuyến mãi', 
  N'Chương trình khuyến mãi còn áp dụng không?', 
  'LOW', 'OPEN', 2, GETDATE(), NULL);
+
+
+
+ INSERT INTO [dbo].[Tasks]
+([title],[description],[status],[priority],[due_date],[progress],[created_by])
+VALUES
+(N'Design CRM Database',
+ N'Design full schema for CRM system including ERD',
+ 'In Progress',
+ 'High',
+ DATEADD(DAY,7,GETDATE()),
+ 40,
+ 1),
+
+(N'Prepare Sales Pitch Deck',
+ N'Create presentation slides for potential investors',
+ 'Pending',
+ 'Medium',
+ DATEADD(DAY,5,GETDATE()),
+ 0,
+ 2),
+
+(N'Customer Follow-up Call',
+ N'Call VIP customer for feedback on recent purchase',
+ 'Completed',
+ 'Low',
+ DATEADD(DAY,-1,GETDATE()),
+ 100,
+ 1)
+GO
+
+
+INSERT INTO [dbo].[Task_Assignees]
+([task_id],[user_id])
+VALUES
+(1,2),
+(1,3),
+(2,1),
+(3,2)
+GO
+
+
+INSERT INTO [dbo].[Activities]
+([activity_type],[description],[related_type],[related_id],[created_by])
+VALUES
+('CALL',
+ N'Called customer to confirm delivery status',
+ 'CUSTOMER',
+ 1,
+ 2),
+
+('EMAIL',
+ N'Sent follow-up email regarding proposal',
+ 'LEAD',
+ 1,
+ 1),
+
+('MEETING',
+ N'Internal meeting about Q2 sales strategy',
+ 'INTERNAL',
+ NULL,
+ 3)
+GO
