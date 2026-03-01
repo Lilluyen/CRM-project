@@ -3,6 +3,14 @@ let allCustomerData = [];
 let filteredCustomers = [];
 let currentPage = 1;
 let rowsPerPage = 10;
+let advancedFilters = {
+    loyaltyTiers: [],
+    tagIds: [],
+    bodyShapes: [],
+    sizes: [],
+    returnRateMode: null
+};
+
 let selectedFilters = {
     searchText: '',
     tags: [],
@@ -16,7 +24,7 @@ let selectedFilters = {
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function () {
     // Get initial customer data from table
-    loadCustomerDataFromTable();
+    callFilterAPI(1); // Load first page with default filters
 
     // Set up event listeners
     setupEventListeners();
@@ -36,41 +44,9 @@ document.addEventListener('DOMContentLoaded', function () {
         showToast(pageStatus, toastType);
     }
 
-    // Render initial table
-//    renderTable();
 });
 
-// ===== LOAD DATA FROM TABLE =====
-function loadCustomerDataFromTable() {
-    const rows = document.querySelectorAll('table tbody tr');
-    allCustomerData = [];
 
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length > 0) {
-            const customerData = {
-                customerId: row.dataset.customerId || extractCustomerId(cells[6]),
-                name: cells[0].querySelector('strong')?.textContent.trim() || '',
-                phone: cells[0].querySelector('.muted')?.textContent.trim() || '',
-                email: cells[7].textContent.trim() || '',
-                loyaltyTier: cells[1].querySelector('.loyalty-badge')?.textContent.trim() || '',
-                rfmScore: cells[1].querySelector('.muted')?.textContent.replace('RFM Score: ', '').trim() || '',
-                preferredSize: cells[2].querySelector('strong')?.textContent.trim() || '',
-                bodyShape: cells[2].querySelector('.muted')?.textContent.trim() || '',
-                styleTags: Array.from(cells[3].querySelectorAll('.tag')).map(tag => tag.textContent.trim()),
-                returnRate: parseInt(cells[4].textContent) || 0,
-                lastPurchase: cells[5].textContent.trim() || '',
-                gender: cells[8].textContent.trim() || '',
-                height: cells[9].textContent.trim() || '',
-                weight: cells[10].textContent.trim() || '',
-                row: row
-            };
-            allCustomerData.push(customerData);
-        }
-    });
-
-    filteredCustomers = [...allCustomerData];
-}
 
 function extractCustomerId(actionCell) {
     const viewIcon = actionCell.querySelector('[onclick*="viewCustomer"]');
@@ -104,88 +80,84 @@ function debounce(callback, delay) {
 }
 
 // ===== FILTER FUNCTIONS =====
-function toggleFilterTag(tag) {
-    const index = selectedFilters.tags.indexOf(tag);
-    if (index > -1) {
-        selectedFilters.tags.splice(index, 1);
-    } else {
-        selectedFilters.tags.push(tag);
+function toggleFilterTag(type) {
+    if (type === 'GOLD') {
+        toggleArrayValue(advancedFilters.loyaltyTiers, 'GOLD');
+        const goldButton = document.querySelector('.gold-members');
+        goldButton.classList.toggle('active');
+        document.querySelector('input[name="loyaltyFilter"][value="GOLD"]').checked = goldButton.classList.contains('active');
     }
 
-    // Update button styles
-    document.querySelectorAll('.filter-btn:not(.advanced)').forEach(btn => {
-        const btnTag = btn.textContent.trim();
-        let tagValue = '';
-        if (btnTag.includes('Gold')) {
-            tagValue = 'GOLD';
-        } else if (btnTag.includes('High Return')) {
-            tagValue = 'HIGH_RETURN';
-        }
+    if (type === 'HIGH_RETURN') {
+        advancedFilters.returnRateMode =
+            advancedFilters.returnRateMode === 'HIGH' ? null : 'HIGH';
+        const highReturnButton = document.querySelector('.high-return');
+        highReturnButton.classList.toggle('active');
+        document.querySelector('input[name="returnRateFilter"][value="HIGH"]').checked = highReturnButton.classList.contains('active');
+    }
 
-        if (selectedFilters.tags.includes(tagValue)) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-
+    currentPage = 1;
     applyFilters();
 }
 
+function toggleArrayValue(arr, value) {
+    const index = arr.indexOf(value);
+    if (index === -1) arr.push(value);
+    else arr.splice(index, 1);
+}
+
 function applyFilters() {
-    const searchText = document.getElementById('searchInput')?.value.toLowerCase() || '';
-    selectedFilters.searchText = searchText;
+    callFilterAPI(1);
+}
 
-    filteredCustomers = allCustomerData.filter(customer => {
-        // Search filter
-        if (searchText) {
-            const matchesSearch =
-                    customer.name.toLowerCase().includes(searchText) ||
-                    customer.phone.includes(searchText) ||
-                    customer.styleTags.some(tag => tag.toLowerCase().includes(searchText));
-            if (!matchesSearch)
-                return false;
-        }
+async function callFilterAPI(page = 1) {
 
-        // Tag filters (Gold, High Return) - ALL tags must match (AND logic)
-        if (selectedFilters.tags.length > 0) {
-            for (let tag of selectedFilters.tags) {
-                if (tag === 'GOLD' && customer.loyaltyTier !== 'GOLD') {
-                    return false;
-                }
-                if (tag === 'HIGH_RETURN' && customer.returnRate <= 30) {
-                    return false;
-                }
-            }
-        }
+    currentPage = page;
 
-        // Advanced filters
-        if (selectedFilters.loyalty.length > 0 && !selectedFilters.loyalty.includes(customer.loyaltyTier)) {
-            return false;
-        }
-        if (selectedFilters.bodyShape.length > 0 && !selectedFilters.bodyShape.includes(customer.bodyShape)) {
-            return false;
-        }
-        if (selectedFilters.size.length > 0 && !selectedFilters.size.includes(customer.preferredSize.charAt(0))) {
-            return false;
-        }
-        if (selectedFilters.returnRate.length > 0) {
-            const isHighReturn = customer.returnRate > 30;
-            if (!selectedFilters.returnRate.includes(isHighReturn ? 'HIGH' : 'NORMAL')) {
-                return false;
-            }
-        }
-        if (selectedFilters.styleTags.length > 0) {
-            const hasMatchingTag = customer.styleTags.some(tag => selectedFilters.styleTags.includes(tag));
-            if (!hasMatchingTag)
-                return false;
-        }
+    const keyword = document.getElementById("searchInput")?.value || "";
 
-        return true;
+    const params = new URLSearchParams();
+
+    params.append("page", currentPage);
+    params.append("size", rowsPerPage);
+    params.append("keyword", keyword);
+
+    if (advancedFilters.loyaltyTiers.length)
+        params.append("tiers", advancedFilters.loyaltyTiers.join(','));
+
+    if (advancedFilters.tagIds.length)
+        params.append("tags", advancedFilters.tagIds.join(','));
+
+    if (advancedFilters.bodyShapes.length)
+        params.append("bodyShapes", advancedFilters.bodyShapes.join(','));
+
+    if (advancedFilters.sizes.length)
+        params.append("sizes", advancedFilters.sizes.join(','));
+
+    if (advancedFilters.returnRateMode)
+        params.append("returnRateMode", advancedFilters.returnRateMode);
+
+    const response = await fetch(`${window.__CTX__}/customers/filter`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: params.toString()
     });
 
-    currentPage = 1;
-    renderTable();
+    const data = await response.json();
+
+    /* 🔴 CỰC KỲ QUAN TRỌNG */
+    selectedFilters = data.customers;
+
+    /* dùng cho preview */
+    filteredCustomers = data.customers;
+
+    renderTableBody(data.customers);
+
+    const totalPages = Math.ceil(data.totalRecords / rowsPerPage);
+    renderPagination(totalPages, currentPage);
 }
 
 // ===== ADVANCED FILTER MODAL =====
@@ -206,84 +178,80 @@ function closeAdvancedFilter() {
 }
 
 function checkCurrentFilters() {
-    // Check loyalty filters
-    document.querySelectorAll('input[name="loyaltyFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.loyalty.includes(checkbox.value);
+
+    document.querySelectorAll('input[name="loyaltyFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.loyaltyTiers.includes(cb.value);
     });
 
-    // Check body shape filters
-    document.querySelectorAll('input[name="bodyShapeFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.bodyShape.includes(checkbox.value);
+    document.querySelectorAll('input[name="bodyShapeFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.bodyShapes.includes(cb.value);
     });
 
-    // Check size filters
-    document.querySelectorAll('input[name="sizeFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.size.includes(checkbox.value);
+    document.querySelectorAll('input[name="sizeFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.sizes.includes(cb.value);
     });
 
-    // Check return rate filters
-    document.querySelectorAll('input[name="returnRateFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.returnRate.includes(checkbox.value);
+    document.querySelectorAll('input[name="styleTagFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.tagIds.includes(parseInt(cb.value));
     });
 
-    // Check style tag filters
-    document.querySelectorAll('input[name="styleTagFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.styleTags.includes(checkbox.value);
+    document.querySelectorAll('input[name="returnRateFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.returnRateMode === cb.value;
     });
 }
-
 function applyAdvancedFilter() {
-    // Get selected loyalty tiers
-    selectedFilters.loyalty = Array.from(
-            document.querySelectorAll('input[name="loyaltyFilter"]:checked')
-            ).map(cb => cb.value);
 
-    // Get selected body shapes
-    selectedFilters.bodyShape = Array.from(
-            document.querySelectorAll('input[name="bodyShapeFilter"]:checked')
-            ).map(cb => cb.value);
+    // Loyalty
+    advancedFilters.loyaltyTiers = Array.from(
+        document.querySelectorAll('input[name="loyaltyFilter"]:checked')
+    ).map(cb => cb.value);
 
-    // Get selected sizes
-    selectedFilters.size = Array.from(
-            document.querySelectorAll('input[name="sizeFilter"]:checked')
-            ).map(cb => cb.value);
+    // Body shape
+    advancedFilters.bodyShapes = Array.from(
+        document.querySelectorAll('input[name="bodyShapeFilter"]:checked')
+    ).map(cb => cb.value);
 
-    // Get selected return rates
-    selectedFilters.returnRate = Array.from(
-            document.querySelectorAll('input[name="returnRateFilter"]:checked')
-            ).map(cb => cb.value);
+    // Sizes
+    advancedFilters.sizes = Array.from(
+        document.querySelectorAll('input[name="sizeFilter"]:checked')
+    ).map(cb => cb.value);
 
-    // Get selected style tags
-    selectedFilters.styleTags = Array.from(
-            document.querySelectorAll('input[name="styleTagFilter"]:checked')
-            ).map(cb => cb.value);
+    // Style Tags → map sang tagIds (INT)
+    advancedFilters.tagIds = Array.from(
+        document.querySelectorAll('input[name="styleTagFilter"]:checked')
+    ).map(cb => parseInt(cb.value));
+
+    // Return Rate (radio → chỉ lấy 1)
+    const returnRate = document.querySelector('input[name="returnRateFilter"]:checked');
+    advancedFilters.returnRateMode = returnRate ? returnRate.value : null;
 
     closeAdvancedFilter();
-    applyFilters();
+    callFilterAPI(1);
 }
 
 function resetAdvancedFilter() {
-    selectedFilters.loyalty = [];
-    selectedFilters.bodyShape = [];
-    selectedFilters.size = [];
-    selectedFilters.returnRate = [];
-    selectedFilters.styleTags = [];
 
-    // Uncheck all checkboxes
-    document.querySelectorAll('#advancedFilterModal input[type="checkbox"]').forEach(cb => {
+    advancedFilters = {
+        loyaltyTiers: [],
+        tagIds: [],
+        bodyShapes: [],
+        sizes: [],
+        returnRateMode: null
+    };
+
+    document.querySelectorAll('#advancedFilterModal input').forEach(cb => {
         cb.checked = false;
     });
 
-    applyFilters();
+    callFilterAPI(1);
 }
 
 
 // ===== CUSTOMER ACTIONS =====
 function openPreview(customerId) {
-    const customer = allCustomerData.find(c => c.customerId == customerId);
+    const customer = selectedFilters.find(c => c.customerId == customerId);
     if (!customer)
         return;
-    console.log(customer);
     // Populate preview panel
     document.getElementById('previewName').textContent = customer.name;
     document.getElementById('previewPhone').textContent = customer.phone;
@@ -334,48 +302,52 @@ function deleteCustomer(customerId) {
 }
 
 // ===== ACTION MENU =====
-function toggleMenu(element, event) {
+// function toggleMenu(element, event) {
 
-    event.stopPropagation(); // 🛑 chặn document click
+//     event.stopPropagation(); // 🛑 chặn document click
 
-    const menu = element.closest('.action-wrapper').querySelector('.action-menu');
+//     const menu = element.closest('.action-wrapper').querySelector('.action-menu');
 
-    const isVisible = menu.style.display === 'flex';
+//     const isVisible = menu.style.display === 'flex';
 
-    // đóng tất cả menu khác
-    document.querySelectorAll('.action-menu').forEach(m => m.style.display = 'none');
+//     // đóng tất cả menu khác
+//     document.querySelectorAll('.action-menu').forEach(m => m.style.display = 'none');
 
-    // toggle menu hiện tại
-    menu.style.display = isVisible ? 'none' : 'flex';
-    menu.style.flexDirection = 'column';
-}
+//     // toggle menu hiện tại
+//     menu.style.display = isVisible ? 'none' : 'flex';
+//     menu.style.flexDirection = 'column';
+// }
 
 // Close action menu when clicking outside
 document.addEventListener("click", function (e) {
 
     const ellipsis = e.target.closest(".fa-ellipsis-vertical");
 
+    // CLICK vào dấu ...
     if (ellipsis) {
-
         e.stopPropagation();
 
         const wrapper = ellipsis.closest(".action-wrapper");
         const menu = wrapper.querySelector(".action-menu");
 
-        const isVisible = menu.classList.contains("show");
+        const isOpen = menu.classList.contains("show");
 
-        document.querySelectorAll(".action-menu")
-            .forEach(m => m.classList.remove("show"));
+        // đóng tất cả menu khác
+        document.querySelectorAll(".action-menu").forEach(m => {
+            m.classList.remove("show");
+        });
 
-        if (!isVisible) {
+        if (!isOpen) {
             menu.classList.add("show");
         }
 
         return;
     }
 
-    document.querySelectorAll(".action-menu")
-        .forEach(m => m.classList.remove("show"));
+    // CLICK ngoài → đóng hết
+    document.querySelectorAll(".action-menu").forEach(m => {
+        m.classList.remove("show");
+    });
 });
 
 // ===== TOAST NOTIFICATIONS =====
@@ -453,35 +425,20 @@ document.getElementById('customerPreview')?.addEventListener('click', function (
 
 
 // ================= PAGINATION AJAX =================
-function loadPage(page = 1, pageSize = rowsPerPage) {
+function loadPage(page, size) {
 
-    rowsPerPage = pageSize;
     currentPage = page;
 
-    fetch(`${window.__CTX__ || ""}/customers?page=${page}&size=${pageSize}`, {
-        headers: {
-            "X-Requested-With": "XMLHttpRequest"
-        }
-    })
-            .then(res => res.json())
-            .then(data => {
+    if (size) {
+        rowsPerPage = size;
+    }
 
-                console.log("DATA:", data);
-
-                allCustomerData = data.customers;
-
-                renderTableBody(data.customers);
-
-                // TÍNH TOTAL PAGES TỪ totalRecords
-                const totalPages = Math.ceil(data.totalRecords / rowsPerPage);
-
-                renderPagination(totalPages, currentPage);
-
-            })
-            .catch(err => console.error(err));
+    // GỌI LẠI FILTER (giữ toàn bộ điều kiện đang chọn)
+    callFilterAPI(currentPage);
 }
 
 function renderTableBody(customers) {
+    console.log(customers);
 
     let html = "";
 
@@ -532,8 +489,7 @@ function renderTableBody(customers) {
     <td class="actions">
         <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
             <div class="action-wrapper">
-                <i class="fa-solid fa-ellipsis-vertical"
-                    onclick="toggleMenu(this)"></i>
+                <i class="fa-solid fa-ellipsis-vertical"></i>
 
                     <div class="action-menu">
                     <div onclick="openPreview(${c.customerId})">Preview</div>
@@ -557,7 +513,7 @@ function renderTags(tags) {
         return "";
 
     return tags.slice(0, 2).map(tag =>
-            `<span class="tag">${tag}</span>`
+        `<span class="tag">${tag}</span>`
     ).join("");
 }
 
@@ -574,7 +530,7 @@ function renderPagination(totalPages, currentPage) {
     const container = document.getElementById("paginationControls");
 
     if (!totalPages || totalPages <= 1) {
-        container.innerHTML = "<button class=" + "active" + ">1</button>";
+        container.innerHTML = `<button class= "active btn btn-light">1</button>`;
         return;
     }
 
@@ -584,7 +540,7 @@ function renderPagination(totalPages, currentPage) {
 
         html += `
             <button onclick="loadPage(${i}, ${rowsPerPage})"
-                class="${i === currentPage ? "active" : ""}">
+                class="btn btn-light ${i === currentPage ? "active" : ""}">
                 ${i}
             </button>
         `;

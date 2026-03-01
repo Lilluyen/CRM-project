@@ -14,6 +14,7 @@ import dao.CustomerSegmentDAO;
 import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
+import dto.CustomerFilterRequest;
 import dto.CustomerPageResult;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
@@ -120,7 +121,7 @@ public class CustomerService {
         }
     }
 
-    public CustomerPageResult  getCustomerList(int page, int size) throws SQLException {
+    public CustomerPageResult getCustomerList(int page, int size) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
             CustomerPageResult customerList = customerQueryDAO.getCustomerList(conn, page, size);
@@ -243,6 +244,12 @@ public class CustomerService {
             if (!currentSet.contains(newId)) {
                 customerStyleDAO.insertCustomerStyle(conn, customerId, newId);
             }
+        }
+    }
+
+    public CustomerPageResult filterAdvanced(CustomerFilterRequest filterRequest) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return customerQueryDAO.filterAdvanced(conn, filterRequest);
         }
     }
 }

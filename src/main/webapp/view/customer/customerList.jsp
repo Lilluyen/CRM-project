@@ -5,7 +5,7 @@
 
 <div class="content col-10 mt-5">
     <h1>Customer Center</h1>
-    <div class="sub">Managing ${fn:length(customerList)} customers & body profiles</div>
+    <div class="sub">Managing ${totalRecord} customers & body profiles</div>
 
     <div class="top-bar">
         <div class="filter-section">
@@ -17,8 +17,8 @@
             </div>
 
             <div class="filter-buttons">
-                <button class="filter-btn" onclick="toggleFilterTag('GOLD')">Gold Members</button>
-                <button class="filter-btn" onclick="toggleFilterTag('HIGH_RETURN')">High Return</button>
+                <button class="filter-btn gold-members" onclick="toggleFilterTag('GOLD')">Gold Members</button>
+                <button class="filter-btn high-return" onclick="toggleFilterTag('HIGH_RETURN')">High Return</button>
                 <button class="filter-btn advanced" onclick="openAdvancedFilter()"><i class="fas fa-sliders-h"></i> Advanced</button>
             </div>
         </div>
@@ -107,8 +107,7 @@
                         <td class="actions">
                             <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
                             <div class="action-wrapper">
-                                <i class="fa-solid fa-ellipsis-vertical"
-                                   onclick="toggleMenu(this)"></i>
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
 
                                 <div class="action-menu" id="customerMenuAction">
                                     <div onclick="openPreview(${c.customerId})">Preview</div>
@@ -129,16 +128,12 @@
         <!-- pagination controls -->
         <div id="paginationControls" style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
             <c:forEach begin="1" end="${totalPages}" var="i">
-                <button onclick="loadPage(${i})" class="${i == currentPage ? 'active' : ''}"> 
+                <button onclick="loadPage(${i})" class="btn btn-light ${i == currentPage ? 'active' : ''}"> 
                     ${i}
                 </button> 
             </c:forEach>
         </div>
     </div>
-
-
-
-
 
     <div id="toast" class="toast">
         <div class="toast-left">
@@ -206,6 +201,14 @@
                             <input type="checkbox" name="bodyShapeFilter" value="RECTANGLE" />
                             Rectangle
                         </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="bodyShapeFilter" value="INVERTED TRIANGLE" />
+                            Inverted Triangle
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="bodyShapeFilter" value="SLENDER" />
+                            Slender
+                        </label>
                     </div>
                 </div>
 
@@ -236,11 +239,11 @@
                     <div class="checkbox-group">
                         <label class="checkbox-item">
                             <input type="checkbox" name="returnRateFilter" value="HIGH" />
-                            High (> 30%)
+                            High (> 40%)
                         </label>
                         <label class="checkbox-item">
                             <input type="checkbox" name="returnRateFilter" value="NORMAL" />
-                            Normal (≤ 30%)
+                            Normal (≤ 40%)
                         </label>
                     </div>
                 </div>
@@ -250,7 +253,7 @@
                     <div class="checkbox-group checkbox-group-3">
                         <c:forEach items="${styleTagList}" var="style">
                             <label class="checkbox-item">
-                                <input type="checkbox" name="styleTagFilter" value="${style.tagName}" />
+                                <input type="checkbox" name="styleTagFilter" value="${style.tagId}" />
                                 ${style.tagName}
                             </label>
                         </c:forEach>

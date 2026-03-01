@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
+import java.util.List;
+import model.StyleTag;
 import service.CustomerService;
 import util.ControllerUltil;
 
@@ -33,13 +35,15 @@ public class CustomerListController extends HttpServlet {
 
         try {
             if (request.getParameter("page") != null) {
-                page = Integer.parseInt(request.getParameter("page"));
+                page = ControllerUltil.parsePage(request.getParameter("page"));
             }
+
             if (request.getParameter("size") != null) {
-                size = Integer.parseInt(request.getParameter("size"));
+                size = ControllerUltil.parseSize(request.getParameter("size"));
             }
             CustomerService customerService = new CustomerService();
             CustomerPageResult result = customerService.getCustomerList(page, size);
+            List<StyleTag> styleTagList = customerService.getListStyleTags();
 
             if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
                 response.setContentType("application/json");
@@ -55,6 +59,8 @@ public class CustomerListController extends HttpServlet {
             }
             request.setAttribute("customerList", result.getCustomers());
             request.setAttribute("totalPages", result.getTotalPages(size));
+            request.setAttribute("totalRecord", result.getTotalRecords());
+            request.setAttribute("styleTagList", styleTagList);
             request.setAttribute("currentPage", page);
 
             request.setAttribute("pageTitle", "Customer List | Clothes CRM");
