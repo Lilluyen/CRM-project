@@ -11,7 +11,7 @@
                 <h4 class="mb-1"><i class="fas fa-bullhorn me-2"></i>Quản lý Campaign</h4>
                 <p class="text-muted mb-0">Tạo, cập nhật, và theo dõi hiệu quả chiến dịch marketing</p>
             </div>
-            <a href="${pageContext.request.contextPath}/marketing/campaign?action=create"
+            <a href="${pageContext.request.contextPath}/marketing/campaign/form"
                class="btn btn-primary">
                 <i class="fas fa-plus-circle me-1"></i> Tạo Campaign Mới
             </a>
@@ -36,7 +36,6 @@
             <div class="card-body">
                 <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Tìm kiếm &amp; Lọc</h6>
                 <form method="GET" action="${pageContext.request.contextPath}/marketing/campaign" class="row g-3">
-                    <input type="hidden" name="action" value="list">
 
                     <div class="col-md-5">
                         <label class="form-label">Tên campaign</label>
@@ -59,7 +58,7 @@
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-search me-1"></i> Tìm kiếm
                         </button>
-                        <a href="${pageContext.request.contextPath}/marketing/campaign?action=list"
+                        <a href="${pageContext.request.contextPath}/marketing/campaign"
                            class="btn btn-outline-secondary w-100">
                             <i class="fas fa-redo me-1"></i> Đặt lại
                         </a>
@@ -151,11 +150,11 @@
                                         </td>
 
                                         <td class="text-center">
-                                            <a href="${pageContext.request.contextPath}/marketing/campaign?action=detail&id=${campaign.campaignId}"
+                                            <a href="${pageContext.request.contextPath}/marketing/campaign/detail?id=${campaign.campaignId}"
                                                class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="${pageContext.request.contextPath}/marketing/campaign?action=edit&id=${campaign.campaignId}"
+                                            <a href="${pageContext.request.contextPath}/marketing/campaign/form?id=${campaign.campaignId}"
                                                class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -176,13 +175,13 @@
                             <div class="d-flex gap-1">
                                 <c:if test="${pagination.hasPreviousPage()}">
                                     <a class="btn btn-sm btn-outline-secondary"
-                                       href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${pagination.currentPage - 1}">
+                                       href="${pageContext.request.contextPath}/marketing/campaign?page=${pagination.currentPage - 1}">
                                         <i class="fas fa-chevron-left"></i> Trước
                                     </a>
                                 </c:if>
                                 <c:if test="${pagination.hasNextPage()}">
                                     <a class="btn btn-sm btn-outline-secondary"
-                                       href="${pageContext.request.contextPath}/marketing/campaign?action=list&page=${pagination.currentPage + 1}">
+                                       href="${pageContext.request.contextPath}/marketing/campaign?page=${pagination.currentPage + 1}">
                                         Tiếp <i class="fas fa-chevron-right"></i>
                                     </a>
                                 </c:if>
@@ -199,7 +198,7 @@
                     <div class="card-body">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Không có campaign nào</h5>
-                        <a href="${pageContext.request.contextPath}/marketing/campaign?action=create"
+                        <a href="${pageContext.request.contextPath}/marketing/campaign/form"
                            class="btn btn-primary mt-2">
                             <i class="fas fa-plus me-1"></i> Tạo Campaign
                         </a>
@@ -249,7 +248,7 @@
     function performDelete() {
         if (campaignIdToDelete) {
             window.location.href =
-                "${pageContext.request.contextPath}/marketing/campaign?action=delete&id=" + campaignIdToDelete;
+                "${pageContext.request.contextPath}/marketing/campaign/delete?id=" + campaignIdToDelete;
         }
     }
 </script>

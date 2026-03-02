@@ -2,80 +2,39 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${campaign.campaignId != null ? 'Chỉnh sửa' : 'Tạo'} Campaign - CRM</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <!-- Campaign CSS -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/campaign.css">
-</head>
-
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/">
-                <i class="bi bi-briefcase-fill"></i> CRM-Project
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="${pageContext.request.contextPath}/marketing/campaign?action=list">
-                            <i class="bi bi-megaphone"></i> Campaign
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/marketing/lead?action=list">
-                            <i class="bi bi-people"></i> Leads
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/marketing/report">
-                            <i class="bi bi-graph-up"></i> Reports
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="container-fluid">
-            <h1>
-                <c:if test="${campaign.campaignId != null}">
-                    <i class="bi bi-pencil-square"></i> Chỉnh sửa Campaign
-                </c:if>
-                <c:if test="${campaign.campaignId == null}">
-                    <i class="bi bi-plus-circle"></i> Tạo Campaign Mới
-                </c:if>
-            </h1>
-        </div>
-    </div>
-
+<div class="col-10">
     <div class="container-fluid py-4">
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/marketing/campaign?action=list">Campaign</a></li>
-                <li class="breadcrumb-item active" aria-current="page">
-                    <c:if test="${campaign.campaignId != null}">Chỉnh sửa</c:if>
-                    <c:if test="${campaign.campaignId == null}">Tạo mới</c:if>
-                </li>
-            </ol>
-        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">
+                    <c:choose>
+                        <c:when test="${campaign.campaignId != null}">
+                            <i class="fas fa-edit me-2"></i>Chỉnh sửa Campaign
+                        </c:when>
+                        <c:otherwise>
+                            <i class="fas fa-plus-circle me-2"></i>Tạo Campaign Mới
+                        </c:otherwise>
+                    </c:choose>
+                </h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/marketing/campaign">Campaign</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <c:choose>
+                                <c:when test="${campaign.campaignId != null}">Chỉnh sửa</c:when>
+                                <c:otherwise>Tạo mới</c:otherwise>
+                            </c:choose>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <a href="${pageContext.request.contextPath}/marketing/campaign"
+               class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
 
         <!-- Error Alert -->
         <c:if test="${not empty error}">
@@ -89,16 +48,8 @@
         <!-- Form -->
         <div class="form-container">
             <form id="campaignForm" method="POST"
-            action="${pageContext.request.contextPath}/marketing/campaign"
+            action="${pageContext.request.contextPath}/marketing/campaign/form"
             novalidate>
-                <c:choose>
-    <c:when test="${not empty campaign.campaignId}">
-        <input type="hidden" name="action" value="update">
-    </c:when>
-    <c:otherwise>
-        <input type="hidden" name="action" value="create">
-    </c:otherwise>
-</c:choose>
                 <c:if test="${campaign.campaignId != null}">
                     <input type="hidden" name="campaignId" value="${campaign.campaignId}">
                 </c:if>
@@ -216,7 +167,7 @@
                     <div class="form-actions">
 
     <!-- Cancel -->
-    <a href="${pageContext.request.contextPath}/marketing/campaign?action=list"
+    <a href="${pageContext.request.contextPath}/marketing/campaign"
        class="btn btn-large btn-cancel">
         <i class="bi bi-x-circle"></i> Hủy
     </a>
@@ -381,14 +332,5 @@
     }
 </script>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container-fluid">
-            <p class="mb-0">&copy; 2026 CRM-Project v1.0 | Marketing Module</p>
-        </div>
-    </footer>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    </div>
+</div>

@@ -1,0 +1,283 @@
+/* ====================================
+ * CAMPAIGN DETAIL PAGE - STYLES
+ * Chỉ custom classes, KHÔNG override Bootstrap/theme globals
+ * ==================================== */
+
+.col-10 > .container-fluid {
+    margin-top: 100px;
+}
+
+/* ====================================
+ * BADGES & STATUS (custom classes)
+ * ==================================== */
+
+.badge-status {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.badge-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-planning {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-paused {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-completed {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.channel-badge {
+    display: inline-block;
+    padding: 0.35rem 0.6rem;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #495057;
+    font-weight: 500;
+}
+
+/* ====================================
+ * BUDGET (custom class)
+ * ==================================== */
+
+.budget-amount {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+/* ====================================
+ * DETAIL SECTIONS (custom classes)
+ * ==================================== */
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    align-items: start;
+}
+
+.detail-label {
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.detail-value {
+    color: #212529;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.description-box {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+    color: #495057;
+    line-height: 1.6;
+}
+
+/* ====================================
+ * STATS GRID (custom classes)
+ * ==================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* ====================================
+ * TIMELINE (custom classes)
+ * ==================================== */
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #667eea, transparent);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding-left: 2rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2.25rem;
+    top: 0.25rem;
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px #f8f9fa;
+}
+
+.timeline-date {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.timeline-text {
+    color: #495057;
+    margin-top: 0.25rem;
+}
+
+/* ====================================
+ * ACTION BUTTONS (custom classes)
+ * ==================================== */
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn-large {
+    flex: 1;
+    min-width: 150px;
+}
+
+.btn-large {
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary-custom {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+}
+
+.btn-primary-custom:hover {
+    background-color: #0b5ed7;
+    color: white;
+}
+
+.btn-warning-custom {
+    background-color: #ffc107;
+    color: #000;
+    border: none;
+}
+
+.btn-warning-custom:hover {
+    background-color: #ffb800;
+    color: #000;
+}
+
+.btn-danger-custom {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-danger-custom:hover {
+    background-color: #bb2d3b;
+    color: white;
+}
+
+.btn-secondary-custom {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-secondary-custom:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+
+/* ====================================
+ * RESPONSIVE (custom classes only)
+ * ==================================== */
+
+@media (max-width: 768px) {
+    .detail-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons .btn-large {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

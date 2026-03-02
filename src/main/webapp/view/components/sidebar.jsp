@@ -21,10 +21,12 @@ isELIgnored="false" %>
             <span>Campaign</span>
             <span class="menu-arrow"></span>
           </a>
-          <ul style="${page eq 'customer-list' ? 'display:block;' : ''}">
+          <ul
+            style="${fn:startsWith(page, 'campaign-') ? 'display:block;' : ''}"
+          >
             <li>
               <a
-                class="${page eq 'customer-list' ? 'active' : ''}"
+                class="${page eq 'campaign-list' ? 'active' : ''}"
                 href="${pageContext.request.contextPath}/marketing/campaign"
               >
                 Campaign List
@@ -32,26 +34,18 @@ isELIgnored="false" %>
             </li>
             <li>
               <a
-                class="${page eq 'customer-add' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/customers/add-customer"
+                class="${page eq 'campaign-form' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/marketing/campaign/form"
               >
                 Add New Campaign
               </a>
             </li>
             <li>
               <a
-                class="${page eq 'customer-detail' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/customers"
+                class="${page eq 'campaign-detail' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/marketing/campaign"
               >
-                Campaign Detail
-              </a>
-            </li>
-            <li>
-              <a
-                class="${page eq 'customer-segments' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/customers/segments"
-              >
-                Campaign form
+                Campaign Update
               </a>
             </li>
           </ul>

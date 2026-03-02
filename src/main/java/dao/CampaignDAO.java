@@ -77,9 +77,9 @@ public class CampaignDAO {
         return null;
     }
 
-    // Lấy danh sách tất cả campaign (mới nhất trước)
+    // Lấy danh sách tất cả campaign (cập nhật gần nhất trước)
     public List<Campaign> getAllCampaign() {
-        String sql = "SELECT * FROM Campaigns ORDER BY created_at DESC";
+        String sql = "SELECT * FROM Campaigns ORDER BY updated_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -106,6 +106,7 @@ public class CampaignDAO {
         }
         return campaigns;
     }
+
     // Tìm campaign theo tên và trạng thái (search)
     public List<Campaign> searchCampaigns(String searchName, String status) {
         String sql = "SELECT * FROM Campaigns WHERE 1=1";
@@ -123,12 +124,11 @@ public class CampaignDAO {
             params.add(status);
         }
 
-        sql += " ORDER BY created_at DESC";
+        sql += " ORDER BY updated_at DESC";
 
         List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection(); 
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }

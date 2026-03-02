@@ -1,0 +1,148 @@
+/* ====================================
+ * CAMPAIGN FORM PAGE - STYLES
+ * Chỉ custom classes, KHÔNG override Bootstrap/theme globals
+ * ==================================== */
+
+.col-10 > .container-fluid {
+    margin-top: 100px;
+}
+
+/* ====================================
+ * FORM CONTAINER (custom class)
+ * ==================================== */
+
+.form-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section h5 {
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* ====================================
+ * FIELD GROUP (custom class)
+ * ==================================== */
+
+.field-group {
+    margin-bottom: 1.5rem;
+}
+
+/* ====================================
+ * REQUIRED LABEL (custom class)
+ * ==================================== */
+
+.required::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* ====================================
+ * DATE INPUT GROUP (custom class)
+ * ==================================== */
+
+.date-input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* ====================================
+ * FORM ACTIONS (custom class)
+ * ==================================== */
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e9ecef;
+}
+
+/* ====================================
+ * CURRENCY HELPER (custom class)
+ * ==================================== */
+
+.currency-helper {
+    font-size: 0.875rem;
+    color: #6c757d;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* ====================================
+ * CUSTOM BUTTONS
+ * ==================================== */
+
+.btn-large {
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-save {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #218838;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+    color: white;
+}
+
+/* ====================================
+ * RESPONSIVE (custom classes only)
+ * ==================================== */
+
+@media (max-width: 768px) {
+    .date-input-group {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button,
+    .form-actions a {
+        width: 100%;
+    }
+}
