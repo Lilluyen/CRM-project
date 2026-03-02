@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,7 @@ public class LeadDAO {
     public int createLead(Lead lead) {
         String sql = "INSERT INTO Leads(full_name, email, phone, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
             ps.setString(3, lead.getPhone());
@@ -28,8 +28,16 @@ public class LeadDAO {
             ps.setString(5, lead.getSource());
             ps.setString(6, lead.getStatus());
             ps.setInt(7, lead.getScore());
-            ps.setInt(8, lead.getCampaignId());
-            ps.setInt(9, lead.getAssignedTo());
+            if (lead.getCampaignId() > 0) {
+                ps.setInt(8, lead.getCampaignId());
+            } else {
+                ps.setNull(8, Types.INTEGER);
+            }
+            if (lead.getAssignedTo() > 0) {
+                ps.setInt(9, lead.getAssignedTo());
+            } else {
+                ps.setNull(9, Types.INTEGER);
+            }
             ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
             ps.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
 
@@ -56,8 +64,16 @@ public class LeadDAO {
             ps.setString(5, lead.getSource());
             ps.setString(6, lead.getStatus());
             ps.setInt(7, lead.getScore());
-            ps.setInt(8, lead.getCampaignId());
-            ps.setInt(9, lead.getAssignedTo());
+            if (lead.getCampaignId() > 0) {
+                ps.setInt(8, lead.getCampaignId());
+            } else {
+                ps.setNull(8, Types.INTEGER);
+            }
+            if (lead.getAssignedTo() > 0) {
+                ps.setInt(9, lead.getAssignedTo());
+            } else {
+                ps.setNull(9, Types.INTEGER);
+            }
             ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
             ps.setInt(11, lead.getLeadId());
             return ps.executeUpdate() > 0;
@@ -101,9 +117,7 @@ public class LeadDAO {
     public List<Lead> getAllLeads() {
         String sql = "SELECT * FROM Leads ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 leads.add(mapResultSetToLead(rs));
             }
@@ -148,8 +162,7 @@ public class LeadDAO {
 
     public boolean isDuplicate(String email, String phone) {
         String sql = "SELECT COUNT(*) FROM Leads WHERE email = ? OR phone = ?";
-        try (Connection conn = DBContext.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ps.setString(2, phone != null ? phone : "");
             ResultSet rs = ps.executeQuery();
@@ -164,7 +177,7 @@ public class LeadDAO {
 
     /**
      * Import batch leads (dùng transaction)
-     * 
+     *
      * @return số leads được import thành công
      */
     public int importLeads(List<Lead> leads) throws Exception {
@@ -210,6 +223,109 @@ public class LeadDAO {
         }
 
         return importedCount;
+    }
+
+    // Đếm tổng số lead theo campaign_id
+    public int countLeadsByCampaignId(int campaignId) {
+        String sql = "SELECT COUNT(*) as cnt FROM Leads WHERE campaign_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("cnt");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // Đếm số lead theo campaign_id và status
+    public int countLeadsByCampaignAndStatus(int campaignId, String status) {
+        String sql = "SELECT COUNT(*) as cnt FROM Leads WHERE campaign_id = ? AND status = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ps.setString(2, status);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("cnt");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // ==============================
+    // SEARCH + PAGINATION (OFFSET / FETCH)
+    // ==============================
+    public List<Lead> searchLeads(String keyword, String status, int page, int pageSize) {
+        String sql = "SELECT * FROM Leads WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += " AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?)";
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND status = ?";
+            params.add(status);
+        }
+
+        sql += " ORDER BY created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        int offset = (page - 1) * pageSize;
+        params.add(offset);
+        params.add(pageSize);
+
+        List<Lead> leads = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                leads.add(mapResultSetToLead(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return leads;
+    }
+
+    // ==============================
+    // COUNT FOR PAGINATION
+    // ==============================
+    public int countLeads(String keyword, String status) {
+        String sql = "SELECT COUNT(*) FROM Leads WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += " AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?)";
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND status = ?";
+            params.add(status);
+        }
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     // Map dữ liệu từ ResultSet sang đối tượng Lead

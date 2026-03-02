@@ -9,6 +9,66 @@ public class LeadService {
 
     private LeadDAO leadDAO = new LeadDAO();
 
+    // ==============================
+    // SEARCH + PAGINATION
+    // ==============================
+    /**
+     * Tìm kiếm leads theo keyword + status, có phân trang
+     */
+    public List<Lead> searchLeads(String keyword, String status, int page, int pageSize) {
+        return leadDAO.searchLeads(keyword, status, page, pageSize);
+    }
+
+    /**
+     * Đếm tổng leads theo điều kiện lọc (dùng cho phân trang)
+     */
+    public int countLeads(String keyword, String status) {
+        return leadDAO.countLeads(keyword, status);
+    }
+
+    // ==============================
+    // CRUD
+    // ==============================
+    /**
+     * Tạo mới Lead (validate + set defaults)
+     */
+    public int createLead(Lead lead) {
+        if (lead.getFullName() == null || lead.getFullName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Họ tên không được để trống.");
+        }
+        if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email không được để trống.");
+        }
+        // Check duplicate email
+        if (leadDAO.findLeadByEmail(lead.getEmail()) != null) {
+            throw new IllegalArgumentException("Email đã tồn tại trong hệ thống.");
+        }
+        // Set defaults
+        if (lead.getStatus() == null || lead.getStatus().trim().isEmpty()) {
+            lead.setStatus("NEW_LEAD");
+        }
+        return leadDAO.createLead(lead);
+    }
+
+    /**
+     * Cập nhật Lead
+     */
+    public boolean updateLead(Lead lead) {
+        if (lead.getLeadId() <= 0) {
+            throw new IllegalArgumentException("Lead ID không hợp lệ.");
+        }
+        if (lead.getFullName() == null || lead.getFullName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Họ tên không được để trống.");
+        }
+        if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email không được để trống.");
+        }
+        return leadDAO.updateLead(lead);
+    }
+
+    // ==============================
+    // EXISTING METHODS
+    // ==============================
     /**
      * Import danh sách Leads (tự động check duplicate)
      */
