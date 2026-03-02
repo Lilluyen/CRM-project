@@ -9,13 +9,16 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Campaign;
 import model.Lead;
+import service.CampaignService;
 import service.LeadService;
 
 @WebServlet(name = "LeadListController", urlPatterns = {"/marketing/leads"})
 public class LeadListController extends HttpServlet {
 
     private final LeadService leadService = new LeadService();
+    private final CampaignService campaignService = new CampaignService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -24,6 +27,15 @@ public class LeadListController extends HttpServlet {
         // --- Đọc params ---
         String keyword = request.getParameter("search");
         String status = request.getParameter("status");
+
+        // Lọc theo campaign (từ Campaign Detail → Xem Leads)
+        int campaignId = 0;
+        try {
+            if (request.getParameter("campaignId") != null) {
+                campaignId = Integer.parseInt(request.getParameter("campaignId"));
+            }
+        } catch (NumberFormatException ignored) {
+        }
 
         int page = 1;
         int pageSize = 10;
@@ -49,20 +61,27 @@ public class LeadListController extends HttpServlet {
         }
 
         // --- Đếm tổng bản ghi ---
-        int totalItems = leadService.countLeads(keyword, status);
+        int totalItems = leadService.countLeads(keyword, status, campaignId);
 
         // --- Tạo Pagination DTO ---
         Pagination pagination = new Pagination(page, pageSize, totalItems);
 
         // --- Lấy danh sách theo trang ---
         List<Lead> leads = leadService.searchLeads(
-                keyword, status, pagination.getCurrentPage(), pageSize);
+                keyword, status, campaignId, pagination.getCurrentPage(), pageSize);
 
         // --- Đặt request attributes ---
         request.setAttribute("leads", leads);
         request.setAttribute("pagination", pagination);
         request.setAttribute("searchKeyword", keyword);
         request.setAttribute("filterStatus", status);
+
+        // Nếu đang lọc theo campaign → load thông tin campaign
+        if (campaignId > 0) {
+            Campaign campaign = campaignService.getCampaignById(campaignId);
+            request.setAttribute("filterCampaign", campaign);
+            request.setAttribute("filterCampaignId", campaignId);
+        }
 
         // Flash success message from session (PRG pattern)
         String successMsg = (String) request.getSession().getAttribute("successMessage");

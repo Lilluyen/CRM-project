@@ -1,12 +1,15 @@
 package controller.marketing;
 
 import java.io.IOException;
+import java.util.List;
 
+import dao.CampaignLeadDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Campaign;
 import model.Lead;
 import service.LeadService;
 
@@ -14,6 +17,7 @@ import service.LeadService;
 public class LeadDetailController extends HttpServlet {
 
     private final LeadService leadService = new LeadService();
+    private final CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -37,6 +41,10 @@ public class LeadDetailController extends HttpServlet {
             }
 
             request.setAttribute("lead", lead);
+
+            // Load danh sách campaigns mà lead tham gia
+            List<Campaign> leadCampaigns = campaignLeadDAO.getCampaignsByLeadId(leadId);
+            request.setAttribute("leadCampaigns", leadCampaigns);
 
             // Flash success message from session (PRG pattern)
             String successMsg = (String) request.getSession().getAttribute("successMessage");

@@ -2,12 +2,15 @@ package service;
 
 import java.util.List;
 
+import dao.CampaignLeadDAO;
 import dao.LeadDAO;
 import model.Lead;
+import util.LeadScoringUtil;
 
 public class LeadService {
 
     private LeadDAO leadDAO = new LeadDAO();
+    private CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
 
     // ==============================
     // SEARCH + PAGINATION
@@ -15,15 +18,15 @@ public class LeadService {
     /**
      * Tìm kiếm leads theo keyword + status, có phân trang
      */
-    public List<Lead> searchLeads(String keyword, String status, int page, int pageSize) {
-        return leadDAO.searchLeads(keyword, status, page, pageSize);
+    public List<Lead> searchLeads(String keyword, String status, int campaignId, int page, int pageSize) {
+        return leadDAO.searchLeads(keyword, status, campaignId, page, pageSize);
     }
 
     /**
      * Đếm tổng leads theo điều kiện lọc (dùng cho phân trang)
      */
-    public int countLeads(String keyword, String status) {
-        return leadDAO.countLeads(keyword, status);
+    public int countLeads(String keyword, String status, int campaignId) {
+        return leadDAO.countLeads(keyword, status, campaignId);
     }
 
     // ==============================
@@ -39,15 +42,50 @@ public class LeadService {
         if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
         }
-        // Check duplicate email
-        if (leadDAO.findLeadByEmail(lead.getEmail()) != null) {
-            throw new IllegalArgumentException("Email đã tồn tại trong hệ thống.");
+
+        // Check: email đã tồn tại?
+        Lead existingLead = leadDAO.findLeadByEmail(lead.getEmail());
+        if (existingLead != null) {
+            // Nếu có chọn campaign mới → gắn lead cũ vào campaign đó
+            if (lead.getCampaignId() > 0) {
+                if (campaignLeadDAO.isLeadInCampaign(lead.getCampaignId(), existingLead.getLeadId())) {
+                    throw new IllegalArgumentException(
+                            "Lead \"" + existingLead.getFullName() + "\" đã thuộc campaign này rồi.");
+                }
+                // Gắn lead cũ vào campaign mới qua bảng Campaign_Leads
+                campaignLeadDAO.assignLeadToCampaign(
+                        lead.getCampaignId(), existingLead.getLeadId(), "NEW");
+                // Cập nhật campaign_id chính của lead (latest campaign)
+                existingLead.setCampaignId(lead.getCampaignId());
+                leadDAO.updateLead(existingLead);
+                return existingLead.getLeadId();
+            }
+            // Không chọn campaign → thật sự trùng
+            throw new IllegalArgumentException(
+                    "Email đã tồn tại. Nếu muốn gắn vào campaign khác, vui lòng chọn Campaign.");
         }
-        // Set defaults
+
+        // Lead mới hoàn toàn
         if (lead.getStatus() == null || lead.getStatus().trim().isEmpty()) {
             lead.setStatus("NEW_LEAD");
         }
-        return leadDAO.createLead(lead);
+        // Auto-score nếu chưa có điểm
+        if (lead.getScore() <= 0) {
+            lead.setScore(LeadScoringUtil.calculateScore(
+                    lead.getEmail(), lead.getPhone(), lead.getSource()));
+        }
+        // Auto-qualify nếu score >= 50
+        if (lead.getScore() >= 50 && "NEW_LEAD".equals(lead.getStatus())) {
+            lead.setStatus("QUALIFIED");
+        }
+        int newId = leadDAO.createLead(lead);
+
+        // Nếu có campaign → thêm vào Campaign_Leads
+        if (newId > 0 && lead.getCampaignId() > 0) {
+            campaignLeadDAO.assignLeadToCampaign(
+                    lead.getCampaignId(), newId, "NEW");
+        }
+        return newId;
     }
 
     /**
@@ -77,7 +115,14 @@ public class LeadService {
         for (Lead lead : leads) {
             if (leadDAO.findLeadByEmail(lead.getEmail()) == null) {
                 lead.setStatus("NEW_LEAD");
-                lead.setScore(0);
+                // Auto-score dựa trên dữ liệu có sẵn
+                int score = LeadScoringUtil.calculateScore(
+                        lead.getEmail(), lead.getPhone(), lead.getSource());
+                lead.setScore(score);
+                // Auto-qualify nếu score >= 50
+                if (score >= 50) {
+                    lead.setStatus("QUALIFIED");
+                }
                 if (leadDAO.createLead(lead) > 0) {
                     importedCount++;
                 }

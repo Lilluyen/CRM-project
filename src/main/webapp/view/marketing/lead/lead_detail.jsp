@@ -145,16 +145,77 @@
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Campaign ID:</span>
-                        <span class="detail-value">
-                            ${lead.campaignId > 0 ? lead.campaignId : 'Không thuộc campaign'}
-                        </span>
-                    </div>
-                    <div class="detail-row">
                         <span class="detail-label">Assigned To:</span>
                         <span class="detail-value">
                             ${lead.assignedTo > 0 ? lead.assignedTo : 'Chưa phân công'}
                         </span>
+                    </div>
+
+                    <!-- Danh sách campaigns mà lead tham gia -->
+                    <div class="mt-3">
+                        <span class="detail-label d-block mb-2">Campaigns tham gia:</span>
+                        <c:choose>
+                            <c:when test="${not empty leadCampaigns}">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Tên Campaign</th>
+                                                <th>Kênh</th>
+                                                <th>Trạng thái Campaign</th>
+                                                <th>Thời gian</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach var="camp" items="${leadCampaigns}" varStatus="loop">
+                                                <tr>
+                                                    <td>${loop.count}</td>
+                                                    <td>
+                                                        <a href="${pageContext.request.contextPath}/marketing/campaign/detail?id=${camp.campaignId}"
+                                                           class="text-decoration-none fw-semibold">
+                                                            ${camp.name}
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark border">
+                                                            ${not empty camp.channel ? camp.channel : '-'}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${camp.status == 'ACTIVE' || camp.status == 'Running'}">
+                                                                <span class="badge bg-success">Active</span>
+                                                            </c:when>
+                                                            <c:when test="${camp.status == 'PLANNING' || camp.status == 'Planned' || camp.status == 'PLANNED'}">
+                                                                <span class="badge bg-info">Planning</span>
+                                                            </c:when>
+                                                            <c:when test="${camp.status == 'PAUSED' || camp.status == 'Paused'}">
+                                                                <span class="badge bg-warning text-dark">Paused</span>
+                                                            </c:when>
+                                                            <c:when test="${camp.status == 'COMPLETED' || camp.status == 'Completed'}">
+                                                                <span class="badge bg-secondary">Completed</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="badge bg-light text-dark border">${camp.status}</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td class="text-muted small">
+                                                        ${camp.startDate} ~ ${camp.endDate}
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-info-circle me-1"></i> Chưa tham gia campaign nào.
+                                </p>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
 

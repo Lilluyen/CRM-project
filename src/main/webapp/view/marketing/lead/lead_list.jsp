@@ -37,11 +37,34 @@
             </div>
         </c:if>
 
+        <%-- Banner: đang lọc theo campaign --%>
+        <c:if test="${not empty filterCampaign}">
+            <div class="alert alert-info d-flex justify-content-between align-items-center mb-3" role="alert">
+                <div>
+                    <i class="fas fa-bullhorn me-2"></i>
+                    Đang xem leads của campaign:
+                    <strong>
+                        <a href="${pageContext.request.contextPath}/marketing/campaign/detail?id=${filterCampaign.campaignId}"
+                           class="text-decoration-none">
+                            ${filterCampaign.name}
+                        </a>
+                    </strong>
+                </div>
+                <a href="${pageContext.request.contextPath}/marketing/leads" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-times me-1"></i> Xóa bộ lọc
+                </a>
+            </div>
+        </c:if>
+
         <!-- Filter Section -->
         <div class="card shadow-sm mb-4 filter-card">
             <div class="card-body">
                 <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Tìm kiếm & Lọc</h6>
                 <form method="GET" action="${pageContext.request.contextPath}/marketing/leads" class="row g-3">
+                    <%-- Giữ campaignId khi search/filter --%>
+                    <c:if test="${not empty filterCampaignId}">
+                        <input type="hidden" name="campaignId" value="${filterCampaignId}" />
+                    </c:if>
 
                     <div class="col-md-5">
                         <label class="form-label">Tìm kiếm (tên, email, SĐT)</label>
@@ -110,7 +133,7 @@
                                     <th>Điện thoại</th>
                                     <th>Điểm số</th>
                                     <th>Trạng thái</th>
-                                    <th>Nguồn</th>
+                                    <th>Campaign</th>
                                     <th class="text-center">Hành động</th>
                                 </tr>
                             </thead>
@@ -169,9 +192,17 @@
                                         </td>
 
                                         <td>
-                                            <span class="badge bg-light text-dark border">
-                                                ${lead.source != null && !lead.source.isEmpty() ? lead.source : '-'}
-                                            </span>
+                                            <c:choose>
+                                                <c:when test="${not empty lead.campaignName}">
+                                                    <a href="${pageContext.request.contextPath}/marketing/campaign/detail?id=${lead.campaignId}"
+                                                       class="text-decoration-none">
+                                                        <i class="fas fa-bullhorn me-1"></i>${lead.campaignName}
+                                                    </a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="text-muted">-</span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </td>
 
                                         <td class="text-center">
