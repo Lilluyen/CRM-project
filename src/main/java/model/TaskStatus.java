@@ -1,8 +1,7 @@
 package model;
 
 public enum TaskStatus {
-    NEW,
-    ASSIGNED,
+    PENDING,
     IN_PROGRESS,
     DONE,
     OVERDUE,

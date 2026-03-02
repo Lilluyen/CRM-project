@@ -5,7 +5,7 @@
 package model;
 
 import java.time.LocalDateTime;
-
+import model.User;
 /**
  *
  * @author Pham Minh Quan
@@ -14,22 +14,22 @@ public class Activity {
     private Integer activityId;
     private String relatedType;
     private Integer relatedId;
-    private String relatedName;
     private String activityType;
     private String subject;
     private String description;
-    private User createdBy;
-    private java.time.LocalDateTime activityDate;
-    private java.time.LocalDateTime createdAt;
+    private User createdBy;           // FK -> Users(user_id)
+    private LocalDateTime activityDate;
+    private LocalDateTime createdAt;
 
     public Activity() {
     }
 
-    public Activity(Integer activityId, String relatedType, Integer relatedId, String relatedName, String activityType, String subject, String description, User createdBy, LocalDateTime activityDate, LocalDateTime createdAt) {
+    public Activity(Integer activityId, String relatedType, Integer relatedId,
+                    String activityType, String subject, String description,
+                    User createdBy, LocalDateTime activityDate, LocalDateTime createdAt) {
         this.activityId = activityId;
         this.relatedType = relatedType;
         this.relatedId = relatedId;
-        this.relatedName = relatedName;
         this.activityType = activityType;
         this.subject = subject;
         this.description = description;
@@ -38,85 +38,31 @@ public class Activity {
         this.createdAt = createdAt;
     }
 
-    public Integer getActivityId() {
-        return activityId;
-    }
+    public Integer getActivityId() { return activityId; }
+    public void setActivityId(Integer activityId) { this.activityId = activityId; }
 
-    public void setActivityId(Integer activityId) {
-        this.activityId = activityId;
-    }
+    public String getRelatedType() { return relatedType; }
+    public void setRelatedType(String relatedType) { this.relatedType = relatedType; }
 
-    public String getRelatedType() {
-        return relatedType;
-    }
+    public Integer getRelatedId() { return relatedId; }
+    public void setRelatedId(Integer relatedId) { this.relatedId = relatedId; }
 
-    public void setRelatedType(String relatedType) {
-        this.relatedType = relatedType;
-    }
+    public String getActivityType() { return activityType; }
+    public void setActivityType(String activityType) { this.activityType = activityType; }
 
-    public Integer getRelatedId() {
-        return relatedId;
-    }
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
 
-    public void setRelatedId(Integer relatedId) {
-        this.relatedId = relatedId;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getRelatedName() {
-        return relatedName;
-    }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
-    public void setRelatedName(String relatedName) {
-        this.relatedName = relatedName;
-    }
+    public LocalDateTime getActivityDate() { return activityDate; }
+    public void setActivityDate(LocalDateTime activityDate) { this.activityDate = activityDate; }
 
-    public String getActivityType() {
-        return activityType;
-    }
-
-    public void setActivityType(String activityType) {
-        this.activityType = activityType;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public User getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public LocalDateTime getActivityDate() {
-        return activityDate;
-    }
-
-    public void setActivityDate(LocalDateTime activityDate) {
-        this.activityDate = activityDate;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
 
