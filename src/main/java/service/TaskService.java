@@ -1,28 +1,19 @@
-// service/TaskService.java (additions)
 package service;
-
-import java.sql.Connection;
-import java.util.Comparator;
-import java.util.List;
 
 import dao.TaskDAO;
 import model.Task;
 import model.User;
 
+import java.sql.Connection;
+import java.util.Collections;
+import java.util.List;
+
 /**
- * Service layer: Orchestrates business logic and coordinates between
- * Controller and DAO.
- * 
- * Responsibilities:
- * - Apply business rules
- * - Coordinate multiple DAOs if needed
- * - Transform domain objects
- * - Notify systems (via NotificationService)
- * 
- * NOT responsible for:
- * - HTTP concerns
- * - JSON serialization
- * - Direct database access (delegates to DAO)
+ * TaskService – business logic layer for Tasks.
+ *
+ * Role-based visibility:
+ *   ADMIN / MANAGER  → all tasks
+ *   Others           → only tasks they are assigned to
  */
 public class TaskService {
 
@@ -34,75 +25,112 @@ public class TaskService {
         this.notificationService = new NotificationService(connection);
     }
 
-    /**
-     * Get tasks for a specific user based on role and permissions.
-     * This is BUSINESS LOGIC (Service layer responsibility).
-     * 
-     * @param user   Current authenticated user
-     * @param sortBy Sort criteria (deadline, status, etc.)
-     * @param page   Pagination page number
-     * @return List of Task domain objects (NOT JSON-serialized)
-     */
-    public List<Task> getTasksForUser(User user, String sortBy, int page) throws Exception {
-        List<Task> tasks;
-
-        // Business rule: Admins and Managers see all tasks; others see only assigned
-        // tasks
-        if (user != null && user.getRole() != null &&
-                ("ADMIN".equalsIgnoreCase(user.getRole().getRoleName()) ||
-                        "MANAGER".equalsIgnoreCase(user.getRole().getRoleName()))) {
-            tasks = taskDAO.getAllTasks();
-        } else if (user != null) {
-            tasks = taskDAO.findByUser(user.getUserId());
-        } else {
-            tasks = java.util.Collections.emptyList();
+    // ─────────────────────────────────────────────────────────────────────────
+    // LIST (paged + filtered)
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<Task> getTasksPaged(User currentUser,
+                                    String title, String status, String priority,
+                                    String sortField, String sortDir,
+                                    int page, int pageSize) {
+        try {
+            boolean isPrivileged = isAdminOrManager(currentUser);
+            Integer assigneeFilter = isPrivileged ? null : currentUser.getUserId();
+            return taskDAO.getTasksPaged(title, status, priority,
+                    assigneeFilter, sortField, sortDir, page, pageSize);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
         }
+    }
 
-        // Apply sorting (business logic)
-        if ("deadline".equals(sortBy)) {
-            tasks.sort(Comparator.comparing(Task::getDueDate,
-                    Comparator.nullsLast(Comparator.naturalOrder())));
-        } else if ("status".equals(sortBy)) {
-            tasks.sort(Comparator.comparing(Task::getStatus,
-                    Comparator.nullsLast(Comparator.naturalOrder())));
+    public int countTasks(User currentUser, String title, String status, String priority) {
+        try {
+            boolean isPrivileged = isAdminOrManager(currentUser);
+            Integer assigneeFilter = isPrivileged ? null : currentUser.getUserId();
+            return taskDAO.countTasksFiltered(title, status, priority, assigneeFilter);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
-
-        return tasks;
     }
 
-    /**
-     * Get total count of tasks for a user.
-     */
-    public int getTotalTasksForUser(User user) throws Exception {
-        if (user != null && user.getRole() != null &&
-                ("ADMIN".equalsIgnoreCase(user.getRole().getRoleName()) ||
-                        "MANAGER".equalsIgnoreCase(user.getRole().getRoleName()))) {
-            return taskDAO.getAllTasks().size();
-        } else if (user != null) {
-            return taskDAO.findByUser(user.getUserId()).size();
+    // ─────────────────────────────────────────────────────────────────────────
+    // CRUD
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean createTask(Task task) {
+        try { return taskDAO.createTask(task); } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    public boolean updateTask(Task task) {
+        try { return taskDAO.updateTask(task); } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    public boolean deleteTask(int taskId) {
+        try { return taskDAO.deleteTask(taskId); } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    public Task getTaskById(int id) {
+        try { return taskDAO.getTaskById(id); } catch (Exception e) { e.printStackTrace(); return null; }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ASSIGN TASK – adds to Task_Assignees and sends notification
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean assignTask(int taskId, int userId, Task task) {
+        try {
+            boolean ok = taskDAO.addAssignee(taskId, userId);
+            if (ok && task != null) {
+                notificationService.createForUser(userId,
+                        "New Task Assigned",
+                        "Task \"" + task.getTitle() + "\" has been assigned to you. Priority: " + task.getPriority(),
+                        "TASK", "Task", taskId);
+            }
+            return ok;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-        return 0;
     }
 
-    /**
-     * Create a new task.
-     */
-    public boolean createTask(Task task) throws Exception {
-        return taskDAO.createTask(task);
+    public boolean removeAssignee(int taskId, int userId) {
+        try { return taskDAO.removeAssignee(taskId, userId); }
+        catch (Exception e) { e.printStackTrace(); return false; }
     }
 
-    /**
-     * Update an existing task.
-     */
-    public boolean updateTask(Task task) throws Exception {
-        return taskDAO.updateTask(task);
+    // ─────────────────────────────────────────────────────────────────────────
+    // PROGRESS / STATUS
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean updateProgress(int taskId, int progress) {
+        try { return taskDAO.updateProgress(taskId, progress); }
+        catch (Exception e) { e.printStackTrace(); return false; }
     }
 
-    /**
-     * Update progress of a task.
-     */
-    public boolean updateProgress(int taskId, int progress) throws Exception {
-        return taskDAO.updateProgress(taskId, progress);
+    public boolean updateStatus(int taskId, String status, Task task) {
+        try {
+            boolean ok = taskDAO.updateTaskStatus(taskId, status);
+            if (ok && task != null) {
+                List<model.TaskAssignee> assignees = task.getassignees();
+                if (assignees != null) {
+                    for (model.TaskAssignee ta : assignees) {
+                        notificationService.createForUser(
+                                ta.getUser().getUserId(),
+                                "Task Status Updated",
+                                "Task \"" + task.getTitle() + "\" status changed to: " + status,
+                                "TASK", "Task", taskId);
+                    }
+                }
+            }
+            return ok;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    private boolean isAdminOrManager(User user) {
+        if (user == null || user.getRole() == null) return false;
+        String rn = user.getRole().getRoleName();
+        return "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);
+    }
 }

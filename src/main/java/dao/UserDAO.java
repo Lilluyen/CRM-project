@@ -1,8 +1,11 @@
 package dao;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import model.Role;
 import model.User;
@@ -197,5 +200,34 @@ public class UserDAO {
         }
 
         return false;
+    }
+
+    public List<User> getAllUsers(Connection conn) {
+        String sql = """
+            SELECT user_id
+                  ,username
+                  ,password_hash
+                  ,email
+                  ,full_name
+                  ,phone
+                  ,role_id
+                  ,status
+                  ,created_at
+                  ,updated_at
+                  ,last_login_at
+              FROM Users
+        """;
+        List<User> users=new ArrayList();
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                users.add(mapUser(rs));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return users;
     }
 }

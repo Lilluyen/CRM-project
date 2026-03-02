@@ -1,6 +1,7 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Notification {
     private int notificationId;
@@ -10,13 +11,14 @@ public class Notification {
     private String relatedType;          // e.g. "Task", "Lead", "Deal" ...
     private Integer relatedId;
     private LocalDateTime createdAt;
+    private List<NotificationRecipient> nrs;
 
     public Notification() {
     }
 
     public Notification(int notificationId, String title, String content,
                         String type, String relatedType, Integer relatedId,
-                        LocalDateTime createdAt) {
+                        LocalDateTime createdAt, List<NotificationRecipient> nrs) {
         this.notificationId = notificationId;
         this.title = title;
         this.content = content;
@@ -24,6 +26,7 @@ public class Notification {
         this.relatedType = relatedType;
         this.relatedId = relatedId;
         this.createdAt = createdAt;
+        this.nrs=nrs;
     }
 
     public int getNotificationId() { return notificationId; }
@@ -46,4 +49,7 @@ public class Notification {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public List<NotificationRecipient> getNrs() {return nrs;}
+    public void setNrs(List<NotificationRecipient> nrs) {this.nrs = nrs;}
 }
