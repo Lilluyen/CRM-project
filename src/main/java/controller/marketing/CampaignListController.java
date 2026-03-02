@@ -3,6 +3,7 @@ package controller.marketing;
 import java.io.IOException;
 import java.util.List;
 
+import dto.Pagination;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,29 +21,51 @@ public class CampaignListController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // --- Đọc params ---
         String searchName = request.getParameter("search");
         String status = request.getParameter("status");
 
-        List<Campaign> campaigns;
+        int page = 1;
+        int pageSize = 10; // mặc định
+        try {
+            if (request.getParameter("page") != null)
+                page = Integer.parseInt(request.getParameter("page"));
+        } catch (NumberFormatException ignored) {}
+        try {
+            if (request.getParameter("pageSize") != null)
+                pageSize = Integer.parseInt(request.getParameter("pageSize"));
+        } catch (NumberFormatException ignored) {}
 
-        if ((searchName != null && !searchName.trim().isEmpty())
-                || (status != null && !status.trim().isEmpty())) {
+        // Giới hạn pageSize hợp lệ
+        if (pageSize != 5 && pageSize != 10 && pageSize != 20) pageSize = 10;
+        if (page < 1) page = 1;
 
-            campaigns = campaignService.searchCampaigns(searchName, status);
+        boolean hasFilter = (searchName != null && !searchName.trim().isEmpty())
+                || (status != null && !status.trim().isEmpty());
 
-            // Nếu tìm thấy đúng 1 kết quả, auto-redirect đến detail
-            if (campaigns.size() == 1) {
-                Campaign campaign = campaigns.get(0);
+        // --- Đếm tổng bản ghi ---
+        int totalItems = campaignService.countCampaigns(searchName, status);
+
+        // Nếu tìm thấy đúng 1 kết quả, auto-redirect đến detail
+        if (hasFilter && totalItems == 1) {
+            List<Campaign> single = campaignService.searchCampaigns(searchName, status, 1, 1);
+            if (!single.isEmpty()) {
                 response.sendRedirect(request.getContextPath()
-                        + "/marketing/campaign/detail?id=" + campaign.getCampaignId());
+                        + "/marketing/campaign/detail?id=" + single.get(0).getCampaignId());
                 return;
             }
-
-        } else {
-            campaigns = campaignService.getAllCampaigns();
         }
 
+        // --- Tạo Pagination DTO ---
+        Pagination pagination = new Pagination(page, pageSize, totalItems);
+
+        // --- Lấy danh sách theo trang ---
+        List<Campaign> campaigns = campaignService.searchCampaigns(
+                searchName, status, pagination.getCurrentPage(), pageSize);
+
+        // --- Đặt request attributes ---
         request.setAttribute("campaigns", campaigns);
+        request.setAttribute("pagination", pagination);
         request.setAttribute("searchName", searchName);
         request.setAttribute("filterStatus", status);
 

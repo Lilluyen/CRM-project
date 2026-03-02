@@ -82,7 +82,7 @@
 
                 <div class="card shadow-sm mb-3 border-0 bg-primary text-white" style="border-radius: 10px;">
                     <div class="card-body py-3 px-4">
-                        <span class="fs-2 fw-bold">${campaigns.size()}</span>
+                        <span class="fs-2 fw-bold">${pagination.totalItems}</span>
                         <span class="ms-2">
                             <c:choose>
                                 <c:when test="${not empty searchName or not empty filterStatus}">Campaign tìm thấy</c:when>
@@ -109,7 +109,7 @@
                             <tbody>
                                 <c:forEach var="campaign" items="${campaigns}" varStatus="loop">
                                     <tr>
-                                        <td class="text-muted">${loop.count}</td>
+                                        <td class="text-muted">${pagination.offset + loop.count}</td>
 
                                         <td>
                                             <strong>${campaign.name}</strong><br>
@@ -165,29 +165,8 @@
                         </table>
                     </div>
 
-                    <%-- Pagination --%>
-                    <c:if test="${not empty pagination}">
-                        <div class="card-footer d-flex justify-content-between align-items-center flex-wrap">
-                            <small class="text-muted">
-                                Hiển thị ${pagination.startItemNumber} - ${pagination.endItemNumber}
-                                / ${pagination.totalItems}
-                            </small>
-                            <div class="d-flex gap-1">
-                                <c:if test="${pagination.hasPreviousPage()}">
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                       href="${pageContext.request.contextPath}/marketing/campaign?page=${pagination.currentPage - 1}">
-                                        <i class="fas fa-chevron-left"></i> Trước
-                                    </a>
-                                </c:if>
-                                <c:if test="${pagination.hasNextPage()}">
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                       href="${pageContext.request.contextPath}/marketing/campaign?page=${pagination.currentPage + 1}">
-                                        Tiếp <i class="fas fa-chevron-right"></i>
-                                    </a>
-                                </c:if>
-                            </div>
-                        </div>
-                    </c:if>
+                    <%-- Pagination (reusable component) --%>
+                    <jsp:include page="/view/components/pagination.jsp" />
                 </div>
 
             </c:when>
