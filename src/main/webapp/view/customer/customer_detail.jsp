@@ -73,9 +73,9 @@
                 </div>
 
                 <div class="customer-detail__row">
-                    <span>Social</span>
+                    <span>Source</span>
                     <strong>
-                        ${customerDetail.socialLink}
+                        ${customerDetail.source}
                     </strong>
                 </div>
             </div>
@@ -142,14 +142,6 @@
 
                 <div class="customer-detail__metrics">
 
-                    <div class="customer-detail__metric">
-                        <span class="customer-detail__metric-label">
-                            Customer Type
-                        </span>
-                        <span class="customer-detail__metric-value">
-                            ${customerDetail.customerType}
-                        </span>
-                    </div>
 
                     <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">

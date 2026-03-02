@@ -72,12 +72,16 @@
                         <td>
                             <span class="loyalty-badge
                                   <c:choose>
+                                      <c:when test="${c.loyaltyTier == 'PLATINUM'}">platinum</c:when>
                                       <c:when test="${c.loyaltyTier == 'GOLD'}">gold</c:when>
+                                      <c:when test="${c.loyaltyTier == 'SILVER'}">silver</c:when>
+                                      <c:when test="${c.loyaltyTier == 'BRONZE'}">bronze</c:when>
                                       <c:when test="${c.loyaltyTier == 'BLACKLIST'}">blacklist</c:when>
                                   </c:choose>">
                                 ${c.loyaltyTier}
                             </span>
-                            <div class="muted">RFM Score: ${c.rfmScore}</div>
+
+                            <div class="muted table_rfm_score">RFM Score: ${c.rfmScore}</div>
                         </td>
 
                         <td>

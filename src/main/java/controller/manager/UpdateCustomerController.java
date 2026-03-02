@@ -88,7 +88,7 @@ public class UpdateCustomerController extends HttpServlet {
         String gender = request.getParameter("gender");
         String birthdayRaw = request.getParameter("birthday");
         String address = request.getParameter("address");
-        String socialLink = request.getParameter("socialLink");
+        String source = request.getParameter("source");
         String[] tagIdsRaw = request.getParameterValues("tagIds");
 
         // ======================
@@ -101,7 +101,7 @@ public class UpdateCustomerController extends HttpServlet {
 
         if (phone == null || phone.isEmpty()) {
             errors.add("Phone is required");
-        } else if (!phone.matches("^[0-9]{9,11}$")) {
+        } else if (!phone.matches("^[0-9]{9,15}$")) {
             errors.add("Phone must be 9-11 digits");
         }
 
@@ -140,7 +140,7 @@ public class UpdateCustomerController extends HttpServlet {
             reloadFormData(request, customerId);
 
             request.setAttribute("errors", errors);
-            request.getRequestDispatcher("/view/customer/edit_customer.jsp")
+            request.getRequestDispatcher("/view/layout.jsp")
                     .forward(request, response);
             return;
         }
@@ -161,7 +161,7 @@ public class UpdateCustomerController extends HttpServlet {
             dto.setGender(gender);
             dto.setBirthday(birthday);
             dto.setAddress(address);
-            dto.setSocialLink(socialLink);
+            dto.setSource(source);
             dto.setStyleTags(tagIds);
 
             customerService.updateCustomer(dto, customerId);
@@ -169,6 +169,7 @@ public class UpdateCustomerController extends HttpServlet {
             response.sendRedirect(
                     request.getContextPath()
                             + "/customers/detail?customerId=" + customerId);
+            return;
 
         } catch (DuplicateEmailException e) {
             errors.add("Email already exists");
@@ -182,8 +183,8 @@ public class UpdateCustomerController extends HttpServlet {
         reloadFormData(request, customerId);
 
         request.setAttribute("errors", errors);
-        request.getRequestDispatcher("/view/customer/edit_customer.jsp")
-                .forward(request, response);
+        request.getRequestDispatcher("/view/layout.jsp")
+                    .forward(request, response);
     }
 
     private void reloadFormData(HttpServletRequest request, int customerId)
@@ -195,6 +196,13 @@ public class UpdateCustomerController extends HttpServlet {
 
             request.setAttribute("allStyleTags",
                     customerService.getListStyleTags());
+            
+            // Layout attributes
+            request.setAttribute("pageTitle", "Customer Edit | Clothes CRM");
+            request.setAttribute("contentPage", "customer/edit_customer.jsp");
+            request.setAttribute("pageCss", "customer-add.css");
+            // request.setAttribute("pageJs", "customer-edit.js");
+            request.setAttribute("page", "customer-add");
         } catch (Exception e) {
             throw new ServletException(e);
         }

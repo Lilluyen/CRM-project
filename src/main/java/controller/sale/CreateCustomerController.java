@@ -70,7 +70,7 @@ public class CreateCustomerController extends HttpServlet {
                 String phone = req.getParameter("phone");
                 String gender = req.getParameter("gender");
                 String email = req.getParameter("email");
-                String socialLink = req.getParameter("socialLink");
+                String source = req.getParameter("source");
                 String address = req.getParameter("address");
 
                 // Validate name
@@ -120,7 +120,7 @@ public class CreateCustomerController extends HttpServlet {
                 dto.setGender(gender);
                 dto.setEmail(email);
                 dto.setBirthday(birthday);
-                dto.setSocialLink(socialLink);
+                dto.setSource(source);
                 dto.setAddress(address);
 
                 dto.setHeight(height);

@@ -89,11 +89,11 @@
                 </div>
 
                 <div class="cf__field">
-                    <label class="cf__label">Social Link</label>
+                    <label class="cf__label">Source</label>
                     <input class="cf__input"
                            type="text"
-                           name="socialLink"
-                           value="${customerDetail.socialLink}">
+                           name="source"
+                           value="${customerDetail.source}">
                 </div>
 
                 <div class="cf__field">
@@ -115,7 +115,7 @@
                         <input class="cf__input"
                                type="number"
                                name="height"
-                               value="${customerDetail.height}">
+                               value="${customerDetail.latestMeasurement.height}">
                     </div>
 
                     <div class="cf__field">
@@ -123,16 +123,16 @@
                         <input class="cf__input"
                                type="number"
                                name="weight"
-                               value="${customerDetail.weight}">
+                               value="${customerDetail.latestMeasurement.weight}">
                     </div>
 
                     <div class="cf__field">
                         <label class="cf__label">Preferred Size</label>
                         <select class="cf__input" name="preferred_size">
-                            <option value="S" <c:if test="${customerDetail.preferredSize == 'S'}">selected</c:if>>S</option>
-                            <option value="M" <c:if test="${customerDetail.preferredSize == 'M'}">selected</c:if>>M</option>
-                            <option value="L" <c:if test="${customerDetail.preferredSize == 'L'}">selected</c:if>>L</option>
-                            <option value="XL" <c:if test="${customerDetail.preferredSize == 'XL'}">selected</c:if>>XL</option>
+                            <option value="S" <c:if test="${customerDetail.latestMeasurement.preferredSize == 'S'}">selected</c:if>>S</option>
+                            <option value="M" <c:if test="${customerDetail.latestMeasurement.preferredSize == 'M'}">selected</c:if>>M</option>
+                            <option value="L" <c:if test="${customerDetail.latestMeasurement.preferredSize == 'L'}">selected</c:if>>L</option>
+                            <option value="XL" <c:if test="${customerDetail.latestMeasurement.preferredSize == 'XL'}">selected</c:if>>XL</option>
                             </select>
                         </div>
                     </div>
@@ -143,20 +143,23 @@
                     <h3 class="cf__section-title">Body Measurement</h3>
 
                     <div class="cf__grid cf__grid--4">
-                        <input class="cf__input" type="number" step="0.1" name="bust" value="${customerDetail.bust}" placeholder="Bust">
-                    <input class="cf__input" type="number" step="0.1" name="waist" value="${customerDetail.waist}" placeholder="Waist">
-                    <input class="cf__input" type="number" step="0.1" name="hips" value="${customerDetail.hips}" placeholder="Hips">
-                    <input class="cf__input" type="number" step="0.1" name="shoulder" value="${customerDetail.shoulder}" placeholder="Shoulder">
+                        <div class="cf__field">
+                            <label class="cf__label">Bust (cm)</label>
+                            <input class="cf__input" type="number" step="0.1" name="bust" value="${customerDetail.latestMeasurement.bust}" placeholder="Bust"></div>
+                    <div class="cf__field"><label class="cf__label">Waist (cm)</label><input class="cf__input" type="number" step="0.1" name="waist" value="${customerDetail.latestMeasurement.waist}" placeholder="Waist"></div>
+                    <div class="cf__field"><label class="cf__label">Hips (cm)</label><input class="cf__input" type="number" step="0.1" name="hips" value="${customerDetail.latestMeasurement.hips}" placeholder="Hips"></div>
+                    <div class="cf__field"><label class="cf__label">Shoulder (cm)</label><input class="cf__input" type="number" step="0.1" name="shoulder" value="${customerDetail.latestMeasurement.shoulder}" placeholder="Shoulder"></div>
                 </div>
 
                 <div class="cf__field">
                     <label class="cf__label">Body Shape</label>
                     <select name="bodyShape" class="cf__input">
-                        <option value="HOURGLASS" <c:if test="${customerDetail.bodyShape == 'HOURGLASS'}">selected</c:if>>Hourglass</option>
-                        <option value="PEAR" <c:if test="${customerDetail.bodyShape == 'PEAR'}">selected</c:if>>Pear</option>
-                        <option value="APPLE" <c:if test="${customerDetail.bodyShape == 'APPLE'}">selected</c:if>>Apple</option>
-                        <option value="RECTANGLE" <c:if test="${customerDetail.bodyShape == 'RECTANGLE'}">selected</c:if>>Rectangle</option>
-                        <option value="INVERTED_TRIANGLE" <c:if test="${customerDetail.bodyShape == 'INVERTED_TRIANGLE'}">selected</c:if>>Inverted Triangle</option>
+                        <option value="HOURGLASS" <c:if test="${customerDetail.latestMeasurement.bodyShape == 'HOURGLASS'}">selected</c:if>>Hourglass</option>
+                        <option value="PEAR" <c:if test="${customerDetail.latestMeasurement.bodyShape == 'PEAR'}">selected</c:if>>Pear</option>
+                        <option value="APPLE" <c:if test="${customerDetail.latestMeasurement.bodyShape == 'APPLE'}">selected</c:if>>Apple</option>
+                        <option value="RECTANGLE" <c:if test="${customerDetail.latestMeasurement.bodyShape == 'RECTANGLE'}">selected</c:if>>Rectangle</option>
+                        <option value="INVERTED TRIANGLE" <c:if test="${customerDetail.latestMeasurement.bodyShape == 'INVERTED TRIANGLE'}">selected</c:if>>Inverted Triangle</option>
+                        <option value="SLENDER" <c:if test="${customerDetail.latestMeasurement.bodyShape == 'SLENDER'}">selected</c:if>>Slender</option>
                         </select>
                     </div>
                 </section>
@@ -172,7 +175,7 @@
 
                         <!-- duyệt danh sách style của customer -->
                         <c:forEach items="${customerDetail.styleTags}" var="st">
-                            <c:if test="${st == s.tagId}">
+                            <c:if test="${st.tagId == s.tagId}">
                                 <c:set var="checked" value="true"/>
                             </c:if>
                         </c:forEach>
@@ -199,6 +202,8 @@
                 <button type="submit" class="cf__btn cf__btn--primary">
                     Update Profile
                 </button>
+
+                <div><span style="color: red;">${errors}</span></div>
             </div>
 
         </form>

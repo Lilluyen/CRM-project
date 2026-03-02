@@ -52,8 +52,8 @@
                 </div>
 
                 <div class="cf__field">
-                    <label class="cf__label">Social Link</label>
-                    <input class="cf__input" type="text" name="socialLink" placeholder="Ex: https://www.facebook.com/username">
+                    <label class="cf__label">Source</label>
+                    <input class="cf__input" type="text" name="source" placeholder="Ex: Facebook, Instagram, etc.">
                 </div>
 
                 <div class="cf__field">
@@ -122,7 +122,8 @@
                             <option value="PEAR">Pear</option>
                             <option value="APPLE">Apple</option>
                             <option value="RECTANGLE">Rectangle</option>
-                            <option value="INVERTED_TRIANGLE">Inverted Triangle</option>
+                            <option value="INVERTED TRIANGLE">Inverted Triangle</option>
+                            <option value="SLENDER">Slender</option>
                         </select>
                     </div>
             </section>

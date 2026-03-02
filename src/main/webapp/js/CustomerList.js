@@ -262,7 +262,7 @@ function openPreview(customerId) {
     document.getElementById('previewHeight').textContent = customer.height || 'Not available';
     document.getElementById('previewWeight').textContent = customer.weight || 'Not available';
     document.getElementById('previewLoyalty').textContent = customer.loyaltyTier;
-    document.getElementById('previewLoyalty').className = `preview-value loyalty-badge ${customer.loyaltyTier === 'GOLD' ? 'gold' : ''}`;
+    document.getElementById('previewLoyalty').className = `preview-value loyalty-badge ${getLoyaltyClass(customer.loyaltyTier)}`;
     document.getElementById('previewRFM').textContent = customer.rfmScore;
     document.getElementById('previewReturnRate').textContent = customer.returnRate + '%';
 
@@ -518,8 +518,14 @@ function renderTags(tags) {
 }
 
 function getLoyaltyClass(tier) {
+    if (tier === "PLATINUM")
+        return "platinum";
     if (tier === "GOLD")
         return "gold";
+    if (tier === "SILVER")
+        return "silver";
+    if (tier === "BRONZE")
+        return "bronze";
     if (tier === "BLACKLIST")
         return "blacklist";
     return "";
