@@ -100,6 +100,13 @@ function toggleFilterTag(type) {
     applyFilters();
 }
 
+document.querySelector('input[name="loyaltyFilter"][value="GOLD"]').addEventListener('change', function () {
+    document.querySelector('input[name="loyaltyFilter"][value="GOLD"]').checked === true ? document.querySelector('.gold-members').classList.add('active') : document.querySelector('.gold-members').classList.remove('active');
+});
+document.querySelector('input[name="returnRateFilter"][value="HIGH"]').addEventListener('change', function () {
+    document.querySelector('input[name="returnRateFilter"][value="HIGH"]').checked === true ? document.querySelector('.high-return').classList.add('active') : document.querySelector('.high-return').classList.remove('active');
+});
+
 function toggleArrayValue(arr, value) {
     const index = arr.indexOf(value);
     if (index === -1) arr.push(value);
