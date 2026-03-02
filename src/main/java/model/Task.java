@@ -7,6 +7,7 @@ package model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import model.User;
+import java.util.List;
 /**
  *
  * @author Pham Minh Quan
@@ -22,13 +23,13 @@ public class Task {
     private User createdBy;           // FK -> Users(user_id)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    private List<TaskAssignee> assignees;     // List of users assigned to this task
     public Task() {
     }
 
     public Task(Integer taskId, String title, String description, String status,
                 String priority, LocalDateTime dueDate, Integer progress,
-                User createdBy, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                User createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, List<TaskAssignee> assignees) {
         this.taskId = taskId;
         this.title = title;
         this.description = description;
@@ -39,6 +40,7 @@ public class Task {
         this.createdBy = createdBy;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.assignees = assignees;
     }
 
     public Integer getTaskId() { return taskId; }
@@ -70,4 +72,7 @@ public class Task {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<TaskAssignee> getassignees() { return assignees; }
+    public void setassignees(List<TaskAssignee> assignees) { this.assignees = assignees; }
 }

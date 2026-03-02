@@ -1041,7 +1041,10 @@ REFERENCES [dbo].[Users] ([user_id])
 GO
 ALTER TABLE [dbo].[Notification_Recipients] CHECK CONSTRAINT [fk_nr_user]
 GO
-
+ALTER TABLE [dbo].[Task_History]  WITH CHECK ADD  
+CONSTRAINT [fk_th_task] FOREIGN KEY([task_id])
+REFERENCES [dbo].[Tasks] ([task_id])
+GO
 ALTER TABLE [dbo].[Task_Assignees]  WITH CHECK ADD  
 CONSTRAINT [fk_ta_task] FOREIGN KEY([task_id])
 REFERENCES [dbo].[Tasks] ([task_id])
