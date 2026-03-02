@@ -33,7 +33,7 @@ public class ViewTaskDetails extends HttpServlet {
                 request.setAttribute("task", task);
 
                 // Forward to JSP for display
-                request.getRequestDispatcher("/CRUD/TaskDetails.jsp").forward(request, response);
+                request.getRequestDispatcher("/frontend/tasksdetails.html").forward(request, response);
             } else {
                 request.setAttribute("error", "Task not found!");
                 request.getRequestDispatcher("/view/error/404.jsp").forward(request, response);

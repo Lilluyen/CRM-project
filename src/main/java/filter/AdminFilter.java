@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpSession;
 
 import model.User;
 
-@WebFilter("/admin/*")
+@WebFilter(urlPatterns = {"/admin/*", "/admin.jsp"})
 public class AdminFilter extends HttpFilter {
 
     @Override
@@ -35,7 +35,7 @@ public class AdminFilter extends HttpFilter {
         User user = (User) session.getAttribute("user");
 
         if (1 != user.getRole().getRoleId()) {
-            response.sendRedirect(context + "/?error=accessDenied");
+            response.sendRedirect(context + "/login?error=accessDenied");
             return;
         }
 

@@ -35,7 +35,7 @@ public class SaleFilter extends HttpFilter {
         User user = (User) session.getAttribute("user");
 
         if (2 != user.getRole().getRoleId()) {
-            response.sendRedirect(context + "/?error=accessDenied");
+            response.sendRedirect(context + "/login?error=accessDenied");
             return;
         }
 

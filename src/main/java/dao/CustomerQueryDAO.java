@@ -8,7 +8,6 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
-import dto.CustomerDetailDTO;
 import dto.CustomerListDTO;
 
 public class CustomerQueryDAO {
@@ -108,10 +107,66 @@ public class CustomerQueryDAO {
         return 0;
     }
 
-    public CustomerDetailDTO getCustomerDetail(int customerId, Connection connection) throws SQLException {
-        CustomerDetailDTO dto = null;
-        String sql = "";
-        return dto;
+
+
+    // Xóa dữ liệu liên quan đến customer (để chuẩn bị xóa customer)
+    public void deleteCustomerRelatedData(int customerId, Connection connection) throws SQLException {
+        // ========== XÓA THEO THỨ TỰ FK CONSTRAINT ==========
+        // Level 1: Xóa dữ liệu có FK tới Tickets
+        // Feedbacks.ticket_id → Tickets.ticket_id
+        String deleteFeedbacksSql = """
+                DELETE FROM Feedbacks
+                WHERE ticket_id IN (
+                    SELECT ticket_id FROM Tickets WHERE customer_id = ?
+                )
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(deleteFeedbacksSql)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        // Level 2: Xóa Tickets (FK → Customers)
+        String deleteTicketsSql = "DELETE FROM Tickets WHERE customer_id = ?";
+        try (PreparedStatement stm = connection.prepareStatement(deleteTicketsSql)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        // Level 3: Xóa dữ liệu liên quan khác
+        // 1. Xóa Customer OTP
+//        String deleteOtpSql = "DELETE FROM CustomerOTP WHERE customer_id = ?";
+//        try (PreparedStatement stm = connection.prepareStatement(deleteOtpSql)) {
+//            stm.setInt(1, customerId);
+//            stm.executeUpdate();
+//        }
+
+        // 2. Xóa Customer Style Map
+        String deleteCsmSql = "DELETE FROM Customer_Style_Map WHERE customer_id = ?";
+        try (PreparedStatement stm = connection.prepareStatement(deleteCsmSql)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        // 3. Xóa Customer Measurements
+        String deleteMeasurementSql = "DELETE FROM Customer_Measurements WHERE customer_id = ?";
+        try (PreparedStatement stm = connection.prepareStatement(deleteMeasurementSql)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        // 4. Xóa Customer Segment Map
+        String deleteCsmSegmentSql = "DELETE FROM Customer_Segment_Map WHERE customer_id = ?";
+        try (PreparedStatement stm = connection.prepareStatement(deleteCsmSegmentSql)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        // 5. Xóa Virtual Wardrobe
+        String deleteWardrobeSql = "DELETE FROM Virtual_Wardrobe WHERE customer_id = ?";
+        try (PreparedStatement stm = connection.prepareStatement(deleteWardrobeSql)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
     }
 
 }

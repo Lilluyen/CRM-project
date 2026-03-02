@@ -1,3 +1,5 @@
+package controller.sale.category;
+
 import java.io.IOException;
 import java.sql.Connection;
 
@@ -9,12 +11,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Category;
 import util.DBContext;
+
 @WebServlet("/sale/category/edit")
 public class EditCategoryController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         try (Connection conn = DBContext.getConnection()) {
@@ -27,8 +30,7 @@ public class EditCategoryController extends HttpServlet {
             request.setAttribute("category", c);
 
             request.getRequestDispatcher(
-                    "/view/sale/category/categoryForm.jsp"
-            ).forward(request, response);
+                    "/view/sale/category/categoryForm.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);
@@ -37,7 +39,7 @@ public class EditCategoryController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         try (Connection conn = DBContext.getConnection()) {

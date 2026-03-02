@@ -64,7 +64,7 @@ public class LoginController extends HttpServlet {
             case "ADMIN":
                 return "/admin.jsp";
 
-            case "SALES":
+            case "SALE":
                 return "/sale.jsp";
 
             case "MARKETING":

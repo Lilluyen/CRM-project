@@ -1,4 +1,4 @@
-﻿USE master;
+﻿﻿USE master;
 GO
 
 IF EXISTS (SELECT * FROM sys.databases WHERE name = 'CRM_System')
@@ -11,9 +11,7 @@ GO
 /****** Object:  Database [CRM_System]    Script Date: 2/25/2026 3:19:47 PM ******/
 CREATE DATABASE [CRM_System]
  CONTAINMENT = NONE
- ON  PRIMARY 
 
- WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
 GO
 ALTER DATABASE [CRM_System] SET COMPATIBILITY_LEVEL = 160
 GO
@@ -302,6 +300,17 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+CREATE TABLE CustomerOTP (
+    customer_id INT PRIMARY KEY,
+    otp_hash NVARCHAR(255) NOT NULL,
+    otp_expired_at DATETIME2 NOT NULL,
+    failed_attempt INT DEFAULT 0,
+    send_count INT DEFAULT 0,
+    last_send DATETIME2 DEFAULT SYSDATETIME(),
+    CONSTRAINT fk_customerotp_customer
+        FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+);
 /****** Object:  Table [dbo].[Deal_Products]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -546,6 +555,22 @@ CONSTRAINT fk_users_role
 	REFERENCES Roles(role_id)
 );
 GO
+
+CREATE TABLE [dbo].[UserOTP] (
+    user_id INT PRIMARY KEY,
+    otp_hash NVARCHAR(255) NOT NULL,
+    otp_expired_at DATETIME2 NOT NULL,
+    failed_attempt INT DEFAULT 0,
+    send_count INT DEFAULT 0,
+    last_send DATETIME2 DEFAULT SYSDATETIME(),
+    created_at DATETIME2 DEFAULT SYSDATETIME(),
+
+    CONSTRAINT fk_userotp_user
+        FOREIGN KEY (user_id)
+        REFERENCES [dbo].[Users](user_id)
+        ON DELETE CASCADE
+);
+GO
 /****** Object:  Table [dbo].[Virtual_Wardrobe]    Script Date: 2/25/2026 3:19:47 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -640,12 +665,164 @@ VALUES
 
 (4,'cs01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','cs01@crm.com','CS','0900000004',4,'ACTIVE',GETDATE()),
 
-(5,'manager01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','manager@crm.com','Manager','0900000005',5,'ACTIVE',GETDATE());
+(5,'manager01','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','manager@crm.com','Manager','0900000005',5,'ACTIVE',GETDATE()),
+
+(6,'blocked_user','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','blockeduser@gmail.com',N'Blocked Staff','0909999999',3,'LOCKED',GETDATE()),
+
+(7,'change_pass','$2a$12$K.ltnAFcUTkz1VKT8C2Hk.yPfm/jPx2PTcRWmN6G/GeIq4bMd5wPG','changepass@gmail.com',N'User Change Pass','0909999999',1,'ACTIVE',GETDATE());
 
 SET IDENTITY_INSERT [dbo].[Users] OFF
 GO
 SET ANSI_PADDING ON
 GO
+
+INSERT INTO Tickets (
+    customer_id,
+    subject,
+    description,
+    priority,
+    status,
+    assigned_to,
+    created_at,
+    updated_at
+)
+VALUES
+
+-- 1
+(1, N'Lỗi gửi OTP nhiều lần',
+ N'Hệ thống gửi OTP quá nhiều lần.',
+ 'MEDIUM',
+ 'OPEN',
+ NULL,
+ DATEADD(HOUR, -2, GETDATE()),
+ DATEADD(HOUR, -2, GETDATE())),
+
+-- 2
+(1, N'Không nhận được email xác nhận',
+ N'Tôi không nhận được email kích hoạt tài khoản.',
+ 'HIGH',
+ 'OPEN',
+ 1,
+ DATEADD(HOUR, -5, GETDATE()),
+ DATEADD(HOUR, -4, GETDATE())),
+
+-- 3
+(1, N'Tài khoản bị khóa',
+ N'Tôi đăng nhập sai nhiều lần và bị khóa.',
+ 'HIGH',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(DAY, -1, GETDATE()),
+ GETDATE()),
+
+-- 4
+(1, N'Không cập nhật được thông tin cá nhân',
+ N'Tôi không thể sửa số điện thoại.',
+ 'LOW',
+ 'OPEN',
+ NULL,
+ DATEADD(DAY, -2, GETDATE()),
+ DATEADD(DAY, -2, GETDATE())),
+
+-- 5
+(1, N'Yêu cầu hoàn tiền',
+ N'Tôi muốn hoàn tiền cho đơn hàng #1234.',
+ 'HIGH',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(DAY, -3, GETDATE()),
+ GETDATE()),
+
+-- 6
+(1, N'Giao hàng chậm',
+ N'Đơn hàng của tôi bị giao trễ 5 ngày.',
+ 'MEDIUM',
+ 'RESOLVED',
+ 1,
+ DATEADD(DAY, -6, GETDATE()),
+ DATEADD(DAY, -5, GETDATE())),
+
+-- 7
+(1, N'Sản phẩm bị lỗi',
+ N'Sản phẩm nhận được bị hỏng.',
+ 'HIGH',
+ 'RESOLVED',
+ 1,
+ DATEADD(DAY, -7, GETDATE()),
+ DATEADD(DAY, -6, GETDATE())),
+
+-- 8
+(1, N'Yêu cầu xuất hóa đơn',
+ N'Tôi cần xuất hóa đơn VAT.',
+ 'LOW',
+ 'CLOSED',
+ 1,
+ DATEADD(DAY, -10, GETDATE()),
+ DATEADD(DAY, -9, GETDATE())),
+
+-- 9
+(2, N'Đổi mật khẩu không thành công',
+ N'Tôi không đổi được mật khẩu.',
+ 'MEDIUM',
+ 'OPEN',
+ NULL,
+ DATEADD(DAY, -1, GETDATE()),
+ DATEADD(DAY, -1, GETDATE())),
+
+-- 10
+(3, N'App bị crash',
+ N'Ứng dụng bị crash khi mở.',
+ 'HIGH',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(HOUR, -10, GETDATE()),
+ GETDATE()),
+
+-- 11
+(1, N'Tư vấn sản phẩm',
+ N'Tôi cần tư vấn sản phẩm mới.',
+ 'LOW',
+ 'OPEN',
+ NULL,
+ DATEADD(DAY, -4, GETDATE()),
+ DATEADD(DAY, -4, GETDATE())),
+
+-- 12
+(1, N'Không thêm được địa chỉ giao hàng',
+ N'Hệ thống báo lỗi khi thêm địa chỉ.',
+ 'MEDIUM',
+ 'IN_PROGRESS',
+ 1,
+ DATEADD(DAY, -2, GETDATE()),
+ GETDATE()),
+
+-- 13
+(1, N'Yêu cầu hủy đơn hàng',
+ N'Tôi muốn hủy đơn trước khi giao.',
+ 'HIGH',
+ 'RESOLVED',
+ 1,
+ DATEADD(DAY, -8, GETDATE()),
+ DATEADD(DAY, -7, GETDATE())),
+
+-- 14
+(1, N'Lỗi hiển thị trên mobile',
+ N'Giao diện mobile bị vỡ layout.',
+ 'LOW',
+ 'OPEN',
+ NULL,
+ DATEADD(HOUR, -3, GETDATE()),
+ DATEADD(HOUR, -3, GETDATE())),
+
+-- 15
+(1, N'Không áp dụng được mã giảm giá',
+ N'Tôi nhập mã nhưng hệ thống báo sai.',
+ 'MEDIUM',
+ 'CLOSED',
+ 1,
+ DATEADD(DAY, -12, GETDATE()),
+ DATEADD(DAY, -11, GETDATE()));
+
 /****** Object:  Index [UQ__Customer__B43B145F1294BDA2]    Script Date: 2/25/2026 3:19:47 PM ******/
 ALTER TABLE [dbo].[Customers] ADD UNIQUE NONCLUSTERED 
 (
@@ -705,8 +882,6 @@ GO
 ALTER TABLE [dbo].[Tasks] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Tickets] ADD  DEFAULT (getdate()) FOR [created_at]
-GO
-ALTER TABLE [dbo].[Users] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[Virtual_Wardrobe] ADD  DEFAULT (getdate()) FOR [bought_at]
 GO
@@ -839,4 +1014,3 @@ USE [master]
 GO
 ALTER DATABASE [CRM_System] SET  READ_WRITE 
 GO
-

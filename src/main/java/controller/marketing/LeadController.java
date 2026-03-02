@@ -1,17 +1,20 @@
 package controller.marketing;
 
 import java.io.IOException;
+import java.util.List;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Lead;
 import service.CampaignLeadService;
 import service.LeadService;
 
 @WebServlet("/marketing/lead")
 public class LeadController extends HttpServlet {
+
     private LeadService leadService = new LeadService();
     private CampaignLeadService campaignLeadService = new CampaignLeadService();
 
@@ -21,7 +24,7 @@ public class LeadController extends HttpServlet {
         if ("score".equals(action)) {
             int leadId = Integer.parseInt(request.getParameter("leadId"));
             int score = Integer.parseInt(request.getParameter("score"));
-            
+
             try {
                 if (leadService.scoreLead(leadId, score)) {
                     response.getWriter().write("{\"success\": true}");
@@ -32,21 +35,21 @@ public class LeadController extends HttpServlet {
         } else if ("updateStatus".equals(action)) {
             int leadId = Integer.parseInt(request.getParameter("leadId"));
             String status = request.getParameter("status");
-            
+
             if (leadService.updateLeadStatus(leadId, status)) {
                 response.sendRedirect(request.getHeader("Referer"));
             }
         } else if ("assignToCampaign".equals(action)) {
             int leadId = Integer.parseInt(request.getParameter("leadId"));
             int campaignId = Integer.parseInt(request.getParameter("campaignId"));
-            
+
             try {
                 if (campaignLeadService.assignLeadToCampaign(campaignId, leadId)) {
                     response.sendRedirect("lead?action=list");
                 }
             } catch (Exception e) {
                 request.setAttribute("error", e.getMessage());
-                request.getRequestDispatcher("/marketing/lead_list.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/marketing/lead_list.jsp").forward(request, response);
             }
         }
     }
@@ -55,15 +58,16 @@ public class LeadController extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("list".equals(action) || action == null) {
-            var leads = leadService.getAllLeads();
+            List<Lead> leads = leadService.getAllLeads();
             request.setAttribute("leads", leads);
-            request.getRequestDispatcher("/marketing/lead_list.jsp").forward(request, response);
+            // ===== FIX: Sửa đường dẫn =====
+            request.getRequestDispatcher("/view/marketing/lead_list.jsp").forward(request, response);
         } else if ("byCampaign".equals(action)) {
             int campaignId = Integer.parseInt(request.getParameter("campaignId"));
-            var leads = campaignLeadService.getLeadsByCampaignId(campaignId);
+            List<Lead> leads = campaignLeadService.getLeadsByCampaignId(campaignId);
             request.setAttribute("leads", leads);
             request.setAttribute("campaignId", campaignId);
-            request.getRequestDispatcher("/marketing/lead_by_campaign.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/marketing/lead_by_campaign.jsp").forward(request, response);
         }
     }
 }

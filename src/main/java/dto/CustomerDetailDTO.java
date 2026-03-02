@@ -28,7 +28,7 @@ public class CustomerDetailDTO {
 
     private String ownerName;
 
-    private List<CustomerMeasurement> measurements;
+    private CustomerMeasurement latestMeasurement;
     private List<StyleTag> styleTags;
 
     // Getter & Setter ...
@@ -153,12 +153,12 @@ public class CustomerDetailDTO {
         this.ownerName = ownerName;
     }
 
-    public List<CustomerMeasurement> getMeasurements() {
-        return measurements;
+    public CustomerMeasurement getLatestMeasurement() {
+        return latestMeasurement;
     }
 
-    public void setMeasurements(List<CustomerMeasurement> measurements) {
-        this.measurements = measurements;
+    public void setLatestMeasurement(CustomerMeasurement latestMeasurement) {
+        this.latestMeasurement = latestMeasurement;
     }
 
     public List<StyleTag> getStyleTags() {

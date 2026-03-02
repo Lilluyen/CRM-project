@@ -35,7 +35,7 @@ public class ManagerFilter extends HttpFilter {
         User user = (User) session.getAttribute("user");
 
         if (5 != user.getRole().getRoleId()) {
-            response.sendRedirect(context + "/?error=accessDenied");
+            response.sendRedirect(context + "/login?error=accessDenied");
             return;
         }
 

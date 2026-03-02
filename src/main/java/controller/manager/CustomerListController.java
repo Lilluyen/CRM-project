@@ -50,6 +50,8 @@ public class CustomerListController extends HttpServlet {
             request.setAttribute("customerList", customerList);
             request.setAttribute("pageTitle", "Customer List | Clothes CRM");
             request.setAttribute("contentPage", "customer/customerList.jsp");
+            request.setAttribute("pageCss", "customerList.css");
+            request.setAttribute("page", "customer-list");
 
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
 
