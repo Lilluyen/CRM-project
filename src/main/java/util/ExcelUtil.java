@@ -57,7 +57,6 @@ public class ExcelUtil {
                     lead.setFullName(fullName);
                     lead.setEmail(email);
                     lead.setPhone(phone);
-                    lead.setCompanyName(companyName);
                     lead.setInterest(interest);
                     lead.setSource(source != null ? source : "IMPORT");
                     lead.setStatus("NEW_LEAD");

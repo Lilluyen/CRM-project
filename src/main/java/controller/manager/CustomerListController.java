@@ -1,69 +1,81 @@
 package controller.manager;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-
-import dto.CustomerListDTO;
+import dto.CustomerPageResult;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.LocalDateTime;
+import java.util.List;
 import model.StyleTag;
 import service.CustomerService;
 import util.ControllerUltil;
 
-@WebServlet(name = "CustomerListController", urlPatterns = { "/customers" })
+@WebServlet(name = "CustomerListController", urlPatterns = {"/customers"})
 public class CustomerListController extends HttpServlet {
+
+    private static final int DEFAULT_SIZE = 10;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        // Handle POST requests if needed
-        try {
-            doProcess(request, response);
-        } catch (ServletException | IOException e) {
-            log("CustomerListController - doPost failed", e);
-            ControllerUltil.forwardError(request, response, "Failed to retrieve customer list.");
-        }
+
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            doProcess(request, response);
-        } catch (ServletException | IOException e) {
-            log("CustomerListController - doGet failed", e);
-            ControllerUltil.forwardError(request, response, "Failed to retrieve customer list.");
-        }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        int page = 1;
+        int size = DEFAULT_SIZE;
 
-    }
-
-    protected void doProcess(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // Handle GET requests to display the customer list
-        CustomerService customerService = new CustomerService();
         try {
-            List<CustomerListDTO> customerList = customerService.getCustomerList();
+            if (request.getParameter("page") != null) {
+                page = ControllerUltil.parsePage(request.getParameter("page"));
+            }
+
+            if (request.getParameter("size") != null) {
+                size = ControllerUltil.parseSize(request.getParameter("size"));
+            }
+            CustomerService customerService = new CustomerService();
+            CustomerPageResult result = customerService.getCustomerList(page, size);
             List<StyleTag> styleTagList = customerService.getListStyleTags();
+
+            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+
+                Gson gson = new GsonBuilder()
+                        .registerTypeAdapter(LocalDateTime.class,
+                                (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context)
+                                -> new JsonPrimitive(src.toString()))
+                        .create();
+                response.getWriter().write(gson.toJson(result));
+                return;
+            }
+            request.setAttribute("customerList", result.getCustomers());
+            request.setAttribute("totalPages", result.getTotalPages(size));
+            request.setAttribute("totalRecord", result.getTotalRecords());
             request.setAttribute("styleTagList", styleTagList);
-            request.setAttribute("customerList", customerList);
+            request.setAttribute("currentPage", page);
+
             request.setAttribute("pageTitle", "Customer List | Clothes CRM");
             request.setAttribute("contentPage", "customer/customerList.jsp");
             request.setAttribute("pageCss", "customerList.css");
+            request.setAttribute("pageJs", "CustomerList.js");
             request.setAttribute("page", "customer-list");
 
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
 
-        } catch (SQLException e) {
-            log("DB error", e);
-            ControllerUltil.forwardError(request, response,
-                    "Database error occurred while retrieving customer list.");
-
-        } catch (ServletException | IOException e) {
-            log("View error", e);
-            ControllerUltil.forwardError(request, response,
-                    "Internal server error occurred while processing your request.");
+        } catch (SQLException ex) {
+            log("DB error", ex);
+            ControllerUltil.forwardError(request, response, "Database error.");
         }
+
     }
+
 }

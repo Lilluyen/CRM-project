@@ -1,99 +1,92 @@
 package dao;
 
+import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
+import dto.CustomerFilterRequest;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import dto.CustomerListDTO;
+import dto.CustomerPageResult;
 
 public class CustomerQueryDAO {
 
-    public List<CustomerListDTO> getCustomerList(Connection connection) throws SQLException {
+    private CustomerListDTO mapRow(ResultSet rs) throws SQLException {
 
-        // Implement the logic to fetch customer list with necessary details
-        List<CustomerListDTO> customerList = new java.util.ArrayList<>();
+        CustomerListDTO dto = new CustomerListDTO();
 
-        String sql = """
-                SELECT
-                    c.customer_id,
-                    c.[name],
-                    c.phone,
-                    c.loyalty_tier,
-                    c.rfm_score,
+        dto.setCustomerId(rs.getInt("customer_id"));
+        dto.setName(rs.getString("name"));
+        dto.setPhone(rs.getString("phone"));
+        dto.setEmail(rs.getString("email"));
+        dto.setGender(rs.getString("gender"));
+        dto.setLoyaltyTier(rs.getString("loyalty_tier"));
+        dto.setRfmScore(rs.getInt("rfm_score"));
+        dto.setPreferredSize(rs.getString("fit_profile"));
+        dto.setBodyShape(rs.getString("body_shape"));
+        dto.setHeight(rs.getBigDecimal("height"));
+        dto.setWeight(rs.getBigDecimal("weight"));
 
-                	CASE
-                    WHEN m.preferred_size IS NULL THEN NULL
-                    ELSE CONCAT(
-                        m.preferred_size,
-                        ' (',
-                        CAST(m.height AS INT),
-                        'cm - ',
-                        CAST(m.weight AS INT),
-                        'kg)'
-                    )
-                END AS fit_profile,
+        String styleTagsStr = rs.getString("style_tags");
+        if (styleTagsStr != null && !styleTagsStr.isBlank()) {
+            dto.setStyleTags(Arrays.asList(styleTagsStr.split("\\s*,\\s*")));
+        }
 
-                    m.body_shape,
+        dto.setReturnRate(rs.getDouble("return_rate"));
 
-                    STUFF((
-                        SELECT ', ' + t.tag_name
-                        FROM Customer_Style_Map csm
-                        JOIN Style_Tags t ON csm.tag_id = t.tag_id
-                        WHERE csm.customer_id = c.customer_id
-                        FOR XML PATH(''), TYPE
-                    ).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS style_tags,
+        Timestamp ts = rs.getTimestamp("last_purchase_date");
+        if (ts != null) {
+            dto.setLastPurchase(ts.toLocalDateTime());
+        }
 
-                    c.return_rate,
-                    c.last_purchase AS last_purchase_date,
-                    c.[status]
+        return dto;
+    }
 
-                FROM Customers c
+    public CustomerPageResult getCustomerList(
+            Connection connection,
+            int page,
+            int size) throws SQLException {
 
-                OUTER APPLY (
-                    SELECT TOP 1 *
-                    FROM Customer_Measurements
-                    WHERE customer_id = c.customer_id
-                    ORDER BY measured_at DESC
-                ) m
+        List<CustomerListDTO> customerList = new ArrayList<>();
+        int totalRecords = 0;
 
-                ORDER BY c.rfm_score DESC;
-                """;
+        try (CallableStatement cs = connection.prepareCall("{call sp_GetCustomersPaged(?,?)}")) {
 
-        try (
-                PreparedStatement stm = connection.prepareStatement(sql);
-                ResultSet rs = stm.executeQuery();) {
-            while (rs.next()) {
-                CustomerListDTO dto = new CustomerListDTO();
-                dto.setCustomerId(rs.getInt("customer_id"));
-                dto.setName(rs.getString("name"));
-                dto.setPhone(rs.getString("phone"));
-                dto.setLoyaltyTier(rs.getString("loyalty_tier"));
-                dto.setRfmScore(rs.getInt("rfm_score"));
-                dto.setPreferredSize(rs.getString("fit_profile"));
-                dto.setBodyShape(rs.getString("body_shape"));
+            cs.setInt(1, page);
+            cs.setInt(2, size);
 
-                String styleTagsStr = rs.getString("style_tags");
+            boolean hasResult = cs.execute();
 
-                if (styleTagsStr != null && !styleTagsStr.isBlank()) {
-                    List<String> tags = Arrays.asList(styleTagsStr.replace("[", "")
-                            .replace("]", "")
-                            .split("\\s*,\\s*"));
-                    dto.setStyleTags(tags);
+            // ===== ResultSet 1: TotalRecords =====
+            if (hasResult) {
+                try (ResultSet rsTotal = cs.getResultSet()) {
+                    if (rsTotal.next()) {
+                        totalRecords = rsTotal.getInt("TotalRecords");
+                    }
                 }
+            }
 
-                dto.setReturnRate(rs.getDouble("return_rate"));
-                Timestamp ts = rs.getTimestamp("last_purchase_date");
-                if (ts != null) {
-                    dto.setLastPurchase(ts.toLocalDateTime());
+            // Move to ResultSet 2
+            if (cs.getMoreResults()) {
+
+                try (ResultSet rs = cs.getResultSet()) {
+
+                    while (rs.next()) {
+                        CustomerListDTO dto = mapRow(rs);
+
+                        customerList.add(dto);
+                    }
                 }
-                customerList.add(dto);
             }
         }
-        return customerList;
+
+        return new CustomerPageResult(customerList, totalRecords);
     }
 
     public int countTotalCustomers(Connection connection) throws SQLException {
@@ -106,8 +99,6 @@ public class CustomerQueryDAO {
         }
         return 0;
     }
-
-
 
     // Xóa dữ liệu liên quan đến customer (để chuẩn bị xóa customer)
     public void deleteCustomerRelatedData(int customerId, Connection connection) throws SQLException {
@@ -134,12 +125,11 @@ public class CustomerQueryDAO {
 
         // Level 3: Xóa dữ liệu liên quan khác
         // 1. Xóa Customer OTP
-//        String deleteOtpSql = "DELETE FROM CustomerOTP WHERE customer_id = ?";
-//        try (PreparedStatement stm = connection.prepareStatement(deleteOtpSql)) {
-//            stm.setInt(1, customerId);
-//            stm.executeUpdate();
-//        }
-
+        String deleteOtpSql = "DELETE FROM CustomerOTP WHERE customer_id = ?";
+        try (PreparedStatement stm = connection.prepareStatement(deleteOtpSql)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
         // 2. Xóa Customer Style Map
         String deleteCsmSql = "DELETE FROM Customer_Style_Map WHERE customer_id = ?";
         try (PreparedStatement stm = connection.prepareStatement(deleteCsmSql)) {
@@ -167,6 +157,98 @@ public class CustomerQueryDAO {
             stm.setInt(1, customerId);
             stm.executeUpdate();
         }
+    }
+
+    private SQLServerDataTable toStringTVP(List<String> list) throws SQLException {
+
+        SQLServerDataTable tvp = new SQLServerDataTable();
+        tvp.addColumnMetadata("value", java.sql.Types.NVARCHAR);
+
+        if (list != null) {
+            for (String s : list) {
+                tvp.addRow(s);
+            }
+        }
+        return tvp;
+    }
+
+    private SQLServerDataTable toIntTVP(List<Integer> list) throws SQLException {
+
+        SQLServerDataTable tvp = new SQLServerDataTable();
+        tvp.addColumnMetadata("value", java.sql.Types.INTEGER);
+
+        if (list != null) {
+            for (Integer i : list) {
+                tvp.addRow(i);
+            }
+        }
+        return tvp;
+    }
+
+    public CustomerPageResult filterAdvanced(
+            Connection connection,
+            CustomerFilterRequest filterRequest
+    ) throws SQLException {
+
+        List<CustomerListDTO> list = new ArrayList<>();
+        int totalRecords = 0;
+
+        String sql = "{call dbo.sp_FilterCustomersAdvanced(?,?,?,?,?,?,?,?)}";
+
+        try (CallableStatement cs = connection.prepareCall(sql)) {
+
+            // ===== BASIC PARAMS =====
+            cs.setInt(1, filterRequest.getPage());
+            cs.setInt(2, filterRequest.getPageSize());
+            cs.setString(3, filterRequest.getKeyword());
+
+            // ===== TVP PARAMS =====
+            SQLServerDataTable tierTVP = toStringTVP(filterRequest.getLoyaltyTiers());
+            SQLServerDataTable shapeTVP = toStringTVP(filterRequest.getBodyShapes());
+            SQLServerDataTable sizeTVP = toStringTVP(filterRequest.getSizes());
+            SQLServerDataTable tagTVP = toIntTVP(filterRequest.getTagIds());
+
+            cs.unwrap(com.microsoft.sqlserver.jdbc.SQLServerCallableStatement.class)
+                    .setStructured(4, "dbo.StringList", tierTVP);
+
+            cs.unwrap(com.microsoft.sqlserver.jdbc.SQLServerCallableStatement.class)
+                    .setStructured(5, "dbo.StringList", shapeTVP);
+
+            cs.unwrap(com.microsoft.sqlserver.jdbc.SQLServerCallableStatement.class)
+                    .setStructured(6, "dbo.StringList", sizeTVP);
+
+            cs.unwrap(com.microsoft.sqlserver.jdbc.SQLServerCallableStatement.class)
+                    .setStructured(7, "dbo.IntList", tagTVP);
+
+            cs.setString(8, filterRequest.getReturnRateMode());
+
+            // ===== EXECUTE =====
+            boolean hasResults = cs.execute();
+            int resultIndex = 0;
+
+            while (hasResults || cs.getUpdateCount() != -1) {
+
+                if (hasResults) {
+                    try (ResultSet rs = cs.getResultSet()) {
+
+                        if (resultIndex == 0) {
+                            if (rs.next()) {
+                                totalRecords = rs.getInt("TotalRecords");
+                            }
+                        } else if (resultIndex == 1) {
+                            while (rs.next()) {
+                                list.add(mapRow(rs));
+                            }
+                        }
+                    }
+                    resultIndex++;
+                }
+
+                hasResults = cs.getMoreResults();
+            }
+        }
+
+        return new CustomerPageResult(list, totalRecords);
     }
 
 }

@@ -20,7 +20,7 @@ public class CustomerDAO {
                            ,[birthday]
                            ,[gender]
                            ,[address]
-                           ,[social_link]
+                           ,[source]
                            ,[owner_id]
                            ,[created_at])
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""";
@@ -35,7 +35,7 @@ public class CustomerDAO {
                             : null);
             stmt.setString(5, customer.getGender() != null ? customer.getGender() : null);
             stmt.setString(6, customer.getAddress() != null ? customer.getAddress() : null);
-            stmt.setString(7, customer.getSocialLink() != null ? customer.getSocialLink() : null);
+            stmt.setString(7, customer.getSource() != null ? customer.getSource() : null);
 
             stmt.setInt(8, customer.getOwner().getUserId());
             stmt.setTimestamp(9, new java.sql.Timestamp(System.currentTimeMillis()));
@@ -120,7 +120,7 @@ public class CustomerDAO {
 
                     customer.setGender(rs.getString("gender"));
                     customer.setAddress(rs.getString("address"));
-                    customer.setSocialLink(rs.getString("social_link"));
+                    customer.setSource(rs.getString("source"));
 
                     return customer;
                 }
@@ -152,8 +152,7 @@ public class CustomerDAO {
                         c.birthday,
                         c.gender,
                         c.address,
-                        c.social_link,
-                        c.customer_type,
+                        c.source,
                         c.status,
                         c.loyalty_tier,
                         c.rfm_score,
@@ -171,8 +170,9 @@ public class CustomerDAO {
 
             try (var rs = ps.executeQuery()) {
 
-                if (!rs.next())
+                if (!rs.next()) {
                     return null;
+                }
 
                 CustomerDetailDTO dto = new CustomerDetailDTO();
 
@@ -183,8 +183,7 @@ public class CustomerDAO {
                 dto.setBirthday(rs.getDate("birthday").toLocalDate());
                 dto.setGender(rs.getString("gender"));
                 dto.setAddress(rs.getString("address"));
-                dto.setSocialLink(rs.getString("social_link"));
-                dto.setCustomerType(rs.getString("customer_type"));
+                dto.setSource(rs.getString("source"));
                 dto.setStatus(rs.getString("status"));
                 dto.setLoyaltyTier(rs.getString("loyalty_tier"));
                 dto.setRfmScore(rs.getInt("rfm_score"));
@@ -200,4 +199,77 @@ public class CustomerDAO {
         }
     }
 
+    public void updateBasicInfo(Customer customer, Connection conn)
+            throws SQLException {
+
+        String sql = """
+                    UPDATE Customers
+                    SET name = ?,
+                        phone = ?,
+                        email = ?,
+                        birthday = ?,
+                        gender = ?,
+                        address = ?,
+                        source = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE customer_id = ?
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, customer.getName());
+            ps.setString(2, customer.getPhone());
+            ps.setString(3, customer.getEmail());
+
+            if (customer.getBirthday() != null) {
+                ps.setDate(4, java.sql.Date.valueOf(customer.getBirthday()));
+            } else {
+                ps.setNull(4, java.sql.Types.DATE);
+            }
+
+            ps.setString(5, customer.getGender());
+            ps.setString(6, customer.getAddress());
+            ps.setString(7, customer.getSource());
+
+            ps.setInt(8, customer.getCustomerId());
+
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean existsByPhoneExcludeId(String phone, int customerId, Connection conn)
+            throws SQLException {
+
+        String sql = """
+                    SELECT 1 FROM Customers
+                    WHERE phone = ? AND customer_id <> ?
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, customerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public boolean existsByEmailExcludeId(String email, int customerId, Connection conn)
+            throws SQLException {
+
+        String sql = """
+                    SELECT 1 FROM Customers
+                    WHERE email = ? AND customer_id <> ?
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, customerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
 }

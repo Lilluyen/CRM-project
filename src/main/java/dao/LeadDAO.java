@@ -17,21 +17,21 @@ public class LeadDAO {
 
     // Tạo mới một lead và trả về ID vừa được sinh ra
     public int createLead(Lead lead) {
-        String sql = "INSERT INTO Leads(full_name, email, phone, company_name, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO Leads(full_name, email, phone, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
             ps.setString(3, lead.getPhone());
-            ps.setString(4, lead.getCompanyName());
-            ps.setString(5, lead.getInterest());
-            ps.setString(6, lead.getSource());
-            ps.setString(7, lead.getStatus());
-            ps.setInt(8, lead.getScore());
-            ps.setInt(9, lead.getCampaignId());
-            ps.setInt(10, lead.getAssignedTo());
+            ps.setString(4, lead.getInterest());
+            ps.setString(5, lead.getSource());
+            ps.setString(6, lead.getStatus());
+            ps.setInt(7, lead.getScore());
+            ps.setInt(8, lead.getCampaignId());
+            ps.setInt(9, lead.getAssignedTo());
+            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
             ps.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
 
             if (ps.executeUpdate() > 0) {
                 ResultSet rs = ps.getGeneratedKeys();
@@ -47,20 +47,19 @@ public class LeadDAO {
 
     // Cập nhật thông tin một lead theo ID
     public boolean updateLead(Lead lead) {
-        String sql = "UPDATE Leads SET full_name=?, email=?, phone=?, company_name=?, interest=?, source=?, status=?, score=?, campaign_id=?, assigned_to=?, updated_at=? WHERE lead_id=?";
+        String sql = "UPDATE Leads SET full_name=?, email=?, phone=?,  interest=?, source=?, status=?, score=?, campaign_id=?, assigned_to=?, updated_at=? WHERE lead_id=?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
             ps.setString(3, lead.getPhone());
-            ps.setString(4, lead.getCompanyName());
-            ps.setString(5, lead.getInterest());
-            ps.setString(6, lead.getSource());
-            ps.setString(7, lead.getStatus());
-            ps.setInt(8, lead.getScore());
-            ps.setInt(9, lead.getCampaignId());
-            ps.setInt(10, lead.getAssignedTo());
-            ps.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setInt(12, lead.getLeadId());
+            ps.setString(4, lead.getInterest());
+            ps.setString(5, lead.getSource());
+            ps.setString(6, lead.getStatus());
+            ps.setInt(7, lead.getScore());
+            ps.setInt(8, lead.getCampaignId());
+            ps.setInt(9, lead.getAssignedTo());
+            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(11, lead.getLeadId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -102,7 +101,9 @@ public class LeadDAO {
     public List<Lead> getAllLeads() {
         String sql = "SELECT * FROM Leads ORDER BY created_at DESC";
         List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 leads.add(mapResultSetToLead(rs));
             }
@@ -145,40 +146,10 @@ public class LeadDAO {
         return leads;
     }
 
-    // Đếm tổng leads thuộc campaign (qua Leads.campaign_id)
-    public int countLeadsByCampaignId(int campaignId) {
-        String sql = "SELECT COUNT(*) FROM Leads WHERE campaign_id = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, campaignId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    // Đếm leads thuộc campaign theo trạng thái (qua Leads.campaign_id + status)
-    public int countLeadsByCampaignAndStatus(int campaignId, String status) {
-        String sql = "SELECT COUNT(*) FROM Leads WHERE campaign_id = ? AND status = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, campaignId);
-            ps.setString(2, status);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
     public boolean isDuplicate(String email, String phone) {
         String sql = "SELECT COUNT(*) FROM Leads WHERE email = ? OR phone = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ps.setString(2, phone != null ? phone : "");
             ResultSet rs = ps.executeQuery();
@@ -193,12 +164,12 @@ public class LeadDAO {
 
     /**
      * Import batch leads (dùng transaction)
-     *
+     * 
      * @return số leads được import thành công
      */
     public int importLeads(List<Lead> leads) throws Exception {
-        String sql = "INSERT INTO Leads(full_name, email, phone, company_name, interest, source, status, score, created_at, updated_at) "
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Leads(full_name, email, phone,  interest, source, status, score, created_at, updated_at) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         int importedCount = 0;
         Connection conn = null;
@@ -212,13 +183,12 @@ public class LeadDAO {
                     ps.setString(1, lead.getFullName());
                     ps.setString(2, lead.getEmail());
                     ps.setString(3, lead.getPhone());
-                    ps.setString(4, lead.getCompanyName());
-                    ps.setString(5, lead.getInterest());
-                    ps.setString(6, lead.getSource());
-                    ps.setString(7, lead.getStatus());
-                    ps.setInt(8, lead.getScore());
+                    ps.setString(4, lead.getInterest());
+                    ps.setString(5, lead.getSource());
+                    ps.setString(6, lead.getStatus());
+                    ps.setInt(7, lead.getScore());
+                    ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
                     ps.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
-                    ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
 
                     ps.addBatch();
                 }
@@ -249,7 +219,6 @@ public class LeadDAO {
                 rs.getString("full_name"),
                 rs.getString("email"),
                 rs.getString("phone"),
-                rs.getString("company_name"),
                 rs.getString("interest"),
                 rs.getString("source"),
                 rs.getString("status"),

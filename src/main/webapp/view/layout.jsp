@@ -35,7 +35,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/assets/css/${pageCss}" />
+              href="${pageContext.request.contextPath}/assets/css/${pageCss}?v=<%= System.currentTimeMillis() %>" />
 
 
     </head>
@@ -77,6 +77,7 @@
         <script src="${pageContext.request.contextPath}/assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
 
         <script src="${pageContext.request.contextPath}/assets/js/script.js"></script>  <!-- luôn phải cuối -->
+        <script src="${pageContext.request.contextPath}/js/${pageJs}?v=<%= System.currentTimeMillis() %>"></script>
     </body>
 </html>
 
