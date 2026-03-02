@@ -16,9 +16,8 @@ public class CustomerDetailDTO {
     private LocalDate birthday;
     private String gender;
     private String address;
-    private String socialLink;
+    private String source;
 
-    private String customerType;
     private String status;
     private String loyaltyTier;
 
@@ -89,20 +88,12 @@ public class CustomerDetailDTO {
         this.address = address;
     }
 
-    public String getSocialLink() {
-        return socialLink;
+    public String getSource() {
+        return source;
     }
 
-    public void setSocialLink(String socialLink) {
-        this.socialLink = socialLink;
-    }
-
-    public String getCustomerType() {
-        return customerType;
-    }
-
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public String getStatus() {

@@ -8,7 +8,6 @@ public class Lead {
     private String fullName;
     private String email;
     private String phone;
-    private String companyName;
     private String interest;
     private String source;
     private String status;
@@ -21,14 +20,13 @@ public class Lead {
     public Lead() {
     }
 
-    public Lead(int leadId, String fullName, String email, String phone, String companyName,
+    public Lead(int leadId, String fullName, String email, String phone, 
             String interest, String source, String status, int score, int campaignId, int assignedTo,
             LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.leadId = leadId;
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
-        this.companyName = companyName;
         this.interest = interest;
         this.source = source;
         this.status = status;
@@ -70,14 +68,6 @@ public class Lead {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
     }
 
     public String getInterest() {

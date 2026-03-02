@@ -123,7 +123,6 @@ public class CampaignLeadDAO {
                 rs.getString("full_name"),
                 rs.getString("email"),
                 rs.getString("phone"),
-                rs.getString("company_name"),
                 rs.getString("interest"),
                 rs.getString("source"),
                 rs.getString("status"),

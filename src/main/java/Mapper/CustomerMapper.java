@@ -18,7 +18,7 @@ public class CustomerMapper {
         customer.setEmail(dto.getEmail());
         customer.setGender(dto.getGender());
         customer.setAddress(dto.getAddress());
-        customer.setSocialLink(dto.getSocialLink());
+        customer.setSource(dto.getSource());
 
         User owner = new User();
         owner.setUserId(userId);
@@ -54,9 +54,7 @@ public class CustomerMapper {
         dto.setBirthday(c.getBirthday());
         dto.setGender(c.getGender());
         dto.setAddress(c.getAddress());
-        dto.setSocialLink(c.getSocialLink());
-
-        dto.setCustomerType(c.getCustomerType());
+        dto.setSource(c.getSource());
         dto.setStatus(c.getStatus());
         dto.setLoyaltyTier(c.getLoyaltyTier());
         dto.setRfmScore(c.getRfmScore());

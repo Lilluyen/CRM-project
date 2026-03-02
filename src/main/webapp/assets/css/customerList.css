@@ -22,41 +22,7 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Sidebar Styling
-.sidebar {
-    background-color: var(--primary-navy);
-    min-height: 100vh;
-    padding: 2rem 1rem;
-    color: white;
-}
 
-.sidebar h2 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    padding-left: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-}
-
-.sidebar ul li a {
-    color: #94a3b8;
-    text-decoration: none;
-    display: block;
-    padding: 12px 1rem;
-    border-radius: 8px;
-    transition: 0.3s;
-}
-
-.sidebar ul li a:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-} */
 
 /* Content Area */
 .content {
@@ -202,6 +168,7 @@ th {
 td {
     padding: 18px 15px;
     border-bottom: 1px solid #f1f5f9;
+    height: 105px;
     vertical-align: middle;
 }
 
@@ -216,7 +183,7 @@ td:nth-child(1) {
 /* Customer */
 th:nth-child(2),
 td:nth-child(2) {
-    width: 109.284px;
+    width: 125.51px;
 }
 
 /* Loyalty */
@@ -271,24 +238,110 @@ td:nth-child(7) {
     font-size: 14px;
 }
 
-/* Badges */
+/* Style chung cho Badge (giữ nguyên hoặc điều chỉnh tùy ý) */
 .loyalty-badge {
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 800;
+    padding: 6px 16px; /* Tăng nhẹ padding cho sang trọng */
+    border-radius: 999px; /* Bo tròn hoàn toàn dạng pill */
+    font-weight: 800; /* Đậm hơn */
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px; /* Thêm khoảng cách chữ */
     display: inline-block;
-    background: #f1f5f9;
+    cursor: default;
+    position: relative; /* Cần thiết cho hiệu ứng bóng lướt */
+    overflow: hidden;   /* Cần thiết cho hiệu ứng bóng lướt */
 }
 
+/* PLATINUM - Phiên bản SIÊU SÁNG, SIÊU BÓNG */
+.loyalty-badge.platinum {
+    /* Gradient từ trắng tinh khiết sang xám cực nhẹ để tạo khối */
+    background: linear-gradient(135deg, 
+        #ffffff 0%,   /* Trắng tinh */
+        #f8fafc 40%,  /* Trắng xanh nhẹ */
+        #e2e8f0 100%  /* Xám rất nhẹ ở góc */
+    );
+    
+    /* Màu chữ xám đậm, không dùng màu đen thuần để giữ vẻ tinh tế */
+    color: #1f2937;
+    
+    /* Viền trắng trong suốt nhẹ để định hình trên nền sáng */
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    
+    /* ĐIỂM NHẤN: Hiệu ứng tỏa sáng (Outer Glow) màu trắng/bạc */
+    box-shadow: 
+        0 4px 15px rgba(219, 234, 254, 0.5), /* Bóng xanh nhạt tạo độ sâu */
+        0 0 20px rgba(255, 255, 255, 0.8);  /* Ánh hào quang trắng */
+
+    /* Thêm một chút text-shadow để chữ nổi bật trên nền trắng */
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* ĐIỂM NHẤN CAO CẤP: "Vệt sáng lướt qua" (Glossy Sweep) */
+/* Hiệu ứng này sẽ tự động chạy để tạo cảm giác bóng bẩy liên tục */
+.loyalty-badge.platinum::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -150%; /* Bắt đầu ngoài cùng bên trái */
+    width: 100%;
+    height: 200%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.9), /* Vệt sáng trắng mạnh */
+        transparent
+    );
+    transform: rotate(35deg);
+    animation: sweep 4s infinite; /* Chạy vô hạn mỗi 4 giây */
+}
+
+@keyframes sweep {
+    0% { left: -150%; }
+    20% { left: 150%; } /* Lướt nhanh qua trong 20% thời gian đầu */
+    100% { left: 150%; } /* Nghỉ ở bên phải cho đến hết chu kỳ */
+}
+
+/* GOLD - Màu vàng hoàng gia, bớt bị "chói" */
 .loyalty-badge.gold {
-    background: var(--gold-bg);
-    color: var(--gold-text);
+    background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #B45309 100%);
+    color: #451a03;
+    border: 1px solid #fbbf24;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
 }
 
+/* SILVER - Màu bạc tinh tế */
+.loyalty-badge.silver {
+    background: linear-gradient(135deg, #f9fafb 0%, #9ca3af 100%);
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+/* BRONZE - Màu đồng trầm ấm, rõ nét */
+.loyalty-badge.bronze {
+    background: linear-gradient(135deg, #edc9af 0%, #a0522d 100%);
+    color: #fff;
+    border: 1px solid #8b4513;
+}
+
+/* BLACKLIST - Hiệu ứng nguy hiểm, quyền lực */
 .loyalty-badge.blacklist {
-    background: var(--red-bg);
-    color: var(--red-text);
+    background: #000;
+    color: #ff4d4f;
+    border: 1px solid #ff4d4f;
+    box-shadow: inset 0 0 8px rgba(255, 77, 79, 0.4);
+    text-transform: uppercase;
+    animation: pulse-red 2s infinite;
+}
+
+/* Hiệu ứng nháy nhẹ cho Blacklist */
+@keyframes pulse-red {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.table_rfm_score{
+    text-align: center;
 }
 
 /* Tags */
@@ -353,6 +406,11 @@ td:nth-child(7) {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     min-width: 120px;
     z-index: 100;
+}
+
+.action-menu.show {
+    display: flex;
+    flex-direction: column;
 }
 
 .action-menu div {
@@ -1137,6 +1195,12 @@ td:nth-child(7) {
 }
 
 #paginationControls .btn-outline-secondary:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+#paginationControls .active {
     background: var(--accent-blue);
     color: white;
     border-color: var(--accent-blue);

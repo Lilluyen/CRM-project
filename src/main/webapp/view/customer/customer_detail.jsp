@@ -62,8 +62,8 @@
                 <div class="customer-detail__row">
                     <span>Birthday</span>
                     <strong>
-                        <fmt:formatDate value="${customerDetail.birthday}"
-                                        pattern="dd/MM/yyyy"/>
+                        ${customerDetail.birthday}
+                                        
                     </strong>
                 </div>
 
@@ -73,11 +73,9 @@
                 </div>
 
                 <div class="customer-detail__row">
-                    <span>Social</span>
+                    <span>Source</span>
                     <strong>
-                        <a href="${customerDetail.socialLink}" target="_blank">
-                            View Profile
-                        </a>
+                        ${customerDetail.source}
                     </strong>
                 </div>
             </div>
@@ -100,7 +98,35 @@
                             No style tags
                         </span>
                     </c:if>
+                    <!-- ADD TAG BUTTON -->
+                    <button type="button"
+                            class="customer-detail__add-tag"
+                            onclick="toggleTagPicker()">
+                        + Add Tag
+                    </button>
+
+                    <!-- TAG PICKER -->
+                    <div id="tagPicker" class="tag-picker hidden">
+                        <form action="${pageContext.request.contextPath}/add-tag" method="post">
+                            <input type="hidden" name="customerId" value="${customerDetail.customerId}" />
+
+                            <div class="tag-picker__list">
+                                <c:forEach var="tag" items="${allStyleTags}">
+                                    <label class="tag-picker__item">
+                                        <input type="checkbox" name="tagIds" value="${tag.tagId}" />
+                                        <span>${tag.tagName}</span>
+                                    </label>
+                                </c:forEach>
+                            </div>
+
+                            <div class="tag-picker__actions">
+                                <button type="submit">Add</button>
+                                <button type="button" onclick="toggleTagPicker()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
             </div>
 
         </div>
@@ -116,14 +142,6 @@
 
                 <div class="customer-detail__metrics">
 
-                    <div class="customer-detail__metric">
-                        <span class="customer-detail__metric-label">
-                            Customer Type
-                        </span>
-                        <span class="customer-detail__metric-value">
-                            ${customerDetail.customerType}
-                        </span>
-                    </div>
 
                     <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">
@@ -228,3 +246,9 @@
     </div>
 
 </div>
+
+<script>
+    function toggleTagPicker() {
+        document.getElementById("tagPicker").classList.toggle("hidden");
+    }
+</script>

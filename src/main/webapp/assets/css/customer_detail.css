@@ -20,7 +20,7 @@ body {
     margin-top: 5.5rem !important;
     /* Đảm bảo bo góc cho cả khối nếu Header là phần đầu tiên */
     border-radius: 0.25rem;
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* HEADER SECTION */
@@ -222,4 +222,95 @@ body {
     .customer-detail__body {
         grid-template-columns: 1fr;
     }
+}
+
+.customer-detail__tags {
+    position: relative;
+}
+
+.tag-picker {
+    position: absolute;
+    bottom: -235px;
+    left: -20px;
+    width: 300px;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.tag-picker__item {
+    display: block;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+.tag-picker__actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 8px;
+}
+
+.tag-picker__actions button {
+    background: transparent;
+    border-radius: 10px;
+    width: 80px;
+    height: 30px;
+}
+
+.tag-picker__actions button:hover,
+.customer-detail__add-tag:hover {
+    background: var(--sf-blue);
+    color: white;
+    border-radius: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+.customer-detail__add-tag {
+    border: 1px dashed #2154ba;
+    background: transparent;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: #2154ba;
+}
+
+.tag-picker__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tag-picker__item {
+    border: 1px solid #e5e7eb;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.tag-picker__item input {
+    display: none;
+}
+
+
+
+.tag-picker__item input:checked+span {
+
+    background: #fef3c7;
+
+    color: #92400e;
+}
+
+
+.tag-picker__item input:checked+span::after {
+    content: '✓';
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 12px;
+    color: #92400e;
 }

@@ -257,7 +257,7 @@
                 ></span>
                 <div class="profilesets">
                   <h6>John Doe</h6>
-                  <h5>Admin</h5>
+                  <h5>Sale</h5>
                 </div>
               </div>
               <hr class="m-0" />

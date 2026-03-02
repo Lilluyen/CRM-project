@@ -3,6 +3,14 @@ let allCustomerData = [];
 let filteredCustomers = [];
 let currentPage = 1;
 let rowsPerPage = 10;
+let advancedFilters = {
+    loyaltyTiers: [],
+    tagIds: [],
+    bodyShapes: [],
+    sizes: [],
+    returnRateMode: null
+};
+
 let selectedFilters = {
     searchText: '',
     tags: [],
@@ -16,7 +24,7 @@ let selectedFilters = {
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function () {
     // Get initial customer data from table
-    loadCustomerDataFromTable();
+    callFilterAPI(1); // Load first page with default filters
 
     // Set up event listeners
     setupEventListeners();
@@ -36,38 +44,9 @@ document.addEventListener('DOMContentLoaded', function () {
         showToast(pageStatus, toastType);
     }
 
-    // Render initial table
-    renderTable();
 });
 
-// ===== LOAD DATA FROM TABLE =====
-function loadCustomerDataFromTable() {
-    const rows = document.querySelectorAll('table tbody tr');
-    allCustomerData = [];
 
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length > 0) {
-            const customerData = {
-                customerId: row.dataset.customerId || extractCustomerId(cells[6]),
-                name: cells[0].querySelector('strong')?.textContent.trim() || '',
-                phone: cells[0].querySelector('.muted')?.textContent.trim() || '',
-                email: cells[0].dataset.email || '',
-                loyaltyTier: cells[1].querySelector('.loyalty-badge')?.textContent.trim() || '',
-                rfmScore: cells[1].querySelector('.muted')?.textContent.replace('RFM Score: ', '').trim() || '',
-                preferredSize: cells[2].querySelector('strong')?.textContent.trim() || '',
-                bodyShape: cells[2].querySelector('.muted')?.textContent.trim() || '',
-                styleTags: Array.from(cells[3].querySelectorAll('.tag')).map(tag => tag.textContent.trim()),
-                returnRate: parseInt(cells[4].textContent) || 0,
-                lastPurchase: cells[5].textContent.trim() || '',
-                row: row
-            };
-            allCustomerData.push(customerData);
-        }
-    });
-
-    filteredCustomers = [...allCustomerData];
-}
 
 function extractCustomerId(actionCell) {
     const viewIcon = actionCell.querySelector('[onclick*="viewCustomer"]');
@@ -86,20 +65,7 @@ function setupEventListeners() {
         searchInput.addEventListener('input', debounce(applyFilters, 300));
     }
 
-    // Rows per page select
-    const rowsPerPageSelect = document.getElementById('rowsPerPage');
-    if (rowsPerPageSelect) {
-        rowsPerPageSelect.addEventListener('change', function () {
-            const value = this.value;
-            if (value === 'all') {
-                rowsPerPage = filteredCustomers.length || 10;
-            } else {
-                rowsPerPage = parseInt(value);
-            }
-            currentPage = 1;
-            renderTable();
-        });
-    }
+
 
     // Filter tag buttons - Already using onclick in JSP, no need for event listener here
 }
@@ -114,86 +80,84 @@ function debounce(callback, delay) {
 }
 
 // ===== FILTER FUNCTIONS =====
-function toggleFilterTag(tag) {
-    const index = selectedFilters.tags.indexOf(tag);
-    if (index > -1) {
-        selectedFilters.tags.splice(index, 1);
-    } else {
-        selectedFilters.tags.push(tag);
+function toggleFilterTag(type) {
+    if (type === 'GOLD') {
+        toggleArrayValue(advancedFilters.loyaltyTiers, 'GOLD');
+        const goldButton = document.querySelector('.gold-members');
+        goldButton.classList.toggle('active');
+        document.querySelector('input[name="loyaltyFilter"][value="GOLD"]').checked = goldButton.classList.contains('active');
     }
 
-    // Update button styles
-    document.querySelectorAll('.filter-btn:not(.advanced)').forEach(btn => {
-        const btnTag = btn.textContent.trim();
-        let tagValue = '';
-        if (btnTag.includes('Gold')) {
-            tagValue = 'GOLD';
-        } else if (btnTag.includes('High Return')) {
-            tagValue = 'HIGH_RETURN';
-        }
+    if (type === 'HIGH_RETURN') {
+        advancedFilters.returnRateMode =
+            advancedFilters.returnRateMode === 'HIGH' ? null : 'HIGH';
+        const highReturnButton = document.querySelector('.high-return');
+        highReturnButton.classList.toggle('active');
+        document.querySelector('input[name="returnRateFilter"][value="HIGH"]').checked = highReturnButton.classList.contains('active');
+    }
 
-        if (selectedFilters.tags.includes(tagValue)) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-
+    currentPage = 1;
     applyFilters();
 }
 
+function toggleArrayValue(arr, value) {
+    const index = arr.indexOf(value);
+    if (index === -1) arr.push(value);
+    else arr.splice(index, 1);
+}
+
 function applyFilters() {
-    const searchText = document.getElementById('searchInput')?.value.toLowerCase() || '';
-    selectedFilters.searchText = searchText;
+    callFilterAPI(1);
+}
 
-    filteredCustomers = allCustomerData.filter(customer => {
-        // Search filter
-        if (searchText) {
-            const matchesSearch =
-                customer.name.toLowerCase().includes(searchText) ||
-                customer.phone.includes(searchText) ||
-                customer.styleTags.some(tag => tag.toLowerCase().includes(searchText));
-            if (!matchesSearch) return false;
-        }
+async function callFilterAPI(page = 1) {
 
-        // Tag filters (Gold, High Return) - ALL tags must match (AND logic)
-        if (selectedFilters.tags.length > 0) {
-            for (let tag of selectedFilters.tags) {
-                if (tag === 'GOLD' && customer.loyaltyTier !== 'GOLD') {
-                    return false;
-                }
-                if (tag === 'HIGH_RETURN' && customer.returnRate <= 30) {
-                    return false;
-                }
-            }
-        }
+    currentPage = page;
 
-        // Advanced filters
-        if (selectedFilters.loyalty.length > 0 && !selectedFilters.loyalty.includes(customer.loyaltyTier)) {
-            return false;
-        }
-        if (selectedFilters.bodyShape.length > 0 && !selectedFilters.bodyShape.includes(customer.bodyShape)) {
-            return false;
-        }
-        if (selectedFilters.size.length > 0 && !selectedFilters.size.includes(customer.preferredSize)) {
-            return false;
-        }
-        if (selectedFilters.returnRate.length > 0) {
-            const isHighReturn = customer.returnRate > 30;
-            if (!selectedFilters.returnRate.includes(isHighReturn ? 'HIGH' : 'NORMAL')) {
-                return false;
-            }
-        }
-        if (selectedFilters.styleTags.length > 0) {
-            const hasMatchingTag = customer.styleTags.some(tag => selectedFilters.styleTags.includes(tag));
-            if (!hasMatchingTag) return false;
-        }
+    const keyword = document.getElementById("searchInput")?.value || "";
 
-        return true;
+    const params = new URLSearchParams();
+
+    params.append("page", currentPage);
+    params.append("size", rowsPerPage);
+    params.append("keyword", keyword);
+
+    if (advancedFilters.loyaltyTiers.length)
+        params.append("tiers", advancedFilters.loyaltyTiers.join(','));
+
+    if (advancedFilters.tagIds.length)
+        params.append("tags", advancedFilters.tagIds.join(','));
+
+    if (advancedFilters.bodyShapes.length)
+        params.append("bodyShapes", advancedFilters.bodyShapes.join(','));
+
+    if (advancedFilters.sizes.length)
+        params.append("sizes", advancedFilters.sizes.join(','));
+
+    if (advancedFilters.returnRateMode)
+        params.append("returnRateMode", advancedFilters.returnRateMode);
+
+    const response = await fetch(`${window.__CTX__}/customers/filter`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: params.toString()
     });
 
-    currentPage = 1;
-    renderTable();
+    const data = await response.json();
+
+    /* 🔴 CỰC KỲ QUAN TRỌNG */
+    selectedFilters = data.customers;
+
+    /* dùng cho preview */
+    filteredCustomers = data.customers;
+
+    renderTableBody(data.customers);
+
+    const totalPages = Math.ceil(data.totalRecords / rowsPerPage);
+    renderPagination(totalPages, currentPage);
 }
 
 // ===== ADVANCED FILTER MODAL =====
@@ -214,253 +178,91 @@ function closeAdvancedFilter() {
 }
 
 function checkCurrentFilters() {
-    // Check loyalty filters
-    document.querySelectorAll('input[name="loyaltyFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.loyalty.includes(checkbox.value);
+
+    document.querySelectorAll('input[name="loyaltyFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.loyaltyTiers.includes(cb.value);
     });
 
-    // Check body shape filters
-    document.querySelectorAll('input[name="bodyShapeFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.bodyShape.includes(checkbox.value);
+    document.querySelectorAll('input[name="bodyShapeFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.bodyShapes.includes(cb.value);
     });
 
-    // Check size filters
-    document.querySelectorAll('input[name="sizeFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.size.includes(checkbox.value);
+    document.querySelectorAll('input[name="sizeFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.sizes.includes(cb.value);
     });
 
-    // Check return rate filters
-    document.querySelectorAll('input[name="returnRateFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.returnRate.includes(checkbox.value);
+    document.querySelectorAll('input[name="styleTagFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.tagIds.includes(parseInt(cb.value));
     });
 
-    // Check style tag filters
-    document.querySelectorAll('input[name="styleTagFilter"]').forEach(checkbox => {
-        checkbox.checked = selectedFilters.styleTags.includes(checkbox.value);
+    document.querySelectorAll('input[name="returnRateFilter"]').forEach(cb => {
+        cb.checked = advancedFilters.returnRateMode === cb.value;
     });
 }
-
 function applyAdvancedFilter() {
-    // Get selected loyalty tiers
-    selectedFilters.loyalty = Array.from(
+
+    // Loyalty
+    advancedFilters.loyaltyTiers = Array.from(
         document.querySelectorAll('input[name="loyaltyFilter"]:checked')
     ).map(cb => cb.value);
 
-    // Get selected body shapes
-    selectedFilters.bodyShape = Array.from(
+    // Body shape
+    advancedFilters.bodyShapes = Array.from(
         document.querySelectorAll('input[name="bodyShapeFilter"]:checked')
     ).map(cb => cb.value);
 
-    // Get selected sizes
-    selectedFilters.size = Array.from(
+    // Sizes
+    advancedFilters.sizes = Array.from(
         document.querySelectorAll('input[name="sizeFilter"]:checked')
     ).map(cb => cb.value);
 
-    // Get selected return rates
-    selectedFilters.returnRate = Array.from(
-        document.querySelectorAll('input[name="returnRateFilter"]:checked')
-    ).map(cb => cb.value);
-
-    // Get selected style tags
-    selectedFilters.styleTags = Array.from(
+    // Style Tags → map sang tagIds (INT)
+    advancedFilters.tagIds = Array.from(
         document.querySelectorAll('input[name="styleTagFilter"]:checked')
-    ).map(cb => cb.value);
+    ).map(cb => parseInt(cb.value));
+
+    // Return Rate (radio → chỉ lấy 1)
+    const returnRate = document.querySelector('input[name="returnRateFilter"]:checked');
+    advancedFilters.returnRateMode = returnRate ? returnRate.value : null;
 
     closeAdvancedFilter();
-    applyFilters();
+    callFilterAPI(1);
 }
 
 function resetAdvancedFilter() {
-    selectedFilters.loyalty = [];
-    selectedFilters.bodyShape = [];
-    selectedFilters.size = [];
-    selectedFilters.returnRate = [];
-    selectedFilters.styleTags = [];
 
-    // Uncheck all checkboxes
-    document.querySelectorAll('#advancedFilterModal input[type="checkbox"]').forEach(cb => {
+    advancedFilters = {
+        loyaltyTiers: [],
+        tagIds: [],
+        bodyShapes: [],
+        sizes: [],
+        returnRateMode: null
+    };
+
+    document.querySelectorAll('#advancedFilterModal input').forEach(cb => {
         cb.checked = false;
     });
 
-    applyFilters();
+    callFilterAPI(1);
 }
 
-// ===== TABLE RENDERING =====
-function renderTable() {
-    const tbody = document.querySelector('table tbody');
-    if (!tbody) return;
-
-    if (filteredCustomers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No customers found</td></tr>';
-        renderPagination();
-        return;
-    }
-
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage);
-    if (currentPage > totalPages && totalPages > 0) {
-        currentPage = totalPages;
-    }
-
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    const endIndex = startIndex + rowsPerPage;
-    const pageCustomers = filteredCustomers.slice(startIndex, endIndex);
-
-    // Render rows
-    tbody.innerHTML = pageCustomers.map(customer => `
-        <tr class="card-body-row">
-            <td class="customer-info">
-                <div class="avatar">
-                    ${customer.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                    <div><strong>${customer.name}</strong></div>
-                    <div class="muted">${customer.phone}</div>
-                </div>
-            </td>
-            
-            <td>
-                <span class="loyalty-badge ${customer.loyaltyTier === 'GOLD' ? 'gold' : customer.loyaltyTier === 'BLACKLIST' ? 'blacklist' : ''}">
-                    ${customer.loyaltyTier}
-                </span>
-                <div class="muted">RFM Score: ${customer.rfmScore}</div>
-            </td>
-            
-            <td>
-                <div><strong>${customer.preferredSize}</strong></div>
-                <div class="muted">${customer.bodyShape}</div>
-            </td>
-            
-            <td class="tags">
-                ${customer.styleTags.slice(0, 2).map(tag => `<span class="tag">${tag}</span>`).join('')}
-            </td>
-            
-            <td>
-                <div>${customer.returnRate}%</div>
-                <div class="progress">
-                    <div class="progress-bar ${customer.returnRate > 30 ? 'high-return' : ''}" 
-                         style="width: ${Math.min(customer.returnRate, 100)}%"></div>
-                </div>
-            </td>
-            
-            <td>${customer.lastPurchase}</td>
-            
-            <td class="actions">
-                <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${customer.customerId})"></i>
-                <div class="action-wrapper">
-                    <i class="fa-solid fa-ellipsis-vertical" onclick="toggleMenu(this)"></i>
-                    <div class="action-menu" style="display: none;">
-                        <div onclick="openPreview(${customer.customerId})">Preview</div>
-                        <div onclick="deleteCustomer(${customer.customerId})">Delete</div>
-                    </div>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-
-    renderPagination();
-}
-
-// ===== PAGINATION =====
-function renderPagination() {
-    const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage) || 1;
-    const paginationControls = document.getElementById('paginationControls');
-
-    if (!paginationControls) return;
-
-    let html = '';
-
-    // Previous button
-    html += `
-        <button class="btn btn-light" ${currentPage === 1 ? 'disabled' : ''}
-                onclick="goToPage(${currentPage - 1})">
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-    `;
-
-    // Page numbers
-    const maxButtons = window.innerWidth < 768 ? 3 : 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-
-    if (endPage - startPage < maxButtons - 1) {
-        startPage = Math.max(1, endPage - maxButtons + 1);
-    }
-
-    // First page button
-    if (startPage > 1) {
-        html += `<button class="btn btn-light" onclick="goToPage(1)">1</button>`;
-        if (startPage > 2) {
-            html += `<span style="padding: 0 8px;">...</span>`;
-        }
-    }
-
-    // Page number buttons
-    for (let i = startPage; i <= endPage; i++) {
-        html += `
-            <button class="btn ${i === currentPage ? 'btn-primary' : 'btn-light'}" 
-                    onclick="goToPage(${i})">
-                ${i}
-            </button>
-        `;
-    }
-
-    // Last page button
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            html += `<span style="padding: 0 8px;">...</span>`;
-        }
-        html += `<button class="btn btn-light" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-    }
-
-    // Next button
-    html += `
-        <button class="btn btn-light" ${currentPage === totalPages ? 'disabled' : ''}
-                onclick="goToPage(${currentPage + 1})">
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
-    `;
-
-    // Page info
-    const startRecord = filteredCustomers.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
-    const endRecord = Math.min(currentPage * rowsPerPage, filteredCustomers.length);
-    html += `<span style="margin-left: 16px; color: var(--text-muted); font-size: 13px;">
-        ${startRecord}-${endRecord} of ${filteredCustomers.length}
-    </span>`;
-
-    paginationControls.innerHTML = html;
-}
-
-function goToPage(pageNumber) {
-    const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage) || 1;
-    if (pageNumber < 1 || pageNumber > totalPages) return;
-
-    currentPage = pageNumber;
-    renderTable();
-
-    // Scroll to table
-    const table = document.querySelector('table');
-    if (table) {
-        table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-}
 
 // ===== CUSTOMER ACTIONS =====
 function openPreview(customerId) {
-    const customer = allCustomerData.find(c => c.customerId == customerId);
-    if (!customer) return;
-
+    const customer = selectedFilters.find(c => c.customerId == customerId);
+    if (!customer)
+        return;
     // Populate preview panel
     document.getElementById('previewName').textContent = customer.name;
     document.getElementById('previewPhone').textContent = customer.phone;
     document.getElementById('previewEmail').textContent = customer.email || 'Not provided';
-    document.getElementById('previewGender').textContent = 'Not provided';
+    document.getElementById('previewGender').textContent = customer.gender;
     document.getElementById('previewSize').textContent = customer.preferredSize;
     document.getElementById('previewBodyShape').textContent = customer.bodyShape;
-    document.getElementById('previewHeight').textContent = 'Not available';
-    document.getElementById('previewWeight').textContent = 'Not available';
+    document.getElementById('previewHeight').textContent = customer.height || 'Not available';
+    document.getElementById('previewWeight').textContent = customer.weight || 'Not available';
     document.getElementById('previewLoyalty').textContent = customer.loyaltyTier;
-    document.getElementById('previewLoyalty').className = `preview-value loyalty-badge ${customer.loyaltyTier === 'GOLD' ? 'gold' : ''}`;
+    document.getElementById('previewLoyalty').className = `preview-value loyalty-badge ${getLoyaltyClass(customer.loyaltyTier)}`;
     document.getElementById('previewRFM').textContent = customer.rfmScore;
     document.getElementById('previewReturnRate').textContent = customer.returnRate + '%';
 
@@ -472,7 +274,8 @@ function openPreview(customerId) {
 }
 
 function viewCustomer(customerId) {
-    if (!customerId) return;
+    if (!customerId)
+        return;
 
     const ctx = window.__CTX__ || ""; // fallback nếu quên inject
     const url = `${ctx}/customers/detail?customerId=${encodeURIComponent(customerId)}`;
@@ -499,27 +302,52 @@ function deleteCustomer(customerId) {
 }
 
 // ===== ACTION MENU =====
-function toggleMenu(element) {
-    const menu = element.closest('.action-wrapper').querySelector('.action-menu');
-    if (menu) {
-        const isVisible = menu.style.display !== 'none';
+// function toggleMenu(element, event) {
 
-        // Close all other menus
-        document.querySelectorAll('.action-menu').forEach(m => m.style.display = 'none');
+//     event.stopPropagation(); // 🛑 chặn document click
 
-        // Toggle current menu
-        menu.style.display = isVisible ? 'none' : 'flex';
-        menu.style.flexDirection = 'column';
-    }
-}
+//     const menu = element.closest('.action-wrapper').querySelector('.action-menu');
+
+//     const isVisible = menu.style.display === 'flex';
+
+//     // đóng tất cả menu khác
+//     document.querySelectorAll('.action-menu').forEach(m => m.style.display = 'none');
+
+//     // toggle menu hiện tại
+//     menu.style.display = isVisible ? 'none' : 'flex';
+//     menu.style.flexDirection = 'column';
+// }
 
 // Close action menu when clicking outside
-document.addEventListener('click', function (e) {
-    if (!e.target.closest('.action-wrapper')) {
-        document.querySelectorAll('.action-menu').forEach(menu => {
-            menu.style.display = 'none';
+document.addEventListener("click", function (e) {
+
+    const ellipsis = e.target.closest(".fa-ellipsis-vertical");
+
+    // CLICK vào dấu ...
+    if (ellipsis) {
+        e.stopPropagation();
+
+        const wrapper = ellipsis.closest(".action-wrapper");
+        const menu = wrapper.querySelector(".action-menu");
+
+        const isOpen = menu.classList.contains("show");
+
+        // đóng tất cả menu khác
+        document.querySelectorAll(".action-menu").forEach(m => {
+            m.classList.remove("show");
         });
+
+        if (!isOpen) {
+            menu.classList.add("show");
+        }
+
+        return;
     }
+
+    // CLICK ngoài → đóng hết
+    document.querySelectorAll(".action-menu").forEach(m => {
+        m.classList.remove("show");
+    });
 });
 
 // ===== TOAST NOTIFICATIONS =====
@@ -529,7 +357,8 @@ function showToast(message, type = 'success', duration = 3000) {
     const toastMessage = document.getElementById('toastMessage');
     const toastBar = document.getElementById('toastBar');
 
-    if (!toast) return;
+    if (!toast)
+        return;
 
     // Set icon based on type
     const icons = {
@@ -591,4 +420,145 @@ document.getElementById('customerPreview')?.addEventListener('click', function (
     if (e.target === this) {
         closePreview();
     }
+});
+
+
+
+// ================= PAGINATION AJAX =================
+function loadPage(page, size) {
+
+    currentPage = page;
+
+    if (size) {
+        rowsPerPage = size;
+    }
+
+    // GỌI LẠI FILTER (giữ toàn bộ điều kiện đang chọn)
+    callFilterAPI(currentPage);
+}
+
+function renderTableBody(customers) {
+    console.log(customers);
+
+    let html = "";
+
+    customers.forEach(c => {
+
+        html += `
+<tr class="card-body-row">
+
+<td class="customer-info">
+    <div class="avatar">
+        ${c.name ? c.name.charAt(0).toUpperCase() : ""}
+    </div>
+    <div>
+        <div onclick="viewCustomer(${c.customerId})" style="cursor:pointer;">
+            <strong>${c.name}</strong>
+        </div>
+        <div class="muted">${c.phone}</div>
+    </div>
+</td>
+
+<td>
+    <span class="loyalty-badge ${getLoyaltyClass(c.loyaltyTier)}">
+        ${c.loyaltyTier}
+    </span>
+    <div class="muted">RFM Score: ${c.rfmScore}</div>
+</td>
+
+<td>
+    <div><strong>${c.preferredSize ?? ""}</strong></div>
+    <div class="muted">${c.bodyShape ?? ""}</div>
+</td>
+
+<td class="tags">
+    ${renderTags(c.styleTags)}
+</td>
+
+<td>
+    <div>${c.returnRate}%</div>
+    <div class="progress">
+        <div class="progress-bar ${c.returnRate > 30 ? "high-return" : ""}"
+             style="width:${c.returnRate}%">
+        </div>
+    </div>
+</td>
+
+<td>${c.lastPurchase ?? ""}</td>
+
+    <td class="actions">
+        <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
+            <div class="action-wrapper">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+
+                    <div class="action-menu">
+                    <div onclick="openPreview(${c.customerId})">Preview</div>
+                    <div onclick="deleteCustomer(${c.customerId})">Delete</div>
+             </div>
+     </td>
+<td style="display: none;">${c.email}</td>
+                        <td style="display: none;">${c.gender}</td>
+                        <td style="display: none;">${c.height}</td>
+                        <td style="display: none;">${c.weight}</td>
+</tr>
+`;
+    });
+
+    document.getElementById("customerTableBody").innerHTML = html;
+}
+
+function renderTags(tags) {
+
+    if (!tags)
+        return "";
+
+    return tags.slice(0, 2).map(tag =>
+        `<span class="tag">${tag}</span>`
+    ).join("");
+}
+
+function getLoyaltyClass(tier) {
+    if (tier === "PLATINUM")
+        return "platinum";
+    if (tier === "GOLD")
+        return "gold";
+    if (tier === "SILVER")
+        return "silver";
+    if (tier === "BRONZE")
+        return "bronze";
+    if (tier === "BLACKLIST")
+        return "blacklist";
+    return "";
+}
+
+function renderPagination(totalPages, currentPage) {
+
+    const container = document.getElementById("paginationControls");
+
+    if (!totalPages || totalPages <= 1) {
+        container.innerHTML = `<button class= "active btn btn-light">1</button>`;
+        return;
+    }
+
+    let html = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+
+        html += `
+            <button onclick="loadPage(${i}, ${rowsPerPage})"
+                class="btn btn-light ${i === currentPage ? "active" : ""}">
+                ${i}
+            </button>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+document.getElementById("rowsPerPage")?.addEventListener("change", function () {
+
+    const value = this.value === "all" ? 999999 : parseInt(this.value);
+
+    rowsPerPage = value;
+    loadPage(1, value);
 });
