@@ -229,3 +229,71 @@ VALUES
 ('Customer', 19, 'CALL', N'Giới thiệu sản phẩm mới', N'Khách quan tâm BST hè', 2, GETDATE()),
 
 ('Lead', 4, 'EMAIL', N'Gửi thông tin chi tiết', N'Lead yêu cầu thêm thông tin', 3, GETDATE());
+
+
+------------------------------------------------------------------------------------------------
+
+INSERT INTO [CRM_System].[dbo].[Categories] ([category_name], [description], [status], [created_at])
+VALUES 
+-- NHÓM ĐỒ NAM (1-10) -> INACTIVE
+(N'Áo Thun Nam', N'Các loại áo phông cotton, cổ tròn, cổ tim cho nam', 'INACTIVE', GETDATE()),
+(N'Áo Sơ Mi Nam', N'Sơ mi công sở, sơ mi flannel, sơ mi đi biển', 'INACTIVE', GETDATE()),
+(N'Quần Jean Nam', N'Quần bò dáng slim-fit, baggy, straight cho nam', 'INACTIVE', GETDATE()),
+(N'Quần Tây Nam', N'Quần vải thanh lịch cho môi trường công sở', 'INACTIVE', GETDATE()),
+(N'Áo Khoác Nam', N'Áo gió, áo phao, áo bomber nam', 'INACTIVE', GETDATE()),
+(N'Quần Short Nam', N'Quần lửng mặc nhà hoặc đi chơi', 'INACTIVE', GETDATE()),
+(N'Vest Nam', N'Bộ suit và áo blazer nam cao cấp', 'INACTIVE', GETDATE()),
+(N'Đồ Lót Nam', N'Boxer và quần lót nam chất liệu thông thoáng', 'INACTIVE', GETDATE()),
+(N'Đồ Thể Thao Nam', N'Bộ đồ tập gym, chạy bộ cho nam', 'INACTIVE', GETDATE()),
+(N'Áo Len Nam', N'Áo dệt kim, áo len cổ lọ cho mùa đông', 'INACTIVE', GETDATE()),
+
+-- NHÓM ĐỒ NỮ (11-20) -> INACTIVE
+(N'Váy Hoa Nhí', N'Váy voan nhẹ nhàng cho mùa hè', 'INACTIVE', GETDATE()),
+(N'Chân Váy', N'Chân váy chữ A, váy bút chì, váy xếp ly', 'INACTIVE', GETDATE()),
+(N'Áo Croptop', N'Áo dáng ngắn thời trang cho nữ', 'INACTIVE', GETDATE()),
+(N'Đầm Dạ Hội', N'Trang phục sang trọng cho các buổi tiệc', 'INACTIVE', GETDATE()),
+(N'Áo Sơ Mi Nữ', N'Sơ mi kiểu, áo blouse nữ tính', 'INACTIVE', GETDATE()),
+(N'Quần Jean Nữ', N'Skinny jean, mom jean, jean ống rộng', 'INACTIVE', GETDATE()),
+(N'Áo Khoác Cardigan', N'Áo khoác len nhẹ cho nữ', 'INACTIVE', GETDATE()),
+(N'Bộ Đồ Ngủ Nữ', N'Pijama lụa và đồ mặc nhà', 'INACTIVE', GETDATE()),
+(N'Áo Hai Dây', N'Áo camisole, áo dây gợi cảm', 'INACTIVE', GETDATE()),
+(N'Quần Legging', N'Quần ôm co giãn đa năng', 'INACTIVE', GETDATE()),
+
+-- NHÓM TRẺ EM (21-25) -> INACTIVE
+(N'Đồ Sơ Sinh', N'Quần áo mềm mại cho bé dưới 1 tuổi', 'INACTIVE', GETDATE()),
+(N'Váy Bé Gái', N'Các mẫu váy công chúa và váy mặc hằng ngày', 'INACTIVE', GETDATE()),
+(N'Bộ Đồ Bé Trai', N'Quần áo năng động cho bé trai', 'INACTIVE', GETDATE()),
+(N'Áo Khoác Trẻ Em', N'Giữ ấm cho bé vào mùa đông', 'INACTIVE', GETDATE()),
+(N'Đồ Bơi Trẻ Em', N'Đồ bơi một mảnh và hai mảnh cho bé', 'INACTIVE', GETDATE()),
+
+-- NHÓM TRẺ EM (26-30) -> ACTIVE
+(N'Giày Trẻ Em', N'Giày tập đi và giày thể thao cho bé', 'ACTIVE', GETDATE()),
+(N'Mũ Em Bé', N'Mũ che thóp và mũ lưỡi trai nhỏ', 'ACTIVE', GETDATE()),
+(N'Yếm Ăn Dặm', N'Yếm vải và yếm silicon cho bé', 'ACTIVE', GETDATE()),
+(N'Tất Trẻ Em', N'Tất chống trượt cho bé yêu', 'ACTIVE', GETDATE()),
+(N'Đồ Chơi Vải', N'Phụ kiện đồ chơi an toàn đi kèm', 'ACTIVE', GETDATE()),
+
+-- PHỤ KIỆN (31-40) -> ACTIVE
+(N'Thắt Lưng Da', N'Thắt lưng da bò, da cá sấu thật', 'ACTIVE', GETDATE()),
+(N'Ví & Túi Xách', N'Túi cầm tay và ví nam/nữ', 'ACTIVE', GETDATE()),
+(N'Cà Vạt & Nơ', N'Phụ kiện trang trọng cho quý ông', 'ACTIVE', GETDATE()),
+(N'Mũ & Nón', N'Mũ lưỡi trai, mũ len, mũ bucket', 'ACTIVE', GETDATE()),
+(N'Tất & Vớ', N'Tất cotton khử mùi', 'ACTIVE', GETDATE()),
+(N'Kính Thời Trang', N'Kính râm và gọng kính', 'ACTIVE', GETDATE()),
+(N'Trang Sức Cài Áo', N'Brooch cài vest sang trọng', 'ACTIVE', GETDATE()),
+(N'Khăn Quàng Cổ', N'Khăn len, khăn lụa thời trang', 'ACTIVE', GETDATE()),
+(N'Găng Tay', N'Găng tay da và găng tay len', 'ACTIVE', GETDATE()),
+(N'Đồng Hồ', N'Đồng hồ đeo tay thời trang', 'ACTIVE', GETDATE()),
+
+-- ĐỒ THEO DỊP & KHÁC (41-50) -> ACTIVE
+(N'Đồ Tập Yoga', N'Quần áo chuyên dụng cho tập luyện', 'ACTIVE', GETDATE()),
+(N'Đồ Bơi & Bikini', N'Trang phục đi biển cho nữ', 'ACTIVE', GETDATE()),
+(N'Đồ Cưới', N'Váy cưới và vest chú rể', 'ACTIVE', GETDATE()),
+(N'Áo Dài Truyền Thống', N'Áo dài cách tân và truyền thống', 'ACTIVE', GETDATE()),
+(N'Trang Phục Hóa Trang', N'Đồ Halloween và lễ hội', 'ACTIVE', GETDATE()),
+(N'Áo Polo Đồng Phục', N'Áo thun có cổ lịch sự', 'ACTIVE', GETDATE()),
+(N'Quần Jogger', N'Phong cách streetwear thoải mái', 'ACTIVE', GETDATE()),
+(N'Áo Hoodie', N'Áo nỉ có mũ trẻ trung', 'ACTIVE', GETDATE()),
+(N'Quần Kaki', N'Quần vải thô bền bỉ', 'ACTIVE', GETDATE()),
+(N'Hàng Giảm Giá', N'Các sản phẩm đang trong chương trình sale', 'ACTIVE', GETDATE());
+
