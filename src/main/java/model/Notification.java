@@ -1,84 +1,55 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Notification {
-     private int notificationId;
-    private int userId;
+    private int notificationId;
     private String title;
     private String content;
     private String type;
-    private boolean isRead;
+    private String relatedType;          // e.g. "Task", "Lead", "Deal" ...
+    private Integer relatedId;
     private LocalDateTime createdAt;
+    private List<NotificationRecipient> nrs;
 
     public Notification() {
     }
 
-    public Notification(int notificationId, int userId, String title, String content,
-                       String type, boolean isRead, LocalDateTime createdAt) {
+    public Notification(int notificationId, String title, String content,
+                        String type, String relatedType, Integer relatedId,
+                        LocalDateTime createdAt, List<NotificationRecipient> nrs) {
         this.notificationId = notificationId;
-        this.userId = userId;
         this.title = title;
         this.content = content;
         this.type = type;
-        this.isRead = isRead;
+        this.relatedType = relatedType;
+        this.relatedId = relatedId;
         this.createdAt = createdAt;
+        this.nrs=nrs;
     }
 
-    // Getters and Setters
-    public int getNotificationId() {
-        return notificationId;
-    }
+    public int getNotificationId() { return notificationId; }
+    public void setNotificationId(int notificationId) { this.notificationId = notificationId; }
 
-    public void setNotificationId(int notificationId) {
-        this.notificationId = notificationId;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public int getUserId() {
-        return userId;
-    }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getRelatedType() { return relatedType; }
+    public void setRelatedType(String relatedType) { this.relatedType = relatedType; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public Integer getRelatedId() { return relatedId; }
+    public void setRelatedId(Integer relatedId) { this.relatedId = relatedId; }
 
-    public String getContent() {
-        return content;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public boolean isRead() {
-        return isRead;
-    }
-
-    public void setRead(boolean read) {
-        isRead = read;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public List<NotificationRecipient> getNrs() {return nrs;}
+    public void setNrs(List<NotificationRecipient> nrs) {this.nrs = nrs;}
 }
