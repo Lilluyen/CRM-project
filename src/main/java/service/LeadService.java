@@ -43,41 +43,28 @@ public class LeadService {
             throw new IllegalArgumentException("Email không được để trống.");
         }
 
-        // Check: email đã tồn tại?
-        Lead existingLead = leadDAO.findLeadByEmail(lead.getEmail());
-        if (existingLead != null) {
-            // Nếu có chọn campaign mới → gắn lead cũ vào campaign đó
-            if (lead.getCampaignId() > 0) {
-                if (campaignLeadDAO.isLeadInCampaign(lead.getCampaignId(), existingLead.getLeadId())) {
-                    throw new IllegalArgumentException(
-                            "Lead \"" + existingLead.getFullName() + "\" đã thuộc campaign này rồi.");
-                }
-                // Gắn lead cũ vào campaign mới qua bảng Campaign_Leads
-                campaignLeadDAO.assignLeadToCampaign(
-                        lead.getCampaignId(), existingLead.getLeadId(), "NEW");
-                // Cập nhật campaign_id chính của lead (latest campaign)
-                existingLead.setCampaignId(lead.getCampaignId());
-                leadDAO.updateLead(existingLead);
-                return existingLead.getLeadId();
+        // Check duplicate: email + cùng campaign → trùng thật sự
+        if (lead.getCampaignId() > 0) {
+            Lead dup = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), lead.getCampaignId());
+            if (dup != null) {
+                throw new IllegalArgumentException(
+                        "Email \"" + lead.getEmail() + "\" đã tồn tại trong campaign này.");
             }
-            // Không chọn campaign → thật sự trùng
-            throw new IllegalArgumentException(
-                    "Email đã tồn tại. Nếu muốn gắn vào campaign khác, vui lòng chọn Campaign.");
+        } else {
+            // Không chọn campaign → check email có tồn tại lead nào chưa có campaign không
+            Lead dup = leadDAO.findLeadByEmail(lead.getEmail());
+            if (dup != null) {
+                throw new IllegalArgumentException(
+                        "Email \"" + lead.getEmail() + "\" đã tồn tại. Vui lòng chọn Campaign để thêm vào chiến dịch.");
+            }
         }
 
-        // Lead mới hoàn toàn
-        if (lead.getStatus() == null || lead.getStatus().trim().isEmpty()) {
-            lead.setStatus("NEW_LEAD");
-        }
-        // Auto-score nếu chưa có điểm
-        if (lead.getScore() <= 0) {
-            lead.setScore(LeadScoringUtil.calculateScore(
-                    lead.getEmail(), lead.getPhone(), lead.getSource()));
-        }
-        // Auto-qualify nếu score >= 50
-        if (lead.getScore() >= 50 && "NEW_LEAD".equals(lead.getStatus())) {
-            lead.setStatus("QUALIFIED");
-        }
+        // Tạo Lead mới (mỗi campaign có Lead record riêng, cùng email OK)
+        int score = LeadScoringUtil.calculateScore(
+                lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId());
+        lead.setScore(score);
+        lead.setStatus(LeadScoringUtil.determineStatus(score));
+
         int newId = leadDAO.createLead(lead);
 
         // Nếu có campaign → thêm vào Campaign_Leads
@@ -101,6 +88,17 @@ public class LeadService {
         if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
         }
+
+        // Auto re-score & auto-status dựa trên thông tin mới
+        // Giữ nguyên DEAL_CREATED nếu sale đã tạo deal
+        int newScore = LeadScoringUtil.calculateScore(
+                lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId());
+        lead.setScore(newScore);
+
+        if (!"DEAL_CREATED".equals(lead.getStatus())) {
+            lead.setStatus(LeadScoringUtil.determineStatus(newScore));
+        }
+
         return leadDAO.updateLead(lead);
     }
 
@@ -113,19 +111,31 @@ public class LeadService {
     public int importLeads(List<Lead> leads) {
         int importedCount = 0;
         for (Lead lead : leads) {
-            if (leadDAO.findLeadByEmail(lead.getEmail()) == null) {
-                lead.setStatus("NEW_LEAD");
-                // Auto-score dựa trên dữ liệu có sẵn
-                int score = LeadScoringUtil.calculateScore(
-                        lead.getEmail(), lead.getPhone(), lead.getSource());
-                lead.setScore(score);
-                // Auto-qualify nếu score >= 50
-                if (score >= 50) {
-                    lead.setStatus("QUALIFIED");
+            // Check trùng email + cùng campaign
+            if (lead.getCampaignId() > 0) {
+                Lead dup = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), lead.getCampaignId());
+                if (dup != null) {
+                    continue; // đã có trong campaign này rồi, skip
                 }
-                if (leadDAO.createLead(lead) > 0) {
-                    importedCount++;
+            } else {
+                Lead dup = leadDAO.findLeadByEmail(lead.getEmail());
+                if (dup != null) {
+                    continue; // email đã tồn tại mà không có campaign, skip
                 }
+            }
+
+            // Tạo Lead mới (mỗi campaign có record riêng)
+            int score = LeadScoringUtil.calculateScore(
+                    lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId());
+            lead.setScore(score);
+            lead.setStatus(LeadScoringUtil.determineStatus(score));
+            int newId = leadDAO.createLead(lead);
+            if (newId > 0) {
+                if (lead.getCampaignId() > 0) {
+                    campaignLeadDAO.assignLeadToCampaign(
+                            lead.getCampaignId(), newId, "NEW");
+                }
+                importedCount++;
             }
         }
         return importedCount;
@@ -150,9 +160,9 @@ public class LeadService {
             return false;
         }
         lead.setScore(score);
-        // Auto-qualify nếu score >= 50
-        if (score >= 50 && !lead.getStatus().equals("QUALIFIED")) {
-            lead.setStatus("QUALIFIED");
+        // Auto-status theo score mới (giữ DEAL_CREATED nếu sale đã tạo)
+        if (!"DEAL_CREATED".equals(lead.getStatus())) {
+            lead.setStatus(LeadScoringUtil.determineStatus(score));
         }
         return leadDAO.updateLead(lead);
     }

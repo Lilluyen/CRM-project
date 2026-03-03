@@ -59,24 +59,25 @@ prefix="c" %>
                 <label class="form-label required">Nguồn Lead</label>
                 <select class="form-select" id="source" name="source" required>
                   <option value="">-- Chọn nguồn --</option>
-                  <option value="EVENT">Event</option>
-                  <option value="FACEBOOK">Facebook</option>
-                  <option value="WEBSITE">Website</option>
-                  <option value="REFERRAL">Referral</option>
-                  <option value="IMPORT">Import File</option>
+                  <option value="Seminar">Seminar</option>
+                  <option value="Facebook">Facebook</option>
+                  <option value="Website">Website</option>
+                  <option value="Referral">Referral</option>
+                  <option value="Import">Import File</option>
                 </select>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Campaign (Optional)</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="campaignId"
-                  name="campaignId"
-                  placeholder="ID campaign"
-                />
+                <select class="form-select" id="campaignId" name="campaignId">
+                  <option value="">-- Không gắn Campaign --</option>
+                  <c:forEach var="campaign" items="${campaigns}">
+                    <option value="${campaign.campaignId}">
+                      ${campaign.name} (${campaign.status})
+                    </option>
+                  </c:forEach>
+                </select>
               </div>
             </div>
           </div>
@@ -157,20 +158,6 @@ prefix="c" %>
             </tr>
             <tr>
               <td>4</td>
-              <td>companyName</td>
-              <td>Text</td>
-              <td><span class="badge bg-success">Không</span></td>
-              <td>ABC Company</td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td>interest</td>
-              <td>Text</td>
-              <td><span class="badge bg-success">Không</span></td>
-              <td>Product Manager</td>
-            </tr>
-            <tr>
-              <td>6</td>
               <td>source</td>
               <td>Text</td>
               <td><span class="badge bg-success">Không</span></td>
@@ -185,7 +172,7 @@ prefix="c" %>
         <strong>Lưu ý:</strong> Mỗi lead sẽ được tự động chấm điểm (0-100) dựa
         trên:
         <ul class="mb-0 mt-2">
-          <li>Email công ty: +20, Email cá nhân: +10</li>
+          <li>Email công ty: +20, Email cá nhân: +20</li>
           <li>Số điện thoại hợp lệ: +20</li>
           <li>
             Source (Event: +30, Referral: +25, Website: +15, Social: +10, Other:

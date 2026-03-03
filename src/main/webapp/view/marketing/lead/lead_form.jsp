@@ -113,14 +113,15 @@
                                 <label for="source" class="form-label">Nguồn Lead</label>
                                 <select class="form-select" id="source" name="source">
                                     <option value="">-- Chọn nguồn --</option>
-                                    <option value="WEBSITE"      ${lead.source == 'WEBSITE'      ? 'selected' : ''}>Website</option>
-                                    <option value="SOCIAL_MEDIA" ${lead.source == 'SOCIAL_MEDIA' ? 'selected' : ''}>Social Media</option>
-                                    <option value="REFERRAL"     ${lead.source == 'REFERRAL'     ? 'selected' : ''}>Referral</option>
-                                    <option value="EVENT"        ${lead.source == 'EVENT'        ? 'selected' : ''}>Event</option>
-                                    <option value="EMAIL"        ${lead.source == 'EMAIL'        ? 'selected' : ''}>Email Campaign</option>
-                                    <option value="COLD_CALL"    ${lead.source == 'COLD_CALL'    ? 'selected' : ''}>Cold Call</option>
-                                    <option value="IMPORT"       ${lead.source == 'IMPORT'       ? 'selected' : ''}>Import File</option>
-                                    <option value="OTHER"        ${lead.source == 'OTHER'        ? 'selected' : ''}>Khác</option>
+                                    <option value="Website"      ${lead.source == 'Website'      ? 'selected' : ''}>Website</option>
+                                    <option value="Facebook"     ${lead.source == 'Facebook'     ? 'selected' : ''}>Facebook</option>
+                                    <option value="LinkedIn"     ${lead.source == 'LinkedIn'     ? 'selected' : ''}>LinkedIn</option>
+                                    <option value="Referral"     ${lead.source == 'Referral'     ? 'selected' : ''}>Referral</option>
+                                    <option value="Seminar"      ${lead.source == 'Seminar'      ? 'selected' : ''}>Seminar</option>
+                                    <option value="Email"        ${lead.source == 'Email'        ? 'selected' : ''}>Email Campaign</option>
+                                    <option value="Cold Call"    ${lead.source == 'Cold Call'    ? 'selected' : ''}>Cold Call</option>
+                                    <option value="Import"       ${lead.source == 'Import'       ? 'selected' : ''}>Import File</option>
+                                    <option value="Other"        ${lead.source == 'Other'        ? 'selected' : ''}>Khác</option>
                                 </select>
                             </div>
                         </div>
@@ -142,7 +143,7 @@
                     </div>
                 </div>
 
-                <!-- Section 3: Trạng thái & Điểm (chỉ cho edit mode) -->
+                <!-- Section 3: Trạng thái & Điểm (chỉ cho edit mode, read-only) -->
                 <c:if test="${lead.leadId > 0}">
                     <div class="form-section">
                         <h5><i class="fas fa-chart-line me-1"></i> Trạng thái & Điểm số</h5>
@@ -150,23 +151,17 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="field-group">
-                                    <label for="status" class="form-label required">Trạng thái</label>
-                                    <select class="form-select" id="status" name="status" required>
-                                        <option value="NEW_LEAD"     ${lead.status == 'NEW_LEAD'     ? 'selected' : ''}>New Lead</option>
-                                        <option value="CONTACTED"    ${lead.status == 'CONTACTED'    ? 'selected' : ''}>Contacted</option>
-                                        <option value="QUALIFIED"    ${lead.status == 'QUALIFIED'    ? 'selected' : ''}>Qualified</option>
-                                        <option value="DEAL_CREATED" ${lead.status == 'DEAL_CREATED' ? 'selected' : ''}>Deal Created</option>
-                                        <option value="LOST"         ${lead.status == 'LOST'         ? 'selected' : ''}>Lost</option>
-                                    </select>
+                                    <label class="form-label">Trạng thái</label>
+                                    <input type="text" class="form-control" value="${lead.status}" disabled>
+                                    <small class="form-text text-muted">Trạng thái được tự động xác định theo điểm</small>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="field-group">
-                                    <label for="score" class="form-label">Điểm số (0 - 100)</label>
-                                    <input type="number" class="form-control" id="score" name="score"
-                                           value="${lead.score}" min="0" max="100">
-                                    <small class="form-text text-muted">Lead tự động Qualified nếu điểm >= 50</small>
+                                    <label class="form-label">Điểm số</label>
+                                    <input type="text" class="form-control" value="${lead.score}" disabled>
+                                    <small class="form-text text-muted">Họ tên +20 | Email +20 | SĐT +20 | Campaign +10</small>
                                 </div>
                             </div>
                         </div>

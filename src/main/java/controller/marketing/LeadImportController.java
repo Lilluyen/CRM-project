@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.gson.Gson;
 
+import dao.CampaignDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import model.Campaign;
 import model.ImportLeadResponse;
 import model.Lead;
 import service.LeadImportService;
@@ -22,11 +24,16 @@ import util.ExcelUtil;
 public class LeadImportController extends HttpServlet {
 
     private LeadImportService importService = new LeadImportService();
+    private CampaignDAO campaignDAO = new CampaignDAO();
     private Gson gson = new Gson();
 
     // ===== GET: Show import form (qua layout) =====
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Load danh sách campaigns cho dropdown
+        List<Campaign> campaigns = campaignDAO.getAllCampaign();
+        request.setAttribute("campaigns", campaigns);
+
         request.setAttribute("pageTitle", "Import Leads - CRM");
         request.setAttribute("contentPage", "marketing/lead/lead_import.jsp");
         request.setAttribute("pageCss", "lead_import.css");
@@ -66,11 +73,21 @@ public class LeadImportController extends HttpServlet {
                 return;
             }
 
+            // Parse campaignId
+            Integer campaignId = null;
+            if (campaignIdStr != null && !campaignIdStr.trim().isEmpty()) {
+                try {
+                    campaignId = Integer.parseInt(campaignIdStr.trim());
+                } catch (NumberFormatException ex) {
+                    // ignore invalid campaignId
+                }
+            }
+
             // ===== Read Excel =====
             List<Lead> leads = ExcelUtil.readLeadsFromExcel(filePart.getInputStream());
 
             // ===== Import =====
-            ImportLeadResponse importResponse = importService.importLeads(leads, source);
+            ImportLeadResponse importResponse = importService.importLeads(leads, source, campaignId);
 
             // ===== Response =====
             response.getWriter().write(gson.toJson(importResponse));

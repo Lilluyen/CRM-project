@@ -3,6 +3,7 @@ package service;
 import java.util.ArrayList;
 import java.util.List;
 
+import dao.CampaignLeadDAO;
 import dao.LeadDAO;
 import model.ImportLeadResponse;
 import model.Lead;
@@ -16,12 +17,14 @@ import util.PhoneCheck;
 public class LeadImportService {
 
     private LeadDAO leadDAO = new LeadDAO();
+    private CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
 
     /**
      * Import leads với validation và scoring
+     *
      * @return ImportLeadResponse
      */
-    public ImportLeadResponse importLeads(List<Lead> leads, String source) {
+    public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId) {
         ImportLeadResponse response = new ImportLeadResponse();
         List<Lead> validLeads = new ArrayList<>();
         int rowNumber = 2; // Excel row (1-based + header)
@@ -47,9 +50,21 @@ public class LeadImportService {
                 }
             }
 
-            // Check duplicate
-            if (leadDAO.isDuplicate(lead.getEmail(), lead.getPhone())) {
-                errors.add("Row " + rowNumber + ": Email hoặc phone đã tồn tại");
+            // Check duplicate: email + cùng campaign → trùng thật sự
+            if (errors.isEmpty()) {
+                if (campaignId != null && campaignId > 0) {
+                    // Có campaign → chỉ trùng nếu email ĐÃ có trong CÙNG campaign
+                    Lead dup = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), campaignId);
+                    if (dup != null) {
+                        errors.add("Row " + rowNumber + ": Email đã tồn tại trong campaign này");
+                    }
+                    // Email tồn tại ở campaign khác → OK, sẽ tạo Lead mới cho campaign này
+                } else {
+                    // Không có campaign → check email toàn cục
+                    if (leadDAO.findLeadByEmail(lead.getEmail()) != null) {
+                        errors.add("Row " + rowNumber + ": Email đã tồn tại");
+                    }
+                }
             }
 
             rowNumber++;
@@ -66,14 +81,19 @@ public class LeadImportService {
         // ===== SCORING PHASE =====
         for (Lead lead : validLeads) {
             int score = LeadScoringUtil.calculateScore(
-                lead.getEmail(),
-                lead.getPhone(),
-                source != null ? source : lead.getSource()
+                    lead.getFullName(),
+                    lead.getEmail(),
+                    lead.getPhone(),
+                    (campaignId != null) ? campaignId : 0
             );
             lead.setScore(score);
-            lead.setStatus("NEW_LEAD");
+            lead.setStatus(LeadScoringUtil.determineStatus(score));
             if (source != null) {
                 lead.setSource(source);
+            }
+            // Gắn campaign nếu có chọn
+            if (campaignId != null) {
+                lead.setCampaignId(campaignId);
             }
         }
 
@@ -87,6 +107,21 @@ public class LeadImportService {
         try {
             int imported = leadDAO.importLeads(validLeads);
             response.setTotalImported(imported);
+
+            // Gắn lead mới vào Campaign_Leads nếu có campaign
+            if (campaignId != null && campaignId > 0) {
+                // importLeads dùng batch → cần lấy lại leads vừa tạo để gắn campaign
+                // Vì importLeads không trả về IDs, ta gắn bằng cách query lại
+                for (Lead lead : validLeads) {
+                    Lead created = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), campaignId);
+                    if (created != null) {
+                        if (!campaignLeadDAO.isLeadInCampaign(campaignId, created.getLeadId())) {
+                            campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), "NEW");
+                        }
+                    }
+                }
+            }
+
             response.setSuccess(true);
             response.setMessage("Import thành công " + imported + " leads!");
         } catch (Exception e) {
