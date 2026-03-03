@@ -45,7 +45,7 @@ public class CustomerService {
                     throw new DuplicateEmailException("Email already exists");
                 }
 
-                int newCustomerId = customerDAO.insertCustomer(CustomerMapper.toCustomer(dto, userId), conn);
+                int newCustomerId = customerDAO.insertCustomer(CustomerMapper.toCustomerForCreate(dto, userId), conn);
                 if (dto.getStyleTags() != null && !dto.getStyleTags().isEmpty()) {
                     customerStyleDAO.insertCustomerStyles(
                             conn, newCustomerId, dto.getStyleTags());
@@ -91,7 +91,7 @@ public class CustomerService {
                 // 2. UPDATE CUSTOMER INFO
                 // ============================
                 customerDAO.updateBasicInfo(
-                        CustomerMapper.toCustomer(dto, customerId),
+                        CustomerMapper.toCustomerForUpdate(dto, customerId),
                         conn
                 );
 

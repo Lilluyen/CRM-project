@@ -20,6 +20,10 @@
     border-bottom: 1px solid #f1f3f7;
 }
 
+.cf__error-box{
+        padding: 24px 28px;
+}
+
 .cf__title {
     margin: 0;
     font-size: 20px;

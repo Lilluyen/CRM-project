@@ -14,7 +14,7 @@
             <div class="cf__error-box">
                 <ul>
                     <c:forEach items="${errors}" var="e">
-                        <li>${e}</li>
+                        <li style="color: red;">${e}</li>
                         </c:forEach>
                 </ul>
             </div>
@@ -203,7 +203,6 @@
                     Update Profile
                 </button>
 
-                <div><span style="color: red;">${errors}</span></div>
             </div>
 
         </form>

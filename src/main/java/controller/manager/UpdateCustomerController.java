@@ -14,9 +14,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.math.BigDecimal;
 import service.CustomerService;
 
-@WebServlet(name = "UpdateCustomerController", urlPatterns = { "/customers/edit" })
+@WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
 public class UpdateCustomerController extends HttpServlet {
 
     private final CustomerService customerService = new CustomerService();
@@ -66,6 +67,7 @@ public class UpdateCustomerController extends HttpServlet {
 
         int customerId;
         try {
+
             customerId = Integer.parseInt(customerIdRaw);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -94,43 +96,53 @@ public class UpdateCustomerController extends HttpServlet {
         // ======================
         // VALIDATION
         // ======================
-
         if (name == null || name.isEmpty()) {
-            errors.add("Name is required");
+            errors.add("Name is required !");
         }
 
         if (phone == null || phone.isEmpty()) {
-            errors.add("Phone is required");
+            errors.add("Phone is required !");
         } else if (!phone.matches("^[0-9]{9,15}$")) {
             errors.add("Phone must be 9-11 digits");
         }
 
         if (email == null || email.isEmpty()) {
-            errors.add("Email is required");
+            errors.add("Email is required !");
         } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            errors.add("Invalid email format");
+            errors.add("Invalid email format !");
         }
 
         LocalDate birthday = null;
 
         if (birthdayRaw == null || birthdayRaw.isBlank()) {
-            errors.add("Birthday is required");
+            errors.add("Birthday is required !");
         } else {
             try {
                 birthday = LocalDate.parse(birthdayRaw);
                 if (birthday.isAfter(LocalDate.now())) {
-                    errors.add("Birthday must be in the past");
+                    errors.add("Birthday must be in the past !");
                 }
             } catch (DateTimeParseException e) {
-                errors.add("Invalid birthday format");
+                errors.add("Invalid birthday format !");
             }
         }
 
-        if (gender == null ||
-                (!gender.equalsIgnoreCase("Male") &&
-                        !gender.equalsIgnoreCase("Female"))) {
-            errors.add("Invalid gender");
+        if (gender == null
+                || (!gender.equalsIgnoreCase("Male")
+                && !gender.equalsIgnoreCase("Female"))) {
+            errors.add("Invalid gender !");
         }
+
+        BigDecimal height = parseBigDecimal(request.getParameter("height"));
+        BigDecimal weight = parseBigDecimal(request.getParameter("weight"));
+        String preferredSize = request.getParameter("preferred_size");
+
+        BigDecimal bust = parseBigDecimal(request.getParameter("bust"));
+        BigDecimal waist = parseBigDecimal(request.getParameter("waist"));
+        BigDecimal hips = parseBigDecimal(request.getParameter("hips"));
+        BigDecimal shoulder = parseBigDecimal(request.getParameter("shoulder"));
+
+        String bodyShape = request.getParameter("bodyShape");
 
         // ======================
         // Nếu có lỗi → reload data
@@ -155,6 +167,7 @@ public class UpdateCustomerController extends HttpServlet {
             }
 
             CustomerCreateDTO dto = new CustomerCreateDTO();
+            dto.setCustomer_id(customerId);
             dto.setName(name);
             dto.setPhone(phone);
             dto.setEmail(email);
@@ -163,18 +176,27 @@ public class UpdateCustomerController extends HttpServlet {
             dto.setAddress(address);
             dto.setSource(source);
             dto.setStyleTags(tagIds);
+            dto.setHeight(height);
+            dto.setWeight(weight);
+            dto.setPreferredSize(preferredSize);
+
+            dto.setBust(bust);
+            dto.setWaist(waist);
+            dto.setHips(hips);
+            dto.setShoulder(shoulder);
+            dto.setBodyShape(bodyShape);
 
             customerService.updateCustomer(dto, customerId);
 
             response.sendRedirect(
                     request.getContextPath()
-                            + "/customers/detail?customerId=" + customerId);
+                    + "/customers/detail?customerId=" + customerId);
             return;
 
         } catch (DuplicateEmailException e) {
-            errors.add("Email already exists");
+            errors.add("Email already exists !");
         } catch (DuplicatePhoneException e) {
-            errors.add("Phone already exists");
+            errors.add("Phone already exists !");
         } catch (Exception e) {
             errors.add("System error: " + e.getMessage());
         }
@@ -184,7 +206,7 @@ public class UpdateCustomerController extends HttpServlet {
 
         request.setAttribute("errors", errors);
         request.getRequestDispatcher("/view/layout.jsp")
-                    .forward(request, response);
+                .forward(request, response);
     }
 
     private void reloadFormData(HttpServletRequest request, int customerId)
@@ -196,7 +218,7 @@ public class UpdateCustomerController extends HttpServlet {
 
             request.setAttribute("allStyleTags",
                     customerService.getListStyleTags());
-            
+
             // Layout attributes
             request.setAttribute("pageTitle", "Customer Edit | Clothes CRM");
             request.setAttribute("contentPage", "customer/edit_customer.jsp");
@@ -207,4 +229,14 @@ public class UpdateCustomerController extends HttpServlet {
             throw new ServletException(e);
         }
     }
+
+    
+
+    private BigDecimal parseBigDecimal(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return new BigDecimal(value);
+    }
+
 }

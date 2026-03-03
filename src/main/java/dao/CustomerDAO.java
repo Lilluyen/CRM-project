@@ -201,6 +201,8 @@ public class CustomerDAO {
 
     public void updateBasicInfo(Customer customer, Connection conn)
             throws SQLException {
+        
+        System.out.println("Customer ID = " + customer.getCustomerId());
 
         String sql = """
                     UPDATE Customers
@@ -217,7 +219,7 @@ public class CustomerDAO {
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, customer.getName());
+            ps.setNString(1, customer.getName());
             ps.setString(2, customer.getPhone());
             ps.setString(3, customer.getEmail());
 
@@ -227,13 +229,14 @@ public class CustomerDAO {
                 ps.setNull(4, java.sql.Types.DATE);
             }
 
-            ps.setString(5, customer.getGender());
-            ps.setString(6, customer.getAddress());
-            ps.setString(7, customer.getSource());
+            ps.setNString(5, customer.getGender());
+            ps.setNString(6, customer.getAddress());
+            ps.setNString(7, customer.getSource());
 
             ps.setInt(8, customer.getCustomerId());
 
-            ps.executeUpdate();
+            int row = ps.executeUpdate();
+            System.out.println("Row: " + row);
         }
     }
 

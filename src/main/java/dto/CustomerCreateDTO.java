@@ -5,7 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class CustomerCreateDTO {
-
+    
+    private  int customer_id;
     private String name;
     private String phone;
     private String gender;
@@ -41,6 +42,14 @@ public class CustomerCreateDTO {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public int getCustomer_id() {
+        return customer_id;
+    }
+
+    public void setCustomer_id(int customer_id) {
+        this.customer_id = customer_id;
     }
 
     public String getGender() {

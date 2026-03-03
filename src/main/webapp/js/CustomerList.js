@@ -308,22 +308,7 @@ function deleteCustomer(customerId) {
     }
 }
 
-// ===== ACTION MENU =====
-// function toggleMenu(element, event) {
 
-//     event.stopPropagation(); // 🛑 chặn document click
-
-//     const menu = element.closest('.action-wrapper').querySelector('.action-menu');
-
-//     const isVisible = menu.style.display === 'flex';
-
-//     // đóng tất cả menu khác
-//     document.querySelectorAll('.action-menu').forEach(m => m.style.display = 'none');
-
-//     // toggle menu hiện tại
-//     menu.style.display = isVisible ? 'none' : 'flex';
-//     menu.style.flexDirection = 'column';
-// }
 
 // Close action menu when clicking outside
 document.addEventListener("click", function (e) {

@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.format.DateTimeParseException;
 import model.StyleTag;
 import model.User;
 import service.CustomerService;
@@ -22,7 +23,7 @@ import util.EmailCheck;
 import util.NameCheck;
 import util.PhoneCheck;
 
-@WebServlet(name = "CreateCustomerController", urlPatterns = { "/customers/add-customer" })
+@WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
 public class CreateCustomerController extends HttpServlet {
 
     private final CustomerService customerService = new CustomerService();
@@ -57,6 +58,7 @@ public class CreateCustomerController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
+        List<String> errors = new ArrayList<>();
         HttpSession session = req.getSession(false);
 
         if (session != null) {
@@ -72,6 +74,7 @@ public class CreateCustomerController extends HttpServlet {
                 String email = req.getParameter("email");
                 String source = req.getParameter("source");
                 String address = req.getParameter("address");
+                String birthdayRaw = req.getParameter("birthday");
 
                 // Validate name
                 if (!NameCheck.isValidName(name)) {
@@ -89,7 +92,24 @@ public class CreateCustomerController extends HttpServlet {
                     return;
                 }
 
-                LocalDate birthday = parseDate(req.getParameter("birthday"));
+                LocalDate birthday = null;
+
+                if (birthdayRaw == null || birthdayRaw.isBlank()) {
+                    errors.add("Birthday is required");
+                } else {
+                    try {
+                        birthday = LocalDate.parse(birthdayRaw);
+                        if (birthday.isAfter(LocalDate.now())) {
+                            errors.add("Birthday must be in the past");
+                            resp.sendRedirect(req.getContextPath() + "/customers?status=failed");
+                            return;
+                        }
+                    } catch (DateTimeParseException e) {
+                        errors.add("Invalid birthday format");
+                        resp.sendRedirect(req.getContextPath() + "/customers?status=failed");
+                        return;
+                    }
+                }
 
                 // ===== 2. FIT PROFILE (BigDecimal) =====
                 BigDecimal height = parseDecimal(req.getParameter("height"));
@@ -157,10 +177,5 @@ public class CreateCustomerController extends HttpServlet {
         return new BigDecimal(value);
     }
 
-    private LocalDate parseDate(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return LocalDate.parse(value);
-    }
+    
 }
