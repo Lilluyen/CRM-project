@@ -19,9 +19,8 @@ public class ExcelUtil {
 
     /**
      * Đọc Leads từ file XLSX
-     * 
-     * Format Excel:
-     * fullName | email | phone | companyName | interest | source
+     *
+     * Format Excel: fullName | email | phone | companyName | interest | source
      */
     public static List<Lead> readLeadsFromExcel(InputStream inputStream) throws Exception {
         List<Lead> leads = new ArrayList<>();
@@ -32,7 +31,9 @@ public class ExcelUtil {
             // Row 0 là header, bắt đầu từ row 1
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
-                if (row == null) continue;
+                if (row == null) {
+                    continue;
+                }
 
                 try {
                     String fullName = getCellValue(row.getCell(0));
@@ -76,7 +77,9 @@ public class ExcelUtil {
      * Lấy giá trị từ cell
      */
     private static String getCellValue(Cell cell) {
-        if (cell == null) return null;
+        if (cell == null) {
+            return null;
+        }
 
         switch (cell.getCellType()) {
             case STRING:

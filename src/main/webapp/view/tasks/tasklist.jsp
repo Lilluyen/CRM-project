@@ -36,6 +36,13 @@
   .sort-badge { display:inline-block; font-size:.68rem; padding:1px 5px;
                 border-radius:4px; background:#0d6efd; color:#fff; margin-left:4px; }
   .progress { height:8px; }
+
+  @media (min-width: 992px){
+    .card-body .table .badge.priority {
+        display: inline-block !important;
+    }
+}
+  }
 </style>
 
 <div class="page-wrapper">
@@ -178,8 +185,8 @@
                   </a>
                 </td>
                 <td><%= t.getDueDate() != null ? t.getDueDate().toString().replace("T"," ").substring(0,16) : "-" %></td>
-                <td><span class="badge <%= priBadge %>"><%= priLabel %></span></td>
-                <td><span class="badge <%= stBadge %>"><%= stLabel %></span></td>
+                <td><span style="color:white;" class="badge priority <%= priBadge %>"><%= priLabel %></span></td>
+                <td><span style="display:inline-block !important;" class="badge status <%= stBadge %>"><%= stLabel %></span></td>
                 <td>
                   <% if (assigneeNames.length() == 0) { %><span class="text-muted">-</span>
                   <% } else { %><span title="<%= esc(assigneeNames.toString()) %>"><%= esc(shorten(assigneeNames.toString(), 30)) %></span><% } %>
