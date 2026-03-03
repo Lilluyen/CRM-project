@@ -458,9 +458,9 @@ td:nth-child(7) {
 
 /* Shell */
 #advancedFilterModal .modal-content {
-    width: 100%;
+    width: 92%;
     max-width: 680px;
-    max-height: 100vh;
+    max-height: 88vh;
     border-radius: 20px;
     overflow: hidden;
     display: flex;
@@ -536,7 +536,7 @@ td:nth-child(7) {
     background: #fff;
     border: 1.5px solid #e8eef5;
     border-radius: 12px;
-    overflow: auto;
+    overflow: hidden;
     margin: 0;
     transition: border-color .2s;
 }
@@ -758,14 +758,14 @@ td:nth-child(7) {
 
 .btn-save {
     background: var(--accent-blue);
-    border: none;   
+    border: none;
     color: white;
     padding: 10px 25px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 700;
 }
-        
+
 
 /*alert*/
 /* ===== TOAST BASE ===== */
