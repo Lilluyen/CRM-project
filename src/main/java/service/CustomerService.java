@@ -92,8 +92,7 @@ public class CustomerService {
                 // ============================
                 customerDAO.updateBasicInfo(
                         CustomerMapper.toCustomerForUpdate(dto, customerId),
-                        conn
-                );
+                        conn);
 
                 // ============================
                 // 3. UPDATE STYLE SMART (KHÔNG XÓA HẾT)
@@ -101,16 +100,14 @@ public class CustomerService {
                 updateCustomerStylesSmart(
                         customerId,
                         dto.getStyleTags(),
-                        conn
-                );
+                        conn);
 
                 // ============================
                 // 4. INSERT NEW MEASUREMENT VERSION
                 // ============================
                 customerMeasurementDAO.insertCustomerMeasurement(
                         CustomerMapper.toCustomerMeasurement(dto, customerId),
-                        conn
-                );
+                        conn);
 
                 conn.commit();
 
@@ -220,13 +217,11 @@ public class CustomerService {
             Connection conn) throws SQLException {
 
         // Lấy tag hiện tại trong DB
-        List<Integer> currentTagIds
-                = customerStyleDAO.getTagIdsByCustomerId(conn, customerId);
+        List<Integer> currentTagIds = customerStyleDAO.getTagIdsByCustomerId(conn, customerId);
 
         Set<Integer> currentSet = new HashSet<>(currentTagIds);
         Set<Integer> newSet = new HashSet<>(
-                newTagIds == null ? Collections.emptyList() : newTagIds
-        );
+                newTagIds == null ? Collections.emptyList() : newTagIds);
 
         // =====================
         // 1. XÓA những tag bị bỏ chọn
@@ -250,6 +245,12 @@ public class CustomerService {
     public CustomerPageResult filterAdvanced(CustomerFilterRequest filterRequest) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return customerQueryDAO.filterAdvanced(conn, filterRequest);
+        }
+    }
+
+    public boolean upgradeToLoyaltyCustomer(int customerId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return customerSegmentDAO.upgradeToLoyaltyCustomer(conn, customerId);
         }
     }
 }
