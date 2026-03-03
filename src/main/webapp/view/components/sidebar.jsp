@@ -162,13 +162,48 @@ isELIgnored="false" %>
         </li>
 
         <!-- ACTIVITIES -->
-        <li>
-          <a href="${pageContext.request.contextPath}/activity">
+        <li class="submenu">
+          <a href="javascript:void(0);">
             <i class="fas fa-history"></i>
             <span>Activities</span>
+            <span class="menu-arrow"></span>
           </a>
-        </li>
 
+          <ul style="${page eq 'activity-list' ? 'display:block;' : ''}">
+            <li>
+              <a
+                class="${page eq 'activity-list' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities"
+              >
+                Activities List
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'activity-create' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities/create"
+              >
+                Create Activity
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'activity-details' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities/details"
+              >
+                Activity Details
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'activity-edit' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities/edit"
+              >
+                Edit Activity
+              </a>
+            </li>
+          </ul>
+        </li>
         <!-- TASKS -->
         <li>
           <a href="${pageContext.request.contextPath}/task">
@@ -177,6 +212,73 @@ isELIgnored="false" %>
           </a>
         </li>
 
+
+        <li class="submenu">
+          <a href="javascript:void(0);">
+            <i class="fas fa-tasks"></i>
+            <span>Tasks</span>
+            <span class="menu-arrow"></span>
+          </a>
+
+          <ul style="${page eq 'task-list' ? 'display:block;' : ''}">
+            <li>
+              <a
+                class="${page eq 'task-list' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks"
+              >
+                Tasks List
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-create' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/create"
+              >
+                Create Task
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-details' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/details"
+              >
+                Task Details
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-edit' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/edit"
+              >
+                Edit Task
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-assign' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/assign"
+              >
+                Assign Task
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-progress' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/progress"
+              >
+                Task Progress
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-status' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/status"
+              >
+                Task Status
+              </a>
+            </li>
+          </ul>
+        </li>
         <!-- SUPPORT -->
         <li>
           <a href="${pageContext.request.contextPath}/ticket">

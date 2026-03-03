@@ -41,7 +41,9 @@ public class TaskStatusController extends HttpServlet {
             writeJson(resp, "{\"success\":false,\"message\":\"Chưa đăng nhập\"}");
             return;
         }
-
+        if (req.getParameter("taskId") == null) {
+            resp.sendRedirect(req.getContextPath()+"/tasks/list");
+        }
         int    taskId = Integer.parseInt(req.getParameter("taskId"));
         String status = req.getParameter("status");
 

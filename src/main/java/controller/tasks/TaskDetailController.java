@@ -33,7 +33,9 @@ public class TaskDetailController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
-
+        if (req.getParameter("id") == null) {
+            resp.sendRedirect(req.getContextPath()+"/tasks/list");
+        }
         int id = Integer.parseInt(req.getParameter("id"));
 
         try (Connection conn = DBContext.getConnection()) {
