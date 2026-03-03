@@ -307,8 +307,18 @@ function closePreview() {
     }
 }
 
+function upgradeCustomer(customerId) {
+    if (confirm('Upgrade loyalty level for this customer?')) {
+        const ctx = window.__CTX__ || "";
+        const url = `${ctx}/customers/upgrade?customerId=${encodeURIComponent(customerId)}`;
+        window.location.href = url;
+    }
+}
+
 function deleteCustomer(customerId) {
+
     if (confirm('Are you sure you want to delete this customer?')) {
+
         // Make API call to delete
         const ctx = window.__CTX__ || ""; // fallback nếu quên inject
 
@@ -320,10 +330,11 @@ function deleteCustomer(customerId) {
 
 
 
+
 // Close action menu when clicking outside
 document.addEventListener("click", function (e) {
 
-    const ellipsis = e.target.closest(".fa-ellipsis-vertical");
+    const ellipsis = e.target.closest(".menu-btn");
 
     // CLICK vào dấu ...
     if (ellipsis) {
@@ -489,12 +500,27 @@ function renderTableBody(customers) {
 <td>${c.lastPurchase ?? ""}</td>
 
     <td class="actions">
-        <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
+        <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </button>
         <div class="action-wrapper">
-            <i class="fa-solid fa-ellipsis-vertical"></i>
+            <button class="action-icon-btn menu-btn">
+                <i class="fa-solid fa-ellipsis"></i>
+            </button>
             <div class="action-menu">
-                <div onclick="openPreview(${c.customerId})">Preview</div>
-                <div onclick="deleteCustomer(${c.customerId})">Delete</div>
+                <div class="action-menu-item" onclick="openPreview(${c.customerId})">
+                    <i class="fa-regular fa-id-card"></i>
+                    <span>Preview</span>
+                </div>
+                <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
+                    <i class="fa-solid fa-angles-up"></i>
+                    <span>Upgrade Level</span>
+                </div>
+                <div class="action-menu-divider"></div>
+                <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
+                    <i class="fa-regular fa-trash-can"></i>
+                    <span>Delete</span>
+                </div>
             </div>
         </div>
     </td>
@@ -542,11 +568,8 @@ function renderPagination(totalPages, currentPage) {
         return;
     }
 
-    // Build array of page numbers/ellipsis to show
-    // Always show: first, last, current, current±1, current±2
-    // Ellipsis fills the gap
     function getPageRange(current, total) {
-        const delta = 2; // pages around current
+        const delta = 2;
         const range = [];
         const rangeWithDots = [];
 
@@ -554,13 +577,11 @@ function renderPagination(totalPages, currentPage) {
             range.push(i);
         }
 
-        // Always include first page
         if (range[0] > 2) rangeWithDots.push(1, '...');
         else rangeWithDots.push(1);
 
         rangeWithDots.push(...range);
 
-        // Always include last page
         if (range[range.length - 1] < total - 1) rangeWithDots.push('...', total);
         else rangeWithDots.push(total);
 

@@ -109,13 +109,27 @@
 
 
                         <td class="actions">
-                            <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
+                            <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
                             <div class="action-wrapper">
-                                <i class="fa-solid fa-ellipsis-vertical"></i>
-
+                                <button class="action-icon-btn menu-btn">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
                                 <div class="action-menu" id="customerMenuAction">
-                                    <div onclick="openPreview(${c.customerId})">Preview</div>
-                                    <div onclick="deleteCustomer(${c.customerId})">Delete</div>
+                                    <div class="action-menu-item" onclick="openPreview(${c.customerId})">
+                                        <i class="fa-regular fa-id-card"></i>
+                                        <span>Preview</span>
+                                    </div>
+                                    <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-angles-up"></i>
+                                        <span>Upgrade Level</span>
+                                    </div>
+                                    <div class="action-menu-divider"></div>
+                                    <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                        <span>Delete</span>
+                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -364,15 +378,4 @@
         window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
         window.__CTX__ = "${pageContext.request.contextPath}";
     </script>
-
-
-
-
-
-
-
-
-
-
-
 

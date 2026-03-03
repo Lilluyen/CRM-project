@@ -383,20 +383,40 @@ td:nth-child(7) {
 
 /* Actions Cell */
 .actions {
-    color: #94a3b8;
     text-align: center;
     width: 15%;
 }
 
-.actions i {
-    margin-left: 15px;
+/* Icon buttons (View + Menu trigger) */
+.action-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
     cursor: pointer;
-    transition: 0.2s;
-    padding: 10px;
+    transition: all 0.18s ease;
+    font-size: 13px;
 }
 
-.actions i:hover {
+.action-icon-btn:hover {
+    background: #f1f5f9;
     color: var(--accent-blue);
+    transform: scale(1.1);
+}
+
+.view-btn:hover {
+    background: #eff6ff;
+    color: var(--accent-blue);
+}
+
+.menu-btn:hover {
+    background: #f1f5f9;
+    color: #475569;
 }
 
 /* Action Menu */
@@ -408,14 +428,16 @@ td:nth-child(7) {
 .action-menu {
     display: none;
     position: absolute;
-    right: -10px;
-    top: 100%;
+    right: 0;
+    top: calc(100% + 6px);
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-width: 120px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    min-width: 155px;
     z-index: 100;
+    overflow: hidden;
+    padding: 4px;
 }
 
 .action-menu.show {
@@ -423,22 +445,61 @@ td:nth-child(7) {
     flex-direction: column;
 }
 
-.action-menu div {
-    padding: 10px 16px;
+.action-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 13px;
     cursor: pointer;
     font-size: 13px;
+    font-weight: 500;
     color: #374151;
-    transition: 0.2s;
-    border-bottom: 1px solid #f1f5f9;
+    border-radius: 7px;
+    transition: all 0.15s ease;
 }
 
-.action-menu div:last-child {
-    border-bottom: none;
+.action-menu-item i {
+    width: 15px;
+    text-align: center;
+    font-size: 13px;
+    color: #94a3b8;
+    transition: color 0.15s ease;
 }
 
-.action-menu div:hover {
-    background-color: #f8fafc;
+.action-menu-item:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.action-menu-item:hover i {
     color: var(--accent-blue);
+}
+
+/* Upgrade item */
+.action-menu-item.upgrade-item:hover {
+    background-color: #fef9ec;
+    color: #92400e;
+}
+
+.action-menu-item.upgrade-item:hover i {
+    color: #f59e0b;
+}
+
+/* Delete item */
+.action-menu-item.delete-item:hover {
+    background-color: #fff1f2;
+    color: #991b1b;
+}
+
+.action-menu-item.delete-item:hover i {
+    color: #ef4444;
+}
+
+/* Divider */
+.action-menu-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 3px 0;
 }
 
 
@@ -1265,27 +1326,6 @@ td:nth-child(7) {
     background: var(--accent-blue);
     color: white;
     border-color: var(--accent-blue);
-}
-
-#paginationControls .btn-nav {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    min-width: unset;
-}
-
-#paginationControls .pagination-dots {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 36px;
-    height: 36px;
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-muted);
-    letter-spacing: 2px;
-    user-select: none;
 }
 
 /* ...existing code... */
