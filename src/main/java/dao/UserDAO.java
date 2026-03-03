@@ -264,7 +264,6 @@ public class UserDAO {
             e.printStackTrace();
         }
 
-        return users;
         return null;
     }
 
