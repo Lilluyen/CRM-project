@@ -17,17 +17,21 @@ import model.Lead;
 import service.LeadImportService;
 import util.ExcelUtil;
 
-@WebServlet("/marketing/lead-import")
+@WebServlet(name = "LeadImportController", urlPatterns = {"/marketing/leads/import"})
 @MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 5 * 1024 * 1024)
 public class LeadImportController extends HttpServlet {
 
     private LeadImportService importService = new LeadImportService();
     private Gson gson = new Gson();
 
-    // ===== GET: Show import form =====
+    // ===== GET: Show import form (qua layout) =====
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/view/marketing/lead_import.jsp").forward(request, response);
+        request.setAttribute("pageTitle", "Import Leads - CRM");
+        request.setAttribute("contentPage", "marketing/lead/lead_import.jsp");
+        request.setAttribute("pageCss", "lead_import.css");
+        request.setAttribute("page", "lead-import");
+        request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
     }
 
     // ===== POST: Handle file upload =====

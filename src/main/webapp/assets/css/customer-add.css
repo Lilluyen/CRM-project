@@ -20,6 +20,10 @@
     border-bottom: 1px solid #f1f3f7;
 }
 
+.cf__error-box{
+        padding: 24px 28px;
+}
+
 .cf__title {
     margin: 0;
     font-size: 20px;
@@ -51,6 +55,10 @@
 
 .cf__grid--3 {
     grid-template-columns: repeat(3, 1fr);
+}
+
+.cf__grid--4 {
+    grid-template-columns: repeat(4, 1fr);
 }
 
 /* field */

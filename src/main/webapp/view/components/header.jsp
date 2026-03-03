@@ -112,8 +112,63 @@
           </ul>
         </div>
 
-        <div class="topnav-dropdown-footer">
-          <a href="${pageContext.request.contextPath}/notifications/all">View all Notifications</a>
+        <li class="nav-item dropdown has-arrow main-drop">
+          <a
+            href="javascript:void(0);"
+            class="dropdown-toggle nav-link userset"
+            data-bs-toggle="dropdown">
+            <span class="user-img"
+              ><img
+                src="${pageContext.request.contextPath}/Inventory-Management-Admin-Dashboard-main/assets/img/profiles/avator1.jpg"
+                alt="" />
+              <span class="status online"></span
+            ></span>
+          </a>
+          <div class="dropdown-menu menu-drop-user">
+            <div class="profilename">
+              <div class="profileset">
+                <span class="user-img"
+                  ><img
+                    src="${pageContext.request.contextPath}/Inventory-Management-Admin-Dashboard-main/assets/img/profiles/avator1.jpg"
+                    alt="" />
+                  <span class="status online"></span
+                ></span>
+                <div class="profilesets">
+                  <h6>John Doe</h6>
+                  <h5>Sale</h5>
+                </div>
+              </div>
+              <hr class="m-0" />
+              <a class="dropdown-item" href="profile.html">
+                <i class="me-2" data-feather="user"></i> My Profile</a
+              >
+              <a class="dropdown-item" href="generalsettings.html"
+                ><i class="me-2" data-feather="settings"></i>Settings</a
+              >
+              <hr class="m-0" />
+              <a class="dropdown-item logout pb-0" href="${pageContext.request.contextPath}/logout"
+                ><img
+                  src="${pageContext.request.contextPath}/Inventory-Management-Admin-Dashboard-main/assets/img/icons/log-out.svg"
+                  class="me-2"
+                  alt="img" />Logout</a
+              >
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <div class="dropdown mobile-user-menu">
+        <a
+          href="javascript:void(0);"
+          class="nav-link dropdown-toggle"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          ><i class="fa fa-ellipsis-v"></i
+        ></a>
+        <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item" href="profile.html">My Profile</a>
+          <a class="dropdown-item" href="generalsettings.html">Settings</a>
+          <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a>
         </div>
       </div>
     </li><!-- /notification -->

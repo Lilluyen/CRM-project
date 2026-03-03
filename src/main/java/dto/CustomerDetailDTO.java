@@ -16,9 +16,8 @@ public class CustomerDetailDTO {
     private LocalDate birthday;
     private String gender;
     private String address;
-    private String socialLink;
+    private String source;
 
-    private String customerType;
     private String status;
     private String loyaltyTier;
 
@@ -28,7 +27,7 @@ public class CustomerDetailDTO {
 
     private String ownerName;
 
-    private List<CustomerMeasurement> measurements;
+    private CustomerMeasurement latestMeasurement;
     private List<StyleTag> styleTags;
 
     // Getter & Setter ...
@@ -89,20 +88,12 @@ public class CustomerDetailDTO {
         this.address = address;
     }
 
-    public String getSocialLink() {
-        return socialLink;
+    public String getSource() {
+        return source;
     }
 
-    public void setSocialLink(String socialLink) {
-        this.socialLink = socialLink;
-    }
-
-    public String getCustomerType() {
-        return customerType;
-    }
-
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public String getStatus() {
@@ -153,12 +144,12 @@ public class CustomerDetailDTO {
         this.ownerName = ownerName;
     }
 
-    public List<CustomerMeasurement> getMeasurements() {
-        return measurements;
+    public CustomerMeasurement getLatestMeasurement() {
+        return latestMeasurement;
     }
 
-    public void setMeasurements(List<CustomerMeasurement> measurements) {
-        this.measurements = measurements;
+    public void setLatestMeasurement(CustomerMeasurement latestMeasurement) {
+        this.latestMeasurement = latestMeasurement;
     }
 
     public List<StyleTag> getStyleTags() {

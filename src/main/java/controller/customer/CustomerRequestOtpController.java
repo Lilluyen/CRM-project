@@ -46,7 +46,7 @@ public class CustomerRequestOtpController extends HttpServlet {
 
             Customer customer = customerDAO.findByEmail(email);
             if (customer == null) {
-                throw new Exception("Email không tồn tại trong hệ thống.");
+                throw new Exception("The email does not exist in the system.");
             }
 
             // Lưu email vào session để verify bước sau
