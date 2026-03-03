@@ -237,19 +237,19 @@
             <div class="card-body">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number">0</div>
+                        <div class="stat-number">${report != null ? report.totalLead : 0}</div>
                         <div class="stat-label">Tổng Leads</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">0</div>
+                        <div class="stat-number">${report != null ? report.qualifiedLead : 0}</div>
                         <div class="stat-label">Leads Qualified</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">0</div>
+                        <div class="stat-number">${report != null ? report.convertedLead : 0}</div>
                         <div class="stat-label">Deals Created</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">0%</div>
+                        <div class="stat-number">${report != null ? report.roi : 0}%</div>
                         <div class="stat-label">Conversion Rate</div>
                     </div>
                 </div>

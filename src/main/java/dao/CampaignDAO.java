@@ -143,6 +143,74 @@ public class CampaignDAO {
         return campaigns;
     }
 
+    // ==============================
+    // SEARCH + PAGINATION  (OFFSET / FETCH)
+    // ==============================
+    public List<Campaign> searchCampaigns(String searchName, String status, int page, int pageSize) {
+        String sql = "SELECT * FROM Campaigns WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (searchName != null && !searchName.trim().isEmpty()) {
+            sql += " AND name LIKE ?";
+            params.add("%" + searchName.trim() + "%");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND status = ?";
+            params.add(status);
+        }
+
+        sql += " ORDER BY updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        int offset = (page - 1) * pageSize;
+        params.add(offset);
+        params.add(pageSize);
+
+        List<Campaign> campaigns = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                campaigns.add(mapResultSetToCampaign(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return campaigns;
+    }
+
+    // ==============================
+    // COUNT FOR PAGINATION
+    // ==============================
+    public int countCampaigns(String searchName, String status) {
+        String sql = "SELECT COUNT(*) FROM Campaigns WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (searchName != null && !searchName.trim().isEmpty()) {
+            sql += " AND name LIKE ?";
+            params.add("%" + searchName.trim() + "%");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND status = ?";
+            params.add(status);
+        }
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     // Map dữ liệu từ ResultSet sang đối tượng Campaign
     private Campaign mapResultSetToCampaign(ResultSet rs) throws SQLException {
         return new Campaign(
