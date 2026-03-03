@@ -536,7 +536,7 @@ td:nth-child(7) {
     background: #fff;
     border: 1.5px solid #e8eef5;
     border-radius: 12px;
-    overflow: auto;
+    overflow: hidden;
     margin: 0;
     transition: border-color .2s;
 }
