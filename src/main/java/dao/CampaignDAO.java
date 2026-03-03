@@ -8,12 +8,35 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import model.Campaign;
 import util.DBContext;
 
 public class CampaignDAO {
+
+    /**
+     * Trả về tất cả các biến thể của status để hỗ trợ cả UPPERCASE và
+     * PascalCase trong DB. Ví dụ: "ACTIVE" → ["ACTIVE", "Running"]
+     */
+    private List<String> statusAliases(String status) {
+        if (status == null) {
+            return List.of();
+        }
+        return switch (status.toUpperCase()) {
+            case "ACTIVE" ->
+                Arrays.asList("ACTIVE", "Running");
+            case "PLANNING" ->
+                Arrays.asList("PLANNING", "Planned", "PLANNED");
+            case "PAUSED" ->
+                Arrays.asList("PAUSED", "Paused");
+            case "COMPLETED" ->
+                Arrays.asList("COMPLETED", "Completed");
+            default ->
+                List.of(status);
+        };
+    }
 
     public int insert(Campaign campaign) {
         String sql = "INSERT INTO Campaigns(name, description, budget, start_date, end_date, channel, status, created_by, created_at, updated_at) "
@@ -93,10 +116,14 @@ public class CampaignDAO {
 
     // Lấy danh sách campaign theo trạng thái    
     public List<Campaign> getCampaignByStatus(String status) {
-        String sql = "SELECT * FROM Campaigns WHERE status = ? ORDER BY created_at DESC";
+        List<String> aliases = statusAliases(status);
+        String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+        String sql = "SELECT * FROM Campaigns WHERE status IN (" + placeholders + ") ORDER BY created_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
+            for (int i = 0; i < aliases.size(); i++) {
+                ps.setString(i + 1, aliases.get(i));
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 campaigns.add(mapResultSetToCampaign(rs));
@@ -120,8 +147,10 @@ public class CampaignDAO {
 
         // Thêm điều kiện status nếu có
         if (status != null && !status.trim().isEmpty()) {
-            sql += " AND status = ?";
-            params.add(status);
+            List<String> aliases = statusAliases(status);
+            String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+            sql += " AND status IN (" + placeholders + ")";
+            params.addAll(aliases);
         }
 
         sql += " ORDER BY updated_at DESC";
@@ -155,8 +184,10 @@ public class CampaignDAO {
             params.add("%" + searchName.trim() + "%");
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql += " AND status = ?";
-            params.add(status);
+            List<String> aliases = statusAliases(status);
+            String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+            sql += " AND status IN (" + placeholders + ")";
+            params.addAll(aliases);
         }
 
         sql += " ORDER BY updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
@@ -192,8 +223,10 @@ public class CampaignDAO {
             params.add("%" + searchName.trim() + "%");
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql += " AND status = ?";
-            params.add(status);
+            List<String> aliases = statusAliases(status);
+            String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+            sql += " AND status IN (" + placeholders + ")";
+            params.addAll(aliases);
         }
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {

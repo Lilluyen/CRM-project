@@ -13,6 +13,7 @@ public class Lead {
     private String status;
     private int score;
     private int campaignId;
+    private String campaignName; // transient - lấy từ JOIN Campaigns
     private int assignedTo;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -20,7 +21,7 @@ public class Lead {
     public Lead() {
     }
 
-    public Lead(int leadId, String fullName, String email, String phone, 
+    public Lead(int leadId, String fullName, String email, String phone,
             String interest, String source, String status, int score, int campaignId, int assignedTo,
             LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.leadId = leadId;
@@ -100,6 +101,14 @@ public class Lead {
 
     public void setCampaignId(int campaignId) {
         this.campaignId = campaignId;
+    }
+
+    public String getCampaignName() {
+        return campaignName;
+    }
+
+    public void setCampaignName(String campaignName) {
+        this.campaignName = campaignName;
     }
 
     public int getAssignedTo() {

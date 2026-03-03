@@ -267,7 +267,7 @@
                     <a href="${pageContext.request.contextPath}/marketing/campaign/form?id=${campaign.campaignId}" class="btn btn-large btn-warning-custom">
                         <i class="bi bi-pencil"></i> Chỉnh sửa
                     </a>
-                    <a href="${pageContext.request.contextPath}/marketing/lead?action=list&campaignId=${campaign.campaignId}" class="btn btn-large btn-primary-custom">
+                    <a href="${pageContext.request.contextPath}/marketing/leads?campaignId=${campaign.campaignId}" class="btn btn-large btn-primary-custom">
                         <i class="bi bi-people"></i> Xem Leads
                     </a>
                 </div>

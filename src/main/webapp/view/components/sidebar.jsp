@@ -58,16 +58,38 @@ isELIgnored="false" %>
             <span>Leads</span>
             <span class="menu-arrow"></span>
           </a>
-          <ul>
+          <ul style="${fn:startsWith(page, 'lead-') ? 'display:block;' : ''}">
             <li>
-              <a href="${pageContext.request.contextPath}/lead/list"
-                >Lead List</a
+              <a
+                class="${page eq 'lead-list' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/marketing/leads"
               >
+                Lead List
+              </a>
             </li>
             <li>
-              <a href="${pageContext.request.contextPath}/lead/import"
-                >Import Leads</a
+              <a
+                class="${page eq 'lead-form' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/marketing/leads/form"
               >
+                Add New Lead
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'lead-detail' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/marketing/leads"
+              >
+                Update Lead
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'lead-import' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/marketing/leads/import"
+              >
+                Import Leads
+              </a>
             </li>
           </ul>
         </li>
