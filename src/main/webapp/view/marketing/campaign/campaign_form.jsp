@@ -74,17 +74,35 @@
                                 <label for="channel" class="form-label required">Kênh Marketing</label>
                                 <select class="form-select" id="channel" name="channel" required>
                                     <option value="">-- Chọn kênh --</option>
-                                    <option value="EMAIL" ${campaign.channel == 'EMAIL' ? 'selected' : ''}>
+                                    <option value="Email" ${campaign.channel == 'Email' ? 'selected' : ''}>
                                         <i class="bi bi-envelope"></i> Email
                                     </option>
-                                    <option value="SOCIAL_MEDIA" ${campaign.channel == 'SOCIAL_MEDIA' ? 'selected' : ''}>
-                                        <i class="bi bi-share"></i> Social Media
+                                    <option value="Facebook" ${campaign.channel == 'Facebook' ? 'selected' : ''}>
+                                        <i class="bi bi-facebook"></i> Facebook
+                                    </option>
+                                    <option value="Google" ${campaign.channel == 'Google' ? 'selected' : ''}>
+                                        <i class="bi bi-google"></i> Google Ads
+                                    </option>
+                                    <option value="Google Display" ${campaign.channel == 'Google Display' ? 'selected' : ''}>
+                                        <i class="bi bi-display"></i> Google Display
+                                    </option>
+                                    <option value="LinkedIn" ${campaign.channel == 'LinkedIn' ? 'selected' : ''}>
+                                        <i class="bi bi-linkedin"></i> LinkedIn
                                     </option>
                                     <option value="SMS" ${campaign.channel == 'SMS' ? 'selected' : ''}>
                                         <i class="bi bi-chat-dots"></i> SMS
                                     </option>
-                                    <option value="DIRECT_MAIL" ${campaign.channel == 'DIRECT_MAIL' ? 'selected' : ''}>
-                                        <i class="bi bi-mailbox"></i> Direct Mail
+                                    <option value="SEO" ${campaign.channel == 'SEO' ? 'selected' : ''}>
+                                        <i class="bi bi-search"></i> SEO
+                                    </option>
+                                    <option value="Event" ${campaign.channel == 'Event' ? 'selected' : ''}>
+                                        <i class="bi bi-calendar-event"></i> Event
+                                    </option>
+                                    <option value="Referral" ${campaign.channel == 'Referral' ? 'selected' : ''}>
+                                        <i class="bi bi-people"></i> Referral
+                                    </option>
+                                    <option value="Multi-channel" ${campaign.channel == 'Multi-channel' ? 'selected' : ''}>
+                                        <i class="bi bi-diagram-3"></i> Multi-channel
                                     </option>
                                 </select>
                                 <div class="invalid-feedback">Vui lòng chọn kênh marketing.</div>

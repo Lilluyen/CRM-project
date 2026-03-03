@@ -89,17 +89,35 @@
                             <div class="mb-3">
                                 <span class="channel-badge">
                                     <c:choose>
-                                        <c:when test="${campaign.channel == 'EMAIL'}">
+                                        <c:when test="${campaign.channel == 'Email'}">
                                             <i class="bi bi-envelope"></i> Email
                                         </c:when>
-                                        <c:when test="${campaign.channel == 'SOCIAL_MEDIA'}">
-                                            <i class="bi bi-share"></i> Social Media
+                                        <c:when test="${campaign.channel == 'Facebook'}">
+                                            <i class="bi bi-facebook"></i> Facebook
+                                        </c:when>
+                                        <c:when test="${campaign.channel == 'Google'}">
+                                            <i class="bi bi-google"></i> Google Ads
+                                        </c:when>
+                                        <c:when test="${campaign.channel == 'Google Display'}">
+                                            <i class="bi bi-display"></i> Google Display
+                                        </c:when>
+                                        <c:when test="${campaign.channel == 'LinkedIn'}">
+                                            <i class="bi bi-linkedin"></i> LinkedIn
                                         </c:when>
                                         <c:when test="${campaign.channel == 'SMS'}">
                                             <i class="bi bi-chat-dots"></i> SMS
                                         </c:when>
-                                        <c:when test="${campaign.channel == 'DIRECT_MAIL'}">
-                                            <i class="bi bi-mailbox"></i> Direct Mail
+                                        <c:when test="${campaign.channel == 'SEO'}">
+                                            <i class="bi bi-search"></i> SEO
+                                        </c:when>
+                                        <c:when test="${campaign.channel == 'Event'}">
+                                            <i class="bi bi-calendar-event"></i> Event
+                                        </c:when>
+                                        <c:when test="${campaign.channel == 'Referral'}">
+                                            <i class="bi bi-people"></i> Referral
+                                        </c:when>
+                                        <c:when test="${campaign.channel == 'Multi-channel'}">
+                                            <i class="bi bi-diagram-3"></i> Multi-channel
                                         </c:when>
                                         <c:otherwise>
                                             ${campaign.channel}
@@ -161,20 +179,38 @@
                         <span class="detail-value">
                             <span class="channel-badge">
                                 <c:choose>
-                                    <c:when test="${campaign.channel == 'EMAIL'}">
+                                    <c:when test="${campaign.channel == 'Email'}">
                                         <i class="bi bi-envelope"></i> Email
                                     </c:when>
-                                    <c:when test="${campaign.channel == 'SOCIAL_MEDIA'}">
-                                        <i class="bi bi-share"></i> Social Media
+                                    <c:when test="${campaign.channel == 'Facebook'}">
+                                        <i class="bi bi-facebook"></i> Facebook
+                                    </c:when>
+                                    <c:when test="${campaign.channel == 'Google'}">
+                                        <i class="bi bi-google"></i> Google Ads
+                                    </c:when>
+                                    <c:when test="${campaign.channel == 'Google Display'}">
+                                        <i class="bi bi-display"></i> Google Display
+                                    </c:when>
+                                    <c:when test="${campaign.channel == 'LinkedIn'}">
+                                        <i class="bi bi-linkedin"></i> LinkedIn
                                     </c:when>
                                     <c:when test="${campaign.channel == 'SMS'}">
                                         <i class="bi bi-chat-dots"></i> SMS
                                     </c:when>
-                                    <c:when test="${campaign.channel == 'DIRECT_MAIL'}">
-                                        <i class="bi bi-mailbox"></i> Direct Mail
+                                    <c:when test="${campaign.channel == 'SEO'}">
+                                        <i class="bi bi-search"></i> SEO
                                     </c:when>
-                                     <c:otherwise>
-                                                    <span class="channel-badge">${campaign.channel}</span>
+                                    <c:when test="${campaign.channel == 'Event'}">
+                                        <i class="bi bi-calendar-event"></i> Event
+                                    </c:when>
+                                    <c:when test="${campaign.channel == 'Referral'}">
+                                        <i class="bi bi-people"></i> Referral
+                                    </c:when>
+                                    <c:when test="${campaign.channel == 'Multi-channel'}">
+                                        <i class="bi bi-diagram-3"></i> Multi-channel
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="channel-badge">${campaign.channel}</span>
                                     </c:otherwise>
                                 </c:choose>
                             </span>
