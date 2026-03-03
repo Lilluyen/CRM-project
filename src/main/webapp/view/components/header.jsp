@@ -175,14 +175,14 @@
 
     <!-- User Menu -->
     <li class="nav-item dropdown has-arrow main-drop">
-      <a href="javascript:void(0);"
+      <%-- <a href="javascript:void(0);"
          class="dropdown-toggle nav-link userset"
          data-bs-toggle="dropdown">
         <span class="user-img">
           <img src="${pageContext.request.contextPath}/Inventory-Management-Admin-Dashboard-main/assets/img/profiles/avator1.jpg" alt="" />
           <span class="status online"></span>
         </span>
-      </a>
+      </a> --%>
       <div class="dropdown-menu menu-drop-user">
         <div class="profilename">
           <div class="profileset">
