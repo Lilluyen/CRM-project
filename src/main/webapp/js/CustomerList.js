@@ -538,21 +538,70 @@ function renderPagination(totalPages, currentPage) {
     const container = document.getElementById("paginationControls");
 
     if (!totalPages || totalPages <= 1) {
-        container.innerHTML = `<button class= "active btn btn-light">1</button>`;
+        container.innerHTML = `<button class="active btn btn-light">1</button>`;
         return;
     }
 
+    // Build array of page numbers/ellipsis to show
+    // Always show: first, last, current, current±1, current±2
+    // Ellipsis fills the gap
+    function getPageRange(current, total) {
+        const delta = 2; // pages around current
+        const range = [];
+        const rangeWithDots = [];
+
+        for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+            range.push(i);
+        }
+
+        // Always include first page
+        if (range[0] > 2) rangeWithDots.push(1, '...');
+        else rangeWithDots.push(1);
+
+        rangeWithDots.push(...range);
+
+        // Always include last page
+        if (range[range.length - 1] < total - 1) rangeWithDots.push('...', total);
+        else rangeWithDots.push(total);
+
+        return rangeWithDots;
+    }
+
+    const pages = getPageRange(currentPage, totalPages);
+
     let html = "";
 
-    for (let i = 1; i <= totalPages; i++) {
+    // Prev button
+    html += `
+        <button onclick="loadPage(${currentPage - 1}, ${rowsPerPage})"
+            class="btn btn-light btn-nav"
+            ${currentPage === 1 ? "disabled" : ""}>
+            <i class="fas fa-chevron-left"></i> Prev
+        </button>
+    `;
 
-        html += `
-            <button onclick="loadPage(${i}, ${rowsPerPage})"
-                class="btn btn-light ${i === currentPage ? "active" : ""}">
-                ${i}
-            </button>
-        `;
-    }
+    // Page number buttons
+    pages.forEach(p => {
+        if (p === '...') {
+            html += `<span class="pagination-dots">...</span>`;
+        } else {
+            html += `
+                <button onclick="loadPage(${p}, ${rowsPerPage})"
+                    class="btn btn-light ${p === currentPage ? "active" : ""}">
+                    ${p}
+                </button>
+            `;
+        }
+    });
+
+    // Next button
+    html += `
+        <button onclick="loadPage(${currentPage + 1}, ${rowsPerPage})"
+            class="btn btn-light btn-nav"
+            ${currentPage === totalPages ? "disabled" : ""}>
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
 
     container.innerHTML = html;
 }
