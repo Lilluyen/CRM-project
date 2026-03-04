@@ -1,4 +1,3 @@
-<!-- filepath: d:\Kì 5\SWP391\project\CRM-project\src\main\webapp\view\marketing\dashboard.jsp -->
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
@@ -7,116 +6,125 @@
     <div class="container-fluid py-4">
 
         <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="md-page-header">
+            <div class="page-header-icon">
+                <i class="fas fa-chart-pie"></i>
+            </div>
             <div>
-                <h4 class="mb-1"><i class="fas fa-chart-pie me-2"></i>Marketing Dashboard</h4>
-                <p class="text-muted mb-0">Tổng quan hiệu quả marketing</p>
+                <h4>Marketing Dashboard</h4>
+                <p class="md-subtitle">Tổng quan hiệu quả marketing</p>
             </div>
         </div>
 
         <!-- Summary Cards Row 1: Leads -->
-        <h6 class="text-muted mb-3"><i class="fas fa-user-plus me-1"></i> Tổng quan Leads</h6>
+        <p class="section-label"><i class="fas fa-user-plus"></i> Tổng quan Leads</p>
         <div class="row g-3 mb-4">
             <div class="col-md-2">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-primary">${totalLeads}</div>
-                    <small class="text-muted">Tổng Leads</small>
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-number">${totalLeads}</div>
+                    <div class="stat-label">Tổng Leads</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-info">${newLeads}</div>
-                    <small class="text-muted">New</small>
+                <div class="stat-card stat-info">
+                    <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+                    <div class="stat-number">${newLeads}</div>
+                    <div class="stat-label">New</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-warning">${contactedLeads}</div>
-                    <small class="text-muted">Contacted</small>
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon"><i class="fas fa-phone"></i></div>
+                    <div class="stat-number">${contactedLeads}</div>
+                    <div class="stat-label">Contacted</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-success">${qualifiedLeads}</div>
-                    <small class="text-muted">Qualified</small>
+                <div class="stat-card stat-success">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-number">${qualifiedLeads}</div>
+                    <div class="stat-label">Qualified</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold" style="color: #6f42c1;">${dealCreatedLeads}</div>
-                    <small class="text-muted">Deal Created</small>
+                <div class="stat-card stat-purple">
+                    <div class="stat-icon"><i class="fas fa-handshake"></i></div>
+                    <div class="stat-number">${dealCreatedLeads}</div>
+                    <div class="stat-label">Deal Created</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-danger">${lostLeads}</div>
-                    <small class="text-muted">Lost</small>
+                <div class="stat-card stat-danger">
+                    <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                    <div class="stat-number">${lostLeads}</div>
+                    <div class="stat-label">Lost</div>
                 </div>
             </div>
         </div>
 
         <!-- Summary Cards Row 2: Campaigns & Conversion -->
-        <h6 class="text-muted mb-3"><i class="fas fa-bullhorn me-1"></i> Tổng quan Campaigns</h6>
+        <p class="section-label"><i class="fas fa-bullhorn"></i> Tổng quan Campaigns</p>
         <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-primary">${totalCampaigns}</div>
-                    <small class="text-muted">Tổng Campaign</small>
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon"><i class="fas fa-bullhorn"></i></div>
+                    <div class="stat-number">${totalCampaigns}</div>
+                    <div class="stat-label">Tổng Campaign</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-success">${activeCampaigns}</div>
-                    <small class="text-muted">Đang chạy</small>
+                <div class="stat-card stat-success">
+                    <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
+                    <div class="stat-number">${activeCampaigns}</div>
+                    <div class="stat-label">Đang chạy</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-info">${planningCampaigns}</div>
-                    <small class="text-muted">Lên kế hoạch</small>
+                <div class="stat-card stat-info">
+                    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="stat-number">${planningCampaigns}</div>
+                    <div class="stat-label">Lên kế hoạch</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm text-center py-3">
-                    <div class="fs-2 fw-bold text-warning">${conversionRate}%</div>
-                    <small class="text-muted">Conversion Rate</small>
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="stat-number">${conversionRate}%</div>
+                    <div class="stat-label">Conversion Rate</div>
                 </div>
             </div>
         </div>
 
-        <!-- Lead Funnel (Visual Pipeline) -->
-        <div class="card shadow-sm mb-4">
+        <!-- Lead Funnel -->
+        <div class="funnel-card card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-filter me-1"></i> Lead Funnel</h5>
+                <h5 class="mb-0"><i class="fas fa-filter me-2 text-primary"></i>Lead Funnel</h5>
             </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div class="text-center flex-fill">
-                        <div class="bg-info bg-opacity-10 rounded p-3">
-                            <div class="fs-3 fw-bold text-info">${newLeads}</div>
-                            <small>New Lead</small>
-                        </div>
+            <div class="card-body p-0">
+                <div class="funnel-track">
+                    <div class="funnel-step step-new">
+                        <div class="funnel-pct">Stage 1</div>
+                        <div class="funnel-number">${newLeads}</div>
+                        <div class="funnel-label">New Lead</div>
                     </div>
-                    <i class="fas fa-chevron-right text-muted"></i>
-                    <div class="text-center flex-fill">
-                        <div class="bg-warning bg-opacity-10 rounded p-3">
-                            <div class="fs-3 fw-bold text-warning">${contactedLeads}</div>
-                            <small>Contacted</small>
-                        </div>
+                    <div class="funnel-connector"><i class="fas fa-chevron-right"></i></div>
+                    <div class="funnel-step step-contacted">
+                        <div class="funnel-pct">Stage 2</div>
+                        <div class="funnel-number">${contactedLeads}</div>
+                        <div class="funnel-label">Contacted</div>
                     </div>
-                    <i class="fas fa-chevron-right text-muted"></i>
-                    <div class="text-center flex-fill">
-                        <div class="bg-success bg-opacity-10 rounded p-3">
-                            <div class="fs-3 fw-bold text-success">${qualifiedLeads}</div>
-                            <small>Qualified</small>
-                        </div>
+                    <div class="funnel-connector"><i class="fas fa-chevron-right"></i></div>
+                    <div class="funnel-step step-qualified">
+                        <div class="funnel-pct">Stage 3</div>
+                        <div class="funnel-number">${qualifiedLeads}</div>
+                        <div class="funnel-label">Qualified</div>
                     </div>
-                    <i class="fas fa-chevron-right text-muted"></i>
-                    <div class="text-center flex-fill">
-                        <div class="rounded p-3" style="background: rgba(111,66,193,0.1);">
-                            <div class="fs-3 fw-bold" style="color:#6f42c1;">${dealCreatedLeads}</div>
-                            <small>Deal Created</small>
-                        </div>
+                    <div class="funnel-connector"><i class="fas fa-chevron-right"></i></div>
+                    <div class="funnel-step step-deal">
+                        <div class="funnel-pct">Stage 4</div>
+                        <div class="funnel-number">${dealCreatedLeads}</div>
+                        <div class="funnel-label">Deal Created</div>
                     </div>
                 </div>
             </div>
@@ -125,20 +133,20 @@
         <div class="row g-4">
             <!-- Top Active Campaigns -->
             <div class="col-md-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-fire me-1"></i> Campaign đang chạy</h5>
+                <div class="data-card card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-fire text-danger me-2"></i>Campaign đang chạy</h5>
                         <a href="${pageContext.request.contextPath}/marketing/campaign?status=ACTIVE"
-                           class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                           class="md-card-action">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="card-body p-0">
                         <c:choose>
                             <c:when test="${not empty topCampaigns}">
                                 <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead class="table-light">
+                                    <table class="table mb-0">
+                                        <thead>
                                             <tr>
-                                                <th>Tên</th>
+                                                <th>Tên Campaign</th>
                                                 <th>Kênh</th>
                                                 <th>Ngân sách</th>
                                                 <th>Kết thúc</th>
@@ -149,16 +157,16 @@
                                                 <tr>
                                                     <td>
                                                         <a href="${pageContext.request.contextPath}/marketing/campaign/detail?id=${c.campaignId}"
-                                                           class="text-decoration-none fw-semibold">
+                                                           class="campaign-name-link">
                                                             ${c.name}
                                                         </a>
                                                     </td>
-                                                    <td><span class="badge bg-light text-dark border">${c.channel}</span></td>
-                                                    <td class="text-success fw-semibold">
+                                                    <td><span class="channel-tag">${c.channel}</span></td>
+                                                    <td class="budget-text">
                                                         <fmt:formatNumber value="${c.budget}" type="currency"
                                                                           currencySymbol="₫" maxFractionDigits="0"/>
                                                     </td>
-                                                    <td class="small text-muted">${c.endDate}</td>
+                                                    <td class="end-date-text">${c.endDate}</td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
@@ -166,8 +174,8 @@
                                 </div>
                             </c:when>
                             <c:otherwise>
-                                <div class="text-center py-4 text-muted">
-                                    <i class="fas fa-bullhorn fa-2x mb-2"></i>
+                                <div class="empty-state">
+                                    <div class="empty-icon"><i class="fas fa-bullhorn"></i></div>
                                     <p>Chưa có campaign nào đang chạy</p>
                                 </div>
                             </c:otherwise>
@@ -178,18 +186,18 @@
 
             <!-- Recent Leads -->
             <div class="col-md-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-user-clock me-1"></i> Leads mới nhất</h5>
+                <div class="data-card card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user-clock text-primary me-2"></i>Leads mới nhất</h5>
                         <a href="${pageContext.request.contextPath}/marketing/leads"
-                           class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                           class="md-card-action">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="card-body p-0">
                         <c:choose>
                             <c:when test="${not empty recentLeads}">
                                 <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead class="table-light">
+                                    <table class="table mb-0">
+                                        <thead>
                                             <tr>
                                                 <th>Họ tên</th>
                                                 <th>Email</th>
@@ -202,40 +210,40 @@
                                                 <tr>
                                                     <td>
                                                         <a href="${pageContext.request.contextPath}/marketing/leads/detail?id=${lead.leadId}"
-                                                           class="text-decoration-none fw-semibold">
+                                                           class="lead-name-link text-decoration-none">
                                                             ${lead.fullName}
                                                         </a>
                                                     </td>
-                                                    <td class="small">${lead.email}</td>
+                                                    <td class="lead-email-text">${lead.email}</td>
                                                     <td>
                                                         <c:choose>
                                                             <c:when test="${lead.score >= 70}">
-                                                                <span class="badge bg-danger">${lead.score}</span>
+                                                                <span class="score-badge score-hot">${lead.score}</span>
                                                             </c:when>
                                                             <c:when test="${lead.score >= 40}">
-                                                                <span class="badge bg-warning text-dark">${lead.score}</span>
+                                                                <span class="score-badge score-warm">${lead.score}</span>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <span class="badge bg-secondary">${lead.score}</span>
+                                                                <span class="score-badge score-cold">${lead.score}</span>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </td>
                                                     <td>
                                                         <c:choose>
                                                             <c:when test="${lead.status == 'NEW_LEAD'}">
-                                                                <span class="badge bg-info text-dark">New</span>
+                                                                <span class="lead-badge new">New</span>
                                                             </c:when>
                                                             <c:when test="${lead.status == 'CONTACTED'}">
-                                                                <span class="badge bg-warning text-dark">Contacted</span>
+                                                                <span class="lead-badge contacted">Contacted</span>
                                                             </c:when>
                                                             <c:when test="${lead.status == 'QUALIFIED'}">
-                                                                <span class="badge bg-success">Qualified</span>
+                                                                <span class="lead-badge qualified">Qualified</span>
                                                             </c:when>
                                                             <c:when test="${lead.status == 'DEAL_CREATED'}">
-                                                                <span class="badge" style="background:#6f42c1;">Deal</span>
+                                                                <span class="lead-badge deal">Deal</span>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <span class="badge bg-danger">Lost</span>
+                                                                <span class="lead-badge lost">Lost</span>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </td>
@@ -246,8 +254,8 @@
                                 </div>
                             </c:when>
                             <c:otherwise>
-                                <div class="text-center py-4 text-muted">
-                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <div class="empty-state">
+                                    <div class="empty-icon"><i class="fas fa-inbox"></i></div>
                                     <p>Chưa có lead nào</p>
                                 </div>
                             </c:otherwise>
@@ -258,9 +266,9 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="card shadow-sm mt-4">
+        <div class="quick-actions-card card">
             <div class="card-body">
-                <h6 class="mb-3"><i class="fas fa-bolt me-1"></i> Thao tác nhanh</h6>
+                <p class="qa-label"><i class="fas fa-bolt me-1"></i> Thao tác nhanh</p>
                 <div class="d-flex gap-2 flex-wrap">
                     <a href="${pageContext.request.contextPath}/marketing/campaign/form" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i> Tạo Campaign
