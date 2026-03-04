@@ -24,7 +24,18 @@ public class LeadImportService {
      *
      * @return ImportLeadResponse
      */
+    /**
+     * Overload cũ — gọi version mới với danh sách assign rỗng.
+     */
     public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId) {
+        return importLeads(leads, source, campaignId, new ArrayList<>());
+    }
+
+    /**
+     * Import leads với validation, scoring và round-robin assign cho danh sách
+     * sale đã chọn.
+     */
+    public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId, List<Integer> assignedToIds) {
         ImportLeadResponse response = new ImportLeadResponse();
         List<Lead> validLeads = new ArrayList<>();
         int rowNumber = 2; // Excel row (1-based + header)
@@ -94,6 +105,11 @@ public class LeadImportService {
             // Gắn campaign nếu có chọn
             if (campaignId != null) {
                 lead.setCampaignId(campaignId);
+            }
+            // Round-robin assign sale staff
+            if (assignedToIds != null && !assignedToIds.isEmpty()) {
+                int idx = validLeads.indexOf(lead) % assignedToIds.size();
+                lead.setAssignedTo(assignedToIds.get(idx));
             }
         }
 

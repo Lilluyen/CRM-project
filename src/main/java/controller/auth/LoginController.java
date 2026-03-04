@@ -1,7 +1,6 @@
 package controller.auth;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 import dao.UserDAO;
@@ -13,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Role;
 import model.User;
 
-@WebServlet(name = "LoginController", urlPatterns = { "/login" })
+@WebServlet(name = "LoginController", urlPatterns = {"/login"})
 public class LoginController extends HttpServlet {
 
     @Override
@@ -62,16 +61,16 @@ public class LoginController extends HttpServlet {
         switch (role.getRoleName().toUpperCase()) {
 
             case "ADMIN":
-                return "/admin.jsp";
+                return "/admin/dashboard";
 
             case "SALE":
-                return "/sale.jsp";
+                return "/sale/dashboard";
 
             case "MARKETING":
-                return "/marketing.jsp";
+                return "/marketing/dashboard";
 
             case "CS":
-                return "/cs.jsp";
+                return "/cs/dashboard";
 
             default:
                 return "/dashboard";

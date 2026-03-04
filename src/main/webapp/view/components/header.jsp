@@ -20,9 +20,28 @@
     request.setAttribute("unreadNotifications", unreadNotifications);
     request.setAttribute("unreadCount", unreadCount);
 %>
+
+<c:set var="userRole" value="${sessionScope.user.role.roleName}" />
+<c:choose>
+  <c:when test="${fn:toUpperCase(userRole) eq 'ADMIN'}">
+    <c:set var="rolePrefix" value="/admin" />
+  </c:when>
+  <c:when test="${fn:toUpperCase(userRole) eq 'SALE'}">
+    <c:set var="rolePrefix" value="/sale" />
+  </c:when>
+  <c:when test="${fn:toUpperCase(userRole) eq 'MARKETING'}">
+    <c:set var="rolePrefix" value="/marketing" />
+  </c:when>
+  <c:when test="${fn:toUpperCase(userRole) eq 'CS'}">
+    <c:set var="rolePrefix" value="/cs" />
+  </c:when>
+  <c:otherwise>
+    <c:set var="rolePrefix" value="" />
+  </c:otherwise>
+</c:choose>
 <div class="header">
   <div class="header-left active">
-    <a href="${pageContext.request.contextPath}/dashboard" class="logo">
+    <a href="${pageContext.request.contextPath}${rolePrefix}/dashboard" class="logo">
       <img src="${pageContext.request.contextPath}/assets/img/logo.jpeg" alt="CRM Logo" />
     </a>
     <a id="toggle_btn" href="javascript:void(0);"></a>
