@@ -66,7 +66,6 @@ public class TaskEditController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
-
         int taskId = Integer.parseInt(req.getParameter("taskId"));
         Task task  = buildTask(req);
         task.setTaskId(taskId);

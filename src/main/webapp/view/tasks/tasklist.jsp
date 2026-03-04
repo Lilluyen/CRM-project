@@ -42,7 +42,7 @@
         display: inline-block !important;
     }
 }
-  }
+  
 </style>
 
 <div class="page-wrapper">

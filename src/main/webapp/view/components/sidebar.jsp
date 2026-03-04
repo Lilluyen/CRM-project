@@ -173,7 +173,7 @@ isELIgnored="false" %>
             <li>
               <a
                 class="${page eq 'activity-list' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/activities"
+                href="${pageContext.request.contextPath}/activities/list"
               >
                 Activities List
               </a>
@@ -205,14 +205,6 @@ isELIgnored="false" %>
           </ul>
         </li>
         <!-- TASKS -->
-        <li>
-          <a href="${pageContext.request.contextPath}/task">
-            <i class="fas fa-tasks"></i>
-            <span>Tasks</span>
-          </a>
-        </li>
-
-
         <li class="submenu">
           <a href="javascript:void(0);">
             <i class="fas fa-tasks"></i>
@@ -224,7 +216,7 @@ isELIgnored="false" %>
             <li>
               <a
                 class="${page eq 'task-list' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/tasks"
+                href="${pageContext.request.contextPath}/tasks/list"
               >
                 Tasks List
               </a>
