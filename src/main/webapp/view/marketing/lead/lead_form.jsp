@@ -141,6 +141,23 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="assignedTo" class="form-label">Assigned To</label>
+                                <select class="form-select" id="assignedTo" name="assignedTo">
+                                    <option value="0">-- Chưa phân công --</option>
+                                    <c:forEach var="user" items="${users}">
+                                        <option value="${user.userId}"
+                                            ${lead.assignedTo == user.userId ? 'selected' : ''}>
+                                            ${user.fullName} (${user.role.roleName})
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Section 3: Trạng thái & Điểm (chỉ cho edit mode, read-only) -->

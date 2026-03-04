@@ -15,6 +15,7 @@ public class Lead {
     private int campaignId;
     private String campaignName; // transient - lấy từ JOIN Campaigns
     private int assignedTo;
+    private String assignedToName; // transient - lấy từ JOIN Users
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -117,6 +118,14 @@ public class Lead {
 
     public void setAssignedTo(int assignedTo) {
         this.assignedTo = assignedTo;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
     }
 
     public LocalDateTime getCreatedAt() {
