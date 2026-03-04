@@ -147,7 +147,14 @@
                     <div class="detail-row">
                         <span class="detail-label">Assigned To:</span>
                         <span class="detail-value">
-                            ${lead.assignedTo > 0 ? lead.assignedTo : 'Chưa phân công'}
+                            <c:choose>
+                                <c:when test="${lead.assignedTo > 0 && not empty lead.assignedToName}">
+                                    <i class="fas fa-user-tie me-1"></i>${lead.assignedToName}
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="text-muted">Chưa phân công</span>
+                                </c:otherwise>
+                            </c:choose>
                         </span>
                     </div>
 

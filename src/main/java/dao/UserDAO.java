@@ -30,14 +30,17 @@ public class UserDAO {
         user.setPhone(rs.getString("phone"));
         user.setStatus(rs.getString("status"));
 
-        if (rs.getTimestamp("created_at") != null)
+        if (rs.getTimestamp("created_at") != null) {
             user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        }
 
-        if (rs.getTimestamp("updated_at") != null)
+        if (rs.getTimestamp("updated_at") != null) {
             user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        }
 
-        if (rs.getTimestamp("last_login_at") != null)
+        if (rs.getTimestamp("last_login_at") != null) {
             user.setLastLoginAt(rs.getTimestamp("last_login_at").toLocalDateTime());
+        }
 
         // Map role (1 role duy nhất)
         if (rs.getInt("role_id") != 0) {
@@ -217,13 +220,87 @@ public class UserDAO {
                   ,last_login_at
               FROM Users
         """;
-        List<User> users=new ArrayList();
+        List<User> users = new ArrayList();
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                users.add(mapUser(rs));}} catch (SQLException e) {
-            e.printStackTrace();    }
-        return users;}
+                users.add(mapUser(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    /**
+     * Lấy danh sách tất cả user đang active (dùng cho dropdown Assigned To).
+     */
+    public List<User> getActiveUsers() {
+        String sql = """
+            SELECT
+                u.user_id,
+                u.username,
+                u.password_hash,
+                u.email,
+                u.full_name,
+                u.phone,
+                u.status,
+                u.created_at,
+                u.updated_at,
+                u.last_login_at,
+                r.role_id,
+                r.role_name,
+                r.description
+            FROM Users u
+            LEFT JOIN Roles r ON u.role_id = r.role_id
+            WHERE u.status = 'Active'
+            ORDER BY u.full_name
+        """;
+        List<User> users = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                users.add(mapUser(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    public List<User> getActiveSaleStaffs() {
+        String sql = """
+            SELECT
+                u.user_id,
+                u.username,
+                u.password_hash,
+                u.email,
+                u.full_name,
+                u.phone,
+                u.status,
+                u.created_at,
+                u.updated_at,
+                u.last_login_at,
+                r.role_id,
+                r.role_name,
+                r.description
+            FROM Users u
+            LEFT JOIN Roles r ON u.role_id = r.role_id
+            WHERE u.status = 'Active'
+            ORDER BY u.full_name
+        """;
+        List<User> users = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                if (rs.getInt("role_id") == 2) { // role_id = 2 là Sale
+                    users.add(mapUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
     /*
      * =========================
      * FIND USER BY EMAIL

@@ -3,6 +3,7 @@ package controller.marketing;
 import java.io.IOException;
 import java.util.List;
 
+import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Campaign;
 import model.Lead;
+import model.User;
 import service.CampaignService;
 import service.LeadService;
 
@@ -18,6 +20,7 @@ public class LeadFormController extends HttpServlet {
 
     private final LeadService leadService = new LeadService();
     private final CampaignService campaignService = new CampaignService();
+    private final UserDAO userDAO = new UserDAO();
 
     // ======================================================================
     // Helper: forward form page qua layout
@@ -27,6 +30,10 @@ public class LeadFormController extends HttpServlet {
         // Load danh sách campaigns cho dropdown
         List<Campaign> campaigns = campaignService.getAllCampaigns();
         request.setAttribute("campaigns", campaigns);
+
+        // Load danh sách users cho dropdown Assigned To
+        List<User> users = userDAO.getActiveSaleStaffs();
+        request.setAttribute("users", users);
 
         request.setAttribute("pageTitle", pageTitle);
         request.setAttribute("contentPage", "marketing/lead/lead_form.jsp");
