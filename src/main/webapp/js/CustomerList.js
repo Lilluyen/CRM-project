@@ -300,6 +300,14 @@ function viewCustomer(customerId) {
     window.location.href = url; // chuyển trang
 }
 
+function editCustomer(customerId) {
+    if (!customerId)
+        return;
+    const ctx = window.__CTX__ || ""; // fallback nếu quên inject
+    const url = `${ctx}/customers/edit?customerId=${encodeURIComponent(customerId)}`;
+    window.location.href = url;
+}
+
 function closePreview() {
     const preview = document.getElementById('customerPreview');
     if (preview) {
@@ -502,6 +510,10 @@ function renderTableBody(customers) {
     <td class="actions">
         <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
             <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </button>
+
+        <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
+            <i class="fa-solid fa-pen-to-square"></i>
         </button>
         <div class="action-wrapper">
             <button class="action-icon-btn menu-btn">
