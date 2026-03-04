@@ -1,11 +1,13 @@
 package controller.marketing;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
 
 import dao.CampaignDAO;
+import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,6 +18,7 @@ import jakarta.servlet.http.Part;
 import model.Campaign;
 import model.ImportLeadResponse;
 import model.Lead;
+import model.User;
 import service.LeadImportService;
 import util.ExcelUtil;
 
@@ -25,6 +28,7 @@ public class LeadImportController extends HttpServlet {
 
     private LeadImportService importService = new LeadImportService();
     private CampaignDAO campaignDAO = new CampaignDAO();
+    private UserDAO userDAO = new UserDAO();
     private Gson gson = new Gson();
 
     // ===== GET: Show import form (qua layout) =====
@@ -33,6 +37,10 @@ public class LeadImportController extends HttpServlet {
         // Load danh sách campaigns cho dropdown
         List<Campaign> campaigns = campaignDAO.getAllCampaign();
         request.setAttribute("campaigns", campaigns);
+
+        // Load danh sách sale staffs cho checkbox assign
+        List<User> saleStaffs = userDAO.getActiveSaleStaffs();
+        request.setAttribute("saleStaffs", saleStaffs);
 
         request.setAttribute("pageTitle", "Import Leads - CRM");
         request.setAttribute("contentPage", "marketing/lead/lead_import.jsp");
@@ -83,11 +91,24 @@ public class LeadImportController extends HttpServlet {
                 }
             }
 
+            // Parse assignedToIds (checkbox multi-select)
+            String[] assignedToArr = request.getParameterValues("assignedToIds");
+            List<Integer> assignedToIds = new ArrayList<>();
+            if (assignedToArr != null) {
+                for (String idStr : assignedToArr) {
+                    try {
+                        assignedToIds.add(Integer.parseInt(idStr.trim()));
+                    } catch (NumberFormatException ex) {
+                        // ignore invalid id
+                    }
+                }
+            }
+
             // ===== Read Excel =====
             List<Lead> leads = ExcelUtil.readLeadsFromExcel(filePart.getInputStream());
 
             // ===== Import =====
-            ImportLeadResponse importResponse = importService.importLeads(leads, source, campaignId);
+            ImportLeadResponse importResponse = importService.importLeads(leads, source, campaignId, assignedToIds);
 
             // ===== Response =====
             response.getWriter().write(gson.toJson(importResponse));
