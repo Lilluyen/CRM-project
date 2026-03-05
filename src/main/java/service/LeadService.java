@@ -29,6 +29,10 @@ public class LeadService {
         return leadDAO.countLeads(keyword, status, campaignId);
     }
 
+    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId) {
+        return leadDAO.searchLeadsForExport(keyword, status, campaignId);
+    }
+
     // ==============================
     // CRUD
     // ==============================
@@ -42,22 +46,7 @@ public class LeadService {
         if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
         }
-
-        // Check duplicate: email + cùng campaign → trùng thật sự
-        if (lead.getCampaignId() > 0) {
-            Lead dup = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), lead.getCampaignId());
-            if (dup != null) {
-                throw new IllegalArgumentException(
-                        "Email \"" + lead.getEmail() + "\" đã tồn tại trong campaign này.");
-            }
-        } else {
-            // Không chọn campaign → check email có tồn tại lead nào chưa có campaign không
-            Lead dup = leadDAO.findLeadByEmail(lead.getEmail());
-            if (dup != null) {
-                throw new IllegalArgumentException(
-                        "Email \"" + lead.getEmail() + "\" đã tồn tại. Vui lòng chọn Campaign để thêm vào chiến dịch.");
-            }
-        }
+        validateLeadUniqueness(lead);
 
         // Tạo Lead mới (mỗi campaign có Lead record riêng, cùng email OK)
         int score = LeadScoringUtil.calculateScore(
@@ -88,6 +77,7 @@ public class LeadService {
         if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
         }
+        validateLeadUniqueness(lead, lead.getLeadId());
 
         // Auto re-score & auto-status dựa trên thông tin mới
         // Giữ nguyên DEAL_CREATED nếu sale đã tạo deal
@@ -111,17 +101,10 @@ public class LeadService {
     public int importLeads(List<Lead> leads) {
         int importedCount = 0;
         for (Lead lead : leads) {
-            // Check trùng email + cùng campaign
-            if (lead.getCampaignId() > 0) {
-                Lead dup = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), lead.getCampaignId());
-                if (dup != null) {
-                    continue; // đã có trong campaign này rồi, skip
-                }
-            } else {
-                Lead dup = leadDAO.findLeadByEmail(lead.getEmail());
-                if (dup != null) {
-                    continue; // email đã tồn tại mà không có campaign, skip
-                }
+            try {
+                validateLeadUniqueness(lead);
+            } catch (IllegalArgumentException ex) {
+                continue;
             }
 
             // Tạo Lead mới (mỗi campaign có record riêng)
@@ -146,6 +129,63 @@ public class LeadService {
      */
     public boolean checkDuplicate(String email) {
         return leadDAO.findLeadByEmail(email) != null;
+    }
+
+    public boolean checkDuplicatePhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return false;
+        }
+        return leadDAO.findLeadByPhone(phone.trim()) != null;
+    }
+
+    public void validateLeadUniqueness(Lead lead) {
+        validateLeadUniqueness(lead, null);
+    }
+
+    public void validateLeadUniqueness(Lead lead, Integer excludedLeadId) {
+        String phone = lead.getPhone() != null ? lead.getPhone().trim() : "";
+        lead.setPhone(phone);
+
+        boolean hasExcludeId = excludedLeadId != null && excludedLeadId > 0;
+
+        if (lead.getCampaignId() > 0) {
+            Lead dupEmail = hasExcludeId
+                    ? leadDAO.findLeadByEmailAndCampaignExcludeLeadId(lead.getEmail(), lead.getCampaignId(), excludedLeadId)
+                    : leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), lead.getCampaignId());
+            if (dupEmail != null) {
+                throw new IllegalArgumentException(
+                        "Email \"" + lead.getEmail() + "\" đã tồn tại trong campaign này.");
+            }
+
+            if (!phone.isEmpty()) {
+                Lead dupPhone = hasExcludeId
+                        ? leadDAO.findLeadByPhoneAndCampaignExcludeLeadId(phone, lead.getCampaignId(), excludedLeadId)
+                        : leadDAO.findLeadByPhoneAndCampaign(phone, lead.getCampaignId());
+                if (dupPhone != null) {
+                    throw new IllegalArgumentException(
+                            "Số điện thoại \"" + phone + "\" đã tồn tại trong campaign này.");
+                }
+            }
+            return;
+        }
+
+        Lead dupEmail = hasExcludeId
+                ? leadDAO.findLeadByEmailExcludeLeadId(lead.getEmail(), excludedLeadId)
+                : leadDAO.findLeadByEmail(lead.getEmail());
+        if (dupEmail != null) {
+            throw new IllegalArgumentException(
+                    "Email \"" + lead.getEmail() + "\" đã tồn tại. Vui lòng chọn Campaign để thêm vào chiến dịch.");
+        }
+
+        if (!phone.isEmpty()) {
+            Lead dupPhone = hasExcludeId
+                    ? leadDAO.findLeadByPhoneExcludeLeadId(phone, excludedLeadId)
+                    : leadDAO.findLeadByPhone(phone);
+            if (dupPhone != null) {
+                throw new IllegalArgumentException(
+                        "Số điện thoại \"" + phone + "\" đã tồn tại. Vui lòng chọn Campaign để thêm vào chiến dịch.");
+            }
+        }
     }
 
     /**

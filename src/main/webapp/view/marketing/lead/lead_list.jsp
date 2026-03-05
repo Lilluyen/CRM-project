@@ -12,6 +12,16 @@
                 <p class="text-muted mb-0">Danh sách, tìm kiếm và quản lý leads trong hệ thống</p>
             </div>
             <div class="d-flex gap-2">
+                <form method="GET" action="${pageContext.request.contextPath}/marketing/leads/export" class="d-inline">
+                    <input type="hidden" name="search" value="${searchKeyword}" />
+                    <input type="hidden" name="status" value="${filterStatus}" />
+                    <c:if test="${not empty filterCampaignId}">
+                        <input type="hidden" name="campaignId" value="${filterCampaignId}" />
+                    </c:if>
+                    <button type="submit" class="btn btn-outline-success">
+                        <i class="fas fa-file-excel me-1"></i> Export Excel
+                    </button>
+                </form>
                 <a href="${pageContext.request.contextPath}/marketing/leads/import"
                    class="btn btn-outline-primary">
                     <i class="fas fa-file-import me-1"></i> Import Leads
@@ -214,10 +224,6 @@
                                                class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button class="btn btn-sm btn-outline-secondary ms-1"
-                                                    onclick="openScoreModal(${lead.leadId}, ${lead.score})" title="Chấm điểm">
-                                                <i class="fas fa-star"></i>
-                                            </button>
                                         </td>
                                     </tr>
                                 </c:forEach>

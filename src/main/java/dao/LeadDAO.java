@@ -114,6 +114,21 @@ public class LeadDAO {
         return null;
     }
 
+    // Tìm một lead theo số điện thoại
+    public Lead findLeadByPhone(String phone) {
+        String sql = "SELECT * FROM Leads WHERE phone = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * Tìm lead theo email + campaign_id (kiểm tra trùng trong cùng campaign). 1
      * người có thể tham gia nhiều campaign → mỗi campaign có Lead record riêng.
@@ -123,6 +138,90 @@ public class LeadDAO {
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ps.setInt(2, campaignId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Tìm lead theo phone + campaign_id (kiểm tra trùng trong cùng campaign).
+     */
+    public Lead findLeadByPhoneAndCampaign(String phone, int campaignId) {
+        String sql = "SELECT * FROM Leads WHERE phone = ? AND campaign_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, campaignId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo email và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByEmailExcludeLeadId(String email, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE email = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, excludedLeadId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo phone và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByPhoneExcludeLeadId(String phone, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE phone = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, excludedLeadId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo email + campaign và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByEmailAndCampaignExcludeLeadId(String email, int campaignId, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE email = ? AND campaign_id = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, campaignId);
+            ps.setInt(3, excludedLeadId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo phone + campaign và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByPhoneAndCampaignExcludeLeadId(String phone, int campaignId, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE phone = ? AND campaign_id = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, campaignId);
+            ps.setInt(3, excludedLeadId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return mapResultSetToLead(rs);
@@ -327,6 +426,56 @@ public class LeadDAO {
             while (rs.next()) {
                 Lead lead = mapResultSetToLead(rs);
                 // Set campaign name từ LEFT JOIN
+                String campName = rs.getString("campaign_name");
+                if (campName != null) {
+                    lead.setCampaignName(campName);
+                }
+                leads.add(lead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return leads;
+    }
+
+    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId) {
+        String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
+                + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
+
+        if (campaignId > 0) {
+            sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
+        }
+
+        sql += "WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (campaignId > 0) {
+            sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
+            params.add(campaignId);
+            params.add(campaignId);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND l.status = ?";
+            params.add(status);
+        }
+
+        sql += " ORDER BY l.created_at DESC";
+
+        List<Lead> leads = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
                 String campName = rs.getString("campaign_name");
                 if (campName != null) {
                     lead.setCampaignName(campName);

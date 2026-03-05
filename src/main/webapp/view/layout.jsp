@@ -42,9 +42,9 @@
 
     <body>
 
-        <div id="global-loader">
+        <!-- <div id="global-loader">
             <div class="whirly-loader"> </div>
-        </div>
+        </div> -->
 
         <!-- Nội dung thay đổi nằm ở đây -->
         <main class="main-content main-wrapper layout container-fluid">
