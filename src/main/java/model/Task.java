@@ -4,9 +4,7 @@
  */
 package model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import model.User;
 import java.util.List;
 /**
  *
@@ -24,12 +22,11 @@ public class Task {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<TaskAssignee> assignees;     // List of users assigned to this task
+    private List<TaskHistory> historys;
     public Task() {
     }
 
-    public Task(Integer taskId, String title, String description, String status,
-                String priority, LocalDateTime dueDate, Integer progress,
-                User createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, List<TaskAssignee> assignees) {
+    public Task(Integer taskId, String title, String description, String status, String priority, LocalDateTime dueDate, Integer progress, User createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, List<TaskAssignee> assignees, List<TaskHistory> historys) {
         this.taskId = taskId;
         this.title = title;
         this.description = description;
@@ -41,7 +38,10 @@ public class Task {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.assignees = assignees;
+        this.historys = historys;
     }
+
+    
 
     public Integer getTaskId() { return taskId; }
     public void setTaskId(Integer taskId) { this.taskId = taskId; }
@@ -75,4 +75,21 @@ public class Task {
 
     public List<TaskAssignee> getassignees() { return assignees; }
     public void setassignees(List<TaskAssignee> assignees) { this.assignees = assignees; }
+
+    public List<TaskAssignee> getAssignees() {
+        return assignees;
+    }
+
+    public void setAssignees(List<TaskAssignee> assignees) {
+        this.assignees = assignees;
+    }
+
+    public List<TaskHistory> getHistorys() {
+        return historys;
+    }
+
+    public void setHistorys(List<TaskHistory> historys) {
+        this.historys = historys;
+    }
+    
 }

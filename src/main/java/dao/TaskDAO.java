@@ -8,24 +8,15 @@ import model.Role;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import model.TaskHistory;
+import model.TaskHistoryDetail;
 
 /**
- * TaskDAO – aligned with the actual CRM_System schema:
+ * TaskDAO – aligned with the actual CRM_System schema.
  *
- * Tasks          : task_id, title, description, status, priority,
- *                  due_date, progress, created_by, created_at, updated_at
- * Task_Assignees : task_id, user_id, assigned_at
- * Users          : user_id, username, full_name, email, role_id …
- * Roles          : role_id, role_name …
- *
- * Key design decisions
- * ─────────────────────
- * • getAllTasks / getTaskById fetch Tasks + creator (LEFT JOIN Users+Roles)
- * • assignees are loaded separately via loadAssignees() to keep queries simple.
- * • createTask / updateTask operate only on the Tasks row.
- * • addAssignee / removeAssignee manage Task_Assignees.
- * • announceTask inserts into Notifications + Notification_Recipients (two-table
- *   schema used in CRM_System).
+ * NOTE: Method 11 (announceAssignedTask) has been REMOVED.
+ * All notification logic is now handled exclusively by NotificationDAO / NotificationService
+ * to maintain proper separation of concerns.
  */
 public class TaskDAO {
 
@@ -41,31 +32,25 @@ public class TaskDAO {
     public boolean createTask(Task task) {
         if (task == null || task.getTitle() == null || task.getTitle().isBlank()) return false;
 
-        String sql = "INSERT INTO Tasks (title, description, status, priority, due_date, progress, created_by) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
+        String sql = "INSERT INTO Tasks (title, description, status, priority, due_date, progress, "
+                   + "created_by, created_at, updated_at) "
+                   + "VALUES (?,?,?,?,?,?,?,GETDATE(),GETDATE())";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, task.getTitle().trim());
             ps.setString(2, task.getDescription() != null ? task.getDescription().trim() : "");
             ps.setString(3, task.getStatus()   != null ? task.getStatus()   : "Pending");
             ps.setString(4, task.getPriority() != null ? task.getPriority() : "Medium");
-            if (task.getDueDate() != null)
-                ps.setTimestamp(5, Timestamp.valueOf(task.getDueDate()));
-            else
-                ps.setNull(5, Types.TIMESTAMP);
+            if (task.getDueDate() != null) ps.setTimestamp(5, Timestamp.valueOf(task.getDueDate()));
+            else ps.setNull(5, Types.TIMESTAMP);
             ps.setInt(6, task.getProgress() != null ? task.getProgress() : 0);
             ps.setInt(7, task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0);
-
-            int rows = ps.executeUpdate();
-            if (rows > 0) {
+            if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) task.setTaskId(keys.getInt(1));
                 }
                 return true;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
@@ -74,26 +59,19 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateTask(Task task) {
         if (task == null || task.getTaskId() == null || task.getTaskId() <= 0) return false;
-
-        String sql = "UPDATE Tasks SET title=?, description=?, status=?, priority=?, "
-                   + "due_date=?, progress=?, updated_at=GETDATE() WHERE task_id=?";
-
+        String sql = "UPDATE Tasks SET title=?,description=?,status=?,priority=?,due_date=?,progress=?,"
+                   + "updated_at=GETDATE() WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, task.getTitle()       != null ? task.getTitle().trim()       : "");
             ps.setString(2, task.getDescription() != null ? task.getDescription().trim() : "");
             ps.setString(3, task.getStatus()      != null ? task.getStatus()             : "Pending");
             ps.setString(4, task.getPriority()    != null ? task.getPriority()           : "Medium");
-            if (task.getDueDate() != null)
-                ps.setTimestamp(5, Timestamp.valueOf(task.getDueDate()));
-            else
-                ps.setNull(5, Types.TIMESTAMP);
+            if (task.getDueDate() != null) ps.setTimestamp(5, Timestamp.valueOf(task.getDueDate()));
+            else ps.setNull(5, Types.TIMESTAMP);
             ps.setInt(6, task.getProgress() != null ? task.getProgress() : 0);
             ps.setInt(7, task.getTaskId());
-
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
@@ -101,111 +79,74 @@ public class TaskDAO {
     // 3. UPDATE STATUS
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateTaskStatus(int taskId, String status) {
-        String sql = "UPDATE Tasks SET status=?, updated_at=GETDATE() WHERE task_id=?";
+        String sql = "UPDATE Tasks SET status=?,updated_at=GETDATE() WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setInt(2, taskId);
+            ps.setString(1, status); ps.setInt(2, taskId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 4. UPDATE PROGRESS (0-100)
+    // 4. UPDATE PROGRESS (0-100) – auto-derives status
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateProgress(int taskId, int progress) {
         if (progress < 0 || progress > 100) return false;
         String newStatus = progress >= 100 ? "Done" : (progress > 0 ? "In Progress" : "Pending");
-        String sql = "UPDATE Tasks SET progress=?, status=?, updated_at=GETDATE() WHERE task_id=?";
+        String sql = "UPDATE Tasks SET progress=?,status=?,updated_at=GETDATE() WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, progress);
-            ps.setString(2, newStatus);
-            ps.setInt(3, taskId);
+            ps.setInt(1, progress); ps.setString(2, newStatus); ps.setInt(3, taskId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 5. GET ALL TASKS (with creator info via JOIN)
+    // 5. GET ALL TASKS
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> getAllTasks() {
         List<Task> list = new ArrayList<>();
         String sql = "SELECT t.*, u.user_id AS u_id, u.full_name, u.email, u.username, "
-                   + "       r.role_id, r.role_name "
+                   + "r.role_id, r.role_name "
                    + "FROM Tasks t "
-                   + "LEFT JOIN Users u ON t.created_by = u.user_id "
-                   + "LEFT JOIN Roles r ON u.role_id = r.role_id "
+                   + "LEFT JOIN Users u ON t.created_by=u.user_id "
+                   + "LEFT JOIN Roles r ON u.role_id=r.role_id "
                    + "ORDER BY t.created_at DESC";
-        try (PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Task task = mapRow(rs);
                 task.setassignees(loadAssignees(task.getTaskId()));
                 list.add(task);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // 6. GET ALL TASKS – PAGED + FILTERED
-    //    Supports: title, status, priority, assigneeUserId
+    //    Supports: title, description, status, priority, fromDate, toDate, assigneeUserId
     // ─────────────────────────────────────────────────────────────────────────
-    public List<Task> getTasksPaged(String title, String status, String priority,
-                                    Integer assigneeUserId,
-                                    String sortField, String sortDir,
-                                    int page, int pageSize) {
+    public List<Task> getTasksPaged(String title, String description, String status, String priority,
+            String fromDate, String toDate,
+            Integer assigneeUserId,
+            String sortField, String sortDir,
+            int page, int pageSize) {
         List<Task> list = new ArrayList<>();
-
         StringBuilder sql = new StringBuilder(
-            "SELECT DISTINCT t.*, u.user_id AS u_id, u.full_name, u.email, u.username, "
-          + "r.role_id, r.role_name "
-          + "FROM Tasks t "
-          + "LEFT JOIN Users u  ON t.created_by  = u.user_id "
-          + "LEFT JOIN Roles r  ON u.role_id      = r.role_id "
-          + "LEFT JOIN Task_Assignees ta ON t.task_id = ta.task_id "
-          + "WHERE 1=1 "
-        );
-
+                "SELECT DISTINCT t.*, u.user_id AS u_id, u.full_name, u.email, u.username, "
+                + "r.role_id, r.role_name "
+                + "FROM Tasks t "
+                + "LEFT JOIN Users u  ON t.created_by=u.user_id "
+                + "LEFT JOIN Roles r  ON u.role_id=r.role_id "
+                + "LEFT JOIN Task_Assignees ta ON t.task_id=ta.task_id "
+                + "WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
-        if (title != null && !title.isBlank()) {
-            sql.append("AND t.title LIKE ? ");
-            params.add("%" + title.trim() + "%");
-        }
-        if (status != null && !status.isBlank()) {
-            sql.append("AND t.status = ? ");
-            params.add(status.trim());
-        }
-        if (priority != null && !priority.isBlank()) {
-            sql.append("AND t.priority = ? ");
-            params.add(priority.trim());
-        }
-        if (assigneeUserId != null && assigneeUserId > 0) {
-            sql.append("AND ta.user_id = ? ");
-            params.add(assigneeUserId);
-        }
-
-        // Sort
-        String safe = "t.created_at";
-        if ("dueDate".equals(sortField))   safe = "t.due_date";
-        else if ("priority".equals(sortField)) safe = "t.priority";
-        else if ("status".equals(sortField))   safe = "t.status";
-        else if ("progress".equals(sortField)) safe = "t.progress";
-        String dir = "DESC".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
-        sql.append("ORDER BY ").append(safe).append(" ").append(dir).append(" ");
-
-        int offset = (page - 1) * pageSize;
+        appendFilters(sql, params, title, description, status, priority, fromDate, toDate, assigneeUserId);
+        sql.append("ORDER BY ").append(resolveSortCol(sortField))
+           .append(" ").append("DESC".equalsIgnoreCase(sortDir) ? "DESC" : "ASC").append(" ");
         sql.append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-        params.add(offset);
+        params.add((page - 1) * pageSize);
         params.add(pageSize);
-
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
             try (ResultSet rs = ps.executeQuery()) {
@@ -215,41 +156,57 @@ public class TaskDAO {
                     list.add(task);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
-    public int countTasksFiltered(String title, String status, String priority, Integer assigneeUserId) {
+    public int countTasksFiltered(String title, String description, String status, String priority,
+            String fromDate, String toDate, Integer assigneeUserId) {
         StringBuilder sql = new StringBuilder(
-            "SELECT COUNT(DISTINCT t.task_id) "
-          + "FROM Tasks t "
-          + "LEFT JOIN Task_Assignees ta ON t.task_id = ta.task_id "
-          + "WHERE 1=1 "
-        );
+                "SELECT COUNT(DISTINCT t.task_id) FROM Tasks t "
+                + "LEFT JOIN Task_Assignees ta ON t.task_id=ta.task_id WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
-        if (title != null && !title.isBlank()) {
-            sql.append("AND t.title LIKE ? "); params.add("%" + title.trim() + "%");
-        }
-        if (status != null && !status.isBlank()) {
-            sql.append("AND t.status = ? "); params.add(status.trim());
-        }
-        if (priority != null && !priority.isBlank()) {
-            sql.append("AND t.priority = ? "); params.add(priority.trim());
-        }
-        if (assigneeUserId != null && assigneeUserId > 0) {
-            sql.append("AND ta.user_id = ? "); params.add(assigneeUserId);
-        }
+        appendFilters(sql, params, title, description, status, priority, fromDate, toDate, assigneeUserId);
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return 0;
+    }
+
+    private void appendFilters(StringBuilder sql, List<Object> params,
+            String title, String description, String status, String priority,
+            String fromDate, String toDate, Integer assigneeUserId) {
+        if (title != null && !title.isBlank()) {
+            sql.append("AND t.title LIKE ? "); params.add("%" + title.trim() + "%");
+        }
+        if (description != null && !description.isBlank()) {
+            sql.append("AND t.description LIKE ? "); params.add("%" + description.trim() + "%");
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append("AND t.status=? "); params.add(status.trim());
+        }
+        if (priority != null && !priority.isBlank()) {
+            sql.append("AND t.priority=? "); params.add(priority.trim());
+        }
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append("AND t.due_date >= ? "); params.add(fromDate.trim() + " 00:00:00");
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append("AND t.due_date <= ? "); params.add(toDate.trim() + " 23:59:59");
+        }
+        if (assigneeUserId != null && assigneeUserId > 0) {
+            sql.append("AND ta.user_id=? "); params.add(assigneeUserId);
+        }
+    }
+
+    private String resolveSortCol(String sortField) {
+        if ("dueDate".equals(sortField))  return "t.due_date";
+        if ("priority".equals(sortField)) return "CASE t.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END";
+        if ("progress".equals(sortField)) return "t.progress";
+        return "t.created_at";
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -257,11 +214,11 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public Task getTaskById(int id) {
         String sql = "SELECT t.*, u.user_id AS u_id, u.full_name, u.email, u.username, "
-                   + "       r.role_id, r.role_name "
+                   + "r.role_id, r.role_name "
                    + "FROM Tasks t "
-                   + "LEFT JOIN Users u ON t.created_by = u.user_id "
-                   + "LEFT JOIN Roles r ON u.role_id = r.role_id "
-                   + "WHERE t.task_id = ?";
+                   + "LEFT JOIN Users u ON t.created_by=u.user_id "
+                   + "LEFT JOIN Roles r ON u.role_id=r.role_id "
+                   + "WHERE t.task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -271,9 +228,7 @@ public class TaskDAO {
                     return task;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
@@ -283,11 +238,11 @@ public class TaskDAO {
     public List<Task> findByAssignee(int userId) {
         List<Task> list = new ArrayList<>();
         String sql = "SELECT t.*, u.user_id AS u_id, u.full_name, u.email, u.username, "
-                   + "       r.role_id, r.role_name "
+                   + "r.role_id, r.role_name "
                    + "FROM Tasks t "
-                   + "JOIN Task_Assignees ta ON t.task_id = ta.task_id AND ta.user_id = ? "
-                   + "LEFT JOIN Users u ON t.created_by = u.user_id "
-                   + "LEFT JOIN Roles r ON u.role_id = r.role_id "
+                   + "JOIN Task_Assignees ta ON t.task_id=ta.task_id AND ta.user_id=? "
+                   + "LEFT JOIN Users u ON t.created_by=u.user_id "
+                   + "LEFT JOIN Roles r ON u.role_id=r.role_id "
                    + "ORDER BY t.created_at DESC";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
@@ -298,9 +253,7 @@ public class TaskDAO {
                     list.add(task);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
@@ -309,15 +262,13 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public boolean addAssignee(int taskId, int userId) {
         String sql = "IF NOT EXISTS (SELECT 1 FROM Task_Assignees WHERE task_id=? AND user_id=?) "
-                   + "INSERT INTO Task_Assignees (task_id, user_id) VALUES (?, ?)";
+                   + "INSERT INTO Task_Assignees (task_id,user_id,assigned_at) VALUES (?,?,GETDATE())";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId); ps.setInt(2, userId);
             ps.setInt(3, taskId); ps.setInt(4, userId);
             ps.executeUpdate();
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
@@ -326,9 +277,7 @@ public class TaskDAO {
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId); ps.setInt(2, userId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
@@ -337,55 +286,100 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public boolean deleteTask(int taskId) {
         try {
-            // remove assignees first (FK)
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM Task_Assignees WHERE task_id=?")) {
-                ps.setInt(1, taskId); ps.executeUpdate();
+            for (String s : new String[]{
+                    "DELETE FROM Task_Assignees WHERE task_id=?",
+                    "DELETE FROM Task_History_Detail WHERE history_id IN (SELECT history_id FROM Task_History WHERE task_id=?)",
+                    "DELETE FROM Task_History WHERE task_id=?",
+                    "DELETE FROM Tasks WHERE task_id=?"}) {
+                try (PreparedStatement ps = connection.prepareStatement(s)) {
+                    ps.setInt(1, taskId); ps.executeUpdate();
+                }
             }
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM Task_History WHERE task_id=?")) {
-                ps.setInt(1, taskId); ps.executeUpdate();
-            }
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM Tasks WHERE task_id=?")) {
-                ps.setInt(1, taskId);
-                return ps.executeUpdate() > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 11. ANNOUNCE: insert Notification + Recipient row
+    // 11. TASK HISTORY – insert header row, return generated history_id
     // ─────────────────────────────────────────────────────────────────────────
-    public boolean announceAssignedTask(int userId, String title, String content) {
-        String sqlNotif = "INSERT INTO Notifications (title, content, type, related_type) "
-                        + "VALUES (?, ?, 'TASK', 'Task')";
-        String sqlRecip = "INSERT INTO Notification_Recipients (notification_id, user_id) VALUES (?, ?)";
-        try {
-            int notifId;
-            try (PreparedStatement ps = connection.prepareStatement(sqlNotif,
-                    Statement.RETURN_GENERATED_KEYS)) {
-                ps.setString(1, title);
-                ps.setString(2, content);
-                ps.executeUpdate();
-                try (ResultSet keys = ps.getGeneratedKeys()) {
-                    if (!keys.next()) return false;
-                    notifId = keys.getInt(1);
+    public int insertTaskHistory(int taskId, int changedBy) {
+        String sql = "INSERT INTO Task_History (task_id, changed_by, changed_at) VALUES (?,?,GETDATE())";
+        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, taskId); ps.setInt(2, changedBy);
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return -1;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 12. TASK HISTORY DETAIL – one row per changed field
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean insertTaskHistoryDetail(int historyId, String fieldName, String oldValue, String newValue) {
+        String sql = "INSERT INTO Task_History_Detail (history_id, field_name, old_value, new_value) "
+                   + "VALUES (?,?,?,?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, historyId);
+            ps.setString(2, fieldName);
+            ps.setString(3, oldValue  != null ? oldValue  : "");
+            ps.setString(4, newValue  != null ? newValue  : "");
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); }
+        return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 13. LIST TASK HISTORY BY TASK ID
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<TaskHistory> listTaskHistoryByID(int id) {
+        List<TaskHistory> list = new ArrayList<>();
+        String sql = "SELECT th.history_id, th.task_id, th.changed_by, th.changed_at, "
+                   + "u.full_name AS changer_name "
+                   + "FROM Task_History th "
+                   + "LEFT JOIN Users u ON th.changed_by=u.user_id "
+                   + "WHERE th.task_id=? ORDER BY th.changed_at DESC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TaskHistory th = new TaskHistory();
+                    th.setHistoryId(rs.getInt("history_id"));
+                    th.setTaskId(rs.getInt("task_id"));
+                    th.setChangedBy(rs.getInt("changed_by"));
+                    Timestamp cat = rs.getTimestamp("changed_at");
+                    if (cat != null) th.setChangedAt(cat.toLocalDateTime());
+                    list.add(th);
                 }
             }
-            try (PreparedStatement ps = connection.prepareStatement(sqlRecip)) {
-                ps.setInt(1, notifId);
-                ps.setInt(2, userId);
-                ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 14. LIST TASK HISTORY DETAILS BY HISTORY ID
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<TaskHistoryDetail> listTaskHistoryDetailsByID(int id) {
+        List<TaskHistoryDetail> list = new ArrayList<>();
+        String sql = "SELECT detail_id,history_id,field_name,old_value,new_value "
+                   + "FROM Task_History_Detail WHERE history_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TaskHistoryDetail d = new TaskHistoryDetail();
+                    d.setDetailId(rs.getInt("detail_id"));
+                    d.setHistoryId(rs.getInt("history_id"));
+                    d.setFieldName(rs.getString("field_name"));
+                    d.setOldValue(rs.getString("old_value"));
+                    d.setNewValue(rs.getString("new_value"));
+                    list.add(d);
+                }
             }
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -399,17 +393,12 @@ public class TaskDAO {
         t.setStatus(rs.getString("status"));
         t.setPriority(rs.getString("priority"));
         t.setProgress(rs.getInt("progress"));
-
         Timestamp due = rs.getTimestamp("due_date");
         if (due != null) t.setDueDate(due.toLocalDateTime());
-
         Timestamp cat = rs.getTimestamp("created_at");
         if (cat != null) t.setCreatedAt(cat.toLocalDateTime());
-
         Timestamp uat = rs.getTimestamp("updated_at");
         if (uat != null) t.setUpdatedAt(uat.toLocalDateTime());
-
-        // creator
         int uId = rs.getInt("u_id");
         if (!rs.wasNull() && uId > 0) {
             User u = new User();
@@ -419,9 +408,7 @@ public class TaskDAO {
             u.setUsername(rs.getString("username"));
             int roleId = rs.getInt("role_id");
             if (!rs.wasNull()) {
-                Role r = new Role();
-                r.setRoleId(roleId);
-                r.setRoleName(rs.getString("role_name"));
+                Role r = new Role(); r.setRoleId(roleId); r.setRoleName(rs.getString("role_name"));
                 u.setRole(r);
             }
             t.setCreatedBy(u);
@@ -431,13 +418,12 @@ public class TaskDAO {
 
     private List<TaskAssignee> loadAssignees(int taskId) {
         List<TaskAssignee> list = new ArrayList<>();
-        String sql = "SELECT ta.task_id, ta.assigned_at, "
-                   + "       u.user_id, u.full_name, u.email, u.username, "
-                   + "       r.role_id, r.role_name "
+        String sql = "SELECT ta.task_id, ta.assigned_at, u.user_id, u.full_name, u.email, u.username, "
+                   + "r.role_id, r.role_name "
                    + "FROM Task_Assignees ta "
-                   + "JOIN Users u ON ta.user_id = u.user_id "
-                   + "LEFT JOIN Roles r ON u.role_id = r.role_id "
-                   + "WHERE ta.task_id = ?";
+                   + "JOIN Users u ON ta.user_id=u.user_id "
+                   + "LEFT JOIN Roles r ON u.role_id=r.role_id "
+                   + "WHERE ta.task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -449,22 +435,17 @@ public class TaskDAO {
                     u.setUsername(rs.getString("username"));
                     int roleId = rs.getInt("role_id");
                     if (!rs.wasNull()) {
-                        Role r = new Role();
-                        r.setRoleId(roleId);
-                        r.setRoleName(rs.getString("role_name"));
+                        Role r = new Role(); r.setRoleId(roleId); r.setRoleName(rs.getString("role_name"));
                         u.setRole(r);
                     }
                     TaskAssignee ta = new TaskAssignee();
-                    ta.setTaskId(rs.getInt("task_id"));
-                    ta.setUser(u);
+                    ta.setTaskId(rs.getInt("task_id")); ta.setUser(u);
                     Timestamp at = rs.getTimestamp("assigned_at");
                     if (at != null) ta.setAssignedAt(at.toLocalDateTime());
                     list.add(ta);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 }

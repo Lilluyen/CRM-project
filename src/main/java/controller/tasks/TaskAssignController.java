@@ -42,7 +42,9 @@ public class TaskAssignController extends HttpServlet {
             writeJson(resp, "{\"success\":false,\"message\":\"Chưa đăng nhập\"}");
             return;
         }
-
+        if (req.getParameter("taskId") == null) {
+            resp.sendRedirect(req.getContextPath()+"/tasks/list");
+        }
         int    taskId = Integer.parseInt(req.getParameter("taskId"));
         int    userId = Integer.parseInt(req.getParameter("userId"));
         String action = req.getParameter("action"); // "add" hoặc "remove"
