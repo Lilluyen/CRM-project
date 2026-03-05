@@ -114,6 +114,21 @@ public class LeadDAO {
         return null;
     }
 
+    // Tìm một lead theo số điện thoại
+    public Lead findLeadByPhone(String phone) {
+        String sql = "SELECT * FROM Leads WHERE phone = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * Tìm lead theo email + campaign_id (kiểm tra trùng trong cùng campaign). 1
      * người có thể tham gia nhiều campaign → mỗi campaign có Lead record riêng.
@@ -123,6 +138,90 @@ public class LeadDAO {
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ps.setInt(2, campaignId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Tìm lead theo phone + campaign_id (kiểm tra trùng trong cùng campaign).
+     */
+    public Lead findLeadByPhoneAndCampaign(String phone, int campaignId) {
+        String sql = "SELECT * FROM Leads WHERE phone = ? AND campaign_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, campaignId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo email và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByEmailExcludeLeadId(String email, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE email = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, excludedLeadId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo phone và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByPhoneExcludeLeadId(String phone, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE phone = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, excludedLeadId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo email + campaign và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByEmailAndCampaignExcludeLeadId(String email, int campaignId, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE email = ? AND campaign_id = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, campaignId);
+            ps.setInt(3, excludedLeadId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Tìm lead theo phone + campaign và loại trừ lead hiện tại (phục vụ update)
+    public Lead findLeadByPhoneAndCampaignExcludeLeadId(String phone, int campaignId, int excludedLeadId) {
+        String sql = "SELECT * FROM Leads WHERE phone = ? AND campaign_id = ? AND lead_id <> ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, campaignId);
+            ps.setInt(3, excludedLeadId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return mapResultSetToLead(rs);

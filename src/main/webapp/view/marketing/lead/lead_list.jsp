@@ -224,10 +224,6 @@
                                                class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button class="btn btn-sm btn-outline-secondary ms-1"
-                                                    onclick="openScoreModal(${lead.leadId}, ${lead.score})" title="Chấm điểm">
-                                                <i class="fas fa-star"></i>
-                                            </button>
                                         </td>
                                     </tr>
                                 </c:forEach>

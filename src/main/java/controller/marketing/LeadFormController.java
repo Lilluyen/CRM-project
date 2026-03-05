@@ -137,10 +137,9 @@ public class LeadFormController extends HttpServlet {
             }
 
         } catch (Exception e) {
-            Lead lead = leadService.getLeadById(leadId);
-            if (lead != null) {
-                request.setAttribute("lead", lead);
-            }
+            Lead lead = extractLeadFromRequestSafe(request);
+            lead.setLeadId(leadId);
+            request.setAttribute("lead", lead);
             request.setAttribute("error", e.getMessage());
             forwardForm(request, response, "Chỉnh sửa Lead - CRM");
         }
