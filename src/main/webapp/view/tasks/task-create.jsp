@@ -3,7 +3,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="java.util.List, model.User" %>
 <div >
-<div class="page-wrapper">
+<div class="">
   <div class="content">
 
     <div class="page-header">

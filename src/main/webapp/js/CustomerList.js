@@ -300,6 +300,14 @@ function viewCustomer(customerId) {
     window.location.href = url; // chuyển trang
 }
 
+function editCustomer(customerId) {
+    if (!customerId)
+        return;
+    const ctx = window.__CTX__ || ""; // fallback nếu quên inject
+    const url = `${ctx}/customers/edit?customerId=${encodeURIComponent(customerId)}`;
+    window.location.href = url;
+}
+
 function closePreview() {
     const preview = document.getElementById('customerPreview');
     if (preview) {
@@ -307,8 +315,18 @@ function closePreview() {
     }
 }
 
+function upgradeCustomer(customerId) {
+    if (confirm('Upgrade loyalty level for this customer?')) {
+        const ctx = window.__CTX__ || "";
+        const url = `${ctx}/customers/upgrade?customerId=${encodeURIComponent(customerId)}`;
+        window.location.href = url;
+    }
+}
+
 function deleteCustomer(customerId) {
+
     if (confirm('Are you sure you want to delete this customer?')) {
+
         // Make API call to delete
         const ctx = window.__CTX__ || ""; // fallback nếu quên inject
 
@@ -320,10 +338,11 @@ function deleteCustomer(customerId) {
 
 
 
+
 // Close action menu when clicking outside
 document.addEventListener("click", function (e) {
 
-    const ellipsis = e.target.closest(".fa-ellipsis-vertical");
+    const ellipsis = e.target.closest(".menu-btn");
 
     // CLICK vào dấu ...
     if (ellipsis) {
@@ -489,12 +508,31 @@ function renderTableBody(customers) {
 <td>${c.lastPurchase ?? ""}</td>
 
     <td class="actions">
-        <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
+        <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </button>
+
+        <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
+            <i class="fa-solid fa-pen-to-square"></i>
+        </button>
         <div class="action-wrapper">
-            <i class="fa-solid fa-ellipsis-vertical"></i>
+            <button class="action-icon-btn menu-btn">
+                <i class="fa-solid fa-ellipsis"></i>
+            </button>
             <div class="action-menu">
-                <div onclick="openPreview(${c.customerId})">Preview</div>
-                <div onclick="deleteCustomer(${c.customerId})">Delete</div>
+                <div class="action-menu-item" onclick="openPreview(${c.customerId})">
+                    <i class="fa-regular fa-id-card"></i>
+                    <span>Preview</span>
+                </div>
+                <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
+                    <i class="fa-solid fa-angles-up"></i>
+                    <span>Upgrade Level</span>
+                </div>
+                <div class="action-menu-divider"></div>
+                <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
+                    <i class="fa-regular fa-trash-can"></i>
+                    <span>Delete</span>
+                </div>
             </div>
         </div>
     </td>
@@ -520,6 +558,8 @@ function renderTags(tags) {
 }
 
 function getLoyaltyClass(tier) {
+    if (tier === "DIAMOND")
+        return "diamond";
     if (tier === "PLATINUM")
         return "platinum";
     if (tier === "GOLD")
@@ -538,21 +578,65 @@ function renderPagination(totalPages, currentPage) {
     const container = document.getElementById("paginationControls");
 
     if (!totalPages || totalPages <= 1) {
-        container.innerHTML = `<button class= "active btn btn-light">1</button>`;
+        container.innerHTML = `<button class="active btn btn-light">1</button>`;
         return;
     }
 
+    function getPageRange(current, total) {
+        const delta = 2;
+        const range = [];
+        const rangeWithDots = [];
+
+        for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+            range.push(i);
+        }
+
+        if (range[0] > 2) rangeWithDots.push(1, '...');
+        else rangeWithDots.push(1);
+
+        rangeWithDots.push(...range);
+
+        if (range[range.length - 1] < total - 1) rangeWithDots.push('...', total);
+        else rangeWithDots.push(total);
+
+        return rangeWithDots;
+    }
+
+    const pages = getPageRange(currentPage, totalPages);
+
     let html = "";
 
-    for (let i = 1; i <= totalPages; i++) {
+    // Prev button
+    html += `
+        <button onclick="loadPage(${currentPage - 1}, ${rowsPerPage})"
+            class="btn btn-light btn-nav"
+            ${currentPage === 1 ? "disabled" : ""}>
+            <i class="fas fa-chevron-left"></i> Prev
+        </button>
+    `;
 
-        html += `
-            <button onclick="loadPage(${i}, ${rowsPerPage})"
-                class="btn btn-light ${i === currentPage ? "active" : ""}">
-                ${i}
-            </button>
-        `;
-    }
+    // Page number buttons
+    pages.forEach(p => {
+        if (p === '...') {
+            html += `<span class="pagination-dots">...</span>`;
+        } else {
+            html += `
+                <button onclick="loadPage(${p}, ${rowsPerPage})"
+                    class="btn btn-light ${p === currentPage ? "active" : ""}">
+                    ${p}
+                </button>
+            `;
+        }
+    });
+
+    // Next button
+    html += `
+        <button onclick="loadPage(${currentPage + 1}, ${rowsPerPage})"
+            class="btn btn-light btn-nav"
+            ${currentPage === totalPages ? "disabled" : ""}>
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
 
     container.innerHTML = html;
 }

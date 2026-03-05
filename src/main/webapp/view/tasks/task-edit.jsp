@@ -42,7 +42,7 @@
   .tab-pane { padding-top:1.2rem; }
 </style>
 
-<div class="page-wrapper">
+<div class="">
  <div class="content">
 
   <%-- ── Header ─────────────────────────────────────────────────────── --%>

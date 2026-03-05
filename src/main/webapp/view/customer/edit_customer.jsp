@@ -2,7 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page isELIgnored="false" %>
 
-<div class="cf col-10 mt-5">
+<div class="cf mt-5">
     <div class="cf__container">
 
         <div class="cf__header">

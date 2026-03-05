@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.CustomerService;
+import util.ControllerUltil;
 
 @WebServlet("/customers/remove")
 public class CustomerRemoveController extends HttpServlet {
@@ -51,13 +52,9 @@ public class CustomerRemoveController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Khách hàng không tồn tại");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Database error: " + e.getMessage());
-            request.getRequestDispatcher("/error.jsp").forward(request, response);
+            ControllerUltil.forwardError(request, response, "Database error: " + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
-            request.getRequestDispatcher("/error.jsp").forward(request, response);
+            ControllerUltil.forwardError(request, response, "Error: " + e.getMessage());
         }
     }
 

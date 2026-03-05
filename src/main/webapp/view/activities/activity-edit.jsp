@@ -9,8 +9,10 @@
             ? a.getActivityDate().toString().substring(0, 16) : "";
     String desc = a.getDescription() != null ? a.getDescription() : "";
 %>
+
+
 <div>
-<div class="page-wrapper">
+<div class="">
   <div class="content">
 
     <div class="page-header">

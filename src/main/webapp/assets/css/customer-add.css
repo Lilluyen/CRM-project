@@ -1,52 +1,222 @@
-/* BLOCK */
-.cf {
-    padding: 32px 40px;
-    margin-top: 25px;
+/* ============================================================
+   CUSTOMER FORM — Refined Luxury Aesthetic
+   Font: Cormorant Garamond (display) + DM Sans (body)
+   Theme: Warm ivory · Deep navy · Gold accent
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── Variables ─────────────────────────────────────────────── */
+:root {
+    --ivory: #faf8f5;
+    --white: #ffffff;
+    --navy: #0f1e35;
+    --navy-mid: #1a3255;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-pale: #fdf5e0;
+    --muted: #7a8499;
+    --border: #e8e4dc;
+    --border-focus: #c9a84c;
+    --danger: #d94f4f;
+    --shadow-sm: 0 2px 8px rgba(15, 30, 53, .06);
+    --shadow-md: 0 8px 32px rgba(15, 30, 53, .10);
+    --shadow-lg: 0 20px 60px rgba(15, 30, 53, .14);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --transition: .28s cubic-bezier(.4, 0, .2, 1);
 }
 
-/* container */
+/* ── Page wrapper ───────────────────────────────────────────── */
+.cf {
+    padding: 40px 32px;
+    margin-top: 20px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ivory);
+    min-height: 100vh;
+    animation: cf-page-in .6s ease both;
+}
+
+@keyframes cf-page-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Container ──────────────────────────────────────────────── */
 .cf__container {
     max-width: 100%;
     margin: 0 auto;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, .05);
-    border: 1px solid #eef1f5;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
 }
 
-/* header */
+/* subtle top-edge gold bar */
+.cf__container::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 55%, transparent 100%);
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
 .cf__header {
-    padding: 24px 28px;
-    border-bottom: 1px solid #f1f3f7;
+    padding: 28px 36px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, var(--white) 60%, var(--gold-pale) 100%);
+    animation: slide-down .5s .1s ease both;
 }
 
-.cf__error-box{
-        padding: 24px 28px;
+@keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* decorative icon block before title */
+.cf__header::before {
+    content: '✦';
+    font-size: 18px;
+    color: var(--gold);
+    animation: spin-once 1.2s .4s ease both;
+}
+
+@keyframes spin-once {
+    from {
+        opacity: 0;
+        transform: rotate(-180deg) scale(.4);
+    }
+
+    to {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
 }
 
 .cf__title {
     margin: 0;
-    font-size: 20px;
-    font-weight: 600;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: .02em;
 }
 
-/* section */
+/* ── Error box ──────────────────────────────────────────────── */
+.cf__error-box {
+    padding: 18px 36px;
+    background: #fff5f5;
+    border-left: 4px solid var(--danger);
+    color: var(--danger);
+    font-size: 13.5px;
+    animation: shake .45s ease;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    40% {
+        transform: translateX(6px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+/* ── Sections ───────────────────────────────────────────────── */
 .cf__section {
-    padding: 24px 28px;
+    padding: 28px 36px;
+    border-bottom: 1px solid var(--border);
+    animation: fade-up .5s ease both;
+}
+
+.cf__section:nth-child(2) {
+    animation-delay: .12s;
+}
+
+.cf__section:nth-child(3) {
+    animation-delay: .20s;
+}
+
+.cf__section:nth-child(4) {
+    animation-delay: .28s;
+}
+
+.cf__section:nth-child(5) {
+    animation-delay: .36s;
+}
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .cf__section-title {
-    font-size: 13px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: #6b7280;
-    margin-bottom: 18px;
+    color: var(--gold);
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* grid */
+.cf__section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+}
+
+/* ── Grid layouts ───────────────────────────────────────────── */
 .cf__grid {
     display: grid;
     gap: 20px;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
 .cf__grid--2 {
@@ -61,29 +231,88 @@
     grid-template-columns: repeat(4, 1fr);
 }
 
-/* field */
+/* ── Field ──────────────────────────────────────────────────── */
+.cf__field {
+    position: relative;
+}
+
 .cf__label {
     display: block;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    margin-bottom: 6px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    transition: color var(--transition);
 }
 
+.cf__field:focus-within .cf__label {
+    color: var(--navy-mid);
+}
+
+/* ── Inputs & selects ───────────────────────────────────────── */
 .cf__input {
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    transition: .2s;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    border: 2.5px solid var(--border);
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--navy);
+    transition: border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition),
+        transform var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box;
 }
 
+.cf__input::placeholder {
+    color: #c4c9d4;
+    font-weight: 300;
+}
+
+/* lift on focus */
 .cf__input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, .1);
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, .15),
+        0 4px 12px rgba(201, 168, 76, .08);
     outline: none;
+    background: var(--gold-pale);
+    transform: translateY(-1px);
 }
 
-/* tags */
+/* custom arrow for selects */
+select.cf__input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+/* date input icon tint */
+input[type="date"].cf__input::-webkit-calendar-picker-indicator {
+    opacity: .5;
+    cursor: pointer;
+    filter: sepia(1) saturate(3) hue-rotate(10deg);
+}
+
+/* ── Number input — spin button hide ───────────────────────── */
+input[type=number].cf__input::-webkit-inner-spin-button,
+input[type=number].cf__input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number].cf__input {
+    -moz-appearance: textfield;
+}
+
+/* ── Tags / Style pills ──────────────────────────────────────── */
 .cf__tags {
     display: flex;
     flex-wrap: wrap;
@@ -91,54 +320,232 @@
 }
 
 .cf__tag {
-    border: 1px solid #e5e7eb;
-    padding: 6px 14px;
+    position: relative;
+    border: 1.5px solid var(--border);
     border-radius: 999px;
     cursor: pointer;
+    transition: border-color var(--transition),
+        box-shadow var(--transition),
+        transform var(--transition),
+        background var(--transition);
+    background: var(--white);
+    overflow: hidden;
+}
+
+.cf__tag:hover {
+    border-color: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(201, 168, 76, .18);
 }
 
 .cf__tag input {
     display: none;
 }
 
-.cf__tag input:checked+span {
-
-    background: #fef3c7;
-
-    color: #92400e;
+.cf__tag span {
+    display: block;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color var(--transition);
+    user-select: none;
+    letter-spacing: .02em;
 }
 
+/* checked state */
+.cf__tag input:checked~span,
+.cf__tag input:checked+span {
+    color: var(--navy);
+    font-weight: 600;
+}
 
+.cf__tag:has(input:checked) {
+    border-color: var(--gold);
+    background: var(--gold-pale);
+    box-shadow: 0 2px 10px rgba(201, 168, 76, .22);
+}
+
+/* ripple on check */
+.cf__tag::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 0;
+    height: 0;
+    background: rgba(201, 168, 76, .25);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width .4s ease, height .4s ease, opacity .4s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cf__tag:active::after {
+    width: 160px;
+    height: 160px;
+    opacity: 1;
+}
+
+/* checkmark badge */
 .cf__tag input:checked+span::after {
     content: '✓';
     display: inline-block;
     margin-left: 6px;
-    font-size: 12px;
-    color: #92400e;
+    font-size: 11px;
+    color: var(--gold);
+    animation: pop-in .25s ease;
 }
 
-/* footer */
+@keyframes pop-in {
+    from {
+        opacity: 0;
+        transform: scale(0) rotate(-20deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+    }
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
 .cf__footer {
-    padding: 20px 28px;
-    border-top: 1px solid #f1f3f7;
+    padding: 22px 36px;
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+    background: linear-gradient(135deg, var(--white) 60%, var(--gold-pale) 100%);
+    animation: fade-up .5s .44s ease both;
 }
 
-/* buttons */
+/* ── Buttons ─────────────────────────────────────────────────── */
 .cf__btn {
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 11px 26px;
+    border-radius: var(--radius-sm);
     border: none;
     cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    transition: transform var(--transition),
+        box-shadow var(--transition),
+        background var(--transition),
+        color var(--transition),
+        border-color var(--transition);
+    position: relative;
+    overflow: hidden;
 }
 
-.cf__btn--primary {
-    background: #2563eb;
-    color: #fff;
+/* ripple effect on click */
+.cf__btn::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, .25);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width .5s ease, height .5s ease, opacity .5s ease;
+    opacity: 0;
 }
 
+.cf__btn:active::after {
+    width: 200px;
+    height: 200px;
+    opacity: 1;
+}
+
+/* secondary */
 .cf__btn--secondary {
-    background: #f3f4f6;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+}
+
+.cf__btn--secondary:hover {
+    border-color: var(--navy-mid);
+    color: var(--navy);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.cf__btn--secondary:active {
+    transform: translateY(0);
+}
+
+/* primary — gold gradient */
+.cf__btn--primary {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+    color: var(--white);
+    box-shadow: 0 4px 18px rgba(15, 30, 53, .30);
+    position: relative;
+}
+
+/* shimmer sweep on hover */
+.cf__btn--primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+            transparent 35%,
+            rgba(201, 168, 76, .35) 50%,
+            transparent 65%);
+    transform: translateX(-100%);
+    transition: transform .6s ease;
+}
+
+.cf__btn--primary:hover::before {
+    transform: translateX(100%);
+}
+
+.cf__btn--primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 30, 53, .38);
+    background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy) 100%);
+}
+
+.cf__btn--primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(15, 30, 53, .22);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .cf {
+        padding: 20px 12px;
+    }
+
+    .cf__header,
+    .cf__section,
+    .cf__footer {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .cf__grid--2,
+    .cf__grid--3,
+    .cf__grid--4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Scrollbar (Webkit) ──────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--ivory);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-light);
 }
