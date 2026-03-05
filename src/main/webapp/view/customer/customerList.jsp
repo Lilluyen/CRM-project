@@ -114,8 +114,8 @@
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
                             </button>
 
-                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})>
-                                <i class="fa-solid fa-pen-to-square"></i>
+                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId}) >
+                                        <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             <div class="action-wrapper">
                                 <button class="action-icon-btn menu-btn">
@@ -128,7 +128,11 @@
                                     </div>
                                     <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
                                         <i class="fa-solid fa-angles-up"></i>
-                                        <span>Upgrade Level</span>
+                                        <span>Upgrade</span>
+                                    </div>
+                                    <div class="action-menu-item downgrade-item" onclick="downgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-angles-down"></i>
+                                        <span>Downgrade</span>
                                     </div>
                                     <div class="action-menu-divider"></div>
                                     <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
@@ -401,8 +405,8 @@
     </div>
 
 
-    <script>
-        window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
-        window.__CTX__ = "${pageContext.request.contextPath}";
-    </script>
+            <script>
+            window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
+                window.__CTX__ = "${pageContext.request.contextPath}";
+                </script>
 

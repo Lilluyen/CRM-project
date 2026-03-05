@@ -8,8 +8,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import service.CustomerService;
 
 @WebServlet("/customers/upgrade")
@@ -23,6 +21,7 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
             String customerIdParam = request.getParameter("customerId");
             if (customerIdParam == null || customerIdParam.isEmpty()) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Customer ID is required");
+                response.sendRedirect(request.getContextPath() + "/customers?status=failed");
                 return;
             }
             
@@ -31,6 +30,7 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
                 customerId = Integer.parseInt(customerIdParam);
             } catch (NumberFormatException e) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Customer ID");
+                response.sendRedirect(request.getContextPath() + "/customers?status=failed");
                 return;
             }
             
@@ -41,9 +41,10 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             }
         } catch (SQLException ex) {
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             throw new ServletException("Database error while upgrading customer: " + ex.getMessage(), ex);
         } catch (Exception ex) {
-            Logger.getLogger(UpgradeLoyaltyCustomerController.class.getName()).log(Level.SEVERE, null, ex);
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
         }
     }
 

@@ -554,6 +554,16 @@ td:nth-child(7) {
     color: #f59e0b;
 }
 
+/* Downgrade item */
+.action-menu-item.downgrade-item:hover {
+    background-color: #fef9ec;
+    color: #92400e;
+}
+
+.action-menu-item.downgrade-item:hover i {
+    color: #f59e0b;
+}
+
 /* Delete item */
 .action-menu-item.delete-item:hover {
     background-color: #fff1f2;
@@ -1031,6 +1041,11 @@ td:nth-child(7) {
         filter .45s ease;
 
     filter: blur(6px);
+}
+
+.toast-message{
+    text-align: center;
+    text-transform: uppercase;
 }
 
 /* ===== SHOW ===== */

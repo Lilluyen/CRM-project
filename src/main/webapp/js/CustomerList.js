@@ -323,6 +323,14 @@ function upgradeCustomer(customerId) {
     }
 }
 
+function downgradeCustomer(customerId){
+    if(confirm('Downgrade loyalty level for this customer?')){
+        const ctx = window.__CTX__ || '';
+        const url = `${ctx}/customers/downgrade?customerId=${encodeURIComponent(customerId)}`;
+        window.location.href = url;
+    }
+}
+
 function deleteCustomer(customerId) {
 
     if (confirm('Are you sure you want to delete this customer?')) {
@@ -398,7 +406,7 @@ function showToast(message, type = 'success', duration = 3000) {
     };
 
     toastIcon.innerHTML = icons[type] || icons.info;
-    toastMessage.textContent = message;
+    toastMessage.textContent = `========       ${message}       ========`;
 
     // Set bar color
     toastBar.style.background = barColors[type] || barColors.info;
@@ -526,8 +534,12 @@ function renderTableBody(customers) {
                 </div>
                 <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
                     <i class="fa-solid fa-angles-up"></i>
-                    <span>Upgrade Level</span>
+                    <span>Upgrade</span>
                 </div>
+        <div class="action-menu-item downgrade-item" onclick="downgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-angles-down"></i>
+                                        <span>Downgrade</span>
+                                    </div>
                 <div class="action-menu-divider"></div>
                 <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
                     <i class="fa-regular fa-trash-can"></i>

@@ -261,4 +261,18 @@ public class CustomerService {
             }
         }
     }
+    
+    public boolean downgradeToLoyaltyCustomer(int customerId) throws SQLException, Exception{
+        try(Connection conn = DBContext.getConnection()){
+            try{
+                conn.setAutoCommit(false);
+                boolean isDowngrade = customerSegmentDAO.downgradeToLoyaltyCustomer(conn, customerId);
+                conn.commit();
+                return isDowngrade;
+            }catch(SQLException e){
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
 }
