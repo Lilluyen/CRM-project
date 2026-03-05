@@ -90,6 +90,7 @@ public class TaskListController extends HttpServlet {
 
             req.setAttribute("pageTitle",   "Task List");
             req.setAttribute("contentPage", "/view/tasks/tasklist.jsp");
+            req.setAttribute("page", "task-list");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (SQLException ex) {
             Logger.getLogger(TaskListController.class.getName()).log(Level.SEVERE, null, ex);

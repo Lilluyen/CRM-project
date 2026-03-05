@@ -3,7 +3,7 @@
  * Chỉ custom classes, KHÔNG override Bootstrap/theme globals
  * ==================================== */
 
-.col-10 > .container-fluid {
+.col-10>.container-fluid {
     margin-top: 100px;
 }
 
@@ -166,6 +166,16 @@
 .btn-secondary-custom:hover {
     background-color: #5a6268;
     color: white;
+}
+
+@media (min-width: 992px) {
+    .mini-sidebar .badge {
+        display: inline-block !important;
+    }
+
+    .mini-sidebar.expand-menu .badge {
+        display: inline-block !important;
+    }
 }
 
 /* ====================================

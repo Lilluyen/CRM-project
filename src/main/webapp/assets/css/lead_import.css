@@ -3,7 +3,7 @@
  * Chỉ custom classes, KHÔNG override Bootstrap/theme globals
  * ==================================== */
 
-.col-10 > .container-fluid {
+.col-10>.container-fluid {
     margin-top: 100px;
 }
 
@@ -123,6 +123,16 @@
     content: " *";
     color: #dc3545;
     font-weight: bold;
+}
+
+@media (min-width: 992px) {
+    .mini-sidebar .badge {
+        display: inline-block !important;
+    }
+
+    .mini-sidebar.expand-menu .badge {
+        display: inline-block !important;
+    }
 }
 
 /* ====================================

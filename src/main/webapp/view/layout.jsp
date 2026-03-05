@@ -42,23 +42,27 @@
 
     <body>
 
+        <div id="global-loader">
+            <div class="whirly-loader"> </div>
+        </div>
 
         <!-- Nội dung thay đổi nằm ở đây -->
-        <main class="main-content layout container-fluid">
-
+        <main class="main-content main-wrapper layout container-fluid">
 
             <!-- Header dùng chung -->
             <jsp:include page="components/header.jsp" />
             <!-- Sidebar dùng chung -->
-            <div class="row">
-                <div class="col-2">
-
-                    <jsp:include page="components/sidebar.jsp" />
-                </div>
 
 
+
+            <jsp:include page="components/sidebar.jsp" />
+
+
+
+            <div class="page-wrapper">
                 <jsp:include page="${contentPage}" />
             </div>
+
         </main>
 
 

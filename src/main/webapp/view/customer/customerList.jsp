@@ -3,7 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="content col-10 mt-5">
+<div class="content mt-5">
     <h1>Customer Center</h1>
     <div class="sub">Managing ${totalRecord} customers & body profiles</div>
 
