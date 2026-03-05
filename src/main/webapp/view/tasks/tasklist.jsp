@@ -29,9 +29,17 @@
 .table thead th {
     background-color: transparent;
 }
+@media (min-width: 992px){
+        .mini-sidebar .badge {
+            display: inline-block !important;
+        }
+         .mini-sidebar.expand-menu .badge {
+            display: inline-block !important;
+        }
+    }
 </style>
 
-<div class="page-wrapper">
+<div >
  <div class="content">
 
   <%-- Header --%>
@@ -85,7 +93,7 @@
           </select>
         </div>
         <%-- Page size --%>
-        <div class="col-auto">
+        <!-- <div class="col-auto">
           <label class="form-label">Per page</label>
           <select id="pageSizeSelect" class="form-select form-select-sm" style="width:75px"
                   onchange="changePageSize(this.value)">
@@ -93,7 +101,7 @@
             <option value="<%= ps %>" <%= ps == pageSize ? "selected" : "" %>><%= ps %></option>
             <% } %>
           </select>
-        </div>
+        </div> -->
       </div>
 
       <%-- Date range row --%>
