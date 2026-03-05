@@ -116,6 +116,12 @@ public class CustomerQueryDAO {
             stm.executeUpdate();
         }
 
+        String deleteDealsSql = "DELETE FROM Deals WHERE customer_id = ?";
+        try (PreparedStatement stm = connection.prepareStatement(deleteDealsSql);) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
         // Level 2: Xóa Tickets (FK → Customers)
         String deleteTicketsSql = "DELETE FROM Tickets WHERE customer_id = ?";
         try (PreparedStatement stm = connection.prepareStatement(deleteTicketsSql)) {

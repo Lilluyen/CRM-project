@@ -288,6 +288,75 @@ td:nth-child(7) {
 
 /* --- TỪNG RANK CỤ THỂ --- */
 
+/* DIAMOND - Kim cương xanh lấp lánh */
+.loyalty-badge.diamond {
+    background: linear-gradient(135deg,
+            #ffffff 0%,
+            /* Trắng tinh khiết */
+            #e0f2fe 30%,
+            /* Xanh nhạt cực sáng */
+            #bae6fd 70%,
+            /* Xanh lơ trong suốt */
+            #ffffff 100%);
+    color: #0369a1;
+    /* Màu xanh biển đậm để dễ đọc chữ */
+    border: 1px solid #ffffff;
+
+    /* ĐIỂM NHẤN: Đổ bóng đa lớp tạo hiệu ứng tán sắc ánh sáng */
+    box-shadow:
+        0 0 15px rgba(186, 230, 253, 0.8),
+        /* Hào quang xanh */
+        0 0 30px rgba(255, 255, 255, 0.5),
+        /* Hào quang trắng */
+        inset 0 0 10px rgba(255, 255, 255, 0.9);
+    /* Độ bóng bên trong */
+
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hiệu ứng lấp lánh riêng cho Diamond (Sparkle) */
+.loyalty-badge.diamond::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Tạo các điểm sáng li ti */
+    background-image:
+        radial-gradient(circle, #fff 10%, transparent 20%),
+        radial-gradient(circle, #fff 10%, transparent 20%);
+    background-size: 10px 10px;
+    background-position: 0 0, 5px 5px;
+    opacity: 0.2;
+    animation: sparkle 2s infinite linear;
+}
+
+@keyframes sparkle {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10px);
+    }
+}
+
+/* Vệt sáng lướt qua cực mạnh của Diamond */
+.loyalty-badge.diamond::after {
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 1),
+            /* Vệt sáng trắng tinh */
+            rgba(186, 230, 253, 0.8),
+            /* Pha chút xanh */
+            transparent);
+    animation: sweep 1.5s infinite;
+    /* Chạy nhanh hơn các rank khác */
+}
+
 /* PLATINUM - Trắng sáng lộng lẫy */
 .loyalty-badge.platinum {
     background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 45%, #cbd5e1 100%);

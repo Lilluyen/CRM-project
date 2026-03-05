@@ -72,6 +72,7 @@
                         <td>
                             <span class="loyalty-badge
                                   <c:choose>
+                                      <c:when test="${c.loyaltyTier == 'DIAMOND'}">diamond</c:when>
                                       <c:when test="${c.loyaltyTier == 'PLATINUM'}">platinum</c:when>
                                       <c:when test="${c.loyaltyTier == 'GOLD'}">gold</c:when>
                                       <c:when test="${c.loyaltyTier == 'SILVER'}">silver</c:when>

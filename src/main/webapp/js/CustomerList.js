@@ -558,6 +558,8 @@ function renderTags(tags) {
 }
 
 function getLoyaltyClass(tier) {
+    if (tier === "DIAMOND")
+        return "diamond";
     if (tier === "PLATINUM")
         return "platinum";
     if (tier === "GOLD")
