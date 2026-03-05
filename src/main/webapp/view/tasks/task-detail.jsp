@@ -7,8 +7,20 @@
     if (task == null) { response.sendError(404); return; }
     int prog = task.getProgress() != null ? task.getProgress() : 0;
 %>
+
+<style>
+  @media (min-width: 992px){
+        .mini-sidebar .badge {
+            display: inline-block !important;
+        }
+
+        .mini-sidebar.expand-menu .badge {
+            display: inline-block !important;
+        }
+    }
+</style>
 <div >
-<div class="page-wrapper">
+<div class="">
   <div class="content">
 
     <div class="page-header">

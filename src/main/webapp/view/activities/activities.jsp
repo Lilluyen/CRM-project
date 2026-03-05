@@ -23,8 +23,20 @@
     String p_sortF        = request.getParameter("sortField")    != null ? request.getParameter("sortField")    : "";
     String p_sortD        = request.getParameter("sortDir")      != null ? request.getParameter("sortDir")      : "";
 %>
+
+<style>
+  @media (min-width: 992px){
+        .mini-sidebar .badge {
+            display: inline-block !important;
+        }
+
+        .mini-sidebar.expand-menu .badge {
+            display: inline-block !important;
+        }
+    }
+</style>
 <div>
-<div class="page-wrapper">
+<div class="">
   <div class="content">
 
     <div class="page-header">

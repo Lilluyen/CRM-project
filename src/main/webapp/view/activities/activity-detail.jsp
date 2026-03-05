@@ -13,8 +13,20 @@
     else if ("Note".equals(at))    typeBadge = "bg-warning text-dark";
     else if ("Task".equals(at))    typeBadge = "bg-danger";
 %>
+
+<style>
+  @media (min-width: 992px){
+        .mini-sidebar .badge {
+            display: inline-block !important;
+        }
+
+        .mini-sidebar.expand-menu .badge {
+            display: inline-block !important;
+        }
+    }
+</style>
 <div>
-<div class="page-wrapper">
+<div class="">
   <div class="content">
 
     <div class="page-header">
