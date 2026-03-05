@@ -79,6 +79,9 @@
     color: #495057;
     font-weight: 500;
 }
+.table tbody tr td {
+    color: black;
+}
 
 /* ====================================
  * BUDGET (custom class)
@@ -162,6 +165,10 @@
     font-size: 0.9rem;
     color: #6c757d;
     margin-top: 0.5rem;
+}
+
+.badge {
+    font-size: 1em;
 }
 
 @media (min-width: 992px) {
