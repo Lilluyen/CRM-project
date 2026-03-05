@@ -29,6 +29,10 @@ public class LeadService {
         return leadDAO.countLeads(keyword, status, campaignId);
     }
 
+    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId) {
+        return leadDAO.searchLeadsForExport(keyword, status, campaignId);
+    }
+
     // ==============================
     // CRUD
     // ==============================

@@ -339,6 +339,56 @@ public class LeadDAO {
         return leads;
     }
 
+    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId) {
+        String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
+                + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
+
+        if (campaignId > 0) {
+            sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
+        }
+
+        sql += "WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (campaignId > 0) {
+            sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
+            params.add(campaignId);
+            params.add(campaignId);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND l.status = ?";
+            params.add(status);
+        }
+
+        sql += " ORDER BY l.created_at DESC";
+
+        List<Lead> leads = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
+                String campName = rs.getString("campaign_name");
+                if (campName != null) {
+                    lead.setCampaignName(campName);
+                }
+                leads.add(lead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return leads;
+    }
+
     // ==============================
     // COUNT FOR PAGINATION
     // ==============================
