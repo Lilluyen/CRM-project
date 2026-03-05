@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 @WebServlet(urlPatterns = "/notifications/stream", asyncSupported = true)
 public class NotificationSSEController extends HttpServlet {
 
-    private static final long   POLL_INTERVAL_MS = 8_000;
+    private static final long   POLL_INTERVAL_MS = 1_000;
     private static final long   TIMEOUT_MS       = 60_000 * 5; // 5 min max
     private static final Logger LOG = Logger.getLogger(NotificationSSEController.class.getName());
 

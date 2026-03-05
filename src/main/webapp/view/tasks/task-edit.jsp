@@ -254,8 +254,8 @@
                   for (User u : allUsers) { %>
                 <div class="user-item <%= currentAssigneeIds.contains(u.getUserId()) ? "selected" : "" %>"
                      data-uid="<%= u.getUserId() %>"
-                     data-name="<%= u.getFullName() != null ? u.getFullName(.toLowerCase()) : "" %>"
-                     data-email="<%= u.getEmail() != null ? u.getEmail(.toLowerCase()) : "" %>"
+                     data-name="<%= u.getFullName() != null ? u.getFullName().toLowerCase() : "" %>"
+                     data-email="<%= u.getEmail() != null ? u.getEmail().toLowerCase() : "" %>"
                      onclick="toggleUser(this)">
                   <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
                        style="width:32px;height:32px;flex-shrink:0;font-weight:600">
@@ -263,8 +263,8 @@
                         ? u.getFullName().substring(0,1).toUpperCase() : "?" %>
                   </div>
                   <div>
-                    <div class="fw-semibold" style="font-size:.88rem"><%= u.getFullName( != null ? u.getFullName() : u.getUsername()) %></div>
-                    <div class="text-muted" style="font-size:.78rem"><%= u.getEmail( != null ? u.getEmail() : "") %></div>
+                    <div class="fw-semibold" style="font-size:.88rem"><%= u.getFullName() != null ? u.getFullName() : u.getUsername() %></div>
+                    <div class="text-muted" style="font-size:.78rem"><%= u.getEmail() != null ? u.getEmail() : "" %></div>
                   </div>
                   <i class="fa fa-<%= currentAssigneeIds.contains(u.getUserId()) ? "check-circle text-success" : "circle text-muted" %> ms-auto"
                      id="check-<%= u.getUserId() %>"></i>
@@ -289,29 +289,6 @@
       <div class="tab-pane fade" id="tabHistory">
         <% if (history == null || history.isEmpty()) { %>
           <p class="text-muted"><i class="fa fa-inbox me-1"></i>No change history yet.</p>
-        <% } else { %>
-        <div class="table-responsive">
-          <table class="table table-sm table-striped history-table">
-            <thead class="table-dark">
-              <tr>
-                <th>#</th><th>Changed At</th><th>Changed By</th>
-                <th>Field</th><th>Old Value</th><th>New Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% int hrow = 1;
-                 for (TaskHistory th : history) {
-                     List<model.TaskHistoryDetail> details = (List<model.TaskHistoryDetail>) request.getAttribute("histDetails_" + th.getHistoryId());
-                     // details loaded via sub-call or inline DAO
-                     java.util.List<model.TaskHistoryDetail> dList =
-                         new dao.TaskDAO(new service.TaskService(null) {{ }}.getClass().cast(null)) == null
-                         ? new java.util.ArrayList<>() : new java.util.ArrayList<>();
-                     // We use the TaskDAO directly since we're in JSP scriptlet
-              %>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
         <% } %>
         <%-- Load history details via AJAX for performance --%>
         <div id="historyContainer">
@@ -458,22 +435,22 @@ function loadHistory() {
             data.forEach(h => {
                 if (h.details && h.details.length) {
                     h.details.forEach(d => {
-                        html += `<tr>
-                          <td>${row++}</td>
-                          <td>${h.changedAt || '-'}</td>
-                          <td>${esc(h.changedByName || '-')}</td>
-                          <td><code>${esc(d.fieldName)}</code></td>
-                          <td class="text-danger">${esc(d.oldValue)}</td>
-                          <td class="text-success">${esc(d.newValue)}</td>
-                        </tr>`;
+                        html += '<tr>'
+                              + '<td>' + (h.historyId || '') + '</td>'
+                              + '<td>' + (h.changedAt || '-') + '</td>'
+                              + '<td>' + esc(h.changedByName) + '</td>'
+                              + '<td><code>' + esc(d.fieldName) + '</code></td>'
+                              + '<td class="text-danger">' + esc(d.oldValue) + '</td>'
+                              + '<td class="text-success">' + esc(d.newValue) + '</td>'
+                              + '</tr>';
                     });
                 } else {
-                    html += `<tr>
-                      <td>${row++}</td>
-                      <td>${h.changedAt || '-'}</td>
-                      <td>${esc(h.changedByName || '-')}</td>
-                      <td colspan="3" class="text-muted fst-italic">No field details</td>
-                    </tr>`;
+                    html += '<tr>'
+                          + '<td>' + (h.historyId || '') + '</td>'
+                          + '<td>' + (h.changedAt || '-') + '</td>'
+                          + '<td>' + esc(h.changedByName || '-') + '</td>'
+                          + '<td colspan="3" class="text-muted fst-italic">No field details</td>'
+                          + '</tr>';
                 }
             });
             tbody.innerHTML = html;

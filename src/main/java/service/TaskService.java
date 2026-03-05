@@ -8,8 +8,10 @@ import service.NotificationService;
 
 import java.sql.Connection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * TaskService – business logic layer for Tasks.
@@ -269,6 +271,82 @@ public class TaskService {
     public java.util.List<model.TaskHistoryDetail> getHistoryDetails(int historyId) {
         try { return taskDAO.listTaskHistoryDetailsByID(historyId); }
         catch (Exception e) { e.printStackTrace(); return Collections.emptyList(); }
+    }
+
+    /**
+     * Cập nhật danh sách assignee theo kiểu bulk (nhiều người trong 1 lần thay đổi).
+     * Chỉ tạo 1 bản ghi Task_History, nhiều bản ghi Task_History_Detail cho từng user add/remove.
+     */
+    public boolean updateAssigneesBulk(Task task, int changedByUserId, Set<Integer> desiredAssigneeIds) {
+        if (task == null || task.getTaskId() == null) return false;
+
+        // Tập hiện tại từ task.getassignees()
+        Set<Integer> current = new HashSet<>();
+        if (task.getassignees() != null) {
+            for (TaskAssignee ta : task.getassignees()) {
+                if (ta.getUser() != null) {
+                    current.add(ta.getUser().getUserId());
+                }
+            }
+        }
+
+        Set<Integer> desired = desiredAssigneeIds != null ? new HashSet<>(desiredAssigneeIds) : new HashSet<>();
+
+        // Tính toán phần tử cần thêm / cần xóa
+        Set<Integer> toAdd = new HashSet<>(desired);
+        toAdd.removeAll(current);
+
+        Set<Integer> toRemove = new HashSet<>(current);
+        toRemove.removeAll(desired);
+
+        if (toAdd.isEmpty() && toRemove.isEmpty()) {
+            // Không có thay đổi
+            return true;
+        }
+
+        boolean ok = true;
+
+        // Thực hiện remove trước, sau đó add
+        for (int uid : toRemove) {
+            if (!taskDAO.removeAssignee(task.getTaskId(), uid)) {
+                ok = false;
+            } else {
+                notificationService.createForUser(
+                        uid,
+                        "Task Assignment Cancelled",
+                        "You have been unassigned from task \"" + (task.getTitle() != null ? task.getTitle() : "") + "\".",
+                        "TASK", "Task", task.getTaskId());
+            }
+        }
+
+        for (int uid : toAdd) {
+            if (!taskDAO.addAssignee(task.getTaskId(), uid)) {
+                ok = false;
+            } else {
+                notificationService.createForUser(
+                        uid,
+                        "New Task Assigned",
+                        "Task \"" + (task.getTitle() != null ? task.getTitle() : "") + "\" has been assigned to you. Priority: " + task.getPriority(),
+                        "TASK", "Task", task.getTaskId());
+            }
+        }
+
+        // Nếu có ít nhất một thay đổi thành công thì log history (1 bản ghi header)
+        if (!toAdd.isEmpty() || !toRemove.isEmpty()) {
+            int hid = taskDAO.insertTaskHistory(task.getTaskId(), changedByUserId);
+            if (hid > 0) {
+                for (int uid : toRemove) {
+                    taskDAO.insertTaskHistoryDetail(hid, "assignee_removed",
+                            String.valueOf(uid), "");
+                }
+                for (int uid : toAdd) {
+                    taskDAO.insertTaskHistoryDetail(hid, "assignee_added",
+                            "", String.valueOf(uid));
+                }
+            }
+        }
+
+        return ok;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

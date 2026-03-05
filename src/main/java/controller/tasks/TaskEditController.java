@@ -153,13 +153,7 @@ public class TaskEditController extends HttpServlet {
             Task task        = svc.getTaskById(taskId);
             if (task == null) { writeJson(resp, 404, "{\"success\":false,\"message\":\"Task not found\"}"); return; }
 
-            // Compute current vs desired sets
-            Set<Integer> current = new HashSet<>();
-            if (task.getassignees() != null) {
-                for (TaskAssignee ta : task.getassignees()) {
-                    if (ta.getUser() != null) current.add(ta.getUser().getUserId());
-                }
-            }
+            // Tập desired từ request
             Set<Integer> desired = new HashSet<>();
             if (newIds != null) {
                 for (String sid : newIds) {
@@ -168,19 +162,10 @@ public class TaskEditController extends HttpServlet {
                 }
             }
 
-            // Remove undesired
-            for (int uid : current) {
-                if (!desired.contains(uid)) {
-                    svc.removeAssignee(taskId, uid, user.getUserId(), task);
-                }
-            }
-            // Add new
-            for (int uid : desired) {
-                if (!current.contains(uid)) {
-                    svc.assignTask(taskId, uid, task, user.getUserId());
-                }
-            }
-            writeJson(resp, 200, "{\"success\":true}");
+            boolean ok = svc.updateAssigneesBulk(task, user.getUserId(), desired);
+            writeJson(resp, ok ? 200 : 500, ok
+                    ? "{\"success\":true}"
+                    : "{\"success\":false,\"message\":\"Update failed\"}");
         } catch (SQLException ex) {
             LOG.log(Level.SEVERE, null, ex);
             writeJson(resp, 500, "{\"success\":false,\"message\":\"Server error\"}");
@@ -232,7 +217,7 @@ public class TaskEditController extends HttpServlet {
     }
 
     private List<User> loadUsers(Connection conn) throws ServletException {
-        try { return new UserDAO().getAllUsers(conn); }
+        try { return new UserDAO().getActiveUsers(); }
         catch (Exception e) { throw new ServletException("Cannot load users", e); }
     }
 
