@@ -104,7 +104,13 @@ public class CampaignFormController extends HttpServlet {
             }
 
             LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
+            if (startDate.isBefore(LocalDate.now())) {
+                throw new IllegalArgumentException("Ngày bắt đầu phải là ngày hôm nay hoặc sau đó.");
+            }
             LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+            if (endDate.isBefore(LocalDate.now())) {
+                throw new IllegalArgumentException("Ngày kết thúc phải là ngày hôm nay hoặc sau đó.");
+            }
 
             if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
                 throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
@@ -158,8 +164,13 @@ public class CampaignFormController extends HttpServlet {
             }
 
             LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
+            if (startDate.isBefore(LocalDate.now())) {
+                throw new IllegalArgumentException("Ngày bắt đầu phải là ngày hôm nay hoặc sau đó.");
+            }
             LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
-
+            if (endDate.isBefore(LocalDate.now())) {
+                throw new IllegalArgumentException("Ngày kết thúc phải là ngày hôm nay hoặc sau đó.");
+            }
             if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
                 throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
             }

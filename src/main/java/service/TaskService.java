@@ -2,18 +2,22 @@ package service;
 
 import dao.TaskDAO;
 import model.Task;
+import model.TaskAssignee;
 import model.User;
+import service.NotificationService;
 
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * TaskService – business logic layer for Tasks.
  *
- * Role-based visibility:
- *   ADMIN / MANAGER  → all tasks
- *   Others           → only tasks they are assigned to
+ * Responsibilities:
+ *  • Role-based visibility (ADMIN/MANAGER see all; others see own tasks)
+ *  • CRUD with change-logging via Task_History / Task_History_Detail
+ *  • Notifications via NotificationService (never through TaskDAO)
  */
 public class TaskService {
 
@@ -29,108 +33,258 @@ public class TaskService {
     // LIST (paged + filtered)
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> getTasksPaged(User currentUser,
-                                    String title, String status, String priority,
+                                    String title, String description,
+                                    String status, String priority,
+                                    String fromDate, String toDate,
                                     String sortField, String sortDir,
                                     int page, int pageSize) {
         try {
-            boolean isPrivileged = isAdminOrManager(currentUser);
-            Integer assigneeFilter = isPrivileged ? null : currentUser.getUserId();
-            return taskDAO.getTasksPaged(title, status, priority,
-                    assigneeFilter, sortField, sortDir, page, pageSize);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Collections.emptyList();
-        }
+            Integer assigneeFilter = isPrivileged(currentUser) ? null : currentUser.getUserId();
+            return taskDAO.getTasksPaged(title, description, status, priority,
+                    fromDate, toDate, assigneeFilter, sortField, sortDir, page, pageSize);
+        } catch (Exception e) { e.printStackTrace(); return Collections.emptyList(); }
     }
 
-    public int countTasks(User currentUser, String title, String status, String priority) {
+    public int countTasks(User currentUser,
+                          String title, String description,
+                          String status, String priority,
+                          String fromDate, String toDate) {
         try {
-            boolean isPrivileged = isAdminOrManager(currentUser);
-            Integer assigneeFilter = isPrivileged ? null : currentUser.getUserId();
-            return taskDAO.countTasksFiltered(title, status, priority, assigneeFilter);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
-        }
+            Integer assigneeFilter = isPrivileged(currentUser) ? null : currentUser.getUserId();
+            return taskDAO.countTasksFiltered(title, description, status, priority,
+                    fromDate, toDate, assigneeFilter);
+        } catch (Exception e) { e.printStackTrace(); return 0; }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CRUD
+    // CREATE
     // ─────────────────────────────────────────────────────────────────────────
     public boolean createTask(Task task) {
-        try { return taskDAO.createTask(task); } catch (Exception e) { e.printStackTrace(); return false; }
-    }
-
-    public boolean updateTask(Task task) {
-        try { return taskDAO.updateTask(task); } catch (Exception e) { e.printStackTrace(); return false; }
-    }
-
-    public boolean deleteTask(int taskId) {
-        try { return taskDAO.deleteTask(taskId); } catch (Exception e) { e.printStackTrace(); return false; }
-    }
-
-    public Task getTaskById(int id) {
-        try { return taskDAO.getTaskById(id); } catch (Exception e) { e.printStackTrace(); return null; }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // ASSIGN TASK – adds to Task_Assignees and sends notification
-    // ─────────────────────────────────────────────────────────────────────────
-    public boolean assignTask(int taskId, int userId, Task task) {
         try {
-            boolean ok = taskDAO.addAssignee(taskId, userId);
-            if (ok && task != null) {
-                notificationService.createForUser(userId,
-                        "New Task Assigned",
-                        "Task \"" + task.getTitle() + "\" has been assigned to you. Priority: " + task.getPriority(),
-                        "TASK", "Task", taskId);
+            boolean ok = taskDAO.createTask(task);
+            if (ok && task.getTaskId() != null) {
+                // Log creation as a single-field history entry
+                int hid = taskDAO.insertTaskHistory(task.getTaskId(),
+                        task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0);
+                if (hid > 0) {
+                    taskDAO.insertTaskHistoryDetail(hid, "created", "", task.getTitle());
+                }
             }
             return ok;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean removeAssignee(int taskId, int userId) {
-        try { return taskDAO.removeAssignee(taskId, userId); }
-        catch (Exception e) { e.printStackTrace(); return false; }
+        } catch (Exception e) { e.printStackTrace(); return false; }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PROGRESS / STATUS
+    // UPDATE – logs every changed field
     // ─────────────────────────────────────────────────────────────────────────
-    public boolean updateProgress(int taskId, int progress) {
-        try { return taskDAO.updateProgress(taskId, progress); }
-        catch (Exception e) { e.printStackTrace(); return false; }
-    }
-
-    public boolean updateStatus(int taskId, String status, Task task) {
+    public boolean updateTask(Task newTask, int changedByUserId) {
         try {
-            boolean ok = taskDAO.updateTaskStatus(taskId, status);
-            if (ok && task != null) {
-                List<model.TaskAssignee> assignees = task.getassignees();
-                if (assignees != null) {
-                    for (model.TaskAssignee ta : assignees) {
-                        notificationService.createForUser(
-                                ta.getUser().getUserId(),
-                                "Task Status Updated",
-                                "Task \"" + task.getTitle() + "\" status changed to: " + status,
-                                "TASK", "Task", taskId);
+            Task old = taskDAO.getTaskById(newTask.getTaskId());
+            boolean ok = taskDAO.updateTask(newTask);
+            if (ok) {
+                int hid = taskDAO.insertTaskHistory(newTask.getTaskId(), changedByUserId);
+                if (hid > 0 && old != null) {
+                    logDiff(hid, "title",       old.getTitle(),       newTask.getTitle());
+                    logDiff(hid, "description", old.getDescription(), newTask.getDescription());
+                    logDiff(hid, "status",      old.getStatus(),      newTask.getStatus());
+                    logDiff(hid, "priority",    old.getPriority(),    newTask.getPriority());
+                    logDiff(hid, "progress",
+                            String.valueOf(old.getProgress() != null ? old.getProgress() : 0),
+                            String.valueOf(newTask.getProgress() != null ? newTask.getProgress() : 0));
+                    String oldDue = old.getDueDate()     != null ? old.getDueDate().toString()     : "";
+                    String newDue = newTask.getDueDate() != null ? newTask.getDueDate().toString() : "";
+                    logDiff(hid, "dueDate", oldDue, newDue);
+                }
+                // Notify all assignees about the edit
+                if (old != null && old.getassignees() != null) {
+                    for (TaskAssignee ta : old.getassignees()) {
+                        if (ta.getUser() != null) {
+                            notificationService.createForUser(
+                                    ta.getUser().getUserId(),
+                                    "Task Updated",
+                                    "Task \"" + newTask.getTitle() + "\" has been updated.",
+                                    "TASK", "Task", newTask.getTaskId());
+                        }
                     }
                 }
             }
             return ok;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    /** Backward-compat overload – no changedBy (uses 0). */
+    public boolean updateTask(Task task) {
+        return updateTask(task, 0);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    private boolean isAdminOrManager(User user) {
+    // DELETE
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean deleteTask(int taskId) {
+        try { return taskDAO.deleteTask(taskId); }
+        catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET BY ID
+    // ─────────────────────────────────────────────────────────────────────────
+    public Task getTaskById(int id) {
+        try { return taskDAO.getTaskById(id); }
+        catch (Exception e) { e.printStackTrace(); return null; }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ASSIGN – adds to Task_Assignees, logs history, sends notification
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean assignTask(int taskId, int userId, Task task, int changedByUserId) {
+        try {
+            boolean ok = taskDAO.addAssignee(taskId, userId);
+            if (ok) {
+                int hid = taskDAO.insertTaskHistory(taskId, changedByUserId);
+                if (hid > 0) {
+                    taskDAO.insertTaskHistoryDetail(hid, "assignee_added",
+                            "", String.valueOf(userId));
+                }
+                if (task != null) {
+                    notificationService.createForUser(userId,
+                            "New Task Assigned",
+                            "Task \"" + task.getTitle() + "\" has been assigned to you. Priority: " + task.getPriority(),
+                            "TASK", "Task", taskId);
+                }
+            }
+            return ok;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    /** Backward-compat overload. */
+    public boolean assignTask(int taskId, int userId, Task task) {
+        return assignTask(taskId, userId, task, 0);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // REMOVE ASSIGNEE – logs history, sends notification
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean removeAssignee(int taskId, int userId, int changedByUserId, Task task) {
+        try {
+            boolean ok = taskDAO.removeAssignee(taskId, userId);
+            if (ok) {
+                int hid = taskDAO.insertTaskHistory(taskId, changedByUserId);
+                if (hid > 0) {
+                    taskDAO.insertTaskHistoryDetail(hid, "assignee_removed",
+                            String.valueOf(userId), "");
+                }
+                if (task != null) {
+                    notificationService.createForUser(userId,
+                            "Task Assignment Cancelled",
+                            "You have been unassigned from task \"" + task.getTitle() + "\".",
+                            "TASK", "Task", taskId);
+                }
+            }
+            return ok;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    /** Backward-compat overload. */
+    public boolean removeAssignee(int taskId, int userId) {
+        return removeAssignee(taskId, userId, 0, null);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // UPDATE PROGRESS – logs history, notifies assignees
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean updateProgress(int taskId, int progress, int changedByUserId) {
+        try {
+            Task old = taskDAO.getTaskById(taskId);
+            boolean ok = taskDAO.updateProgress(taskId, progress);
+            if (ok) {
+                int hid = taskDAO.insertTaskHistory(taskId, changedByUserId);
+                if (hid > 0 && old != null) {
+                    logDiff(hid, "progress",
+                            String.valueOf(old.getProgress() != null ? old.getProgress() : 0),
+                            String.valueOf(progress));
+                    // status may have auto-changed
+                    String autoStatus = progress >= 100 ? "Done" : (progress > 0 ? "In Progress" : "Pending");
+                    logDiff(hid, "status", old.getStatus() != null ? old.getStatus() : "", autoStatus);
+                }
+                if (old != null && old.getassignees() != null) {
+                    for (TaskAssignee ta : old.getassignees()) {
+                        if (ta.getUser() != null) {
+                            notificationService.createForUser(ta.getUser().getUserId(),
+                                    "Task Progress Updated",
+                                    "Task \"" + (old.getTitle() != null ? old.getTitle() : "") + "\" progress is now " + progress + "%.",
+                                    "TASK", "Task", taskId);
+                        }
+                    }
+                }
+            }
+            return ok;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    /** Backward-compat overload. */
+    public boolean updateProgress(int taskId, int progress) {
+        return updateProgress(taskId, progress, 0);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // UPDATE STATUS – logs history, notifies assignees
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean updateStatus(int taskId, String status, Task task, int changedByUserId) {
+        try {
+            String oldStatus = task != null && task.getStatus() != null ? task.getStatus() : "";
+            boolean ok = taskDAO.updateTaskStatus(taskId, status);
+            if (ok) {
+                int hid = taskDAO.insertTaskHistory(taskId, changedByUserId);
+                if (hid > 0) {
+                    logDiff(hid, "status", oldStatus, status);
+                }
+                if (task != null && task.getassignees() != null) {
+                    for (TaskAssignee ta : task.getassignees()) {
+                        if (ta.getUser() != null) {
+                            notificationService.createForUser(ta.getUser().getUserId(),
+                                    "Task Status Updated",
+                                    "Task \"" + task.getTitle() + "\" status changed to: " + status,
+                                    "TASK", "Task", taskId);
+                        }
+                    }
+                }
+            }
+            return ok;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    /** Backward-compat overload. */
+    public boolean updateStatus(int taskId, String status, Task task) {
+        return updateStatus(taskId, status, task, 0);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HISTORY ACCESSORS (delegates to TaskDAO)
+    // ─────────────────────────────────────────────────────────────────────────
+    public java.util.List<model.TaskHistory> getHistoryForTask(int taskId) {
+        try { return taskDAO.listTaskHistoryByID(taskId); }
+        catch (Exception e) { e.printStackTrace(); return Collections.emptyList(); }
+    }
+
+    public java.util.List<model.TaskHistoryDetail> getHistoryDetails(int historyId) {
+        try { return taskDAO.listTaskHistoryDetailsByID(historyId); }
+        catch (Exception e) { e.printStackTrace(); return Collections.emptyList(); }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PRIVATE HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+    private boolean isPrivileged(User user) {
         if (user == null || user.getRole() == null) return false;
         String rn = user.getRole().getRoleName();
         return "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);
+    }
+
+    private void logDiff(int historyId, String field, String oldVal, String newVal) {
+        String o = oldVal != null ? oldVal.trim() : "";
+        String n = newVal != null ? newVal.trim() : "";
+        if (!Objects.equals(o, n)) {
+            taskDAO.insertTaskHistoryDetail(historyId, field, o, n);
+        }
     }
 }

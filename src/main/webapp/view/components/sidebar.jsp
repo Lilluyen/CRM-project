@@ -1,18 +1,40 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %> 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> 
-<%@ page isELIgnored="false" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
+uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> <%@ taglib
+uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> <%@ page
+isELIgnored="false" %>
+
+<%-- Xác định role prefix dựa trên role của user --%>
+<c:set var="userRole" value="${sessionScope.user.role.roleName}" />
+<c:choose>
+  <c:when test="${fn:toUpperCase(userRole) eq 'ADMIN'}">
+    <c:set var="rolePrefix" value="/admin" />
+  </c:when>
+  <c:when test="${fn:toUpperCase(userRole) eq 'SALE'}">
+    <c:set var="rolePrefix" value="/sale" />
+  </c:when>
+  <c:when test="${fn:toUpperCase(userRole) eq 'MARKETING'}">
+    <c:set var="rolePrefix" value="/marketing" />
+  </c:when>
+  <c:when test="${fn:toUpperCase(userRole) eq 'CS'}">
+    <c:set var="rolePrefix" value="/cs" />
+  </c:when>
+  <c:otherwise>
+    <c:set var="rolePrefix" value="" />
+  </c:otherwise>
+</c:choose>
+
+
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-inner slimscroll">
-        <div id="sidebar-menu" class="sidebar-menu">
-            <ul>
-                <!-- DASHBOARD -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/dashboard">
-                        <i class="fas fa-home"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
+  <div class="sidebar-inner slimscroll">
+    <div id="sidebar-menu" class="sidebar-menu">
+      <ul>
+        <!-- DASHBOARD -->
+        <li>
+          <a href="${pageContext.request.contextPath}${rolePrefix}/dashboard">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
 
                 <!-- CAMPAIGN -->
                 <li class="submenu">
@@ -161,29 +183,123 @@
                     </ul>
                 </li>
 
-                <!-- ACTIVITIES -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/activity">
-                        <i class="fas fa-history"></i>
-                        <span>Activities</span>
-                    </a>
-                </li>
+        <!-- ACTIVITIES -->
+        <li class="submenu">
+          <a href="javascript:void(0);">
+            <i class="fas fa-history"></i>
+            <span>Activities</span>
+            <span class="menu-arrow"></span>
+          </a>
 
-                <!-- TASKS -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/task">
-                        <i class="fas fa-tasks"></i>
-                        <span>Tasks</span>
-                    </a>
-                </li>
+          <ul style="${page eq 'activity-list' ? 'display:block;' : ''}">
+            <li>
+              <a
+                class="${page eq 'activity-list' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities/list"
+              >
+                Activities List
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'activity-create' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities/create"
+              >
+                Create Activity
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'activity-details' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities/details"
+              >
+                Activity Details
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'activity-edit' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/activities/edit"
+              >
+                Edit Activity
+              </a>
+            </li>
+          </ul>
+        </li>
+        <!-- TASKS -->
+        <li class="submenu">
+          <a href="javascript:void(0);">
+            <i class="fas fa-tasks"></i>
+            <span>Tasks</span>
+            <span class="menu-arrow"></span>
+          </a>
 
-                <!-- SUPPORT -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/ticket">
-                        <i class="fas fa-life-ring"></i>
-                        <span>Support Tickets</span>
-                    </a>
-                </li>
+          <ul style="${page eq 'task-list' ? 'display:block;' : ''}">
+            <li>
+              <a
+                class="${page eq 'task-list' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/list"
+              >
+                Tasks List
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-create' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/create"
+              >
+                Create Task
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-details' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/details"
+              >
+                Task Details
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-edit' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/edit"
+              >
+                Edit Task
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-assign' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/assign"
+              >
+                Assign Task
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-progress' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/progress"
+              >
+                Task Progress
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'task-status' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/tasks/status"
+              >
+                Task Status
+              </a>
+            </li>
+          </ul>
+        </li>
+        <!-- SUPPORT -->
+        <li>
+          <a href="${pageContext.request.contextPath}/ticket">
+            <i class="fas fa-life-ring"></i>
+            <span>Support Tickets</span>
+          </a>
+        </li>
 
                 <!-- REPORT -->
                 <li>

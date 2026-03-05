@@ -18,8 +18,8 @@ public class LeadDAO {
 
     // Tạo mới một lead và trả về ID vừa được sinh ra
     public int createLead(Lead lead) {
-        String sql = "INSERT INTO Leads(full_name, email, phone, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at) "
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Leads(full_name, email, phone, interest, source, status, score, campaign_id, assigned_to, created_at, updated_at, is_converted) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, lead.getFullName());
             ps.setString(2, lead.getEmail());
@@ -49,6 +49,7 @@ public class LeadDAO {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException("Lỗi tạo lead trong DB: " + e.getMessage(), e);
         }
         return 0;
     }
@@ -103,6 +104,25 @@ public class LeadDAO {
         String sql = "SELECT * FROM Leads WHERE email = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLead(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Tìm lead theo email + campaign_id (kiểm tra trùng trong cùng campaign). 1
+     * người có thể tham gia nhiều campaign → mỗi campaign có Lead record riêng.
+     */
+    public Lead findLeadByEmailAndCampaign(String email, int campaignId) {
+        String sql = "SELECT * FROM Leads WHERE email = ? AND campaign_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, campaignId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return mapResultSetToLead(rs);
@@ -181,8 +201,8 @@ public class LeadDAO {
      * @return số leads được import thành công
      */
     public int importLeads(List<Lead> leads) throws Exception {
-        String sql = "INSERT INTO Leads(full_name, email, phone,  interest, source, status, score, created_at, updated_at) "
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Leads(full_name, email, phone, interest, source, status, score, campaign_id, created_at, updated_at, is_converted) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
 
         int importedCount = 0;
         Connection conn = null;
@@ -200,8 +220,13 @@ public class LeadDAO {
                     ps.setString(5, lead.getSource());
                     ps.setString(6, lead.getStatus());
                     ps.setInt(7, lead.getScore());
-                    ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+                    if (lead.getCampaignId() > 0) {
+                        ps.setInt(8, lead.getCampaignId());
+                    } else {
+                        ps.setNull(8, java.sql.Types.INTEGER);
+                    }
                     ps.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
+                    ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
 
                     ps.addBatch();
                 }

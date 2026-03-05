@@ -39,7 +39,9 @@ public class ActivityDeleteController extends HttpServlet {
             writeJson(resp, "{\"success\":false,\"message\":\"Chưa đăng nhập\"}");
             return;
         }
-
+        if (req.getParameter("id") == null) {
+            resp.sendRedirect(req.getContextPath()+"/activities/list");
+        }
         int id = Integer.parseInt(req.getParameter("id"));
 
         try (Connection conn = DBContext.getConnection()) {

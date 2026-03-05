@@ -59,24 +59,59 @@ prefix="c" %>
                 <label class="form-label required">Nguồn Lead</label>
                 <select class="form-select" id="source" name="source" required>
                   <option value="">-- Chọn nguồn --</option>
-                  <option value="EVENT">Event</option>
-                  <option value="FACEBOOK">Facebook</option>
-                  <option value="WEBSITE">Website</option>
-                  <option value="REFERRAL">Referral</option>
-                  <option value="IMPORT">Import File</option>
+                  <option value="Seminar">Seminar</option>
+                  <option value="Facebook">Facebook</option>
+                  <option value="Website">Website</option>
+                  <option value="Referral">Referral</option>
+                  <option value="Import">Import File</option>
                 </select>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Campaign (Optional)</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="campaignId"
-                  name="campaignId"
-                  placeholder="ID campaign"
-                />
+                <select class="form-select" id="campaignId" name="campaignId">
+                  <option value="">-- Không gắn Campaign --</option>
+                  <c:forEach var="campaign" items="${campaigns}">
+                    <option value="${campaign.campaignId}">
+                      ${campaign.name} (${campaign.status})
+                    </option>
+                  </c:forEach>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assign To Sale Staff (checkboxes) -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Assign To (Sale Staff)</label>
+                <div class="assign-to-section">
+                  <div class="assign-to-header">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="selectAllSale" />
+                      <label class="form-check-label fw-bold" for="selectAllSale">
+                        Chọn tất cả
+                      </label>
+                    </div>
+                    <input type="text" class="form-control form-control-sm assign-search" id="searchSale" placeholder="Tìm kiếm sale..." />
+                  </div>
+                  <div class="assign-to-list" id="saleList">
+                    <c:forEach var="staff" items="${saleStaffs}">
+                      <div class="form-check assign-to-item" data-name="${staff.fullName}" data-email="${staff.email}">
+                        <input class="form-check-input sale-checkbox" type="checkbox" name="assignedToIds" value="${staff.userId}" id="sale_${staff.userId}" />
+                        <label class="form-check-label" for="sale_${staff.userId}">
+                          <span class="sale-name">${staff.fullName}</span>
+                          <span class="sale-info">${staff.email} | ${staff.phone}</span>
+                        </label>
+                      </div>
+                    </c:forEach>
+                    <c:if test="${empty saleStaffs}">
+                      <p class="text-muted small mb-0">Không có sale staff nào.</p>
+                    </c:if>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -157,20 +192,6 @@ prefix="c" %>
             </tr>
             <tr>
               <td>4</td>
-              <td>companyName</td>
-              <td>Text</td>
-              <td><span class="badge bg-success">Không</span></td>
-              <td>ABC Company</td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td>interest</td>
-              <td>Text</td>
-              <td><span class="badge bg-success">Không</span></td>
-              <td>Product Manager</td>
-            </tr>
-            <tr>
-              <td>6</td>
               <td>source</td>
               <td>Text</td>
               <td><span class="badge bg-success">Không</span></td>
@@ -185,7 +206,7 @@ prefix="c" %>
         <strong>Lưu ý:</strong> Mỗi lead sẽ được tự động chấm điểm (0-100) dựa
         trên:
         <ul class="mb-0 mt-2">
-          <li>Email công ty: +20, Email cá nhân: +10</li>
+          <li>Email công ty: +20, Email cá nhân: +20</li>
           <li>Số điện thoại hợp lệ: +20</li>
           <li>
             Source (Event: +30, Referral: +25, Website: +15, Social: +10, Other:
@@ -256,6 +277,11 @@ prefix="c" %>
       formData.append("campaignId", campaignId);
     }
 
+    // Append selected sale staff IDs
+    document.querySelectorAll('.sale-checkbox:checked').forEach(cb => {
+      formData.append("assignedToIds", cb.value);
+    });
+
     submitBtn.disabled = true;
     submitBtn.innerHTML =
       '<span class="spinner-border spinner-border-sm me-2"></span>Đang import...';
@@ -323,5 +349,27 @@ prefix="c" %>
       "alert " + (result.success ? "alert-success" : "alert-danger") + " mt-3";
     msgDiv.textContent = result.message;
     errorContainer.appendChild(msgDiv);
+  }
+
+  // ===== Select All Checkbox =====
+  const selectAllCb = document.getElementById("selectAllSale");
+  if (selectAllCb) {
+    selectAllCb.addEventListener("change", function () {
+      const visible = document.querySelectorAll('.assign-to-item:not([style*="display: none"]) .sale-checkbox');
+      visible.forEach(cb => cb.checked = this.checked);
+    });
+  }
+
+  // ===== Search Sale Staff =====
+  const searchSaleInput = document.getElementById("searchSale");
+  if (searchSaleInput) {
+    searchSaleInput.addEventListener("input", function () {
+      const keyword = this.value.toLowerCase();
+      document.querySelectorAll(".assign-to-item").forEach(item => {
+        const name = (item.dataset.name || "").toLowerCase();
+        const email = (item.dataset.email || "").toLowerCase();
+        item.style.display = (name.includes(keyword) || email.includes(keyword)) ? "" : "none";
+      });
+    });
   }
 </script>

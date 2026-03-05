@@ -33,9 +33,10 @@ public class ActivityDetailController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
-
+        if (req.getParameter("id") == null) {
+            resp.sendRedirect(req.getContextPath()+"/activities/list");
+        }
         int id = Integer.parseInt(req.getParameter("id"));
-
         try (Connection conn = DBContext.getConnection()) {
             Activity activity = new ActivityService(conn).getActivityById(id);
             if (activity == null) {
@@ -48,6 +49,7 @@ public class ActivityDetailController extends HttpServlet {
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (SQLException ex) {
             Logger.getLogger(ActivityDetailController.class.getName()).log(Level.SEVERE, null, ex);
+            
         }
     }
 }
