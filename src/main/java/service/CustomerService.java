@@ -248,9 +248,17 @@ public class CustomerService {
         }
     }
 
-    public boolean upgradeToLoyaltyCustomer(int customerId) throws SQLException {
+    public boolean upgradeToLoyaltyCustomer(int customerId) throws SQLException, Exception {
         try (Connection conn = DBContext.getConnection()) {
-            return customerSegmentDAO.upgradeToLoyaltyCustomer(conn, customerId);
+            try {
+                conn.setAutoCommit(false);
+                boolean isUpggrade = customerSegmentDAO.upgradeToLoyaltyCustomer(conn, customerId);
+                conn.commit();
+                return isUpggrade;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
         }
     }
 }

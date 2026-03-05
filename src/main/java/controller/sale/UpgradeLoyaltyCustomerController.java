@@ -8,6 +8,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import service.CustomerService;
 
 @WebServlet("/customers/upgrade")
@@ -16,7 +18,7 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
     private final CustomerService customerService = new CustomerService();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String customerIdParam = request.getParameter("customerId");
             if (customerIdParam == null || customerIdParam.isEmpty()) {
@@ -34,12 +36,14 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
             
             boolean success = customerService.upgradeToLoyaltyCustomer(customerId);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/customers?upgradeSuccess=true");
+                response.sendRedirect(request.getContextPath() + "/customers?status=success");
             } else {
-                response.sendRedirect(request.getContextPath() + "/customers?upgradeSuccess=false");
+                response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             }
         } catch (SQLException ex) {
             throw new ServletException("Database error while upgrading customer: " + ex.getMessage(), ex);
+        } catch (Exception ex) {
+            Logger.getLogger(UpgradeLoyaltyCustomerController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
