@@ -1,3 +1,4 @@
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
@@ -106,7 +107,9 @@
                             </div>
                         </td>
 
-                        <td>${c.lastPurchase}</td>
+                        <td>
+                            ${c.lastPurchaseDate}
+                        </td>
 
 
                         <td class="actions">
@@ -193,6 +196,10 @@
                 <div class="input-group">
                     <label>&#x1F451; Loyalty Tier</label>
                     <div class="checkbox-group">
+                        <label class="checkbox-item" data-tier="diamond">
+                            <input type="checkbox" name="loyaltyFilter" value="DIAMOND" />
+                            Diamond
+                        </label>
                         <label class="checkbox-item" data-tier="platinum">
                             <input type="checkbox" name="loyaltyFilter" value="PLATINUM" />
                             Platinum
