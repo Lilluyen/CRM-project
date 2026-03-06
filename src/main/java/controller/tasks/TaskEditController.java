@@ -203,17 +203,16 @@ public class TaskEditController extends HttpServlet {
 
     /**
      * Rule:
-     * - Task created by role 1/5: cannot edit dueDate/priority
-     * - Task not created by role 1/5: only the creator can edit dueDate/priority
+     * - ADMIN/MANAGER (role_id=1 or 5): always can edit dueDate/priority
+     * - Non-management: can edit dueDate/priority only if the task creator is NOT role 1/5
      */
     private boolean canEditDuePriority(Task task, User currentUser) {
         if (task == null || currentUser == null) return false;
 
+        if (isManagerOrAdmin(currentUser)) return true;
         if (task.getCreatedBy() == null) return false;
-        // Self-created only
-        if (task.getCreatedBy().getUserId() != currentUser.getUserId()) return false;
 
-        // If creator is management role, lock these fields
+        // If creator is management role, lock these fields for non-management users
         if (task.getCreatedBy().getRole() == null) return true;
         int creatorRoleId = task.getCreatedBy().getRole().getRoleId();
         return creatorRoleId != 1 && creatorRoleId != 5;

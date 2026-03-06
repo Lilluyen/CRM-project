@@ -154,6 +154,22 @@ public class NotificationDAO {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // 6b. MARK SINGLE NOTIFICATION AS UNREAD
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean markAsUnread(int notificationId, int userId) {
+        String sql = "UPDATE Notification_Recipients SET is_read=0, read_at=NULL "
+                   + "WHERE notification_id=? AND user_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, notificationId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 7. MARK ALL AS READ FOR USER
     // ─────────────────────────────────────────────────────────────────────────
     public boolean markAllAsReadForUser(int userId) {

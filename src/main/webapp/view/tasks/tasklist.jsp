@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ page import="java.util.List, model.Task, model.TaskAssignee" %>
+<%@ page import="java.util.List, model.Task, model.TaskAssignee, model.User" %>
 <%
     @SuppressWarnings("unchecked")
     List<Task> tasks  = request.getAttribute("tasks") != null ? (List<Task>) request.getAttribute("tasks") : new java.util.ArrayList<>();
@@ -18,6 +18,14 @@
     String fTo       = (String) request.getAttribute("f_toDate");      if (fTo       == null) fTo       = "";
     String fSortF    = (String) request.getAttribute("f_sortField");   if (fSortF    == null) fSortF    = "";
     String fSortD    = (String) request.getAttribute("f_sortDir");     if (fSortD    == null) fSortD    = "ASC";
+
+    User currentUser = (User) session.getAttribute("user");
+    boolean isManager = false;
+    if (currentUser != null && currentUser.getRole() != null) {
+        int rid = currentUser.getRole().getRoleId();
+        String rn = currentUser.getRole().getRoleName();
+        isManager = rid == 1 || rid == 5 || "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);
+    }
 %>
 <style>
 .sortable-th { cursor:pointer; user-select:none; white-space:nowrap; }
@@ -200,6 +208,17 @@
                String aShort  = aNames.length() > 28 ? aNames.substring(0, 28) + "…" : aNames.toString();
                String creator = t.getCreatedBy() != null && t.getCreatedBy().getFullName() != null
                                 ? t.getCreatedBy().getFullName() : "-";
+
+               int creatorRoleId = t.getCreatedBy() != null && t.getCreatedBy().getRole() != null
+                       ? t.getCreatedBy().getRole().getRoleId()
+                       : 0;
+               boolean creatorIsManagement = creatorRoleId == 1 || creatorRoleId == 5;
+               boolean canDelete = false;
+               if (isManager) {
+                   canDelete = true;
+               } else if (currentUser != null && t.getCreatedBy() != null) {
+                   canDelete = !creatorIsManagement && t.getCreatedBy().getUserId() == currentUser.getUserId();
+               }
        %>
        <tr>
          <td class="text-muted small">
@@ -241,10 +260,12 @@
                 class="btn btn-sm btn-outline-info" title="View"><i class="fa fa-eye"></i></a>
              <a href="${pageContext.request.contextPath}/tasks/edit?id=<%= t.getTaskId() %>"
                 class="btn btn-sm btn-outline-warning" title="Edit"><i class="fa fa-edit"></i></a>
-             <button type="button" class="btn btn-sm btn-outline-danger"
-                     onclick="deleteTask(<%= t.getTaskId() %>)" title="Delete">
-               <i class="fa fa-trash"></i>
-             </button>
+             <% if (canDelete) { %>
+               <button type="button" class="btn btn-sm btn-outline-danger"
+                       onclick="deleteTask(<%= t.getTaskId() %>)" title="Delete">
+                 <i class="fa fa-trash"></i>
+               </button>
+             <% } %>
            </div>
          </td>
        </tr>

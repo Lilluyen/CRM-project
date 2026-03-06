@@ -187,9 +187,27 @@ public class NotificationService {
         }
     }
 
+    public Notification getById(int notificationId) {
+        try {
+            return notificationDAO.findById(notificationId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public boolean markAsRead(int notificationId, int userId) {
         try {
             return notificationDAO.markAsRead(notificationId, userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean markAsUnread(int notificationId, int userId) {
+        try {
+            return notificationDAO.markAsUnread(notificationId, userId);
         } catch (Exception e) {
             e.printStackTrace();
             return false;

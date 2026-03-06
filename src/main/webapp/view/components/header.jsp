@@ -102,8 +102,7 @@
               <c:otherwise>
                 <c:forEach var="notif" items="${unreadNotifications}">
                   <li class="notification-message" id="notif-item-${notif.notificationId}">
-                    <a href="javascript:void(0);"
-                       onclick="markNotifRead(${notif.notificationId})">
+                    <a href="${pageContext.request.contextPath}/notifications/view?id=${notif.notificationId}">
                       <div class="media d-flex">
                         <span class="avatar flex-shrink-0">
                           <i class="fa fa-bell fa-lg text-primary mt-2"></i>
@@ -129,6 +128,10 @@
               </c:otherwise>
             </c:choose>
           </ul>
+        </div>
+
+        <div class="topnav-dropdown-footer">
+          <a href="${pageContext.request.contextPath}/notifications/list">View all notifications</a>
         </div>
 
         <li class="nav-item dropdown has-arrow main-drop">
@@ -248,24 +251,6 @@
 
 <script>
 /**
- * Mark one notification as read and remove it from the dropdown.
- */
-function markNotifRead(notifId) {
-    fetch('${pageContext.request.contextPath}/notifications/markRead?id=' + notifId, {
-        method: 'POST'
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            const item = document.getElementById('notif-item-' + notifId);
-            if (item) item.remove();
-            updateBadge(-1);
-        }
-    })
-    .catch(console.error);
-}
-
-/**
  * Mark all notifications as read.
  */
 document.getElementById('markAllRead').addEventListener('click', function () {
@@ -293,4 +278,101 @@ function updateBadge(delta, reset) {
         badge.classList.remove('d-none');
     }
 }
+
+/* ── Real-time updates via SSE ───────────────────────────────────────── */
+(() => {
+  const CTX = '${pageContext.request.contextPath}';
+  const badge = document.getElementById('notif-badge');
+  const listEl = document.getElementById('notif-list');
+  if (!badge || !listEl) return;
+
+  let lastIds = new Set(
+    Array.from(listEl.querySelectorAll('li[id^="notif-item-"]'))
+      .map(li => parseInt(li.id.replace('notif-item-', '')))
+      .filter(n => !isNaN(n))
+  );
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+
+  function setBadgeCount(count) {
+    const c = Number(count) || 0;
+    badge.textContent = String(c);
+    if (c <= 0) badge.classList.add('d-none');
+    else badge.classList.remove('d-none');
+  }
+
+  function render(items) {
+    if (!items || !items.length) {
+      listEl.innerHTML =
+        '<li class="notification-message text-center py-3">' +
+        '<span class="text-muted">No new notifications</span></li>';
+      return;
+    }
+    let html = '';
+    items.forEach(n => {
+      html +=
+        '<li class="notification-message" id="notif-item-' + n.id + '">' +
+        '  <a href="' + CTX + '/notifications/view?id=' + n.id + '">' +
+        '    <div class="media d-flex">' +
+        '      <span class="avatar flex-shrink-0">' +
+        '        <i class="fa fa-bell fa-lg text-primary mt-2"></i>' +
+        '      </span>' +
+        '      <div class="media-body flex-grow-1 ms-2">' +
+        '        <p class="noti-details">' +
+        '          <span class="noti-title">' + esc(n.title) + '</span><br/>' +
+        '          <small class="text-muted">' + esc(n.content) + '</small>' +
+        '        </p>' +
+        '        <p class="noti-time"><span class="notification-time">' + esc(n.createdAt || '') + '</span></p>' +
+        '      </div>' +
+        '    </div>' +
+        '  </a>' +
+        '</li>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  function toast(title, content) {
+    const id = 'toast_' + Date.now();
+    const div = document.createElement('div');
+    div.id = id;
+    div.className = 'alert alert-primary alert-dismissible fade show';
+    div.style.cssText = 'position:fixed;top:70px;right:20px;z-index:9999;min-width:320px;max-width:420px;';
+    div.innerHTML =
+      '<div class="fw-semibold mb-1">' + esc(title) + '</div>' +
+      '<div class="small">' + esc(content) + '</div>' +
+      '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    document.body.appendChild(div);
+    setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 5000);
+  }
+
+  try {
+    const es = new EventSource(CTX + '/notifications/stream');
+    es.onmessage = (ev) => {
+      let data;
+      try { data = JSON.parse(ev.data); } catch { return; }
+      const items = data.items || [];
+      const ids = new Set(items.map(x => x.id));
+
+      // Detect new unread notifications
+      items.forEach(n => {
+        if (!lastIds.has(n.id)) {
+          toast(n.title || 'New notification', n.content || '');
+        }
+      });
+
+      lastIds = ids;
+      setBadgeCount(data.count);
+      render(items);
+    };
+    es.onerror = () => {
+      // keep silent; browser will auto-reconnect
+    };
+  } catch (e) {
+    // SSE not supported – ignore
+  }
+})();
 </script>
