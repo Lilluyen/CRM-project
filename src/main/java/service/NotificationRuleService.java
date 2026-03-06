@@ -4,6 +4,7 @@ import dao.NotificationDAO;
 import dao.NotificationRuleDAO;
 import model.Notification;
 import model.NotificationRule;
+import websocket.NotificationWebSocketEndpoint;
 
 import java.sql.Connection;
 import java.sql.Savepoint;
@@ -64,6 +65,15 @@ public class NotificationRuleService {
                 List<Integer> recipientIds = notificationDAO.findRecipientUserIds(baseNotificationId);
                 for (int uid : recipientIds) {
                     notificationDAO.addRecipient(newNotificationId, uid);
+                }
+
+                // Push real-time notification to connected clients (WebSocket)
+                // Note: this runs inside the scheduler transaction; in the unlikely event of a later rollback
+                // the client may briefly see a notification that won't be committed.
+                Notification full = notificationDAO.findById(newNotificationId);
+                for (int uid : recipientIds) {
+                    int count = notificationDAO.countUnreadByUser(uid);
+                    NotificationWebSocketEndpoint.pushNewUnread(uid, full != null ? full : n, count);
                 }
 
                 LocalDateTime now = LocalDateTime.now();

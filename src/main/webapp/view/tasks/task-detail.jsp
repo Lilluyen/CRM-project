@@ -128,7 +128,7 @@
                    id="prog-bar" role="progressbar" style="width:<%= prog %>%"
                    aria-valuenow="<%= prog %>" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
-            <input type="range" class="form-range" id="prog-range" min="0" max="100" step="5"
+            <input type="range" class="form-range" id="prog-range" min="0" max="100" step="1"
                    value="<%= prog %>" oninput="previewProgress(this.value)">
             <div class="d-flex justify-content-between"><small>0%</small><small>100%</small></div>
             <button class="btn btn-primary mt-3 w-100"

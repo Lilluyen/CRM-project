@@ -181,7 +181,7 @@
                        role="progressbar" style="width:<%= prog %>%"></div>
                 </div>
                 <input type="range" class="form-range" id="prog-range"
-                       min="0" max="100" step="5" value="<%= prog %>"
+                       min="0" max="100" step="1" value="<%= prog %>"
                        oninput="previewProgress(this.value)">
                 <div class="d-flex justify-content-between mb-2"><small>0%</small><small>100%</small></div>
                 <button class="btn btn-primary w-100"
