@@ -35,30 +35,34 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/assets/css/${pageCss}" />
+              href="${pageContext.request.contextPath}/assets/css/${pageCss}?v=<%= System.currentTimeMillis() %>" />
 
 
     </head>
 
     <body>
 
+        <!-- <div id="global-loader">
+            <div class="whirly-loader"> </div>
+        </div> -->
 
         <!-- Nội dung thay đổi nằm ở đây -->
-        <main class="main-content layout container-fluid">
-
+        <main class="main-content main-wrapper layout container-fluid">
 
             <!-- Header dùng chung -->
             <jsp:include page="components/header.jsp" />
             <!-- Sidebar dùng chung -->
-            <div class="row">
-                <div class="col-2">
-
-                    <jsp:include page="components/sidebar.jsp" />
-                </div>
 
 
+
+            <jsp:include page="components/sidebar.jsp" />
+
+
+
+            <div class="page-wrapper">
                 <jsp:include page="${contentPage}" />
             </div>
+
         </main>
 
 
@@ -77,6 +81,7 @@
         <script src="${pageContext.request.contextPath}/assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
 
         <script src="${pageContext.request.contextPath}/assets/js/script.js"></script>  <!-- luôn phải cuối -->
+        <script src="${pageContext.request.contextPath}/js/${pageJs}?v=<%= System.currentTimeMillis() %>"></script>
     </body>
 </html>
 

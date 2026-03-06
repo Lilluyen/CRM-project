@@ -1,6 +1,7 @@
 package controller.manager;
 
 import java.io.IOException;
+import java.util.List;
 
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
@@ -8,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.StyleTag;
 import service.CustomerService;
 import util.ControllerUltil;
 
@@ -20,20 +22,18 @@ public class CustomerDetailController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String customerIdRaw = request.getParameter("customerId");
-
-        if (customerIdRaw == null || customerIdRaw.isBlank()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "customerId is required");
-            return;
-        }
-
         try {
+            String customerIdRaw = request.getParameter("customerId");
 
+            if (customerIdRaw == null || customerIdRaw.isBlank()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "customerId is required");
+                return;
+            }
             int customerId = Integer.parseInt(customerIdRaw);
 
             // 🔥 GỌI SERVICE
             CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
-
+            List<StyleTag> styleTags = customerService.getListStyleTagsByCustomerId(customerId);
             if (customerDetail == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Customer not found");
                 return;
@@ -41,11 +41,13 @@ public class CustomerDetailController extends HttpServlet {
 
             // 🔥 Set data cho view
             request.setAttribute("customerDetail", customerDetail);
+            request.setAttribute("allStyleTags", styleTags);
 
             // Layout attributes
             request.setAttribute("pageTitle", "Customer Detail | Clothes CRM");
             request.setAttribute("contentPage", "customer/customer_detail.jsp");
             request.setAttribute("pageCss", "customer_detail.css");
+            // request.setAttribute("pageJs", "customer_detail.js");
             request.setAttribute("page", "customer-detail");
 
             request.getRequestDispatcher("/view/layout.jsp")

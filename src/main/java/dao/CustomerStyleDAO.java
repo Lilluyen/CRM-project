@@ -110,4 +110,58 @@ public class CustomerStyleDAO {
         return tags;
     }
 
+    public List<Integer> getTagIdsByCustomerId(Connection conn, int customerId)
+            throws SQLException {
+
+        String sql = """
+        SELECT tag_id
+        FROM Customer_Style_Map
+        WHERE customer_id = ?
+    """;
+
+        List<Integer> tagIds = new ArrayList<>();
+
+        try (PreparedStatement stm = conn.prepareStatement(sql)) {
+            stm.setInt(1, customerId);
+
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    tagIds.add(rs.getInt("tag_id"));
+                }
+            }
+        }
+
+        return tagIds;
+    }
+
+    public void deleteCustomerStyle(Connection conn, int customerId, int tagId)
+            throws SQLException {
+
+        String sql = """
+        DELETE FROM Customer_Style_Map
+        WHERE customer_id = ? AND tag_id = ?
+    """;
+
+        try (PreparedStatement stm = conn.prepareStatement(sql)) {
+            stm.setInt(1, customerId);
+            stm.setInt(2, tagId);
+            stm.executeUpdate();
+        }
+    }
+
+    public void insertCustomerStyle(Connection conn, int customerId, int tagId)
+            throws SQLException {
+
+        String sql = """
+        INSERT INTO Customer_Style_Map(customer_id, tag_id)
+        VALUES (?, ?)
+    """;
+
+        try (PreparedStatement stm = conn.prepareStatement(sql)) {
+            stm.setInt(1, customerId);
+            stm.setInt(2, tagId);
+            stm.executeUpdate();
+        }
+    }
+
 }

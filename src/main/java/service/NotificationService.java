@@ -1,80 +1,137 @@
 package service;
 
 import dao.NotificationDAO;
-import util.DBContext;
-import util.Email;
-import util.EmailService;
 import model.Notification;
+import util.DBContext;
 
 import java.sql.Connection;
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * Notification service - coordinates DB notifications and email sending
+ * NotificationService – coordinates Notification creation and retrieval
+ * using the two-table schema:
+ *   Notifications            (shared header)
+ *   Notification_Recipients  (per-user is_read state)
  */
 public class NotificationService {
 
     private final NotificationDAO notificationDAO;
-    private final ExecutorService emailExecutor = Executors.newFixedThreadPool(2);
 
     public NotificationService(Connection connection) {
         this.notificationDAO = new NotificationDAO(connection);
     }
 
-    public boolean createPopupNotification(int userId, String title, String content, String type) {
+    /**
+     * Create a notification and deliver it to ONE user.
+     *
+     * @param userId      recipient user id
+     * @param title       short title
+     * @param content     body text
+     * @param type        e.g. "TASK", "DEADLINE", "INFO"
+     * @param relatedType e.g. "Task", "Lead"
+     * @param relatedId   id of the related entity (nullable)
+     */
+    public boolean createForUser(int userId, String title, String content,
+                                 String type, String relatedType, Integer relatedId) {
         try {
             Notification n = new Notification();
-            n.setUserId(userId);
             n.setTitle(title);
             n.setContent(content);
             n.setType(type);
-            n.setRead(false);
-            n.setCreatedAt(LocalDateTime.now());
+            n.setRelatedType(relatedType);
+            n.setRelatedId(relatedId);
 
-            return notificationDAO.insert(n);
+            int notifId = notificationDAO.insertNotification(n);
+            if (notifId <= 0) return false;
+
+            return notificationDAO.addRecipient(notifId, userId);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
+    /**
+     * Convenience overload – no relatedType/relatedId.
+     */
+    public boolean createForUser(int userId, String title, String content, String type) {
+        return createForUser(userId, title, content, type, null, null);
+    }
+
+    /**
+     * Broadcast to multiple users.
+     */
+    public void broadcastToUsers(List<Integer> userIds, String title, String content,
+                                 String type, String relatedType, Integer relatedId) {
+        try {
+            Notification n = new Notification();
+            n.setTitle(title);
+            n.setContent(content);
+            n.setType(type);
+            n.setRelatedType(relatedType);
+            n.setRelatedId(relatedId);
+
+            int notifId = notificationDAO.insertNotification(n);
+            if (notifId <= 0) return;
+
+            for (int uid : userIds) {
+                notificationDAO.addRecipient(notifId, uid);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Notifications (all) for user, newest first. */
+    public List<Notification> getAllForUser(int userId) {
+        try {
+            return notificationDAO.findByUser(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    /** Unread notifications for user. Used for header dropdown + badge. */
     public List<Notification> getUnreadForUser(int userId) {
         try {
             return notificationDAO.findUnreadByUser(userId);
         } catch (Exception e) {
             e.printStackTrace();
-            return java.util.Collections.emptyList();
+            return Collections.emptyList();
         }
     }
 
-    public boolean markAsRead(int notificationId) {
+    /** Unread count for badge. */
+    public int countUnread(int userId) {
         try {
-            return notificationDAO.markAsRead(notificationId);
+            return notificationDAO.countUnreadByUser(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public boolean markAsRead(int notificationId, int userId) {
+        try {
+            return notificationDAO.markAsRead(notificationId, userId);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    public void sendAssignmentEmailAsync(String toEmail, String subject, String htmlBody) {
-        emailExecutor.submit(() -> {
-            try {
-                Email email = new Email()
-                        .setTo(toEmail)
-                        .setSubject(subject)
-                        .setBodyHtml(htmlBody);
-                EmailService.send(email);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+    public boolean markAllAsRead(int userId) {
+        try {
+            return notificationDAO.markAllAsReadForUser(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static NotificationService withDefaultConnection() throws Exception {
-        Connection conn = DBContext.getConnection();
-        return new NotificationService(conn);
+        return new NotificationService(DBContext.getConnection());
     }
 }

@@ -1,19 +1,25 @@
 package dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
 
 public class CustomerListDTO {
 
     private int customerId;
     private String name;
     private String phone;
+    private String email;
+    private String gender;
 
     private String loyaltyTier;
     private int rfmScore;
 
     private String preferredSize;
     private String bodyShape;
+    private BigDecimal height;
+    private BigDecimal weight;
 
     private List<String> styleTags;
 
@@ -99,4 +105,40 @@ public class CustomerListDTO {
     public void setLastPurchase(LocalDateTime lastPurchase) {
         this.lastPurchase = lastPurchase;
     }
+
+    public BigDecimal getHeight() {
+        return height;
+    }
+
+    public void setHeight(BigDecimal height) {
+        this.height = height;
+    }
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+
+    
+    
 }

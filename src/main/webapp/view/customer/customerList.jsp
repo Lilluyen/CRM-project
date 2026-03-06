@@ -3,9 +3,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="content col-10 mt-5">
+<div class="content mt-5">
     <h1>Customer Center</h1>
-    <div class="sub">Managing ${fn:length(customerList)} customers & body profiles</div>
+    <div class="sub">Managing ${totalRecord} customers & body profiles</div>
 
     <div class="top-bar">
         <div class="filter-section">
@@ -17,8 +17,8 @@
             </div>
 
             <div class="filter-buttons">
-                <button class="filter-btn" onclick="toggleFilterTag('GOLD')">Gold Members</button>
-                <button class="filter-btn" onclick="toggleFilterTag('HIGH_RETURN')">High Return</button>
+                <button class="filter-btn gold-members" onclick="toggleFilterTag('GOLD')">Gold Members</button>
+                <button class="filter-btn high-return" onclick="toggleFilterTag('HIGH_RETURN')">High Return</button>
                 <button class="filter-btn advanced" onclick="openAdvancedFilter()"><i class="fas fa-sliders-h"></i> Advanced</button>
             </div>
         </div>
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="customerTable">
         <table>
             <thead>
                 <tr>
@@ -53,7 +53,7 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="customerTableBody">
                 <c:forEach var="c" items="${customerList}">
                     <tr class="card-body-row">
 
@@ -64,7 +64,7 @@
                                 </c:if>
                             </div>
                             <div>
-                                <div><strong>${c.name}</strong></div>
+                                <div onclick="viewCustomer(${c.customerId})" style="cursor:pointer;"><strong>${c.name}</strong></div>
                                 <div class="muted">${c.phone}</div>
                             </div>
                         </td>
@@ -72,12 +72,17 @@
                         <td>
                             <span class="loyalty-badge
                                   <c:choose>
+                                      <c:when test="${c.loyaltyTier == 'DIAMOND'}">diamond</c:when>
+                                      <c:when test="${c.loyaltyTier == 'PLATINUM'}">platinum</c:when>
                                       <c:when test="${c.loyaltyTier == 'GOLD'}">gold</c:when>
+                                      <c:when test="${c.loyaltyTier == 'SILVER'}">silver</c:when>
+                                      <c:when test="${c.loyaltyTier == 'BRONZE'}">bronze</c:when>
                                       <c:when test="${c.loyaltyTier == 'BLACKLIST'}">blacklist</c:when>
                                   </c:choose>">
                                 ${c.loyaltyTier}
                             </span>
-                            <div class="muted">RFM Score: ${c.rfmScore}</div>
+
+                            <div class="muted table_rfm_score">RFM Score: ${c.rfmScore}</div>
                         </td>
 
                         <td>
@@ -103,28 +108,55 @@
 
                         <td>${c.lastPurchase}</td>
 
-                        <td class="actions">
-                            <i class="fa-regular fa-eye" title="View Details" onclick="viewCustomer(${c.customerId})"></i>
-                            <div class="action-wrapper">
-                                <i class="fa-solid fa-ellipsis-vertical"
-                                   onclick="toggleMenu(this)"></i>
 
-                                <div class="action-menu">
-                                    <div onclick="openPreview(${c.customerId})">Preview</div>
-                                    <div onclick="deleteCustomer(${c.customerId})">Delete</div>
+                        <td class="actions">
+                            <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+
+                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})>
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <div class="action-wrapper">
+                                <button class="action-icon-btn menu-btn">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                                <div class="action-menu" id="customerMenuAction">
+                                    <div class="action-menu-item" onclick="openPreview(${c.customerId})">
+                                        <i class="fa-regular fa-id-card"></i>
+                                        <span>Preview</span>
+                                    </div>
+                                    <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-angles-up"></i>
+                                        <span>Upgrade Level</span>
+                                    </div>
+                                    <div class="action-menu-divider"></div>
+                                    <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                        <span>Delete</span>
+                                    </div>
                                 </div>
                             </div>
                         </td>
+                        <td style="display: none;">${c.email}</td>
+                        <td style="display: none;">${c.gender}</td>
+                        <td style="display: none;">${c.height}</td>
+                        <td style="display: none;">${c.weight}</td>
                     </tr> 
                 </c:forEach>
             </tbody>
+
+
         </table>
+        <!-- pagination controls -->
+        <div id="paginationControls" style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+            <c:forEach begin="1" end="${totalPages}" var="i">
+                <button onclick="loadPage(${i})" class="btn btn-light ${i == currentPage ? 'active' : ''}"> 
+                    ${i}
+                </button> 
+            </c:forEach>
+        </div>
     </div>
-
-    <!-- pagination controls -->
-    <div id="paginationControls" style="margin-top:16px;display:flex;gap:8px;justify-content:center;"></div>
-
-
 
     <div id="toast" class="toast">
         <div class="toast-left">
@@ -145,110 +177,151 @@
     <!-- ADVANCED FILTER MODAL -->
     <div id="advancedFilterModal" class="modal">
         <div class="modal-content">
+
             <div class="modal-header">
-                <h2>Advanced Filter</h2>
-                <span class="close-btn" onclick="closeAdvancedFilter()">&times;</span>
+                <h2><i class="fas fa-sliders-h" style="font-size:13px;opacity:.7;margin-right:6px;"></i>Advanced Filter</h2>
+                <span class="close-btn" onclick="closeAdvancedFilter()">&#x2715;</span>
             </div>
 
             <div class="form-section">
+
+                <!-- Loyalty Tier -->
                 <div class="input-group">
-                    <label>Loyalty Tier</label>
+                    <label>&#x1F451; Loyalty Tier</label>
                     <div class="checkbox-group">
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" data-tier="platinum">
+                            <input type="checkbox" name="loyaltyFilter" value="PLATINUM" />
+                            Platinum
+                        </label>
+                        <label class="checkbox-item" data-tier="gold">
                             <input type="checkbox" name="loyaltyFilter" value="GOLD" />
                             Gold
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" data-tier="silver">
                             <input type="checkbox" name="loyaltyFilter" value="SILVER" />
                             Silver
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" data-tier="bronze">
                             <input type="checkbox" name="loyaltyFilter" value="BRONZE" />
                             Bronze
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" data-tier="blacklist">
                             <input type="checkbox" name="loyaltyFilter" value="BLACKLIST" />
                             Blacklist
                         </label>
                     </div>
                 </div>
 
+                <!-- Body Shape -->
                 <div class="input-group">
-                    <label>Body Shape</label>
+                    <label>&#x1F9CD; Body Shape</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item">
                             <input type="checkbox" name="bodyShapeFilter" value="HOURGLASS" />
-                            Hourglass
+                            &#x231B; Hourglass
                         </label>
                         <label class="checkbox-item">
                             <input type="checkbox" name="bodyShapeFilter" value="PEAR" />
-                            Pear
+                            &#x1F350; Pear
                         </label>
                         <label class="checkbox-item">
                             <input type="checkbox" name="bodyShapeFilter" value="APPLE" />
-                            Apple
+                            &#x1F34E; Apple
                         </label>
                         <label class="checkbox-item">
                             <input type="checkbox" name="bodyShapeFilter" value="RECTANGLE" />
-                            Rectangle
+                            &#x25AC; Rectangle
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="bodyShapeFilter" value="INVERTED TRIANGLE" />
+                            &#x25BD; Inv. Triangle
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="bodyShapeFilter" value="SLENDER" />
+                            &#x2736; Slender
                         </label>
                     </div>
                 </div>
 
+                <!-- Preferred Size -->
                 <div class="input-group">
-                    <label>Preferred Size</label>
+                    <label>&#x1F3F7; Preferred Size</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item">
                             <input type="checkbox" name="sizeFilter" value="S" />
-                            Size S
+                            S
                         </label>
                         <label class="checkbox-item">
                             <input type="checkbox" name="sizeFilter" value="M" />
-                            Size M
+                            M
                         </label>
                         <label class="checkbox-item">
                             <input type="checkbox" name="sizeFilter" value="L" />
-                            Size L
+                            L
                         </label>
                         <label class="checkbox-item">
                             <input type="checkbox" name="sizeFilter" value="XL" />
-                            Size XL
+                            XL
                         </label>
                     </div>
                 </div>
 
+                <!-- Return Rate -->
                 <div class="input-group">
-                    <label>Return Rate</label>
+                    <label>&#x21BA; Return Rate</label>
                     <div class="checkbox-group">
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" data-return="HIGH">
                             <input type="checkbox" name="returnRateFilter" value="HIGH" />
-                            High (> 30%)
+                            High &gt; 40%
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" data-return="NORMAL">
                             <input type="checkbox" name="returnRateFilter" value="NORMAL" />
-                            Normal (≤ 30%)
+                            Normal &#x2264; 40%
                         </label>
                     </div>
                 </div>
 
+                <!-- Style Tags -->
                 <div class="input-group">
-                    <label>Style Tags</label>
-                    <div class="checkbox-group checkbox-group-3">
-                        <c:forEach items="${styleTagList}" var="style">
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="styleTagFilter" value="${style.tagName}" />
-                                ${style.tagName}
-                            </label>
-                        </c:forEach>
+                    <label>&#x1F3A8; Style Tags</label>
+                    <div class="checkbox-group">
+                        <table>
+                            <c:forEach items="${styleTagList}" var="style" varStatus="loop">
+
+                                <c:if test="${loop.index % 4 == 0}">
+                                    </tr>
+                                </c:if>
+
+                                <td style="height: 15px; padding: 3px 0;">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="styleTagFilter" value="${style.tagId}" />
+                                        ${style.tagName}
+                                    </label>
+                                </td>
+                                <c:if test="${loop.index % 4 == 3}">
+                                    </tr>
+                                </c:if>
+
+                            </c:forEach>
+
+                            <!-- Nếu tổng số item không chia hết cho 4 thì đóng tr cuối -->
+                            <c:if test="${styleTagList.size() % 4 != 0}">
+                                </tr>
+                            </c:if>
+                        </table>
                     </div>
                 </div>
+
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="resetAdvancedFilter()">Reset</button>
+                <button type="button" class="btn-cancel" onclick="resetAdvancedFilter()">&#x21BA; Reset</button>
                 <button type="button" class="btn-cancel" onclick="closeAdvancedFilter()">Cancel</button>
-                <button type="button" class="btn-save" onclick="applyAdvancedFilter()">Apply Filter</button>
+                <button type="button" class="btn-save" onclick="applyAdvancedFilter()">
+                    <i class="fas fa-check" style="font-size:11px;margin-right:5px;"></i>Apply Filter
+                </button>
             </div>
+
         </div>
     </div>
 
@@ -326,22 +399,10 @@
             </div>
         </div>
     </div>
-    
-
-<script>
-    window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
-    window.__CTX__ = "${pageContext.request.contextPath}";
-</script>
-<script src="${pageContext.request.contextPath}/js/CustomerList.js"></script>
 
 
-
-
-
-
-
-
-
-
-
+    <script>
+        window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
+        window.__CTX__ = "${pageContext.request.contextPath}";
+    </script>
 
