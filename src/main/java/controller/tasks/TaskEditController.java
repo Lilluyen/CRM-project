@@ -2,7 +2,6 @@ package controller.tasks;
 
 import dao.UserDAO;
 import model.Task;
-import model.TaskAssignee;
 import model.User;
 import service.TaskService;
 import util.DBContext;
@@ -19,7 +18,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,8 +29,10 @@ import java.util.logging.Logger;
  * POST /tasks/edit               – save all task changes and assignees
  *
  * Role-based permissions enforced here and in the JSP:
- *   ADMIN (role_id=1) / MANAGER (role_id=5) → full edit + assign management
- *   Others → title, description, status, progress only
+ *   ADMIN (role_id=1) / MANAGER (role_id=5) → can manage assignees
+ *   DueDate/Priority edit rule:
+ *     - If task is created by ADMIN/MANAGER (role_id=1 or 5): only ADMIN/MANAGER can edit dueDate/priority
+ *     - Otherwise: creator of the task can edit dueDate/priority (ADMIN/MANAGER also allowed)
  */
 @WebServlet("/tasks/edit")
 public class TaskEditController extends HttpServlet {
@@ -56,9 +56,9 @@ public class TaskEditController extends HttpServlet {
             if (task == null) { resp.sendError(404, "Task not found: id=" + id); return; }
 
             req.setAttribute("task",       task);
-            req.setAttribute("history",    svc.getHistoryForTask(id));
             req.setAttribute("isManager",  isManagerOrAdmin(user));
-            req.setAttribute("allUsers",   loadUsers(conn));
+            req.setAttribute("canEditDuePriority", canEditDuePriority(task, user));
+            req.setAttribute("allUsers",   loadUsers());
             req.setAttribute("pageTitle",  "Edit Task – " + task.getTitle());
             req.setAttribute("contentPage","/view/tasks/task-edit.jsp");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
@@ -87,14 +87,15 @@ public class TaskEditController extends HttpServlet {
             Task existing    = svc.getTaskById(taskId);
             if (existing == null) { resp.sendError(404); return; }
 
-            Task updated = applyChanges(req, existing, isManagerOrAdmin(user));
+            boolean canEditDuePri = canEditDuePriority(existing, user);
+            Task updated = applyChanges(req, existing, canEditDuePri);
             boolean ok   = svc.updateTask(updated, user.getUserId());
 
             if (!ok) {
                 req.setAttribute("task",       svc.getTaskById(taskId));
-                req.setAttribute("history",    svc.getHistoryForTask(taskId));
                 req.setAttribute("isManager",  isManagerOrAdmin(user));
-                req.setAttribute("allUsers",   loadUsers(conn));
+                req.setAttribute("canEditDuePriority", canEditDuePri);
+                req.setAttribute("allUsers",   loadUsers());
                 req.setAttribute("error",      "Update failed – please try again.");
                 req.setAttribute("pageTitle",  "Edit Task");
                 req.setAttribute("contentPage","/view/tasks/task-edit.jsp");
@@ -175,7 +176,7 @@ public class TaskEditController extends HttpServlet {
     // ─────────────────────────────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
-    private Task applyChanges(HttpServletRequest req, Task existing, boolean isManager) {
+    private Task applyChanges(HttpServletRequest req, Task existing, boolean canEditDuePriority) {
         // Everyone can change these:
         existing.setTitle(req.getParameter("title"));
         existing.setDescription(req.getParameter("description"));
@@ -183,8 +184,8 @@ public class TaskEditController extends HttpServlet {
         String prog = req.getParameter("progress");
         existing.setProgress(prog != null && !prog.isBlank() ? Integer.parseInt(prog) : existing.getProgress());
 
-        // Only manager / admin:
-        if (isManager) {
+        // Due date / priority: per-task rule (see canEditDuePriority)
+        if (canEditDuePriority) {
             existing.setPriority(req.getParameter("priority"));
             String due = req.getParameter("dueDate");
             if (due != null && !due.isBlank()) existing.setDueDate(LocalDateTime.parse(due, DT_FMT));
@@ -198,6 +199,24 @@ public class TaskEditController extends HttpServlet {
         int rid = user.getRole().getRoleId();
         String rn = user.getRole().getRoleName();
         return rid == 1 || rid == 5 || "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);
+    }
+
+    /**
+     * Rule:
+     * - Task created by role 1/5: cannot edit dueDate/priority
+     * - Task not created by role 1/5: only the creator can edit dueDate/priority
+     */
+    private boolean canEditDuePriority(Task task, User currentUser) {
+        if (task == null || currentUser == null) return false;
+
+        if (task.getCreatedBy() == null) return false;
+        // Self-created only
+        if (task.getCreatedBy().getUserId() != currentUser.getUserId()) return false;
+
+        // If creator is management role, lock these fields
+        if (task.getCreatedBy().getRole() == null) return true;
+        int creatorRoleId = task.getCreatedBy().getRole().getRoleId();
+        return creatorRoleId != 1 && creatorRoleId != 5;
     }
 
     private User requireLogin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -216,7 +235,7 @@ public class TaskEditController extends HttpServlet {
         try { return Integer.parseInt(req.getParameter(name)); } catch (Exception e) { return def; }
     }
 
-    private List<User> loadUsers(Connection conn) throws ServletException {
+    private List<User> loadUsers() throws ServletException {
         try { return new UserDAO().getActiveUsers(); }
         catch (Exception e) { throw new ServletException("Cannot load users", e); }
     }

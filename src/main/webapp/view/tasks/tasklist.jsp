@@ -170,7 +170,6 @@
            <i class="fa fa-inbox fa-2x d-block mb-2"></i>No tasks found.
          </td></tr>
        <% } else {
-           int rowNum = (currentPage - 1) * pageSize + 1;
            for (Task t : tasks) {
                String priCls  = "bg-secondary";
                String priLbl  = t.getPriority() != null ? t.getPriority() : "-";
@@ -203,7 +202,12 @@
                                 ? t.getCreatedBy().getFullName() : "-";
        %>
        <tr>
-         <td class="text-muted small"><%= rowNum++ %></td>
+         <td class="text-muted small">
+           <a class="fw-semibold"
+              href="${pageContext.request.contextPath}/tasks/view-history?id=<%= t.getTaskId() %>">
+             <%= t.getTaskId() %>
+           </a>
+         </td>
          <td>
            <a href="${pageContext.request.contextPath}/tasks/details?id=<%= t.getTaskId() %>" class="fw-semibold">
              <%= t.getTitle() %>
@@ -341,4 +345,4 @@ function deleteTask(id) {
         }).then(r => { if (r.isConfirmed) doIt(); });
     } else if (confirm('Delete this task?')) doIt();
 }
-</script>
+ </script>

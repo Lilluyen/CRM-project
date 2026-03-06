@@ -4,7 +4,6 @@ import model.Notification;
 import model.NotificationRecipient;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -168,6 +167,42 @@ public class NotificationDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 8. FIND NOTIFICATION HEADER BY ID (no recipient join)
+    // ─────────────────────────────────────────────────────────────────────────
+    public Notification findById(int notificationId) {
+        String sql = "SELECT notification_id, title, content, type, related_type, related_id, created_at "
+                   + "FROM Notifications WHERE notification_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, notificationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 9. LIST RECIPIENT USER IDS FOR A NOTIFICATION
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<Integer> findRecipientUserIds(int notificationId) {
+        List<Integer> ids = new ArrayList<>();
+        String sql = "SELECT user_id FROM Notification_Recipients WHERE notification_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, notificationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("user_id"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ids;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
