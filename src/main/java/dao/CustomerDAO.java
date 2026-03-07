@@ -22,8 +22,9 @@ public class CustomerDAO {
                            ,[address]
                            ,[source]
                            ,[owner_id]
-                           ,[created_at])
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""";
+                           ,[created_at]
+                           ,[last_purchase])
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""";
         try (PreparedStatement stmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, customer.getName());
             stmt.setString(2, customer.getPhone());
@@ -39,6 +40,7 @@ public class CustomerDAO {
 
             stmt.setInt(8, customer.getOwner().getUserId());
             stmt.setTimestamp(9, new java.sql.Timestamp(System.currentTimeMillis()));
+            stmt.setTimestamp(10, new java.sql.Timestamp(System.currentTimeMillis()));
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {

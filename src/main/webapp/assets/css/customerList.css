@@ -156,6 +156,10 @@ thead {
     border-bottom: 1px solid var(--border);
 }
 
+tr:hover {
+    background-color: #f1f5f9;
+}
+
 th {
     padding: 15px 20px;
     font-size: 12px;
@@ -236,6 +240,12 @@ td:nth-child(7) {
     justify-content: center;
     font-weight: 700;
     font-size: 14px;
+}
+
+.customer-info strong:hover {
+    color: var(--accent-blue);
+    cursor: pointer;
+    border-bottom: var(--accent-blue) 1px solid;
 }
 
 /* --- CẤU HÌNH CHUNG --- */
@@ -1043,7 +1053,7 @@ td:nth-child(7) {
     filter: blur(6px);
 }
 
-.toast-message{
+.toast-message {
     text-align: center;
     text-transform: uppercase;
 }

@@ -28,8 +28,8 @@ public class CustomerSegmentDAO {
         }
     }
 
-    public boolean downgradeToLoyaltyCustomer(Connection conn, int customerId) throws Exception{
-        String sql = """ 
+    public boolean downgradeToLoyaltyCustomer(Connection conn, int customerId) throws Exception {
+        String sql = """
                      UPDATE [Customers]
                 SET [loyalty_tier] = CASE [loyalty_tier]
                      WHEN 'BLACKLIST' THEN 'BLACKLIST'
@@ -43,11 +43,12 @@ public class CustomerSegmentDAO {
                      [updated_at] = GETDATE()
                  WHERE [customer_id] = ?
                             """;
-        
-        try(PreparedStatement stm = conn.prepareStatement(sql)){
+
+        try (PreparedStatement stm = conn.prepareStatement(sql)) {
             stm.setInt(1, customerId);
             stm.executeUpdate();
             return true;
         }
     }
+
 }

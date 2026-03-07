@@ -117,7 +117,7 @@
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
                             </button>
 
-                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId}) >
+                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
                                         <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             <div class="action-wrapper">
@@ -413,7 +413,11 @@
 
 
             <script>
-            window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
-                window.__CTX__ = "${pageContext.request.contextPath}";
-                </script>
+                window.__PAGE_STATUS__      = "<c:out value='${param.status}' default='' />";
+                window.__CTX__              = "${pageContext.request.contextPath}";
+                window.__SESSION_ID__       = "<c:out value='${sessionId}' default='' />";
+                window.__TOTAL_PAGES__      = ${not empty totalPages ? totalPages : 1};
+                window.__TOTAL_RECORDS__    = ${not empty totalRecord ? totalRecord : 0};
+                window.__CURRENT_PAGE__     = ${not empty currentPage ? currentPage : 1};
+            </script>
 
