@@ -118,6 +118,85 @@ public class CampaignReportDAO {
         return result;
     }
 
+    /** Đếm tổng số campaign performance (cho phân trang). */
+    public int countCampaignPerformance(Integer campaignId, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) AS cnt FROM ("
+                + "SELECT c.campaign_id "
+                + "FROM Campaigns c "
+                + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
+                + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
+                + "WHERE 1 = 1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (campaignId != null) {
+            sql.append(" AND c.campaign_id = ? ");
+            params.add(campaignId);
+        }
+        sql.append(" GROUP BY c.campaign_id, c.name ) AS t");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("cnt");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /** Lấy campaign performance có phân trang (OFFSET / FETCH). */
+    public List<CampaignPerformanceReportDTO> getCampaignPerformancePaginated(
+            Integer campaignId, String fromDate, String toDate, int offset, int limit) {
+        List<CampaignPerformanceReportDTO> result = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.name AS campaign_name, "
+                + "COUNT(DISTINCT l.lead_id) AS total_leads, "
+                + "COUNT(DISTINCT d.deal_id) AS deals_created, "
+                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'WON' THEN 1 ELSE 0 END), 0) AS deals_won, "
+                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'LOST' THEN 1 ELSE 0 END), 0) AS deals_lost "
+                + "FROM Campaigns c "
+                + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
+                + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
+                + "WHERE 1 = 1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (campaignId != null) {
+            sql.append(" AND c.campaign_id = ? ");
+            params.add(campaignId);
+        }
+        sql.append(" GROUP BY c.campaign_id, c.name ORDER BY c.name OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        params.add(offset);
+        params.add(limit);
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int totalLeads = rs.getInt("total_leads");
+                int dealsCreated = rs.getInt("deals_created");
+                int dealsWon = rs.getInt("deals_won");
+                int dealsLost = rs.getInt("deals_lost");
+                double conversionRate = totalLeads > 0 ? dealsWon * 100.0 / totalLeads : 0;
+                result.add(new CampaignPerformanceReportDTO(
+                        rs.getString("campaign_name"),
+                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     public List<LeadSourceReportDTO> getLeadSourceReport(
             Integer campaignId, String source, String fromDate, String toDate) {
         List<LeadSourceReportDTO> result = new ArrayList<>();

@@ -3,6 +3,7 @@ package controller.marketing;
 import java.io.IOException;
 import java.util.List;
 
+import dto.Pagination;
 import dto.report.CampaignPerformanceReportDTO;
 import dto.report.DealResultReportDTO;
 import dto.report.LeadFunnelReportDTO;
@@ -48,9 +49,33 @@ public class CampaignReportController extends HttpServlet {
             try { campaignId = Integer.parseInt(campaignIdParam); } catch (NumberFormatException ignored) {}
         }
 
-        // ── Load report data ─────────────────────────────────────────────────
+        // ── Pagination (Campaign Performance table) ───────────────────────────
+        int page = 1;
+        int pageSize = 10;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (NumberFormatException ignored) {}
+        try {
+            if (request.getParameter("pageSize") != null) {
+                pageSize = Integer.parseInt(request.getParameter("pageSize"));
+            }
+        } catch (NumberFormatException ignored) {}
+        if (pageSize != 5 && pageSize != 10 && pageSize != 20) {
+            pageSize = 10;
+        }
+        if (page < 1) page = 1;
+
+        int totalItems = reportService.getCampaignPerformanceCount(campaignId, fromDate, toDate);
+        Pagination pagination = new Pagination(page, pageSize, totalItems);
+
         List<CampaignPerformanceReportDTO> campaignPerformance =
-                reportService.getCampaignPerformance(campaignId, fromDate, toDate);
+                reportService.getCampaignPerformancePaginated(
+                        campaignId, fromDate, toDate,
+                        pagination.getOffset(), pagination.getPageSize());
+
+        // ── Load report data ─────────────────────────────────────────────────
 
         List<LeadSourceReportDTO> leadSources =
                 reportService.getLeadSourceReport(campaignId, source, fromDate, toDate);
@@ -67,6 +92,7 @@ public class CampaignReportController extends HttpServlet {
 
         // ── Set request attributes ───────────────────────────────────────────
         request.setAttribute("campaignPerformance", campaignPerformance);
+        request.setAttribute("pagination",         pagination);
         request.setAttribute("leadSources",         leadSources);
         request.setAttribute("leadFunnel",          leadFunnel);
         request.setAttribute("dealResult",          dealResult);

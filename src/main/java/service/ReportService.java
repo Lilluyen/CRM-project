@@ -22,6 +22,15 @@ public class ReportService {
         return reportDAO.getCampaignPerformance(campaignId, fromDate, toDate);
     }
 
+    public int getCampaignPerformanceCount(Integer campaignId, String fromDate, String toDate) {
+        return reportDAO.countCampaignPerformance(campaignId, fromDate, toDate);
+    }
+
+    public List<CampaignPerformanceReportDTO> getCampaignPerformancePaginated(
+            Integer campaignId, String fromDate, String toDate, int offset, int limit) {
+        return reportDAO.getCampaignPerformancePaginated(campaignId, fromDate, toDate, offset, limit);
+    }
+
     public List<LeadSourceReportDTO> getLeadSourceReport(
             Integer campaignId, String source, String fromDate, String toDate) {
         return reportDAO.getLeadSourceReport(campaignId, source, fromDate, toDate);

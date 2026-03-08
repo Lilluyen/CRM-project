@@ -28,6 +28,7 @@
   <div class="rpt-filter-card">
     <div class="filter-title"><i class="fas fa-filter"></i> Filter Reports</div>
     <form method="get" action="${pageContext.request.contextPath}/marketing/report">
+      <input type="hidden" name="page" value="1" />
       <div class="rpt-filter-row">
 
         <!-- Campaign -->
@@ -285,7 +286,9 @@
     <div class="rpt-card-header">
       <div class="rpt-section-title">
         <i class="fas fa-table"></i> Campaign Performance
-        <span class="badge-count">${fn:length(campaignPerformance)}</span>
+        <c:if test="${not empty pagination}">
+          <span class="badge-count">${pagination.totalItems}</span>
+        </c:if>
       </div>
     </div>
 
@@ -307,7 +310,7 @@
             <tbody>
               <c:forEach var="cp" items="${campaignPerformance}" varStatus="st">
                 <tr>
-                  <td class="td-number" style="color:var(--rpt-muted)">${st.index + 1}</td>
+                  <td class="td-number" style="color:var(--rpt-muted)">${not empty pagination ? pagination.startItemNumber + st.index : st.index + 1}</td>
                   <td class="td-name">${cp.campaignName}</td>
                   <td class="td-number">${cp.totalLeads}</td>
                   <td class="td-number">${cp.dealsCreated}</td>
@@ -328,6 +331,8 @@
             </tbody>
           </table>
         </div>
+        <%-- Phân trang (Pagination.java + pagination.jsp) --%>
+        <jsp:include page="/view/components/pagination.jsp" />
       </c:when>
       <c:otherwise>
         <div class="rpt-empty">
