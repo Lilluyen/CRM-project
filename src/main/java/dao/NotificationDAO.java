@@ -4,7 +4,6 @@ import model.Notification;
 import model.NotificationRecipient;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -155,6 +154,22 @@ public class NotificationDAO {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // 6b. MARK SINGLE NOTIFICATION AS UNREAD
+    // ─────────────────────────────────────────────────────────────────────────
+    public boolean markAsUnread(int notificationId, int userId) {
+        String sql = "UPDATE Notification_Recipients SET is_read=0, read_at=NULL "
+                   + "WHERE notification_id=? AND user_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, notificationId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 7. MARK ALL AS READ FOR USER
     // ─────────────────────────────────────────────────────────────────────────
     public boolean markAllAsReadForUser(int userId) {
@@ -168,6 +183,42 @@ public class NotificationDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 8. FIND NOTIFICATION HEADER BY ID (no recipient join)
+    // ─────────────────────────────────────────────────────────────────────────
+    public Notification findById(int notificationId) {
+        String sql = "SELECT notification_id, title, content, type, related_type, related_id, created_at "
+                   + "FROM Notifications WHERE notification_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, notificationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 9. LIST RECIPIENT USER IDS FOR A NOTIFICATION
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<Integer> findRecipientUserIds(int notificationId) {
+        List<Integer> ids = new ArrayList<>();
+        String sql = "SELECT user_id FROM Notification_Recipients WHERE notification_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, notificationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("user_id"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ids;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

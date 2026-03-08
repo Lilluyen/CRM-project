@@ -18,6 +18,7 @@ public class LeadImportService {
 
     private LeadDAO leadDAO = new LeadDAO();
     private CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
+    private LeadService leadService = new LeadService();
 
     /**
      * Import leads với validation và scoring
@@ -61,20 +62,16 @@ public class LeadImportService {
                 }
             }
 
-            // Check duplicate: email + cùng campaign → trùng thật sự
+            // Check duplicate dùng rule chung từ LeadService
             if (errors.isEmpty()) {
-                if (campaignId != null && campaignId > 0) {
-                    // Có campaign → chỉ trùng nếu email ĐÃ có trong CÙNG campaign
-                    Lead dup = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), campaignId);
-                    if (dup != null) {
-                        errors.add("Row " + rowNumber + ": Email đã tồn tại trong campaign này");
-                    }
-                    // Email tồn tại ở campaign khác → OK, sẽ tạo Lead mới cho campaign này
-                } else {
-                    // Không có campaign → check email toàn cục
-                    if (leadDAO.findLeadByEmail(lead.getEmail()) != null) {
-                        errors.add("Row " + rowNumber + ": Email đã tồn tại");
-                    }
+                if (campaignId != null) {
+                    lead.setCampaignId(campaignId);
+                }
+
+                try {
+                    leadService.validateLeadUniqueness(lead);
+                } catch (IllegalArgumentException ex) {
+                    errors.add("Row " + rowNumber + ": " + ex.getMessage());
                 }
             }
 

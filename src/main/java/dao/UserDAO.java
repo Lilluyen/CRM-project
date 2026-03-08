@@ -207,18 +207,23 @@ public class UserDAO {
 
     public List<User> getAllUsers(Connection conn) {
         String sql = """
-            SELECT user_id
-                  ,username
-                  ,password_hash
-                  ,email
-                  ,full_name
-                  ,phone
-                  ,role_id
-                  ,status
-                  ,created_at
-                  ,updated_at
-                  ,last_login_at
-              FROM Users
+            SELECT
+                            u.user_id,
+                            u.username,
+                            u.password_hash,
+                            u.email,
+                            u.full_name,
+                            u.phone,
+                            u.status,
+                            u.created_at,
+                            u.updated_at,
+                            u.last_login_at,
+                            r.role_id,
+                            r.role_name,
+                            r.description
+                        FROM Users u
+                        LEFT JOIN Roles r ON u.role_id = r.role_id
+                        ORDER BY u.full_name
         """;
         List<User> users = new ArrayList();
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {

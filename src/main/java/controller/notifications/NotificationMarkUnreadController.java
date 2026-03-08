@@ -1,7 +1,7 @@
-package controller.tasks;
+package controller.notifications;
 
 import model.User;
-import service.TaskService;
+import service.NotificationService;
 import util.DBContext;
 
 import jakarta.servlet.ServletException;
@@ -18,18 +18,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * POST /tasks/progress
- * Cập nhật phần trăm tiến độ của task (AJAX JSON).
- * Tự động đổi status: 0 → Pending | 1-99 → In Progress | 100 → Done.
+ * POST /notifications/markUnread
+ * Đánh dấu một notification là CHƯA đọc cho user hiện tại (AJAX JSON).
  *
  * Request params:
- *   taskId   (int) – bắt buộc
- *   progress (int) – 0 đến 100
- *
- * Response JSON: {"success": true} | {"success": false, "message": "..."}
+ *   id (int) – notification_id
  */
-@WebServlet("/tasks/progress")
-public class TaskProgressController extends HttpServlet {
+@WebServlet("/notifications/markUnread")
+public class NotificationMarkUnreadController extends HttpServlet {
+
+    private static final Logger LOG = Logger.getLogger(NotificationMarkUnreadController.class.getName());
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -41,19 +39,23 @@ public class TaskProgressController extends HttpServlet {
             writeJson(resp, "{\"success\":false,\"message\":\"Chưa đăng nhập\"}");
             return;
         }
-        if (req.getParameter("taskId") == null) {
-            resp.sendRedirect(req.getContextPath()+"/tasks/list");
+
+        int notifId;
+        try {
+            notifId = Integer.parseInt(req.getParameter("id"));
+        } catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, "{\"success\":false,\"message\":\"Thiếu hoặc sai id\"}");
+            return;
         }
-        int taskId   = Integer.parseInt(req.getParameter("taskId"));
-        int progress = Integer.parseInt(req.getParameter("progress"));
 
         try (Connection conn = DBContext.getConnection()) {
-            boolean ok = new TaskService(conn).updateProgress(taskId, progress);
-            writeJson(resp, ok
-                    ? "{\"success\":true}"
-                    : "{\"success\":false,\"message\":\"Cập nhật tiến độ thất bại\"}");
+            boolean ok = new NotificationService(conn).markAsUnread(notifId, user.getUserId());
+            writeJson(resp, ok ? "{\"success\":true}" : "{\"success\":false}");
         } catch (SQLException ex) {
-            Logger.getLogger(TaskProgressController.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            writeJson(resp, "{\"success\":false,\"message\":\"Lỗi hệ thống\"}");
         }
     }
 
@@ -64,3 +66,4 @@ public class TaskProgressController extends HttpServlet {
         }
     }
 }
+

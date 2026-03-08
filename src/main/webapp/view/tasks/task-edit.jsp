@@ -1,12 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ page import="model.Task, model.TaskAssignee, model.TaskHistory, model.User, java.util.List, java.util.HashSet, java.util.Set" %>
+<%@ page import="model.Task, model.TaskAssignee, model.User, java.util.List, java.util.HashSet, java.util.Set" %>
 <%
     Task task = (Task) request.getAttribute("task");
     if (task == null) { response.sendError(404); return; }
 
     boolean isManager = Boolean.TRUE.equals(request.getAttribute("isManager"));
+    boolean canEditDuePriority = Boolean.TRUE.equals(request.getAttribute("canEditDuePriority"));
 
     String dueDateVal = task.getDueDate() != null ? task.getDueDate().toString().substring(0, 16) : "";
 
@@ -18,9 +19,6 @@
     }
     int prog = task.getProgress() != null ? task.getProgress() : 0;
     String progBarCls = prog < 40 ? "bg-danger" : prog < 75 ? "bg-warning" : "bg-success";
-
-    @SuppressWarnings("unchecked")
-    List<TaskHistory> history = (List<TaskHistory>) request.getAttribute("history");
     @SuppressWarnings("unchecked")
     List<User> allUsers = (List<User>) request.getAttribute("allUsers");
 %>
@@ -52,6 +50,8 @@
       <h6><%= task.getTitle() %></h6>
     </div>
     <div class="d-flex gap-2">
+      <a href="${pageContext.request.contextPath}/tasks/view-history?id=<%= task.getTaskId() %>"
+         class="btn btn-outline-dark btn-sm"><i class="fa fa-history me-1"></i>History</a>
       <a href="${pageContext.request.contextPath}/tasks/details?id=<%= task.getTaskId() %>"
          class="btn btn-outline-info btn-sm"><i class="fa fa-eye me-1"></i>View</a>
       <a href="${pageContext.request.contextPath}/tasks/list"
@@ -75,8 +75,6 @@
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabAssign">
       <i class="fa fa-users me-1"></i>Assignees</a></li>
     <% } %>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabHistory">
-      <i class="fa fa-history me-1"></i>History</a></li>
   </ul>
 
   <div class="card border-top-0" style="border-radius:0 0 .5rem .5rem">
@@ -101,7 +99,7 @@
             <%-- Priority – manager only --%>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Priority</label>
-              <% if (isManager) { %>
+              <% if (canEditDuePriority) { %>
               <select name="priority" class="form-select">
                 <% for (String p : new String[]{"Low","Medium","High"}) { %>
                 <option value="<%= p %>" <%= p.equalsIgnoreCase(task.getPriority()) ? "selected" : "" %>><%= p %></option>
@@ -109,7 +107,7 @@
               </select>
               <% } else { %>
               <input type="text" class="form-control" value="<%= task.getPriority() %>" readonly>
-              <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Manager only</small>
+              <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Locked</small>
               <% } %>
             </div>
 
@@ -133,13 +131,13 @@
             <%-- Due Date – manager only --%>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Due Date</label>
-              <% if (isManager) { %>
+              <% if (canEditDuePriority) { %>
               <input type="datetime-local" name="dueDate" class="form-control" value="<%= dueDateVal %>">
               <% } else { %>
               <input type="text" class="form-control"
                      value="<%= task.getDueDate() != null ? task.getDueDate().toString().replace("T"," ").substring(0,16) : "-" %>"
                      readonly>
-              <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Manager only</small>
+              <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Locked</small>
               <% } %>
             </div>
 
@@ -183,7 +181,7 @@
                        role="progressbar" style="width:<%= prog %>%"></div>
                 </div>
                 <input type="range" class="form-range" id="prog-range"
-                       min="0" max="100" step="5" value="<%= prog %>"
+                       min="0" max="100" step="1" value="<%= prog %>"
                        oninput="previewProgress(this.value)">
                 <div class="d-flex justify-content-between mb-2"><small>0%</small><small>100%</small></div>
                 <button class="btn btn-primary w-100"
@@ -254,8 +252,8 @@
                   for (User u : allUsers) { %>
                 <div class="user-item <%= currentAssigneeIds.contains(u.getUserId()) ? "selected" : "" %>"
                      data-uid="<%= u.getUserId() %>"
-                     data-name="<%= u.getFullName() != null ? u.getFullName(.toLowerCase()) : "" %>"
-                     data-email="<%= u.getEmail() != null ? u.getEmail(.toLowerCase()) : "" %>"
+                     data-name="<%= u.getFullName() != null ? u.getFullName().toLowerCase() : "" %>"
+                     data-email="<%= u.getEmail() != null ? u.getEmail().toLowerCase() : "" %>"
                      onclick="toggleUser(this)">
                   <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
                        style="width:32px;height:32px;flex-shrink:0;font-weight:600">
@@ -263,8 +261,8 @@
                         ? u.getFullName().substring(0,1).toUpperCase() : "?" %>
                   </div>
                   <div>
-                    <div class="fw-semibold" style="font-size:.88rem"><%= u.getFullName( != null ? u.getFullName() : u.getUsername()) %></div>
-                    <div class="text-muted" style="font-size:.78rem"><%= u.getEmail( != null ? u.getEmail() : "") %></div>
+                    <div class="fw-semibold" style="font-size:.88rem"><%= u.getFullName() != null ? u.getFullName() : u.getUsername() %></div>
+                    <div class="text-muted" style="font-size:.78rem"><%= u.getEmail() != null ? u.getEmail() : "" %></div>
                   </div>
                   <i class="fa fa-<%= currentAssigneeIds.contains(u.getUserId()) ? "check-circle text-success" : "circle text-muted" %> ms-auto"
                      id="check-<%= u.getUserId() %>"></i>
@@ -282,55 +280,6 @@
         </div>
       </div><%-- /tabAssign --%>
       <% } %>
-
-      <%-- ══════════════════════════════════════════════════════════════════
-           TAB 4 – CHANGE HISTORY
-      ══════════════════════════════════════════════════════════════════ --%>
-      <div class="tab-pane fade" id="tabHistory">
-        <% if (history == null || history.isEmpty()) { %>
-          <p class="text-muted"><i class="fa fa-inbox me-1"></i>No change history yet.</p>
-        <% } else { %>
-        <div class="table-responsive">
-          <table class="table table-sm table-striped history-table">
-            <thead class="table-dark">
-              <tr>
-                <th>#</th><th>Changed At</th><th>Changed By</th>
-                <th>Field</th><th>Old Value</th><th>New Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% int hrow = 1;
-                 for (TaskHistory th : history) {
-                     List<model.TaskHistoryDetail> details = (List<model.TaskHistoryDetail>) request.getAttribute("histDetails_" + th.getHistoryId());
-                     // details loaded via sub-call or inline DAO
-                     java.util.List<model.TaskHistoryDetail> dList =
-                         new dao.TaskDAO(new service.TaskService(null) {{ }}.getClass().cast(null)) == null
-                         ? new java.util.ArrayList<>() : new java.util.ArrayList<>();
-                     // We use the TaskDAO directly since we're in JSP scriptlet
-              %>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-        <% } %>
-        <%-- Load history details via AJAX for performance --%>
-        <div id="historyContainer">
-          <% if (history != null && !history.isEmpty()) { %>
-          <div class="table-responsive">
-            <table class="table table-sm table-hover history-table">
-              <thead class="table-dark">
-                <tr><th style="width:50px">#</th><th>Time</th><th>By</th><th>Field</th><th>Before</th><th>After</th></tr>
-              </thead>
-              <tbody id="historyBody">
-                <tr><td colspan="6" class="text-center py-3">
-                  <div class="spinner-border spinner-border-sm me-2"></div>Loading history…
-                </td></tr>
-              </tbody>
-            </table>
-          </div>
-          <% } %>
-        </div>
-      </div><%-- /tabHistory --%>
 
     </div><%-- /tab-content --%>
    </div><%-- /card-body --%>
@@ -435,53 +384,6 @@ function saveAssignees(taskId) {
     }).catch(() => {
         document.getElementById('assignMsg').textContent = '✗ Network error';
     });
-}
-
-/* ── Load history via AJAX ────────────────────────────────────────── */
-document.querySelector('a[href="#tabHistory"]')?.addEventListener('shown.bs.tab', loadHistory);
-
-let histLoaded = false;
-function loadHistory() {
-    if (histLoaded) return;
-    fetch(CTX + '/tasks/history?taskId=' + TASK_ID)
-        .then(r => r.json())
-        .then(data => {
-            histLoaded = true;
-            const tbody = document.getElementById('historyBody');
-            if (!tbody) return;
-            if (!data || !data.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No history.</td></tr>';
-                return;
-            }
-            let html = '';
-            let row = 1;
-            data.forEach(h => {
-                if (h.details && h.details.length) {
-                    h.details.forEach(d => {
-                        html += `<tr>
-                          <td>${row++}</td>
-                          <td>${h.changedAt || '-'}</td>
-                          <td>${esc(h.changedByName || '-')}</td>
-                          <td><code>${esc(d.fieldName)}</code></td>
-                          <td class="text-danger">${esc(d.oldValue)}</td>
-                          <td class="text-success">${esc(d.newValue)}</td>
-                        </tr>`;
-                    });
-                } else {
-                    html += `<tr>
-                      <td>${row++}</td>
-                      <td>${h.changedAt || '-'}</td>
-                      <td>${esc(h.changedByName || '-')}</td>
-                      <td colspan="3" class="text-muted fst-italic">No field details</td>
-                    </tr>`;
-                }
-            });
-            tbody.innerHTML = html;
-        })
-        .catch(() => {
-            const tbody = document.getElementById('historyBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-danger">Failed to load history.</td></tr>';
-        });
 }
 
 function esc(s) {
