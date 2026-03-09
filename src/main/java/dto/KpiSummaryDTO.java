@@ -3,6 +3,9 @@ package dto;
 public class KpiSummaryDTO {
     private long totalCustomers;
     private long newThisMonth;
+    private long newLastMonth;
+
+    
     private double customerGrowthPct; // % tăng trưởng so tháng trước
 
     private double revenueThisMonth;
@@ -30,13 +33,21 @@ public class KpiSummaryDTO {
     public void setNewThisMonth(long v) {
         this.newThisMonth = v;
     }
+    
+    public long getNewLastMonth() {
+        return newLastMonth;
+    }
+
+    public void setNewLastMonth(long newLastMonth) {
+        this.newLastMonth = newLastMonth;
+    }
 
     public double getCustomerGrowthPct() {
         return customerGrowthPct;
     }
 
-    public void setCustomerGrowthPct(double v) {
-        this.customerGrowthPct = v;
+    public void setCustomerGrowthPct() {
+        this.customerGrowthPct = (this.newThisMonth - this.newLastMonth) / this.newLastMonth * 100.0;
     }
 
     public double getRevenueThisMonth() {
@@ -59,8 +70,8 @@ public class KpiSummaryDTO {
         return revenueGrowthPct;
     }
 
-    public void setRevenueGrowthPct(double v) {
-        this.revenueGrowthPct = v;
+    public void setRevenueGrowthPct() {
+        this.revenueGrowthPct = ((this.revenueThisMonth - this.revenueLastMonth) / this.revenueLastMonth * 100.0) ;
     }
 
     public long getRetainedCustomers() {
@@ -75,8 +86,8 @@ public class KpiSummaryDTO {
         return retentionRatePct;
     }
 
-    public void setRetentionRatePct(double v) {
-        this.retentionRatePct = v;
+    public void setRetentionRatePct() {
+        this.retentionRatePct =  (this.retainedCustomers * 1.0 / this.totalCustomers) * 100;
     }
 
     public double getAvgLtv() {

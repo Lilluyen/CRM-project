@@ -16,6 +16,7 @@ import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
 import dto.CustomerFilterRequest;
 import dto.CustomerPageResult;
+import dto.KpiSummaryDTO;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
@@ -242,7 +243,7 @@ public class CustomerService {
         }
     }
 
-    public CustomerPageResult filterAdvanced(CustomerFilterRequest filterRequest, 
+    public CustomerPageResult filterAdvanced(CustomerFilterRequest filterRequest,
             String sessionId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return customerQueryDAO.filterAdvanced(conn, filterRequest, sessionId);
@@ -276,4 +277,15 @@ public class CustomerService {
             }
         }
     }
+
+    public KpiSummaryDTO kpiSummarySegment() throws SQLException, Exception {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                return customerSegmentDAO.kpiSummarySegment(conn);
+            } catch (SQLException e) {
+                throw e;
+            }
+        }
+    }
+
 }
