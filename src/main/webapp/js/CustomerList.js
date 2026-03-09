@@ -548,22 +548,26 @@ function loadPage(page, size) {
 function renderTableBody(customers) {
     const tbody = document.getElementById("customerTableBody");
 
-    if (!customers || customers.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align:center;padding:40px;color:#888;">
-                    <i class="fas fa-search" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4;"></i>
-                    No customers found.
-                </td>
-            </tr>`;
-        return;
-    }
+    // Fade out
+    tbody.style.transition = 'opacity 0.15s ease';
+    tbody.style.opacity = '0';
 
-    let html = "";
+    setTimeout(() => {
+        if (!customers || customers.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;color:#888;">
+                        <i class="fas fa-search" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4;"></i>
+                        No customers found.
+                    </td>
+                </tr>`;
+        } else {
 
-    customers.forEach(c => {
+            let html = "";
 
-        html += `
+            customers.forEach(c => {
+
+                html += `
 <tr class="card-body-row">
 
 <td class="customer-info">
@@ -644,9 +648,13 @@ function renderTableBody(customers) {
                         <td style="display: none;">${c.weight}</td>
 </tr>
 `;
-    });
+            });
 
-    tbody.innerHTML = html;
+            tbody.innerHTML = html;
+        }
+        // Fade in
+        tbody.style.opacity = '1';
+    }, 150);
 }
 
 function renderTags(tags) {

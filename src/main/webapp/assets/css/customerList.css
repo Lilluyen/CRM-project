@@ -176,6 +176,10 @@ td {
     vertical-align: middle;
 }
 
+#customerTableBody {
+    transition: opacity 0.15s ease;
+}
+
 
 /* ===== COLUMN WIDTH (PIXEL - KHÔNG DÙNG %) ===== */
 
