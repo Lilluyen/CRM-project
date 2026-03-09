@@ -9,14 +9,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Campaign;
 import model.CampaignReport;
-import service.CampaignReportService;
 import service.CampaignService;
+import service.ReportService;
 
 @WebServlet(name = "CampaignDetailController", urlPatterns = {"/marketing/campaign/detail"})
 public class CampaignDetailController extends HttpServlet {
 
     private final CampaignService campaignService = new CampaignService();
-    private final CampaignReportService reportService = new CampaignReportService();
+    private final ReportService reportService = new ReportService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -40,7 +40,7 @@ public class CampaignDetailController extends HttpServlet {
 
             request.setAttribute("campaign", campaign);
 
-            // Generate campaign statistics report (reusable via CampaignReportService)
+            // Generate campaign statistics report
             CampaignReport report = reportService.generateReport(campaignId);
             request.setAttribute("report", report);
 
