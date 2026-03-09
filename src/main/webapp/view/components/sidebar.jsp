@@ -1,7 +1,7 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
-    uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> <%@ taglib
-        uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> <%@ page
-            isELIgnored="false" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %> 
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> 
+<%@ page isELIgnored="false" %>
 
             <%-- Xác định role prefix dựa trên role của user --%>
             <c:set var="userRole" value="${sessionScope.user.role.roleName}" />
@@ -267,30 +267,7 @@
                                             Edit Task
                                         </a>
                                     </li>
-                                    <li>
-                                        <a
-                                            class="${page eq 'task-assign' ? 'active' : ''}"
-                                            href="${pageContext.request.contextPath}/tasks/assign"
-                                            >
-                                            Assign Task
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a
-                                            class="${page eq 'task-progress' ? 'active' : ''}"
-                                            href="${pageContext.request.contextPath}/tasks/progress"
-                                            >
-                                            Task Progress
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a
-                                            class="${page eq 'task-status' ? 'active' : ''}"
-                                            href="${pageContext.request.contextPath}/tasks/status"
-                                            >
-                                            Task Status
-                                        </a>
-                                    </li>
+                                    
                                 </ul>
                             </li>
                             <!-- SUPPORT -->

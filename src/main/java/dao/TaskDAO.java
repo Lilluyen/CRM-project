@@ -34,9 +34,9 @@ public class TaskDAO {
             return false;
         }
 
-        String sql = "INSERT INTO Tasks (title, description, status, priority, due_date, progress, "
+        String sql = "INSERT INTO Tasks (title, description, status, priority, due_date, start_date, completed_at, progress, "
                 + "created_by, created_at, updated_at) "
-                + "VALUES (?,?,?,?,?,?,?,GETDATE(),GETDATE())";
+                + "VALUES (?,?,?,?,?,?,?,?,?,GETDATE(),GETDATE())";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, task.getTitle().trim());
             ps.setString(2, task.getDescription() != null ? task.getDescription().trim() : "");
@@ -47,8 +47,18 @@ public class TaskDAO {
             } else {
                 ps.setNull(5, Types.TIMESTAMP);
             }
-            ps.setInt(6, task.getProgress() != null ? task.getProgress() : 0);
-            ps.setInt(7, task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0);
+            if (task.getStartDate() != null) {
+                ps.setTimestamp(6, Timestamp.valueOf(task.getStartDate()));
+            } else {
+                ps.setNull(6, Types.TIMESTAMP);
+            }
+            if (task.getCompletedAt() != null) {
+                ps.setTimestamp(7, Timestamp.valueOf(task.getCompletedAt()));
+            } else {
+                ps.setNull(7, Types.TIMESTAMP);
+            }
+            ps.setInt(8, task.getProgress() != null ? task.getProgress() : 0);
+            ps.setInt(9, task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0);
             if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) {
@@ -70,7 +80,7 @@ public class TaskDAO {
         if (task == null || task.getTaskId() == null || task.getTaskId() <= 0) {
             return false;
         }
-        String sql = "UPDATE Tasks SET title=?,description=?,status=?,priority=?,due_date=?,progress=?,"
+        String sql = "UPDATE Tasks SET title=?,description=?,status=?,priority=?,due_date=?,start_date=?,completed_at=?,progress=?,"
                 + "updated_at=GETDATE() WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, task.getTitle() != null ? task.getTitle().trim() : "");
@@ -82,8 +92,18 @@ public class TaskDAO {
             } else {
                 ps.setNull(5, Types.TIMESTAMP);
             }
-            ps.setInt(6, task.getProgress() != null ? task.getProgress() : 0);
-            ps.setInt(7, task.getTaskId());
+            if (task.getStartDate() != null) {
+                ps.setTimestamp(6, Timestamp.valueOf(task.getStartDate()));
+            } else {
+                ps.setNull(6, Types.TIMESTAMP);
+            }
+            if (task.getCompletedAt() != null) {
+                ps.setTimestamp(7, Timestamp.valueOf(task.getCompletedAt()));
+            } else {
+                ps.setNull(7, Types.TIMESTAMP);
+            }
+            ps.setInt(8, task.getProgress() != null ? task.getProgress() : 0);
+            ps.setInt(9, task.getTaskId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -95,10 +115,18 @@ public class TaskDAO {
     // 3. UPDATE STATUS
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateTaskStatus(int taskId, String status) {
-        String sql = "UPDATE Tasks SET status=?,updated_at=GETDATE() WHERE task_id=?";
+        Timestamp completedAt = "Done".equalsIgnoreCase(status)
+                ? new Timestamp(System.currentTimeMillis())
+                : null;
+        String sql = "UPDATE Tasks SET status=?,completed_at=?,updated_at=GETDATE() WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setInt(2, taskId);
+            if (completedAt != null) {
+                ps.setTimestamp(2, completedAt);
+            } else {
+                ps.setNull(2, Types.TIMESTAMP);
+            }
+            ps.setInt(3, taskId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -114,11 +142,17 @@ public class TaskDAO {
             return false;
         }
         String newStatus = progress >= 100 ? "Done" : (progress > 0 ? "In Progress" : "Pending");
-        String sql = "UPDATE Tasks SET progress=?,status=?,updated_at=GETDATE() WHERE task_id=?";
+        Timestamp completedAt = progress >= 100 ? new Timestamp(System.currentTimeMillis()) : null;
+        String sql = "UPDATE Tasks SET progress=?,status=?,completed_at=?,updated_at=GETDATE() WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, progress);
             ps.setString(2, newStatus);
-            ps.setInt(3, taskId);
+            if (completedAt != null) {
+                ps.setTimestamp(3, completedAt);
+            } else {
+                ps.setNull(3, Types.TIMESTAMP);
+            }
+            ps.setInt(4, taskId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -195,12 +229,12 @@ public class TaskDAO {
         }
 
         if (fromDate != null && !fromDate.isBlank()) {
-            sql.append("AND t.due_date >= ? ");
+            sql.append("AND t.start_date >= ? ");
             params.add(fromDate.trim() + " 00:00:00");
         }
 
         if (toDate != null && !toDate.isBlank()) {
-            sql.append("AND t.due_date <= ? ");
+            sql.append("AND t.start_date <= ? ");
             params.add(toDate.trim() + " 23:59:59");
         }
 
@@ -219,6 +253,8 @@ public class TaskDAO {
 
         if ("dueDate".equals(sortField)) {
             sql.append("t.due_date ");
+        } else if ("startDate".equals(sortField)) {
+            sql.append("t.start_date ");
         } else if ("priority".equals(sortField)) {
             sql.append("CASE t.priority ")
                     .append("WHEN 'High' THEN 1 ")
@@ -542,6 +578,14 @@ public class TaskDAO {
         Timestamp due = rs.getTimestamp("due_date");
         if (due != null) {
             t.setDueDate(due.toLocalDateTime());
+        }
+        Timestamp start = rs.getTimestamp("start_date");
+        if (start != null) {
+            t.setStartDate(start.toLocalDateTime());
+        }
+        Timestamp completed = rs.getTimestamp("completed_at");
+        if (completed != null) {
+            t.setCompletedAt(completed.toLocalDateTime());
         }
         Timestamp cat = rs.getTimestamp("created_at");
         if (cat != null) {

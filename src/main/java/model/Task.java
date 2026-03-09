@@ -17,6 +17,8 @@ public class Task {
     private String status;               // DEFAULT 'Pending'
     private String priority;             // DEFAULT 'Medium'
     private LocalDateTime dueDate;       // DATETIME in DB
+    private LocalDateTime startDate;     // DATETIME in DB
+    private LocalDateTime completedAt;   // DATETIME in DB
     private Integer progress;            // DEFAULT 0
     private User createdBy;           // FK -> Users(user_id)
     private LocalDateTime createdAt;
@@ -26,13 +28,15 @@ public class Task {
     public Task() {
     }
 
-    public Task(Integer taskId, String title, String description, String status, String priority, LocalDateTime dueDate, Integer progress, User createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, List<TaskAssignee> assignees, List<TaskHistory> historys) {
+    public Task(Integer taskId, String title, String description, String status, String priority, LocalDateTime dueDate, LocalDateTime startDate, LocalDateTime completedAt, Integer progress, User createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, List<TaskAssignee> assignees, List<TaskHistory> historys) {
         this.taskId = taskId;
         this.title = title;
         this.description = description;
         this.status = status;
         this.priority = priority;
         this.dueDate = dueDate;
+        this.startDate = startDate;
+        this.completedAt = completedAt;
         this.progress = progress;
         this.createdBy = createdBy;
         this.createdAt = createdAt;
@@ -60,6 +64,12 @@ public class Task {
 
     public LocalDateTime getDueDate() { return dueDate; }
     public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
+    public LocalDateTime getStartDate() { return startDate; }
+    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
+
+    public LocalDateTime getCompletedAt() { return completedAt; }
+    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
 
     public Integer getProgress() { return progress; }
     public void setProgress(Integer progress) { this.progress = progress; }
@@ -91,5 +101,6 @@ public class Task {
     public void setHistorys(List<TaskHistory> historys) {
         this.historys = historys;
     }
+    
     
 }

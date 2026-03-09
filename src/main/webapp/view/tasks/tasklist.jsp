@@ -115,12 +115,12 @@
       <%-- Date range row --%>
       <div class="row g-2 mt-1 align-items-end">
         <div class="col-lg-2 col-md-3">
-          <label class="form-label">Due From</label>
+          <label class="form-label">Start From</label>
           <input type="date" name="fromDate" class="form-control form-control-sm"
                  value="<%= fFrom %>">
         </div>
         <div class="col-lg-2 col-md-3">
-          <label class="form-label">Due To</label>
+          <label class="form-label">Start To</label>
           <input type="date" name="toDate" class="form-control form-control-sm"
                  value="<%= fTo %>">
         </div>
@@ -149,6 +149,11 @@
        <tr>
          <th style="width:42px">ID</th>
          <th>Title</th>
+         <th class="sortable-th <%= "startDate".equals(fSortF) ? "sorted" : "" %>"
+             onclick="toggleSort('startDate')">
+           Start Date <i class="fa fa-sort sort-icon"></i>
+           <% if ("startDate".equals(fSortF)) out.print("ASC".equals(fSortD) ? "↑" : "↓"); %>
+         </th>
          <%-- Sortable columns: dueDate > priority > progress --%>
          <th class="sortable-th <%= "dueDate".equals(fSortF) ? "sorted" : "" %>"
              onclick="toggleSort('dueDate')">
@@ -174,7 +179,7 @@
       <tbody>
        <%
          if (tasks.isEmpty()) { %>
-         <tr><td colspan="9" class="text-center text-muted py-5">
+         <tr><td colspan="10" class="text-center text-muted py-5">
            <i class="fa fa-inbox fa-2x d-block mb-2"></i>No tasks found.
          </td></tr>
        <% } else {
@@ -223,20 +228,19 @@
        <tr>
          <td class="text-muted small">
            <a class="fw-semibold"
-              href="${pageContext.request.contextPath}/tasks/view-history?id=<%= t.getTaskId() %>">
+              href="${pageContext.request.contextPath}/tasks/details?id=<%= t.getTaskId() %>">
              <%= t.getTaskId() %>
            </a>
          </td>
          <td>
-           <a href="${pageContext.request.contextPath}/tasks/details?id=<%= t.getTaskId() %>" class="fw-semibold">
-             <%= t.getTitle() %>
-           </a>
+           <span class="fw-semibold"><%= t.getTitle() %></span>
            <% if (t.getDescription() != null && !t.getDescription().isBlank()) { %>
-           <div class="text-muted small text-truncate" style="max-width:200px">
+           <div class="text-muted small text-wrap" style="max-width:200px">
              <%= t.getDescription().length() > 60 ? t.getDescription().substring(0,60)+"…" : t.getDescription() %>
            </div>
            <% } %>
          </td>
+         <td class="small"><%= t.getStartDate() != null ? t.getStartDate().toString().replace("T"," ").substring(0,16) : "-" %></td>
          <td class="small"><%= t.getDueDate() != null ? t.getDueDate().toString().replace("T"," ").substring(0,16) : "-" %></td>
          <td><span class="badge <%= priCls %>"><%= priLbl %></span></td>
          <td><span class="badge <%= stCls %>"><%= stLbl %></span></td>

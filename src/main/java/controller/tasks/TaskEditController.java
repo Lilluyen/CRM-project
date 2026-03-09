@@ -190,6 +190,10 @@ public class TaskEditController extends HttpServlet {
             String due = req.getParameter("dueDate");
             if (due != null && !due.isBlank()) existing.setDueDate(LocalDateTime.parse(due, DT_FMT));
             else existing.setDueDate(null);
+
+            String start = req.getParameter("startDate");
+            if (start != null && !start.isBlank()) existing.setStartDate(LocalDateTime.parse(start, DT_FMT));
+            else existing.setStartDate(null);
         }
         return existing;
     }

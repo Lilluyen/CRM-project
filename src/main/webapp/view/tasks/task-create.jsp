@@ -62,7 +62,7 @@
                         placeholder="Describe the task…"></textarea>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label fw-semibold">Status</label>
               <select name="status" class="form-select">
                 <option value="Pending" selected>Pending</option>
@@ -72,12 +72,17 @@
               </select>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Start Date</label>
+              <input type="datetime-local" name="startDate" class="form-control">
+            </div>
+
+            <div class="col-md-3">
               <label class="form-label fw-semibold">Due Date</label>
               <input type="datetime-local" name="dueDate" class="form-control">
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label fw-semibold">Initial Progress (%)</label>
               <input type="number" name="progress" class="form-control"
                      min="0" max="100" value="0">

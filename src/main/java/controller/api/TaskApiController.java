@@ -50,6 +50,7 @@ public class TaskApiController extends HttpServlet {
         String status;
         String priority;
         String dueDate; // yyyy-MM-dd'T'HH:mm
+        String startDate; // yyyy-MM-dd'T'HH:mm
         Integer progress;
         Set<Integer> assigneeIds;
     }
@@ -61,6 +62,7 @@ public class TaskApiController extends HttpServlet {
         String status;
         String priority;
         String dueDate; // yyyy-MM-dd'T'HH:mm
+        String startDate; // yyyy-MM-dd'T'HH:mm
         Integer progress;
     }
 
@@ -93,6 +95,9 @@ public class TaskApiController extends HttpServlet {
 
             if (body.dueDate != null && !body.dueDate.isBlank()) {
                 t.setDueDate(LocalDateTime.parse(body.dueDate, DT_FMT));
+            }
+            if (body.startDate != null && !body.startDate.isBlank()) {
+                t.setStartDate(LocalDateTime.parse(body.startDate, DT_FMT));
             }
 
             boolean ok = svc.createTask(t);
@@ -169,6 +174,10 @@ public class TaskApiController extends HttpServlet {
                 if (body.dueDate != null) {
                     if (body.dueDate.isBlank()) existing.setDueDate(null);
                     else existing.setDueDate(LocalDateTime.parse(body.dueDate, DT_FMT));
+                }
+                if (body.startDate != null) {
+                    if (body.startDate.isBlank()) existing.setStartDate(null);
+                    else existing.setStartDate(LocalDateTime.parse(body.startDate, DT_FMT));
                 }
             }
 

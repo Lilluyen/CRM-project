@@ -10,6 +10,8 @@
     boolean canEditDuePriority = Boolean.TRUE.equals(request.getAttribute("canEditDuePriority"));
 
     String dueDateVal = task.getDueDate() != null ? task.getDueDate().toString().substring(0, 16) : "";
+    String startDateVal = task.getStartDate() != null ? task.getStartDate().toString().substring(0, 16) : "";
+    String completedAtVal = task.getCompletedAt() != null ? task.getCompletedAt().toString().substring(0, 16) : "";
 
     Set<Integer> currentAssigneeIds = new HashSet<>();
     if (task.getassignees() != null) {
@@ -152,6 +154,23 @@
                      role="progressbar" style="width:<%= prog %>%"
                      aria-valuenow="<%= prog %>" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
+            </div>
+
+            <%-- Start Date / Completed At (read-only for most users) --%>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Start Date</label>
+              <% if (canEditDuePriority) { %>
+              <input type="datetime-local" name="startDate" class="form-control" value="<%= startDateVal %>">
+              <% } else { %>
+              <input type="text" class="form-control" value="<%= startDateVal.isEmpty() ? "-" : startDateVal.replace("T"," ") %>" readonly>
+              <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Locked</small>
+              <% } %>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Completed At</label>
+              <input type="text" class="form-control" value="<%= completedAtVal.isEmpty() ? "-" : completedAtVal.replace("T"," ") %>" readonly>
+              <small class="readonly-hint"><i class="fa fa-info-circle me-1"></i>Auto-updated</small>
             </div>
           </div><%-- /row --%>
 
@@ -392,13 +411,14 @@ function esc(s) {
 
 /* ── Toast helper ─────────────────────────────────────────────────── */
 function showToast(msg, type) {
-    const id = 'toast_' + Date.now();
-    const div = document.createElement('div');
-    div.id = id;
-    div.className = `alert alert-${type} alert-dismissible fade show`;
-    div.style.cssText = 'position:fixed;top:70px;right:20px;z-index:9999;min-width:260px;';
-    div.innerHTML = msg + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-    document.body.appendChild(div);
-    setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 3500);
+    alert(msg);
+//    const id = 'toast_' + Date.now();
+//    const div = document.createElement('div');
+//    div.id = id;
+//    div.className = `alert alert-${type} alert-dismissible fade show`;
+//    div.style.cssText = 'position:fixed;top:70px;right:20px;z-index:9999;min-width:260px;';
+//    div.innerHTML = msg + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+//    document.body.appendChild(div);
+//    setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 3500);
 }
 </script>

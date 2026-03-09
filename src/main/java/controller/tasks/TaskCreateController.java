@@ -136,6 +136,11 @@ public class TaskCreateController extends HttpServlet {
         if (due != null && !due.isBlank()) {
             t.setDueDate(LocalDateTime.parse(due, DT_FMT));
         }
+
+        String start = req.getParameter("startDate");
+        if (start != null && !start.isBlank()) {
+            t.setStartDate(LocalDateTime.parse(start, DT_FMT));
+        }
         return t;
     }
 
