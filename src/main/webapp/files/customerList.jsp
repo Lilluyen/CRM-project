@@ -1,9 +1,10 @@
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="content col-10 mt-5">
+<div class="content mt-5">
     <h1>Customer Center</h1>
     <div class="sub">Managing ${totalRecord} customers & body profiles</div>
 
@@ -72,6 +73,7 @@
                         <td>
                             <span class="loyalty-badge
                                   <c:choose>
+                                      <c:when test="${c.loyaltyTier == 'DIAMOND'}">diamond</c:when>
                                       <c:when test="${c.loyaltyTier == 'PLATINUM'}">platinum</c:when>
                                       <c:when test="${c.loyaltyTier == 'GOLD'}">gold</c:when>
                                       <c:when test="${c.loyaltyTier == 'SILVER'}">silver</c:when>
@@ -105,12 +107,18 @@
                             </div>
                         </td>
 
-                        <td>${c.lastPurchase}</td>
+                        <td>
+                            ${c.lastPurchase}
+                        </td>
 
 
                         <td class="actions">
                             <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+
+                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             <div class="action-wrapper">
                                 <button class="action-icon-btn menu-btn">
@@ -123,7 +131,11 @@
                                     </div>
                                     <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
                                         <i class="fa-solid fa-angles-up"></i>
-                                        <span>Upgrade Level</span>
+                                        <span>Upgrade</span>
+                                    </div>
+                                    <div class="action-menu-item downgrade-item" onclick="downgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-angles-down"></i>
+                                        <span>Downgrade</span>
                                     </div>
                                     <div class="action-menu-divider"></div>
                                     <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
@@ -145,11 +157,7 @@
         </table>
         <!-- pagination controls -->
         <div id="paginationControls" style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
-            <c:forEach begin="1" end="${totalPages}" var="i">
-                <button onclick="loadPage(${i})" class="btn btn-light ${i == currentPage ? 'active' : ''}"> 
-                    ${i}
-                </button> 
-            </c:forEach>
+            
         </div>
     </div>
 
@@ -184,6 +192,14 @@
                 <div class="input-group">
                     <label>&#x1F451; Loyalty Tier</label>
                     <div class="checkbox-group">
+                        <label class="checkbox-item" data-tier="diamond">
+                            <input type="checkbox" name="loyaltyFilter" value="DIAMOND" />
+                            Diamond
+                        </label>
+                        <label class="checkbox-item" data-tier="platinum">
+                            <input type="checkbox" name="loyaltyFilter" value="PLATINUM" />
+                            Platinum
+                        </label>
                         <label class="checkbox-item" data-tier="gold">
                             <input type="checkbox" name="loyaltyFilter" value="GOLD" />
                             Gold
@@ -276,12 +292,30 @@
                 <div class="input-group">
                     <label>&#x1F3A8; Style Tags</label>
                     <div class="checkbox-group">
-                        <c:forEach items="${styleTagList}" var="style">
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="styleTagFilter" value="${style.tagId}" />
-                                ${style.tagName}
-                            </label>
-                        </c:forEach>
+                        <table>
+                            <c:forEach items="${styleTagList}" var="style" varStatus="loop">
+
+                                <c:if test="${loop.index % 4 == 0}">
+                                    </tr>
+                                </c:if>
+
+                                <td style="height: 15px; padding: 3px 0;">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="styleTagFilter" value="${style.tagId}" />
+                                        ${style.tagName}
+                                    </label>
+                                </td>
+                                <c:if test="${loop.index % 4 == 3}">
+                                    </tr>
+                                </c:if>
+
+                            </c:forEach>
+
+                            <!-- Nếu tổng số item không chia hết cho 4 thì đóng tr cuối -->
+                            <c:if test="${styleTagList.size() % 4 != 0}">
+                                </tr>
+                            </c:if>
+                        </table>
                     </div>
                 </div>
 
@@ -374,8 +408,12 @@
     </div>
 
 
-    <script>
-        window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
-        window.__CTX__ = "${pageContext.request.contextPath}";
-    </script>
+            <script>
+                window.__PAGE_STATUS__      = "<c:out value='${param.status}' default='' />";
+                window.__CTX__              = "${pageContext.request.contextPath}";
+                window.__SESSION_ID__       = "<c:out value='${sessionId}' default='' />";
+                window.__TOTAL_PAGES__      = ${not empty totalPages ? totalPages : 1};
+                window.__TOTAL_RECORDS__    = ${not empty totalRecord ? totalRecord : 0};
+                window.__CURRENT_PAGE__     = ${not empty currentPage ? currentPage : 1};
+            </script>
 

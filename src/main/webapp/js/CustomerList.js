@@ -1,8 +1,11 @@
 // ===== GLOBAL STATE =====
-let allCustomerData = [];
-let filteredCustomers = [];
 let currentPage = 1;
 let rowsPerPage = 10;
+
+// Hybrid Keyset Pagination state
+let paginationSessionId = window.__SESSION_ID__ || null;
+let totalPages = window.__TOTAL_PAGES__ || 1;
+let totalRecords = window.__TOTAL_RECORDS__ || 0;
 let advancedFilters = {
     loyaltyTiers: [],
     tagIds: [],
@@ -11,28 +14,27 @@ let advancedFilters = {
     returnRateMode: null
 };
 
-let selectedFilters = {
-    searchText: '',
-    tags: [],
-    loyalty: [],
-    bodyShape: [],
-    size: [],
-    returnRate: [],
-    styleTags: []
-};
+// Cache of current page's customer data — used by openPreview()
+let currentPageCustomers = [];
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function () {
-    // Get initial customer data from table
-    callFilterAPI(1); // Load first page with default filters
+    currentPage = window.__CURRENT_PAGE__ || 1;
+    totalPages = window.__TOTAL_PAGES__ || 1;
 
-    // Set up event listeners
+    // Parse server-rendered rows vào currentPageCustomers
+    // để openPreview() hoạt động ngay khi F5 mà không cần gọi API trước
+    currentPageCustomers = parseCustomersFromDOM();
+
+    renderPagination(totalPages, currentPage);
+
+    const rowsSelect = document.getElementById('rowsPerPage');
+    if (rowsSelect) rowsSelect.value = rowsPerPage;
+
     setupEventListeners();
 
-    // Show initial toast if page has status
     const pageStatus = window.__PAGE_STATUS__;
     if (pageStatus) {
-        // Determine type based on message content
         let toastType = 'info';
         if (pageStatus.toLowerCase().includes('success') || pageStatus.toLowerCase().includes('successfully') || pageStatus.toLowerCase().includes('created')) {
             toastType = 'success';
@@ -43,8 +45,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         showToast(pageStatus, toastType);
     }
-
 });
+
+// Parse data từ các hidden <td> mà JSP đã render sẵn
+// Dùng khi F5 — lúc này JS chưa gọi API nào nhưng DOM đã có data
+function parseCustomersFromDOM() {
+    const customers = [];
+    document.querySelectorAll('#customerTableBody tr.card-body-row').forEach(row => {
+        const viewBtn = row.querySelector('[onclick*="viewCustomer"]');
+        const idMatch = viewBtn?.getAttribute('onclick')?.match(/viewCustomer\((\d+)\)/);
+        if (!idMatch) return;
+
+        const tds = row.querySelectorAll('td');
+        customers.push({
+            customerId: parseInt(idMatch[1]),
+            name: row.querySelector('.customer-info strong')?.textContent?.trim() || '',
+            phone: row.querySelector('.customer-info .muted')?.textContent?.trim() || '',
+            email: tds[tds.length - 4]?.textContent?.trim() || '',
+            gender: tds[tds.length - 3]?.textContent?.trim() || '',
+            height: tds[tds.length - 2]?.textContent?.trim() || '',
+            weight: tds[tds.length - 1]?.textContent?.trim() || '',
+            loyaltyTier: row.querySelector('.loyalty-badge')?.textContent?.trim() || '',
+            rfmScore: row.querySelector('.table_rfm_score')?.textContent?.replace('RFM Score:', '')?.trim() || '',
+            preferredSize: row.querySelector('td:nth-child(3) strong')?.textContent?.trim() || '',
+            bodyShape: row.querySelector('td:nth-child(3) .muted')?.textContent?.trim() || '',
+            returnRate: parseFloat(row.querySelector('td:nth-child(5) div')?.textContent) || 0,
+        });
+    });
+    return customers;
+}
 
 
 
@@ -109,6 +138,7 @@ function toggleFilterTag(type) {
     }
 
     currentPage = 1;
+    paginationSessionId = null;  // Filter thay đổi → reset keyset session
     applyFilters();
 }
 
@@ -122,6 +152,8 @@ function toggleArrayValue(arr, value) {
 }
 
 function applyFilters() {
+    // Filter thay đổi → reset session để server tạo keyset mới
+    paginationSessionId = null;
     callFilterAPI(1);
 }
 
@@ -136,6 +168,11 @@ async function callFilterAPI(page = 1) {
     params.append("page", currentPage);
     params.append("size", rowsPerPage);
     params.append("keyword", keyword);
+
+    // Gửi sessionId lên server để dùng keyset pagination
+    if (paginationSessionId) {
+        params.append("sessionId", paginationSessionId);
+    }
 
     if (advancedFilters.loyaltyTiers.length)
         params.append("tiers", advancedFilters.loyaltyTiers.join(','));
@@ -152,26 +189,61 @@ async function callFilterAPI(page = 1) {
     if (advancedFilters.returnRateMode)
         params.append("returnRateMode", advancedFilters.returnRateMode);
 
-    const response = await fetch(`${window.__CTX__}/customers/filter`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-Requested-With": "XMLHttpRequest"
-        },
-        body: params.toString()
-    });
+    let data = null;
+    try {
+        const response = await fetch(`${window.__CTX__}/customers/filter`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: params.toString()
+        });
 
-    const data = await response.json();
+        if (!response.ok) {
+            console.error(`Filter API error: HTTP ${response.status}`);
+            showToast(`Server error (${response.status}). Please try again.`, 'error');
+            return;
+        }
 
-    /* 🔴 CỰC KỲ QUAN TRỌNG */
-    selectedFilters = data.customers;
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+            console.error('Filter API returned empty response');
+            showToast('No data returned from server.', 'warning');
+            return;
+        }
 
-    /* dùng cho preview */
-    filteredCustomers = data.customers;
+        data = JSON.parse(text);
+    } catch (err) {
+        console.error('Filter API failed:', err);
+        showToast('Failed to load customers. Please try again.', 'error');
+        return;
+    }
 
-    renderTableBody(data.customers);
+    if (!data) return;
 
-    const totalPages = Math.ceil(data.totalRecords / rowsPerPage);
+    // Lưu sessionId mới từ server (nếu có)
+    if (data.sessionId) {
+        paginationSessionId = data.sessionId;
+    }
+
+    // Cập nhật totalPages từ server (chỉ khi server trả về, tức page=1 hoặc session mới)
+    if (data.totalPages) {
+        totalPages = data.totalPages;
+        totalRecords = data.totalRecords;
+    }
+
+
+    const customers = data.customers ?? data.data ?? [];
+
+    // Cache customers của page hiện tại để openPreview() dùng
+    currentPageCustomers = customers;
+
+    if (customers.length === 0) {
+        totalPages = 1; // Reset về 1 page nếu filter quá chặt không còn kết quả nào
+    }
+
+    renderTableBody(customers);
     renderPagination(totalPages, currentPage);
 }
 
@@ -243,6 +315,7 @@ function applyAdvancedFilter() {
     advancedFilters.returnRateMode = returnRate ? returnRate.value : null;
 
     closeAdvancedFilter();
+    paginationSessionId = null;  // Filter thay đổi → reset keyset session
     callFilterAPI(1);
 }
 
@@ -260,15 +333,21 @@ function resetAdvancedFilter() {
         cb.checked = false;
     });
 
+    const highReturnButton = document.querySelector('.high-return');
+    highReturnButton.classList.remove('active');
+
+    const goldButton = document.querySelector('.gold-members');
+    goldButton.classList.remove('active');
+
+    // Reset session pagination khi filter thay đổi
+    paginationSessionId = null;
     callFilterAPI(1);
 }
 
-
 // ===== CUSTOMER ACTIONS =====
 function openPreview(customerId) {
-    const customer = selectedFilters.find(c => c.customerId == customerId);
-    if (!customer)
-        return;
+    const customer = currentPageCustomers.find(c => c.customerId == customerId);
+    if (!customer) return;
     // Populate preview panel
     document.getElementById('previewName').textContent = customer.name;
     document.getElementById('previewPhone').textContent = customer.phone;
@@ -319,6 +398,14 @@ function upgradeCustomer(customerId) {
     if (confirm('Upgrade loyalty level for this customer?')) {
         const ctx = window.__CTX__ || "";
         const url = `${ctx}/customers/upgrade?customerId=${encodeURIComponent(customerId)}`;
+        window.location.href = url;
+    }
+}
+
+function downgradeCustomer(customerId) {
+    if (confirm('Downgrade loyalty level for this customer?')) {
+        const ctx = window.__CTX__ || '';
+        const url = `${ctx}/customers/downgrade?customerId=${encodeURIComponent(customerId)}`;
         window.location.href = url;
     }
 }
@@ -398,7 +485,7 @@ function showToast(message, type = 'success', duration = 3000) {
     };
 
     toastIcon.innerHTML = icons[type] || icons.info;
-    toastMessage.textContent = message;
+    toastMessage.textContent = `========       ${message}       ========`;
 
     // Set bar color
     toastBar.style.background = barColors[type] || barColors.info;
@@ -459,13 +546,28 @@ function loadPage(page, size) {
 }
 
 function renderTableBody(customers) {
-    console.log(customers);
+    const tbody = document.getElementById("customerTableBody");
 
-    let html = "";
+    // Fade out
+    tbody.style.transition = 'opacity 0.15s ease';
+    tbody.style.opacity = '0';
 
-    customers.forEach(c => {
+    setTimeout(() => {
+        if (!customers || customers.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;color:#888;">
+                        <i class="fas fa-search" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4;"></i>
+                        No customers found.
+                    </td>
+                </tr>`;
+        } else {
 
-        html += `
+            let html = "";
+
+            customers.forEach(c => {
+
+                html += `
 <tr class="card-body-row">
 
 <td class="customer-info">
@@ -526,8 +628,12 @@ function renderTableBody(customers) {
                 </div>
                 <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
                     <i class="fa-solid fa-angles-up"></i>
-                    <span>Upgrade Level</span>
+                    <span>Upgrade</span>
                 </div>
+        <div class="action-menu-item downgrade-item" onclick="downgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-angles-down"></i>
+                                        <span>Downgrade</span>
+                                    </div>
                 <div class="action-menu-divider"></div>
                 <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
                     <i class="fa-regular fa-trash-can"></i>
@@ -542,9 +648,13 @@ function renderTableBody(customers) {
                         <td style="display: none;">${c.weight}</td>
 </tr>
 `;
-    });
+            });
 
-    document.getElementById("customerTableBody").innerHTML = html;
+            tbody.innerHTML = html;
+        }
+        // Fade in
+        tbody.style.opacity = '1';
+    }, 150);
 }
 
 function renderTags(tags) {
@@ -642,9 +752,8 @@ function renderPagination(totalPages, currentPage) {
 }
 
 document.getElementById("rowsPerPage")?.addEventListener("change", function () {
-
     const value = this.value === "all" ? 999999 : parseInt(this.value);
-
     rowsPerPage = value;
+    paginationSessionId = null;  // PageSize thay đổi → keyset anchor không còn hợp lệ
     loadPage(1, value);
 });

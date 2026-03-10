@@ -184,7 +184,7 @@
                             Last Purchase
                         </span>
                         <span class="customer-detail__metric-value">
-                            ${customerDetail.lastPurchase}
+                            ${customerDetail.lastPurchaseDate}
                         </span>
                     </div>
 

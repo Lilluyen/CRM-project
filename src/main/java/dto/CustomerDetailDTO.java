@@ -31,7 +31,6 @@ public class CustomerDetailDTO {
     private List<StyleTag> styleTags;
 
     // Getter & Setter ...
-
     public int getCustomerId() {
         return customerId;
     }
@@ -158,6 +157,13 @@ public class CustomerDetailDTO {
 
     public void setStyleTags(List<StyleTag> styleTags) {
         this.styleTags = styleTags;
+    }
+
+    public String getLastPurchaseDate() {
+        if (lastPurchase == null) {
+            return "";
+        }
+        return lastPurchase.toLocalDate().toString();
     }
 
 }

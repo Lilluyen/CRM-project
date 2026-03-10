@@ -138,7 +138,10 @@ public class CustomerListDTO {
         this.gender = gender;
     }
 
-
+public String getLastPurchaseDate() {
+    if (lastPurchase == null) return "";
+    return lastPurchase.toLocalDate().toString();
+}
     
     
 }
