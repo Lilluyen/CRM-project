@@ -264,30 +264,6 @@ isELIgnored="false" %> <%-- Xác định role prefix dựa trên role của user
                 Edit Task
               </a>
             </li>
-            <li>
-              <a
-                class="${page eq 'task-assign' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/tasks/assign"
-              >
-                Assign Task
-              </a>
-            </li>
-            <li>
-              <a
-                class="${page eq 'task-progress' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/tasks/progress"
-              >
-                Task Progress
-              </a>
-            </li>
-            <li>
-              <a
-                class="${page eq 'task-status' ? 'active' : ''}"
-                href="${pageContext.request.contextPath}/tasks/status"
-              >
-                Task Status
-              </a>
-            </li>
           </ul>
         </li>
         <!-- SUPPORT -->
