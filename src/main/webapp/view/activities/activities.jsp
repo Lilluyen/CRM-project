@@ -101,7 +101,7 @@
           <table class="table table-striped table-hover">
             <thead>
               <tr>
-                <th>#</th>
+                <th>ID</th>
                 <th class="sortable-th" onclick="toggleSort('subject')">
                   Subject <%= "subject".equals(p_sortF) ? ("ASC".equals(p_sortD) ? "↑" : "↓") : "" %>
                 </th>
@@ -125,18 +125,19 @@
                 </td>
               </tr>
               <% } else {
-                  int rowNum = (currentPage - 1) * pageSize + 1;
+                  
                   for (Activity a : activities) {
                       String typeBadge = "bg-secondary";
-                      String at = a.getActivityType() != null ? a.getActivityType() : "-";
-                      if ("Call".equals(at))    typeBadge = "bg-info text-dark";
-                      else if ("Email".equals(at))   typeBadge = "bg-primary";
-                      else if ("Meeting".equals(at)) typeBadge = "bg-success";
-                      else if ("Note".equals(at))    typeBadge = "bg-warning text-dark";
-                      else if ("Task".equals(at))    typeBadge = "bg-danger";
+                      String at = (a.getActivityType() != null ? a.getActivityType() : "-").toUpperCase();
+                      
+                      if ("CALL".equals(at))    typeBadge = "bg-info text-dark";
+                      else if ("EMAIL".equals(at))   typeBadge = "bg-primary";
+                      else if ("MEETING".equals(at)) typeBadge = "bg-success";
+                      else if ("NOTE".equals(at))    typeBadge = "bg-warning text-dark";
+                      else if ("TASK".equals(at))    typeBadge = "bg-danger";
               %>
               <tr>
-                <td><%= rowNum++ %></td>
+                <td><%= a.getActivityId() %></td>
                 <td>
                   <a href="${pageContext.request.contextPath}/activities/details?id=<%= a.getActivityId() %>">
                     <strong><%= e(a.getSubject()) %></strong>

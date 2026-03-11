@@ -34,11 +34,11 @@
               <label class="form-label fw-semibold">Activity Type <span class="text-danger">*</span></label>
               <select name="activityType" class="form-select" required>
                 <option value="">-- Select --</option>
-                <option value="Call">Call</option>
-                <option value="Email">Email</option>
-                <option value="Meeting">Meeting</option>
-                <option value="Note">Note</option>
-                <option value="Task">Task</option>
+                <option value="CALL">Call</option>
+                <option value="EMAIL">Email</option>
+                <option value="MEETING">Meeting</option>
+                <option value="NOTE">Note</option>
+                <option value="TASK">Task</option>
               </select>
             </div>
 
@@ -51,9 +51,9 @@
               <label class="form-label fw-semibold">Related Type</label>
               <select name="relatedType" class="form-select">
                 <option value="">-- None --</option>
-                <option value="customer">Customer</option>
-                <option value="lead">Lead</option>
-                <option value="deal">Deal</option>
+                <option value="CUSTOMER">Customer</option>
+                <option value="LEAD">Lead</option>
+                <option value="DEAL">Deal</option>
               </select>
             </div>
 

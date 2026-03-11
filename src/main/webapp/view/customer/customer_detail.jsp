@@ -30,6 +30,11 @@
         </div>
 
         <div class="customer-detail__actions">
+            <a href="${pageContext.request.contextPath}/customer-journey?type=customer&customerId=${customerDetail.customerId}"
+               class="customer-detail__btn customer-detail__btn--outline">
+                View Journey
+            </a>
+
             <a href="${pageContext.request.contextPath}/customers/edit?customerId=${customerDetail.customerId}"
                class="customer-detail__btn customer-detail__btn--outline">
                 Edit

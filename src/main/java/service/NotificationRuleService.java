@@ -11,11 +11,15 @@ import java.sql.Savepoint;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Executes notification reminder rules stored in Notification_Rules.
  */
 public class NotificationRuleService {
+
+    private static final Logger LOG = Logger.getLogger(NotificationRuleService.class.getName());
 
     private final Connection connection;
     private final NotificationRuleDAO ruleDAO;
@@ -81,7 +85,7 @@ public class NotificationRuleService {
                 LocalDateTime nextRun = now;
 
                 String rt = rule.getRuleType() != null ? rule.getRuleType().trim() : "";
-                if ("ONCE".equalsIgnoreCase(rt)) {
+                if ("ONCE".equalsIgnoreCase(rt) || "ONE_TIME".equalsIgnoreCase(rt)) {
                     active = false;
                 } else {
                     LocalDateTime computed = computeNextRun(now, rule.getIntervalValue(), rule.getIntervalUnit());
@@ -94,10 +98,10 @@ public class NotificationRuleService {
                 }
 
                 ruleDAO.updateAfterTrigger(rule.getRuleId(), nextRun, now, active);
-                connection.releaseSavepoint(sp);
                 triggered++;
             } catch (Exception ex) {
                 connection.rollback(sp);
+                LOG.log(Level.WARNING, "Failed to process notification rule " + rule.getRuleId(), ex);
                 // keep scheduler alive; move on to next rule
             }
         }

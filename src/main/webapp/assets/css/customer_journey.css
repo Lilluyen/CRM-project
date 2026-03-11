@@ -1,0 +1,11 @@
+.customer-journey .page-header {
+    margin-bottom: 1.5rem;
+}
+
+.customer-journey .table td, .customer-journey .table th {
+    vertical-align: middle;
+}
+
+.customer-journey .badge {
+    text-transform: capitalize;
+}
