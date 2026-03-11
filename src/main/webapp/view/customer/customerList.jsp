@@ -4,8 +4,11 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="content mt-5">
-    <h1>Customer Center</h1>
+<div class="content">
+<div class="d-flex align-items-center gap-3 list__header">
+    <i class="fas fa-users"></i>
+        <h1>Customer Center</h1>
+</div>
     <div class="sub">Managing ${totalRecord} customers & body profiles</div>
 
     <div class="top-bar">
@@ -101,7 +104,7 @@
                             <div>${c.returnRate}%</div>
                             <div class="progress">
                                 <div class="progress-bar
-                                     <c:if test="${c.returnRate > 30}">high-return</c:if>"
+                                     <c:if test="${c.returnRate > 40}">high-return</c:if>"
                                      style="width:${c.returnRate}%">
                                 </div>
                             </div>

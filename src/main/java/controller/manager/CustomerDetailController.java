@@ -3,6 +3,11 @@ package controller.manager;
 import java.io.IOException;
 import java.util.List;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,7 +21,18 @@ import util.ControllerUltil;
 @WebServlet(name = "CustomerDetailController", urlPatterns = { "/customers/detail" })
 public class CustomerDetailController extends HttpServlet {
 
-    private final CustomerService customerService = new CustomerService();
+    CustomerDAO customerDAO = new CustomerDAO();
+    CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+    CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -33,7 +49,7 @@ public class CustomerDetailController extends HttpServlet {
 
             // 🔥 GỌI SERVICE
             CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
-            List<StyleTag> styleTags = customerService.getListStyleTagsByCustomerId(customerId);
+            List<StyleTag> styleTags = customerService.getListStyleTags();
             if (customerDetail == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Customer not found");
                 return;

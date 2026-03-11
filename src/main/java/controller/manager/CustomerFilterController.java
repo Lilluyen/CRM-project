@@ -12,6 +12,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerFilterRequest;
 import dto.CustomerPageResult;
 import jakarta.servlet.ServletException;
@@ -80,8 +85,19 @@ public class CustomerFilterController extends HttpServlet {
             filterRequest.setSizes(sizes);
 
             // ===== CALL SERVICE =====
-            CustomerService service = new CustomerService();
-            CustomerPageResult result = service.filterAdvanced(filterRequest, sessionId);
+            CustomerDAO customerDAO = new CustomerDAO();
+            CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+            CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+            CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+            CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+            CustomerService customerService = new CustomerService(
+                    customerDAO,
+                    customerStyleDAO,
+                    customerQueryDAO,
+                    customerMeasurementDAO,
+                    customerSegmentDAO);
+            CustomerPageResult result = customerService.filterAdvanced(filterRequest, sessionId);
 
             // Lưu sessionId mới vào HttpSession cho request tiếp theo
             if (result.getSessionId() != null) {

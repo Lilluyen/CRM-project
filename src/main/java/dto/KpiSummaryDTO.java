@@ -2,14 +2,13 @@ package dto;
 
 public class KpiSummaryDTO {
     private long totalCustomers;
-    private long newThisMonth;
-    private long newLastMonth;
+    private long newMonthA;
+    private long newMonthB;
 
-    
     private double customerGrowthPct; // % tăng trưởng so tháng trước
 
-    private double revenueThisMonth;
-    private double revenueLastMonth;
+    private double revenueMonthA;
+    private double revenueMonthB;
     private double revenueGrowthPct;
 
     private long retainedCustomers;
@@ -18,83 +17,85 @@ public class KpiSummaryDTO {
     private double avgLtv; // avg LTV từ Deals won
 
     // ── getters / setters ──
+
     public long getTotalCustomers() {
         return totalCustomers;
     }
 
-    public void setTotalCustomers(long v) {
-        this.totalCustomers = v;
+    public void setTotalCustomers(long totalCustomers) {
+        this.totalCustomers = totalCustomers;
     }
 
-    public long getNewThisMonth() {
-        return newThisMonth;
+    public long getNewMonthA() {
+        return newMonthA;
     }
 
-    public void setNewThisMonth(long v) {
-        this.newThisMonth = v;
-    }
-    
-    public long getNewLastMonth() {
-        return newLastMonth;
+    public void setNewMonthA(long newMonthA) {
+        this.newMonthA = newMonthA;
     }
 
-    public void setNewLastMonth(long newLastMonth) {
-        this.newLastMonth = newLastMonth;
+    public long getNewMonthB() {
+        return newMonthB;
+    }
+
+    public void setNewMonthB(long newMonthB) {
+        this.newMonthB = newMonthB;
     }
 
     public double getCustomerGrowthPct() {
         return customerGrowthPct;
     }
 
-    public void setCustomerGrowthPct() {
-        this.customerGrowthPct = (this.newThisMonth - this.newLastMonth) / this.newLastMonth * 100.0;
+    public void setCustomerGrowthPct(double customerGrowthPct) {
+        this.customerGrowthPct = customerGrowthPct;
     }
 
-    public double getRevenueThisMonth() {
-        return revenueThisMonth;
+    public double getRevenueMonthA() {
+        return revenueMonthA;
     }
 
-    public void setRevenueThisMonth(double v) {
-        this.revenueThisMonth = v;
+    public void setRevenueMonthA(double revenueMonthA) {
+        this.revenueMonthA = revenueMonthA;
     }
 
-    public double getRevenueLastMonth() {
-        return revenueLastMonth;
+    public double getRevenueMonthB() {
+        return revenueMonthB;
     }
 
-    public void setRevenueLastMonth(double v) {
-        this.revenueLastMonth = v;
+    public void setRevenueMonthB(double revenueMonthB) {
+        this.revenueMonthB = revenueMonthB;
     }
 
     public double getRevenueGrowthPct() {
         return revenueGrowthPct;
     }
 
-    public void setRevenueGrowthPct() {
-        this.revenueGrowthPct = ((this.revenueThisMonth - this.revenueLastMonth) / this.revenueLastMonth * 100.0) ;
+    public void setRevenueGrowthPct(double revenueGrowthPct) {
+        this.revenueGrowthPct = revenueGrowthPct;
     }
 
     public long getRetainedCustomers() {
         return retainedCustomers;
     }
 
-    public void setRetainedCustomers(long v) {
-        this.retainedCustomers = v;
+    public void setRetainedCustomers(long retainedCustomers) {
+        this.retainedCustomers = retainedCustomers;
     }
 
     public double getRetentionRatePct() {
         return retentionRatePct;
     }
 
-    public void setRetentionRatePct() {
-        this.retentionRatePct =  (this.retainedCustomers * 1.0 / this.totalCustomers) * 100;
+    public void setRetentionRatePct(double retentionRatePct) {
+        this.retentionRatePct = retentionRatePct;
     }
 
     public double getAvgLtv() {
         return avgLtv;
     }
 
-    public void setAvgLtv(double v) {
-        this.avgLtv = v;
+    public void setAvgLtv(double avgLtv) {
+        this.avgLtv = avgLtv;
     }
+    
 }

@@ -3,6 +3,11 @@ package controller.sale;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,10 +18,22 @@ import service.CustomerService;
 @WebServlet("/customers/upgrade")
 public class UpgradeLoyaltyCustomerController extends HttpServlet {
 
-    private final CustomerService customerService = new CustomerService();
+    CustomerDAO customerDAO = new CustomerDAO();
+    CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+    CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         try {
             String customerIdParam = request.getParameter("customerId");
             if (customerIdParam == null || customerIdParam.isEmpty()) {
@@ -24,7 +41,7 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/customers?status=failed");
                 return;
             }
-            
+
             int customerId;
             try {
                 customerId = Integer.parseInt(customerIdParam);
@@ -33,7 +50,7 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/customers?status=failed");
                 return;
             }
-            
+
             boolean success = customerService.upgradeToLoyaltyCustomer(customerId);
             if (success) {
                 response.sendRedirect(request.getContextPath() + "/customers?status=success");
