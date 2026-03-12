@@ -2,11 +2,13 @@ package service;
 
 import dao.NotificationDAO;
 import dao.NotificationRuleDAO;
+import dto.Pagination;
 import model.Notification;
 import model.NotificationRule;
 import websocket.NotificationWebSocketEndpoint;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -125,6 +127,73 @@ public class NotificationRuleService {
             case "month", "months", "m" -> base.plusMonths(intervalValue);
             default -> null;
         };
+    }
+
+    public NotificationRule getRuleById(int ruleId) throws SQLException {
+        return ruleDAO.findById(ruleId);
+    }
+
+    public int countRulesForUser(int userId, boolean isManagement) throws SQLException {
+        if (isManagement) {
+            return ruleDAO.countAll();
+        }
+        return ruleDAO.countForUser(userId);
+    }
+
+    public List<NotificationRule> listRulesForUser(int userId, boolean isManagement, int page, int pageSize) throws SQLException {
+        int offset = Math.max(0, (page - 1) * pageSize);
+        if (isManagement) {
+            return ruleDAO.findAll(offset, pageSize);
+        }
+        return ruleDAO.findForUser(userId, offset, pageSize);
+    }
+
+    public List<Notification> listNotificationsForUser(int userId, boolean isManagement, int page, int pageSize) throws SQLException {
+        int offset = Math.max(0, (page - 1) * pageSize);
+        if (isManagement) {
+            return notificationDAO.findAll(offset, pageSize);
+        }
+        // no paging support in DAO for user notifications, so do in-memory slice
+        List<Notification> all = notificationDAO.findByUser(userId);
+        int toIndex = Math.min(offset + pageSize, all.size());
+        if (offset > all.size()) return new java.util.ArrayList<>();
+        return all.subList(offset, toIndex);
+    }
+
+    public int countNotificationsForUser(int userId, boolean isManagement) throws SQLException {
+        if (isManagement) {
+            return notificationDAO.countAll();
+        }
+        return notificationDAO.findByUser(userId).size();
+    }
+
+    public Notification getNotificationById(int notificationId) throws SQLException {
+        return notificationDAO.findById(notificationId);
+    }
+
+    public boolean updateNotification(Notification n) throws SQLException {
+        return notificationDAO.updateNotification(n);
+    }
+
+    public int createRule(int notificationId,
+                          String ruleType,
+                          Integer intervalValue,
+                          String intervalUnit,
+                          LocalDateTime nextRun) throws SQLException {
+        return ruleDAO.insertRule(notificationId, ruleType, intervalValue, intervalUnit, nextRun);
+    }
+
+    public boolean updateRule(int ruleId,
+                              String ruleType,
+                              Integer intervalValue,
+                              String intervalUnit,
+                              LocalDateTime nextRun,
+                              boolean active) throws SQLException {
+        return ruleDAO.updateRule(ruleId, ruleType, intervalValue, intervalUnit, nextRun, active);
+    }
+
+    public boolean deleteRule(int ruleId) throws SQLException {
+        return ruleDAO.deleteRule(ruleId);
     }
 }
 

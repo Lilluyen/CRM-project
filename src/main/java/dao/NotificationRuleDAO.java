@@ -94,6 +94,113 @@ public class NotificationRuleDAO {
         }
     }
 
+    public NotificationRule findById(int ruleId) throws SQLException {
+        String sql = "SELECT rule_id, notification_id, rule_type, interval_value, interval_unit, "
+                   + "next_run, last_run, is_active, created_at "
+                   + "FROM Notification_Rules WHERE rule_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, ruleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        }
+        return null;
+    }
+
+    public List<NotificationRule> findForUser(int userId, int offset, int limit) throws SQLException {
+        List<NotificationRule> list = new ArrayList<>();
+        String sql = "SELECT r.rule_id, r.notification_id, r.rule_type, r.interval_value, r.interval_unit, "
+                   + "       r.next_run, r.last_run, r.is_active, r.created_at "
+                   + "FROM Notification_Rules r "
+                   + "JOIN Notification_Recipients nr ON r.notification_id = nr.notification_id "
+                   + "WHERE nr.user_id = ? "
+                   + "ORDER BY r.next_run ASC, r.rule_id ASC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, offset);
+            ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    public int countForUser(int userId) throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT r.rule_id) "
+                   + "FROM Notification_Rules r "
+                   + "JOIN Notification_Recipients nr ON r.notification_id = nr.notification_id "
+                   + "WHERE nr.user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public List<NotificationRule> findAll(int offset, int limit) throws SQLException {
+        List<NotificationRule> list = new ArrayList<>();
+        String sql = "SELECT rule_id, notification_id, rule_type, interval_value, interval_unit, "
+                   + "       next_run, last_run, is_active, created_at "
+                   + "FROM Notification_Rules "
+                   + "ORDER BY next_run ASC, rule_id ASC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, offset);
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Notification_Rules";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    public boolean updateRule(int ruleId,
+                              String ruleType,
+                              Integer intervalValue,
+                              String intervalUnit,
+                              LocalDateTime nextRun,
+                              boolean active) throws SQLException {
+        String sql = "UPDATE Notification_Rules "
+                   + "SET rule_type=?, interval_value=?, interval_unit=?, next_run=?, is_active=? "
+                   + "WHERE rule_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, ruleType);
+            if (intervalValue != null) ps.setInt(2, intervalValue);
+            else ps.setNull(2, Types.INTEGER);
+            if (intervalUnit != null) ps.setString(3, intervalUnit);
+            else ps.setNull(3, Types.VARCHAR);
+            ps.setTimestamp(4, Timestamp.valueOf(nextRun));
+            ps.setBoolean(5, active);
+            ps.setInt(6, ruleId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean deleteRule(int ruleId) throws SQLException {
+        String sql = "DELETE FROM Notification_Rules WHERE rule_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, ruleId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     private NotificationRule mapRow(ResultSet rs) throws SQLException {
         NotificationRule r = new NotificationRule();
         r.setRuleId(rs.getInt("rule_id"));

@@ -32,7 +32,42 @@ isELIgnored="false" %> <%-- Xác định role prefix dựa trên role của user
             <span>Dashboard</span>
           </a>
         </li>
-
+        <!-- Notifications -->
+         <li class="submenu">
+          <a href="javascript:void(0);">
+            <i class="fa fa-bell"></i>
+            <span>Notification</span>
+            <span class="menu-arrow"></span>
+          </a>
+          <ul
+            style="${fn:startsWith(page, 'notification-') ? 'display:block;' : ''}"
+          >
+            <li>
+              <a
+                class="${page eq 'notification-list' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/notifications/list"
+              >
+                Notification List
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'notification-form' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/notifications/rules"
+              >
+                Notification Reminder
+              </a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'notification-detail' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/notifications/rules/manage"
+              >
+                Manage Notification Reminder
+              </a>
+            </li>
+          </ul>
+        </li>
         <!-- CAMPAIGN -->
         <li class="submenu">
           <a href="javascript:void(0);">

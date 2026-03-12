@@ -249,6 +249,27 @@ public class NotificationService {
         }
     }
 
+    /**
+     * Returns true if the given user is a recipient of the notification.
+     */
+    public boolean isRecipient(int notificationId, int userId) {
+        try {
+            return notificationDAO.findRecipientUserIds(notificationId).contains(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateNotification(Notification n) {
+        try {
+            return notificationDAO.updateNotification(n);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static NotificationService withDefaultConnection() throws Exception {
         return new NotificationService(DBContext.getConnection());
     }

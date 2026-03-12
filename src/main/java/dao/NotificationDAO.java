@@ -202,6 +202,61 @@ public class NotificationDAO {
         return null;
     }
 
+    /**
+     * Update notification header fields.
+     */
+    public boolean updateNotification(Notification n) {
+        String sql = "UPDATE Notifications SET title=?, content=?, type=?, related_type=?, related_id=? "
+                   + "WHERE notification_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, n.getTitle());
+            ps.setString(2, n.getContent());
+            ps.setString(3, n.getType());
+            ps.setString(4, n.getRelatedType());
+            if (n.getRelatedId() != null) ps.setInt(5, n.getRelatedId());
+            else ps.setNull(5, Types.INTEGER);
+            ps.setInt(6, n.getNotificationId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * List all notifications (no user filter) - used by admin/manager.
+     */
+    public List<Notification> findAll(int offset, int limit) {
+        List<Notification> list = new ArrayList<>();
+        String sql = "SELECT notification_id, title, content, type, related_type, related_id, created_at "
+                   + "FROM Notifications "
+                   + "ORDER BY created_at DESC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, offset);
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM Notifications";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 9. LIST RECIPIENT USER IDS FOR A NOTIFICATION
     // ─────────────────────────────────────────────────────────────────────────
