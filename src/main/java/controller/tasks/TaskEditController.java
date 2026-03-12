@@ -61,6 +61,7 @@ public class TaskEditController extends HttpServlet {
             req.setAttribute("allUsers",   loadUsers());
             req.setAttribute("pageTitle",  "Edit Task – " + task.getTitle());
             req.setAttribute("contentPage","/view/tasks/task-edit.jsp");
+            req.setAttribute("page", "task-edit");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (SQLException ex) { LOG.log(Level.SEVERE, null, ex); }
     }

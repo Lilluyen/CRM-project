@@ -105,6 +105,7 @@ public class TaskDetailController extends HttpServlet {
             req.setAttribute("assigneeNames", assigneeNames);
             req.setAttribute("pageTitle",   "Task Details – " + task.getTitle());
             req.setAttribute("contentPage", "/view/tasks/task-detail.jsp");
+            req.setAttribute("page", "task-details");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (SQLException ex) {
             Logger.getLogger(TaskDetailController.class.getName()).log(Level.SEVERE, null, ex);

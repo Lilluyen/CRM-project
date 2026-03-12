@@ -75,6 +75,7 @@ public class TaskCreateController extends HttpServlet {
                 req.setAttribute("pageTitle",   "Create Task");
                 req.setAttribute("isManager", isManager);
                 req.setAttribute("contentPage", "/view/tasks/task-create.jsp");
+                req.setAttribute("page", "task-create");
                 if (isManager) loadAllUsers(req);
                 req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
                 return;

@@ -51,6 +51,7 @@ public class ActivityEditController extends HttpServlet {
             req.setAttribute("activity",    activity);
             req.setAttribute("pageTitle",   "Edit Activity");
             req.setAttribute("contentPage", "/view/activities/activity-edit.jsp");
+            req.setAttribute("page", "activity-edit");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (SQLException ex) {
             Logger.getLogger(ActivityEditController.class.getName()).log(Level.SEVERE, null, ex);

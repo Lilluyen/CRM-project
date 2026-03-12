@@ -64,6 +64,7 @@ public class ActivityListController extends HttpServlet {
             req.setAttribute("pageTitle",    "Activity List");
             req.setAttribute("contentPage",  "/view/activities/activities.jsp");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
+            req.setAttribute("page", "activity-list");
         } catch (SQLException ex) {
             Logger.getLogger(ActivityListController.class.getName()).log(Level.SEVERE, null, ex);
         }

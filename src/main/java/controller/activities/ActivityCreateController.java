@@ -63,6 +63,7 @@ public class ActivityCreateController extends HttpServlet {
                 req.setAttribute("activity",    activity);
                 req.setAttribute("pageTitle",   "Create Activity");
                 req.setAttribute("contentPage", "/frontend/activities/activity-create.jsp");
+                req.setAttribute("page", "activity-create");
                 req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
                 return;
             }
