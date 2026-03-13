@@ -34,7 +34,7 @@ public class NotificationRuleSchedulerListener implements ServletContextListener
         });
 
         // initial delay gives the app a moment to start before hitting DB
-        executor.scheduleWithFixedDelay(this::runOnceSafe, 5, 60, TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(this::runOnceSafe, 5, 5, TimeUnit.SECONDS);
     }
 
     @Override
