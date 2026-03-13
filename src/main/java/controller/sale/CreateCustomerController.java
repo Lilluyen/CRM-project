@@ -4,9 +4,15 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,7 +20,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.time.format.DateTimeParseException;
 import model.StyleTag;
 import model.User;
 import service.CustomerService;
@@ -23,10 +28,21 @@ import util.EmailCheck;
 import util.NameCheck;
 import util.PhoneCheck;
 
-@WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
+@WebServlet(name = "CreateCustomerController", urlPatterns = { "/customers/add-customer" })
 public class CreateCustomerController extends HttpServlet {
 
-    private final CustomerService customerService = new CustomerService();
+    CustomerDAO customerDAO = new CustomerDAO();
+    CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+    CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -177,5 +193,4 @@ public class CreateCustomerController extends HttpServlet {
         return new BigDecimal(value);
     }
 
-    
 }

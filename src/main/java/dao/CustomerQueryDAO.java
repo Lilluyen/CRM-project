@@ -1,22 +1,15 @@
 package dao;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.microsoft.sqlserver.jdbc.SQLServerCallableStatement;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
-
 import dto.CustomerFilterRequest;
 import dto.CustomerListDTO;
 import dto.CustomerPageResult;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class CustomerQueryDAO {
 
@@ -68,7 +61,8 @@ public class CustomerQueryDAO {
         boolean isNewSession = (sessionId == null || sessionId.isBlank());
         boolean fetchTotal = isNewSession || page == 1;
 
-        String sql = "{call sp_GetCustomersPaged(?, ?, ?, ?)}";
+        String sql = """
+                {call sp_GetCustomersPaged(?, ?, ?, ?)}""";
         // @PageSize, @PageNumber, @SessionID (NULL nếu mới), @FetchTotal
 
         try (CallableStatement cs = connection.prepareCall(sql)) {
@@ -124,16 +118,18 @@ public class CustomerQueryDAO {
                 nextAnchorId);
     }
 
-    public int countTotalCustomers(Connection connection) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Customers";
-
-        try (PreparedStatement stm = connection.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        }
-        return 0;
-    }
+//    public int countTotalCustomers(Connection connection) throws SQLException {
+//        String sql = """
+//                SELECT COUNT(*) FROM Customers
+//                """;
+//
+//        try (PreparedStatement stm = connection.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
+//            if (rs.next()) {
+//                return rs.getInt(1);
+//            }
+//        }
+//        return 0;
+//    }
 
     // Xóa dữ liệu liên quan đến customer (để chuẩn bị xóa customer)
     public void deleteCustomerRelatedData(int customerId, Connection connection) throws SQLException {
@@ -179,14 +175,17 @@ public class CustomerQueryDAO {
         }
 
         // 3. Xóa Customer Measurements
-        String deleteMeasurementSql = "DELETE FROM Customer_Measurements WHERE customer_id = ?";
+        String deleteMeasurementSql = """
+                DELETE FROM Customer_Measurements WHERE customer_id = ?
+                """;
         try (PreparedStatement stm = connection.prepareStatement(deleteMeasurementSql)) {
             stm.setInt(1, customerId);
             stm.executeUpdate();
         }
 
         // 4. Xóa Customer Segment Map
-        String deleteCsmSegmentSql = "DELETE FROM Customer_Segment_Map WHERE customer_id = ?";
+        String deleteCsmSegmentSql = """
+                DELETE FROM Customer_Segment_Map WHERE customer_id = ?""";
         try (PreparedStatement stm = connection.prepareStatement(deleteCsmSegmentSql)) {
             stm.setInt(1, customerId);
             stm.executeUpdate();
@@ -241,7 +240,8 @@ public class CustomerQueryDAO {
 
         // @PageSize, @PageNumber, @Keyword, @LoyaltyTiers, @BodyShapes,
         // @Sizes, @TagIds, @ReturnRateMode, @SessionID, @FetchTotal
-        String sql = "{call dbo.sp_FilterCustomersAdvanced(?,?,?,?,?,?,?,?,?,?)}";
+        String sql = """
+                {call dbo.sp_FilterCustomersAdvanced(?,?,?,?,?,?,?,?,?,?)}""";
 
         try (CallableStatement cs = connection.prepareCall(sql)) {
 

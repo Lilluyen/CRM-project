@@ -10,6 +10,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerPageResult;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -59,7 +64,18 @@ public class CustomerListController extends HttpServlet {
                 httpSession.removeAttribute("customerPagingSession");
             }
 
-            CustomerService customerService = new CustomerService();
+            CustomerDAO customerDAO = new CustomerDAO();
+            CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+            CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+            CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+            CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+            CustomerService customerService = new CustomerService(
+                    customerDAO,
+                    customerStyleDAO,
+                    customerQueryDAO,
+                    customerMeasurementDAO,
+                    customerSegmentDAO);
             CustomerPageResult result = customerService.getCustomerList(page, size, sessionId);
             List<StyleTag> styleTagList = customerService.getListStyleTags();
 
