@@ -180,19 +180,19 @@
 
                                         <td>
                                             <c:choose>
-                                                <c:when test="${lead.status == 'NEW_LEAD'}">
+                                                <c:when test="${lead.status == 'New'}">
                                                     <span class="badge-status badge-new">New</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'QUALIFIED'}">
+                                                <c:when test="${lead.status == 'Qualified'}">
                                                     <span class="badge-status badge-qualified">Qualified</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'CONTACTED'}">
+                                                <c:when test="${lead.status == 'Contacted'}">
                                                     <span class="badge-status badge-contacted">Contacted</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'DEAL_CREATED'}">
-                                                    <span class="badge-status badge-deal">Deal Created</span>
+                                                <c:when test="${lead.status == 'Converted'}">
+                                                    <span class="badge-status badge-deal">Converted</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'LOST'}">
+                                                <c:when test="${lead.status == 'Lost'}">
                                                     <span class="badge-status badge-lost">Lost</span>
                                                 </c:when>
                                                 <c:otherwise>
