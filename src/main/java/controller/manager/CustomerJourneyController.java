@@ -1,9 +1,6 @@
 package controller.manager;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.util.List;
-
+import dao.*;
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -19,14 +16,18 @@ import service.LeadService;
 import util.ControllerUltil;
 import util.DBContext;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.util.List;
+
 /**
  * Hiển thị lịch sử hành trình chăm sóc khách hàng theo từng Activity.
- *
+ * <p>
  * Tham số:
- *   type=customer&customerId=...  -> xem hành trình từ Customer (ngược thời gian)
- *   type=lead&leadId=...        -> xem hành trình từ Lead (xuôi thời gian)
+ * type=customer&customerId=...  -> xem hành trình từ Customer (ngược thời gian)
+ * type=lead&leadId=...        -> xem hành trình từ Lead (xuôi thời gian)
  */
-@WebServlet(name = "CustomerJourneyController", urlPatterns = { "/customer-journey" })
+@WebServlet(name = "CustomerJourneyController", urlPatterns = {"/customer-journey"})
 public class CustomerJourneyController extends HttpServlet {
 
     @Override
@@ -76,7 +77,20 @@ public class CustomerJourneyController extends HttpServlet {
                 }
 
                 int customerId = Integer.parseInt(customerIdRaw);
-                CustomerDetailDTO customerDetail = new CustomerService().getCustomerDetail(customerId);
+
+                CustomerDAO customerDAO = new CustomerDAO();
+                CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+                CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+                CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+                CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+                CustomerService customerService = new CustomerService(
+                        customerDAO,
+                        customerStyleDAO,
+                        customerQueryDAO,
+                        customerMeasurementDAO,
+                        customerSegmentDAO);
+                CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
                 if (customerDetail == null) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Customer not found");
                     return;
