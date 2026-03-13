@@ -317,4 +317,22 @@ class CustomerServiceTest {
             verify(conn).commit();
         }
     }
+    
+    @Test
+    void testCuaCo() throws Exception{
+        CustomerCreateDTO dto = new CustomerCreateDTO();
+        dto.setPhone("345");
+        try(MockedStatic<DBContext> db = mockStatic(DBContext.class)){
+//            
+            db.when(DBContext::getConnection).thenReturn(conn);
+                    
+             when(customerDAO.existsByPhone(dto.getPhone(), conn)).thenReturn(true);
+             assertThrows(DuplicatePhoneException.class, () -> 
+                     customerService.createCustomer(dto, 0)
+             );
+             
+             verify(conn).rollback();
+        
+        }
+    }
 }

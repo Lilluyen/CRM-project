@@ -224,11 +224,6 @@ public class CustomerSegmentDAO {
             while (rs.next()) {
                 SegmentCardDTO dto = new SegmentCardDTO();
 
-                double growthPct = rs.getDouble("growth_pct");
-                if (rs.wasNull()) {
-                    System.out.println("0");
-                }
-
                 dto.setSegmentId(rs.getInt("segment_id"));
                 dto.setSegmentName(rs.getString("segment_name"));
                 dto.setCriteriaLogic(rs.getString("criteria_logic"));
@@ -343,12 +338,12 @@ public class CustomerSegmentDAO {
 
     }
 
-    public static void main(String[] args) throws SQLException, Exception {
-        Connection conn = DBContext.getConnection();
-
-        LocalDate monthA = LocalDate.now().withDayOfMonth(1);
-        LocalDate monthB = monthA.minusMonths(1);
-        SegmentDetailDTO dto = segmentDetail(conn, 1, monthA);
-    }
+//    public static void main(String[] args) throws SQLException, Exception {
+//        Connection conn = DBContext.getConnection();
+//
+//        LocalDate monthA = LocalDate.now().withDayOfMonth(1);
+//        LocalDate monthB = monthA.minusMonths(1);
+//        SegmentDetailDTO dto = segmentDetail(conn, 1, monthA);
+//    }
 
 }
