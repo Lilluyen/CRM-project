@@ -18,6 +18,10 @@
                     </ol>
                 </nav>
             </div>
+            <a href="${pageContext.request.contextPath}/customer-journey?type=lead&leadId=${lead.leadId}"
+               class="btn btn-primary me-2">
+                <i class="fas fa-route me-1"></i> Journey
+            </a>
             <a href="${pageContext.request.contextPath}/marketing/leads"
                class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Quay lại

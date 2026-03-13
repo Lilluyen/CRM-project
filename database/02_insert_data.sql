@@ -7,9 +7,9 @@ GO
 
 SET IDENTITY_INSERT [dbo].[Activities] ON 
 
-INSERT [dbo].[Activities] ([activity_id], [related_type], [related_id], [activity_type], [subject], [description], [created_by], [activity_date], [created_at]) VALUES (1, N'CUSTOMER', 1, N'CALL', NULL, N'Called customer to confirm delivery status', 2, NULL, CAST(N'2026-03-03T19:14:42.120' AS DateTime))
-INSERT [dbo].[Activities] ([activity_id], [related_type], [related_id], [activity_type], [subject], [description], [created_by], [activity_date], [created_at]) VALUES (2, N'LEAD', 1, N'EMAIL', NULL, N'Sent follow-up email regarding proposal', 1, NULL, CAST(N'2026-03-03T19:14:42.120' AS DateTime))
-INSERT [dbo].[Activities] ([activity_id], [related_type], [related_id], [activity_type], [subject], [description], [created_by], [activity_date], [created_at]) VALUES (3, N'INTERNAL', NULL, N'MEETING', NULL, N'Internal meeting about Q2 sales strategy', 3, NULL, CAST(N'2026-03-03T19:14:42.120' AS DateTime))
+INSERT [dbo].[Activities] ([activity_id], [related_type], [related_id], [activity_type], [subject], [description], [created_by], [activity_date], [created_at]) VALUES (1, N'CUSTOMER', 1, N'CALL', N'Call Customer', N'Called customer to confirm delivery status', 2, CAST(N'2026-03-03T19:14:42.120' AS DateTime), CAST(N'2026-03-03T19:14:42.120' AS DateTime))
+INSERT [dbo].[Activities] ([activity_id], [related_type], [related_id], [activity_type], [subject], [description], [created_by], [activity_date], [created_at]) VALUES (2, N'LEAD', 1, N'EMAIL', N'Send email to Lead', N'Sent follow-up email regarding proposal', 1, CAST(N'2026-03-03T19:14:42.120' AS DateTime), CAST(N'2026-03-03T19:14:42.120' AS DateTime))
+INSERT [dbo].[Activities] ([activity_id], [related_type], [related_id], [activity_type], [subject], [description], [created_by], [activity_date], [created_at]) VALUES (3, N'INTERNAL', NULL, N'MEETING', N'Internal Meetng', N'Internal meeting about Q2 sales strategy', 3, CAST(N'2026-03-03T19:14:42.120' AS DateTime), CAST(N'2026-03-03T19:14:42.120' AS DateTime))
 SET IDENTITY_INSERT [dbo].[Activities] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Campaigns] ON 

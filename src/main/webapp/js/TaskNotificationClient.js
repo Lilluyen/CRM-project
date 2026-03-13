@@ -232,7 +232,7 @@ class TaskNotificationClient {
  * REST API client for task notifications
  */
 class TaskNotificationAPIClient {
-    constructor(baseUrl = '/CRM-project/api/tasks') {
+    constructor(baseUrl = '/crm/api/tasks') {
         this.baseUrl = baseUrl;
     }
 

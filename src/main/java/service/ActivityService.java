@@ -89,4 +89,25 @@ public class ActivityService {
             return Collections.emptyList();
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CUSTOMER / LEAD JOURNEY
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<Activity> getCustomerJourney(int customerId) {
+        try {
+            return activityDAO.getActivitiesForCustomerJourney(customerId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Activity> getLeadJourney(int leadId) {
+        try {
+            return activityDAO.getActivitiesForLeadJourney(leadId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
 }

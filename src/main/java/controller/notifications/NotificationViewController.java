@@ -17,8 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * GET /notifications/view?id=...
- * Mark-as-read then redirect to related entity view (Task/Lead/Deal...).
+ * GET /notifications/view?id=... Mark-as-read then redirect to related entity
+ * view (Task/Lead/Deal...).
  */
 @WebServlet("/notifications/view")
 public class NotificationViewController extends HttpServlet {
@@ -53,20 +53,52 @@ public class NotificationViewController extends HttpServlet {
                 return;
             }
 
-            String rt = n.getRelatedType() != null ? n.getRelatedType() : "";
+            String rt = n.getRelatedType() != null ? n.getRelatedType().toLowerCase() : "";
             Integer rid = n.getRelatedId();
 
-            if (rid != null && ("Task".equalsIgnoreCase(rt) || "TASK".equalsIgnoreCase(rt))) {
-                resp.sendRedirect(req.getContextPath() + "/tasks/details?id=" + rid);
-                return;
+            if (rid != null) {
+
+                switch (rt) {
+
+                    case "task":
+                        resp.sendRedirect(req.getContextPath() + "/tasks/details?id=" + rid);
+                        return;
+
+//                    case "deal":
+//                        resp.sendRedirect(req.getContextPath() + "/deals/details?id=" + rid);
+//                        return;
+
+                    case "lead":
+                        resp.sendRedirect(req.getContextPath() + "marketing/leads/details?id=" + rid);
+                        return;
+
+//                    case "ticket":
+//                        resp.sendRedirect(req.getContextPath() + "/tickets/details?id=" + rid);
+//                        return;
+
+                    case "customer":
+                        resp.sendRedirect(req.getContextPath() + "/customers/detail?customerId=" + rid);
+                        return;
+
+                    case "campaign":
+                        resp.sendRedirect(req.getContextPath() + "/marketing/campaigns/details?id=" + rid);
+                        return;
+
+//                    case "security":
+//                        resp.sendRedirect(req.getContextPath() + "/customers/details?id=" + rid);
+//                        return;
+
+                    default:
+                        break;
+                }
             }
 
-            // Fallback: go to inbox
+            // system, report hoặc không có related id
             resp.sendRedirect(req.getContextPath() + "/notifications/list");
+
         } catch (SQLException ex) {
             LOG.log(Level.SEVERE, "Cannot view notification", ex);
             resp.sendRedirect(req.getContextPath() + "/notifications/list");
         }
     }
 }
-

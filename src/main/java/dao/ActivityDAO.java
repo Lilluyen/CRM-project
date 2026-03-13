@@ -97,6 +97,54 @@ public class ActivityDAO {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // 3.5. CUSTOMER / LEAD JOURNEY
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Lấy toàn bộ hoạt động liên quan đến một Customer, bao gồm cả các Activity được gắn
+     * với Lead trước khi chuyển đổi sang Customer.
+     */
+    public List<Activity> getActivitiesForCustomerJourney(int customerId) {
+        List<Activity> list = new ArrayList<>();
+        String sql = BASE_SELECT
+                + "WHERE (a.related_type = 'Customer' AND a.related_id = ?) "
+                + "   OR (a.related_type = 'Lead' AND a.related_id IN ("
+                + "       SELECT lead_id FROM Leads WHERE converted_customer_id = ?)) "
+                + "ORDER BY a.activity_date DESC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Lấy toàn bộ hoạt động của một Lead và (nếu đã convert) của Customer tương ứng.
+     */
+    public List<Activity> getActivitiesForLeadJourney(int leadId) {
+        List<Activity> list = new ArrayList<>();
+        String sql = BASE_SELECT
+                + "WHERE (a.related_type = 'Lead' AND a.related_id = ?) "
+                + "   OR (a.related_type = 'Customer' AND a.related_id = ("
+                + "       SELECT converted_customer_id FROM Leads WHERE lead_id = ?)) "
+                + "ORDER BY a.activity_date ASC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, leadId);
+            ps.setInt(2, leadId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 4. PAGED + FILTERED
     // ─────────────────────────────────────────────────────────────────────────
     public List<Activity> getActivitiesPaged(String subject, String activityType,
