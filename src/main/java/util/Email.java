@@ -15,7 +15,7 @@ public class Email {
     private String subject;
     private String bodyText;
     private String bodyHtml;
-    private List<File> attachments;
+    private final List<File> attachments;
     private boolean isHtml;
 
     public Email() {
@@ -112,6 +112,12 @@ public class Email {
         if ((bodyText == null || bodyText.trim().isEmpty()) &&
             (bodyHtml == null || bodyHtml.trim().isEmpty())) {
             throw new IllegalArgumentException("Email body is required (either text or HTML)");
+        }
+    }
+
+    public void setAttachments(List<File> attachments) {
+        for (File attachment : attachments) {
+            this.addAttachment(attachment);
         }
     }
 }

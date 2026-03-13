@@ -29,6 +29,11 @@ body {
     padding: 40px;
 }
 
+.list__header i {
+    display: inline-block;
+    font-size: 27px;
+}
+
 h1 {
     font-weight: 800;
     font-size: 28px;
@@ -156,6 +161,10 @@ thead {
     border-bottom: 1px solid var(--border);
 }
 
+tr:hover {
+    background-color: #f1f5f9;
+}
+
 th {
     padding: 15px 20px;
     font-size: 12px;
@@ -168,8 +177,11 @@ th {
 td {
     padding: 18px 15px;
     border-bottom: 1px solid #f1f5f9;
-    height: 105px;
     vertical-align: middle;
+}
+
+#customerTableBody {
+    transition: opacity 0.15s ease;
 }
 
 
@@ -236,6 +248,12 @@ td:nth-child(7) {
     justify-content: center;
     font-weight: 700;
     font-size: 14px;
+}
+
+.customer-info strong:hover {
+    color: var(--accent-blue);
+    cursor: pointer;
+    border-bottom: var(--accent-blue) 1px solid;
 }
 
 /* --- CẤU HÌNH CHUNG --- */
@@ -551,6 +569,16 @@ td:nth-child(7) {
 }
 
 .action-menu-item.upgrade-item:hover i {
+    color: #f59e0b;
+}
+
+/* Downgrade item */
+.action-menu-item.downgrade-item:hover {
+    background-color: #fef9ec;
+    color: #92400e;
+}
+
+.action-menu-item.downgrade-item:hover i {
     color: #f59e0b;
 }
 
@@ -1031,6 +1059,11 @@ td:nth-child(7) {
         filter .45s ease;
 
     filter: blur(6px);
+}
+
+.toast-message {
+    text-align: center;
+    text-transform: uppercase;
 }
 
 /* ===== SHOW ===== */

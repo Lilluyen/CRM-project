@@ -1,11 +1,17 @@
 package controller.manager;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
@@ -14,13 +20,23 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.math.BigDecimal;
 import service.CustomerService;
 
-@WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
+@WebServlet(name = "UpdateCustomerController", urlPatterns = { "/customers/edit" })
 public class UpdateCustomerController extends HttpServlet {
 
-    private final CustomerService customerService = new CustomerService();
+    CustomerDAO customerDAO = new CustomerDAO();
+    CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+    CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -129,7 +145,7 @@ public class UpdateCustomerController extends HttpServlet {
 
         if (gender == null
                 || (!gender.equalsIgnoreCase("Male")
-                && !gender.equalsIgnoreCase("Female"))) {
+                        && !gender.equalsIgnoreCase("Female"))) {
             errors.add("Invalid gender !");
         }
 
@@ -190,7 +206,7 @@ public class UpdateCustomerController extends HttpServlet {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/customers/detail?customerId=" + customerId);
+                            + "/customers/detail?customerId=" + customerId);
             return;
 
         } catch (DuplicateEmailException e) {
@@ -229,8 +245,6 @@ public class UpdateCustomerController extends HttpServlet {
             throw new ServletException(e);
         }
     }
-
-    
 
     private BigDecimal parseBigDecimal(String value) {
         if (value == null || value.isBlank()) {

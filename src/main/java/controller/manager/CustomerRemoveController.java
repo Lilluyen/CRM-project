@@ -3,6 +3,11 @@ package controller.manager;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,12 +19,18 @@ import util.ControllerUltil;
 @WebServlet("/customers/remove")
 public class CustomerRemoveController extends HttpServlet {
 
-    private CustomerService customerService;
+    CustomerDAO customerDAO = new CustomerDAO();
+    CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
-    @Override
-    public void init() throws ServletException {
-        customerService = new CustomerService();
-    }
+    CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     /**
      * Xóa khách hàng theo ID

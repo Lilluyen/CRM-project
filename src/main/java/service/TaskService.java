@@ -63,6 +63,12 @@ public class TaskService {
     // ─────────────────────────────────────────────────────────────────────────
     public boolean createTask(Task task) {
         try {
+            // When a task is created already in a completed state, store completed_at.
+            if (task != null) {
+                if ("Done".equalsIgnoreCase(task.getStatus()) || (task.getProgress() != null && task.getProgress() >= 100)) {
+                    task.setCompletedAt(java.time.LocalDateTime.now());
+                }
+            }
             boolean ok = taskDAO.createTask(task);
             if (ok && task.getTaskId() != null) {
                 // Log creation as a single-field history entry
@@ -81,6 +87,19 @@ public class TaskService {
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateTask(Task newTask, int changedByUserId) {
         try {
+            // If task is marked as done or progress is 100, set completedAt (otherwise clear)
+            if (newTask != null) {
+                if ("Done".equalsIgnoreCase(newTask.getStatus()) || (newTask.getProgress() != null && newTask.getProgress() >= 100)) {
+                    newTask.setCompletedAt(java.time.LocalDateTime.now());
+                } else {
+                    newTask.setCompletedAt(null);
+                }
+                // If task is in progress and we don't already have a start date, set it now
+                if ("In Progress".equalsIgnoreCase(newTask.getStatus()) && newTask.getStartDate() == null) {
+                    newTask.setStartDate(java.time.LocalDateTime.now());
+                }
+            }
+
             Task old = taskDAO.getTaskById(newTask.getTaskId());
             boolean ok = taskDAO.updateTask(newTask);
             if (ok) {
@@ -96,6 +115,14 @@ public class TaskService {
                     String oldDue = old.getDueDate()     != null ? old.getDueDate().toString()     : "";
                     String newDue = newTask.getDueDate() != null ? newTask.getDueDate().toString() : "";
                     logDiff(hid, "dueDate", oldDue, newDue);
+
+                    String oldStart = old.getStartDate()     != null ? old.getStartDate().toString()     : "";
+                    String newStart = newTask.getStartDate() != null ? newTask.getStartDate().toString() : "";
+                    logDiff(hid, "startDate", oldStart, newStart);
+
+                    String oldCompleted = old.getCompletedAt()     != null ? old.getCompletedAt().toString()     : "";
+                    String newCompleted = newTask.getCompletedAt() != null ? newTask.getCompletedAt().toString() : "";
+                    logDiff(hid, "completedAt", oldCompleted, newCompleted);
                 }
                 // Notify all assignees about the edit
                 if (old != null && old.getassignees() != null) {

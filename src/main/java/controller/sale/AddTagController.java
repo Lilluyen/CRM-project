@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,7 +19,18 @@ import service.CustomerService;
 @WebServlet("/add-tag")
 public class AddTagController extends HttpServlet {
 
-    private final CustomerService customerService = new CustomerService();
+    CustomerDAO customerDAO = new CustomerDAO();
+    CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+    CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     @Override
     protected void doGet(HttpServletRequest request,

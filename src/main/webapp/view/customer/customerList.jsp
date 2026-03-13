@@ -1,10 +1,14 @@
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="content mt-5">
-    <h1>Customer Center</h1>
+<div class="content">
+<div class="d-flex align-items-center gap-3 list__header">
+    <i class="fas fa-users"></i>
+        <h1>Customer Center</h1>
+</div>
     <div class="sub">Managing ${totalRecord} customers & body profiles</div>
 
     <div class="top-bar">
@@ -100,13 +104,15 @@
                             <div>${c.returnRate}%</div>
                             <div class="progress">
                                 <div class="progress-bar
-                                     <c:if test="${c.returnRate > 30}">high-return</c:if>"
+                                     <c:if test="${c.returnRate > 40}">high-return</c:if>"
                                      style="width:${c.returnRate}%">
                                 </div>
                             </div>
                         </td>
 
-                        <td>${c.lastPurchase}</td>
+                        <td>
+                            ${c.lastPurchaseDate}
+                        </td>
 
 
                         <td class="actions">
@@ -114,8 +120,8 @@
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
                             </button>
 
-                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})>
-                                <i class="fa-solid fa-pen-to-square"></i>
+                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             <div class="action-wrapper">
                                 <button class="action-icon-btn menu-btn">
@@ -128,7 +134,11 @@
                                     </div>
                                     <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
                                         <i class="fa-solid fa-angles-up"></i>
-                                        <span>Upgrade Level</span>
+                                        <span>Upgrade</span>
+                                    </div>
+                                    <div class="action-menu-item downgrade-item" onclick="downgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-angles-down"></i>
+                                        <span>Downgrade</span>
                                     </div>
                                     <div class="action-menu-divider"></div>
                                     <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
@@ -189,6 +199,10 @@
                 <div class="input-group">
                     <label>&#x1F451; Loyalty Tier</label>
                     <div class="checkbox-group">
+                        <label class="checkbox-item" data-tier="diamond">
+                            <input type="checkbox" name="loyaltyFilter" value="DIAMOND" />
+                            Diamond
+                        </label>
                         <label class="checkbox-item" data-tier="platinum">
                             <input type="checkbox" name="loyaltyFilter" value="PLATINUM" />
                             Platinum
@@ -401,8 +415,12 @@
     </div>
 
 
-    <script>
-        window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
-        window.__CTX__ = "${pageContext.request.contextPath}";
-    </script>
+            <script>
+                window.__PAGE_STATUS__      = "<c:out value='${param.status}' default='' />";
+                window.__CTX__              = "${pageContext.request.contextPath}";
+                window.__SESSION_ID__       = "<c:out value='${sessionId}' default='' />";
+                window.__TOTAL_PAGES__      = ${not empty totalPages ? totalPages : 1};
+                window.__TOTAL_RECORDS__    = ${not empty totalRecord ? totalRecord : 0};
+                window.__CURRENT_PAGE__     = ${not empty currentPage ? currentPage : 1};
+            </script>
 

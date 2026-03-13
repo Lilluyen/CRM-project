@@ -234,7 +234,7 @@ public class LeadDAO {
 
     // Lấy toàn bộ danh sách lead (mới nhất trước)
     public List<Lead> getAllLeads() {
-        String sql = "SELECT * FROM Leads ORDER BY created_at DESC";
+        String sql = "SELECT * FROM Leads ORDER BY updated_at DESC";
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -248,7 +248,7 @@ public class LeadDAO {
 
     // Lấy danh sách lead theo chiến dịch, sắp xếp mới nhất trước
     public List<Lead> getLeadByCampaignId(int campaignId) {
-        String sql = "SELECT * FROM Leads WHERE campaign_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT * FROM Leads WHERE campaign_id = ? ORDER BY updated_at DESC";
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
@@ -412,7 +412,7 @@ public class LeadDAO {
             params.add(status);
         }
 
-        sql += " ORDER BY l.created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        sql += " ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         int offset = (page - 1) * pageSize;
         params.add(offset);
         params.add(pageSize);
@@ -466,7 +466,7 @@ public class LeadDAO {
             params.add(status);
         }
 
-        sql += " ORDER BY l.created_at DESC";
+        sql += " ORDER BY l.updated_at DESC";
 
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {

@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ page import="java.util.List, model.Task, model.TaskAssignee" %>
+<%@ page import="java.util.List, model.Task, model.TaskAssignee, model.User" %>
 <%
     @SuppressWarnings("unchecked")
     List<Task> tasks  = request.getAttribute("tasks") != null ? (List<Task>) request.getAttribute("tasks") : new java.util.ArrayList<>();
@@ -18,6 +18,14 @@
     String fTo       = (String) request.getAttribute("f_toDate");      if (fTo       == null) fTo       = "";
     String fSortF    = (String) request.getAttribute("f_sortField");   if (fSortF    == null) fSortF    = "";
     String fSortD    = (String) request.getAttribute("f_sortDir");     if (fSortD    == null) fSortD    = "ASC";
+
+    User currentUser = (User) session.getAttribute("user");
+    boolean isManager = false;
+    if (currentUser != null && currentUser.getRole() != null) {
+        int rid = currentUser.getRole().getRoleId();
+        String rn = currentUser.getRole().getRoleName();
+        isManager = rid == 1 || rid == 5 || "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);
+    }
 %>
 <style>
 .sortable-th { cursor:pointer; user-select:none; white-space:nowrap; }
@@ -107,12 +115,12 @@
       <%-- Date range row --%>
       <div class="row g-2 mt-1 align-items-end">
         <div class="col-lg-2 col-md-3">
-          <label class="form-label">Due From</label>
+          <label class="form-label">Start From</label>
           <input type="date" name="fromDate" class="form-control form-control-sm"
                  value="<%= fFrom %>">
         </div>
         <div class="col-lg-2 col-md-3">
-          <label class="form-label">Due To</label>
+          <label class="form-label">Start To</label>
           <input type="date" name="toDate" class="form-control form-control-sm"
                  value="<%= fTo %>">
         </div>
@@ -141,6 +149,11 @@
        <tr>
          <th style="width:42px">ID</th>
          <th>Title</th>
+         <th class="sortable-th <%= "startDate".equals(fSortF) ? "sorted" : "" %>"
+             onclick="toggleSort('startDate')">
+           Start Date <i class="fa fa-sort sort-icon"></i>
+           <% if ("startDate".equals(fSortF)) out.print("ASC".equals(fSortD) ? "↑" : "↓"); %>
+         </th>
          <%-- Sortable columns: dueDate > priority > progress --%>
          <th class="sortable-th <%= "dueDate".equals(fSortF) ? "sorted" : "" %>"
              onclick="toggleSort('dueDate')">
@@ -166,11 +179,10 @@
       <tbody>
        <%
          if (tasks.isEmpty()) { %>
-         <tr><td colspan="9" class="text-center text-muted py-5">
+         <tr><td colspan="10" class="text-center text-muted py-5">
            <i class="fa fa-inbox fa-2x d-block mb-2"></i>No tasks found.
          </td></tr>
        <% } else {
-           int rowNum = (currentPage - 1) * pageSize + 1;
            for (Task t : tasks) {
                String priCls  = "bg-secondary";
                String priLbl  = t.getPriority() != null ? t.getPriority() : "-";
@@ -201,19 +213,34 @@
                String aShort  = aNames.length() > 28 ? aNames.substring(0, 28) + "…" : aNames.toString();
                String creator = t.getCreatedBy() != null && t.getCreatedBy().getFullName() != null
                                 ? t.getCreatedBy().getFullName() : "-";
+
+               int creatorRoleId = t.getCreatedBy() != null && t.getCreatedBy().getRole() != null
+                       ? t.getCreatedBy().getRole().getRoleId()
+                       : 0;
+               boolean creatorIsManagement = creatorRoleId == 1 || creatorRoleId == 5;
+               boolean canDelete = false;
+               if (isManager) {
+                   canDelete = true;
+               } else if (currentUser != null && t.getCreatedBy() != null) {
+                   canDelete = !creatorIsManagement && t.getCreatedBy().getUserId() == currentUser.getUserId();
+               }
        %>
        <tr>
-         <td class="text-muted small"><%= rowNum++ %></td>
-         <td>
-           <a href="${pageContext.request.contextPath}/tasks/details?id=<%= t.getTaskId() %>" class="fw-semibold">
-             <%= t.getTitle() %>
+         <td class="text-muted small">
+           <a class="fw-semibold"
+              href="${pageContext.request.contextPath}/tasks/details?id=<%= t.getTaskId() %>">
+             <%= t.getTaskId() %>
            </a>
+         </td>
+         <td>
+           <span class="fw-semibold"><%= t.getTitle() %></span>
            <% if (t.getDescription() != null && !t.getDescription().isBlank()) { %>
-           <div class="text-muted small text-truncate" style="max-width:200px">
+           <div class="text-muted small text-wrap" style="max-width:200px">
              <%= t.getDescription().length() > 60 ? t.getDescription().substring(0,60)+"…" : t.getDescription() %>
            </div>
            <% } %>
          </td>
+         <td class="small"><%= t.getStartDate() != null ? t.getStartDate().toString().replace("T"," ").substring(0,16) : "-" %></td>
          <td class="small"><%= t.getDueDate() != null ? t.getDueDate().toString().replace("T"," ").substring(0,16) : "-" %></td>
          <td><span class="badge <%= priCls %>"><%= priLbl %></span></td>
          <td><span class="badge <%= stCls %>"><%= stLbl %></span></td>
@@ -237,10 +264,12 @@
                 class="btn btn-sm btn-outline-info" title="View"><i class="fa fa-eye"></i></a>
              <a href="${pageContext.request.contextPath}/tasks/edit?id=<%= t.getTaskId() %>"
                 class="btn btn-sm btn-outline-warning" title="Edit"><i class="fa fa-edit"></i></a>
-             <button type="button" class="btn btn-sm btn-outline-danger"
-                     onclick="deleteTask(<%= t.getTaskId() %>)" title="Delete">
-               <i class="fa fa-trash"></i>
-             </button>
+             <% if (canDelete) { %>
+               <button type="button" class="btn btn-sm btn-outline-danger"
+                       onclick="deleteTask(<%= t.getTaskId() %>)" title="Delete">
+                 <i class="fa fa-trash"></i>
+               </button>
+             <% } %>
            </div>
          </td>
        </tr>
@@ -341,4 +370,4 @@ function deleteTask(id) {
         }).then(r => { if (r.isConfirmed) doIt(); });
     } else if (confirm('Delete this task?')) doIt();
 }
-</script>
+ </script>

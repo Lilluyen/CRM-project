@@ -16,6 +16,7 @@ import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
 import dto.CustomerFilterRequest;
 import dto.CustomerPageResult;
+import dto.KpiSummaryDTO;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
@@ -25,11 +26,23 @@ import util.DBContext;
 
 public class CustomerService {
 
-    private final CustomerDAO customerDAO = new CustomerDAO();
-    private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
-    private final CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
-    private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+    private final CustomerDAO customerDAO;
+    private final CustomerMeasurementDAO customerMeasurementDAO;
+    private final CustomerStyleDAO customerStyleDAO;
+    private final CustomerQueryDAO customerQueryDAO;
+    private final CustomerSegmentDAO customerSegmentDAO;
+
+    public CustomerService(CustomerDAO customerDAO,
+            CustomerStyleDAO customerStyleDAO,
+            CustomerQueryDAO customerQueryDAO,
+            CustomerMeasurementDAO customerMeasurementDAO,
+            CustomerSegmentDAO customerSegmentDAO) {
+        this.customerDAO = customerDAO;
+        this.customerStyleDAO = customerStyleDAO;
+        this.customerQueryDAO = customerQueryDAO;
+        this.customerMeasurementDAO = customerMeasurementDAO;
+        this.customerSegmentDAO = customerSegmentDAO;
+    }
 
     public int createCustomer(CustomerCreateDTO dto, int userId)
             throws SQLException, DuplicateEmailException, DuplicatePhoneException {
@@ -118,10 +131,10 @@ public class CustomerService {
         }
     }
 
-    public CustomerPageResult getCustomerList(int page, int size) throws SQLException {
+    public CustomerPageResult getCustomerList(int page, int size, String sessionId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
-            CustomerPageResult customerList = customerQueryDAO.getCustomerList(conn, page, size);
+            CustomerPageResult customerList = customerQueryDAO.getCustomerList(conn, page, size, sessionId);
             return customerList;
 
         }
@@ -180,17 +193,19 @@ public class CustomerService {
         }
     }
 
-    public List<StyleTag> getListStyleTagsByCustomerId(int customerId) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-
-            List<StyleTag> styleTagList = customerStyleDAO.getAllStyleTags(conn);
-
-            return styleTagList;
-
-        } catch (Exception ex) {
-            throw new SQLException("Error fetching style tags for customer: " + ex.getMessage(), ex);
-        }
-    }
+    // public List<StyleTag> getListStyleTagsByCustomerId(int customerId) throws
+    // SQLException {
+    // try (Connection conn = DBContext.getConnection()) {
+    //
+    // List<StyleTag> styleTagList = customerStyleDAO.getAllStyleTags(conn);
+    //
+    // return styleTagList;
+    //
+    // } catch (Exception ex) {
+    // throw new SQLException("Error fetching style tags for customer: " +
+    // ex.getMessage(), ex);
+    // }
+    // }
 
     public void addStyleTagsToCustomer(int customerId, List<Integer> styleTagIds) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -242,9 +257,10 @@ public class CustomerService {
         }
     }
 
-    public CustomerPageResult filterAdvanced(CustomerFilterRequest filterRequest) throws SQLException {
+    public CustomerPageResult filterAdvanced(CustomerFilterRequest filterRequest,
+            String sessionId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
-            return customerQueryDAO.filterAdvanced(conn, filterRequest);
+            return customerQueryDAO.filterAdvanced(conn, filterRequest, sessionId);
         }
     }
 
@@ -261,4 +277,29 @@ public class CustomerService {
             }
         }
     }
+
+    public boolean downgradeToLoyaltyCustomer(int customerId) throws SQLException, Exception {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+                boolean isDowngrade = customerSegmentDAO.downgradeToLoyaltyCustomer(conn, customerId);
+                conn.commit();
+                return isDowngrade;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+//    public KpiSummaryDTO kpiSummarySegment() throws SQLException, Exception {
+//        try (Connection conn = DBContext.getConnection()) {
+//            try {
+//                return customerSegmentDAO.kpiSummarySegment(conn);
+//            } catch (SQLException e) {
+//                throw e;
+//            }
+//        }
+//    }
+
 }
