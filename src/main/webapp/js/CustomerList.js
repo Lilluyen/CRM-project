@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // để openPreview() hoạt động ngay khi F5 mà không cần gọi API trước
     currentPageCustomers = parseCustomersFromDOM();
 
-    renderPagination(totalPages, currentPage);
 
     const rowsSelect = document.getElementById('rowsPerPage');
     if (rowsSelect) rowsSelect.value = rowsPerPage;
@@ -76,7 +75,6 @@ function parseCustomersFromDOM() {
 }
 
 
-
 function extractCustomerId(actionCell) {
     const viewIcon = actionCell.querySelector('[onclick*="viewCustomer"]');
     if (viewIcon) {
@@ -88,11 +86,7 @@ function extractCustomerId(actionCell) {
 
 // ===== EVENT LISTENERS =====
 function setupEventListeners() {
-    // Search input
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(applyFilters, 300));
-    }
+
 
     // Sync modal loyalty checkbox ↔ quick-filter Gold button
     const goldCb = document.querySelector('input[name="loyaltyFilter"][value="GOLD"]');
@@ -111,14 +105,6 @@ function setupEventListeners() {
     }
 }
 
-// ===== DEBOUNCE UTILITY =====
-function debounce(callback, delay) {
-    let timeoutId;
-    return function (...args) {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => callback(...args), delay);
-    };
-}
 
 // ===== FILTER FUNCTIONS =====
 function toggleFilterTag(type) {
@@ -145,107 +131,6 @@ function toggleFilterTag(type) {
 // Sync modal checkboxes ↔ quick-filter buttons
 // (registered after DOM ready — see setupEventListeners)
 
-function toggleArrayValue(arr, value) {
-    const index = arr.indexOf(value);
-    if (index === -1) arr.push(value);
-    else arr.splice(index, 1);
-}
-
-function applyFilters() {
-    // Filter thay đổi → reset session để server tạo keyset mới
-    paginationSessionId = null;
-    callFilterAPI(1);
-}
-
-async function callFilterAPI(page = 1) {
-
-    currentPage = page;
-
-    const keyword = document.getElementById("searchInput")?.value || "";
-
-    const params = new URLSearchParams();
-
-    params.append("page", currentPage);
-    params.append("size", rowsPerPage);
-    params.append("keyword", keyword);
-
-    // Gửi sessionId lên server để dùng keyset pagination
-    if (paginationSessionId) {
-        params.append("sessionId", paginationSessionId);
-    }
-
-    if (advancedFilters.loyaltyTiers.length)
-        params.append("tiers", advancedFilters.loyaltyTiers.join(','));
-
-    if (advancedFilters.tagIds.length)
-        params.append("tags", advancedFilters.tagIds.join(','));
-
-    if (advancedFilters.bodyShapes.length)
-        params.append("bodyShapes", advancedFilters.bodyShapes.join(','));
-
-    if (advancedFilters.sizes.length)
-        params.append("sizes", advancedFilters.sizes.join(','));
-
-    if (advancedFilters.returnRateMode)
-        params.append("returnRateMode", advancedFilters.returnRateMode);
-
-    let data = null;
-    try {
-        const response = await fetch(`${window.__CTX__}/customers/filter`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "X-Requested-With": "XMLHttpRequest"
-            },
-            body: params.toString()
-        });
-
-        if (!response.ok) {
-            console.error(`Filter API error: HTTP ${response.status}`);
-            showToast(`Server error (${response.status}). Please try again.`, 'error');
-            return;
-        }
-
-        const text = await response.text();
-        if (!text || text.trim() === '') {
-            console.error('Filter API returned empty response');
-            showToast('No data returned from server.', 'warning');
-            return;
-        }
-
-        data = JSON.parse(text);
-    } catch (err) {
-        console.error('Filter API failed:', err);
-        showToast('Failed to load customers. Please try again.', 'error');
-        return;
-    }
-
-    if (!data) return;
-
-    // Lưu sessionId mới từ server (nếu có)
-    if (data.sessionId) {
-        paginationSessionId = data.sessionId;
-    }
-
-    // Cập nhật totalPages từ server (chỉ khi server trả về, tức page=1 hoặc session mới)
-    if (data.totalPages) {
-        totalPages = data.totalPages;
-        totalRecords = data.totalRecords;
-    }
-
-
-    const customers = data.customers ?? data.data ?? [];
-
-    // Cache customers của page hiện tại để openPreview() dùng
-    currentPageCustomers = customers;
-
-    if (customers.length === 0) {
-        totalPages = 1; // Reset về 1 page nếu filter quá chặt không còn kết quả nào
-    }
-
-    renderTableBody(customers);
-    renderPagination(totalPages, currentPage);
-}
 
 // ===== ADVANCED FILTER MODAL =====
 function openAdvancedFilter() {
@@ -262,7 +147,9 @@ function closeAdvancedFilter() {
     if (modal) {
         modal.classList.remove('open');
         // wait for CSS transition then hide
-        setTimeout(() => { modal.style.display = 'none'; }, 200);
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 200);
     }
 }
 
@@ -288,6 +175,7 @@ function checkCurrentFilters() {
         cb.checked = advancedFilters.returnRateMode === cb.value;
     });
 }
+
 function applyAdvancedFilter() {
 
     // Loyalty
@@ -369,6 +257,31 @@ function openPreview(customerId) {
     }
 }
 
+function getLoyaltyClass(loyaltyTier) {
+    switch (loyaltyTier) {
+        case 'DIAMOND':
+            return 'diamond';
+            break
+        case 'PLATINUM':
+            return 'platinum';
+            break
+        case 'GOLD':
+            return 'gold';
+            break
+        case 'SILVER':
+            return 'silver';
+            break
+        case 'BRONZE':
+            return 'bronze';
+            break
+        case 'BLACKLIST':
+            return 'blacklist';
+            break
+        default:
+            return '';
+    }
+}
+
 function viewCustomer(customerId) {
     if (!customerId)
         return;
@@ -422,8 +335,6 @@ function deleteCustomer(customerId) {
         window.location.href = url; // chuyển trang
     }
 }
-
-
 
 
 // Close action menu when clicking outside
@@ -530,230 +441,31 @@ document.getElementById('customerPreview')?.addEventListener('click', function (
     }
 });
 
+document.addEventListener("change", function (e) {
 
+    // Khi click checkbox SELECT ALL
+    if (e.target.classList.contains("check-all")) {
 
-// ================= PAGINATION AJAX =================
-function loadPage(page, size) {
+        const checked = e.target.checked;
 
-    currentPage = page;
+        document.querySelectorAll(".check-item").forEach(cb => {
+            cb.checked = checked;
+        });
 
-    if (size) {
-        rowsPerPage = size;
     }
 
-    // GỌI LẠI FILTER (giữ toàn bộ điều kiện đang chọn)
-    callFilterAPI(currentPage);
-}
+    // Khi click từng checkbox item
+    if (e.target.classList.contains("check-item")) {
 
-function renderTableBody(customers) {
-    const tbody = document.getElementById("customerTableBody");
+        const total = document.querySelectorAll(".check-item").length;
+        const checked = document.querySelectorAll(".check-item:checked").length;
 
-    // Fade out
-    tbody.style.transition = 'opacity 0.15s ease';
-    tbody.style.opacity = '0';
-
-    setTimeout(() => {
-        if (!customers || customers.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" style="text-align:center;padding:40px;color:#888;">
-                        <i class="fas fa-search" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4;"></i>
-                        No customers found.
-                    </td>
-                </tr>`;
-        } else {
-
-            let html = "";
-
-            customers.forEach(c => {
-
-                html += `
-<tr class="card-body-row">
-
-<td class="customer-info">
-    <div class="avatar">
-        ${c.name ? c.name.charAt(0).toUpperCase() : ""}
-    </div>
-    <div>
-        <div onclick="viewCustomer(${c.customerId})" style="cursor:pointer;">
-            <strong>${c.name}</strong>
-        </div>
-        <div class="muted">${c.phone}</div>
-    </div>
-</td>
-
-<td>
-    <span class="loyalty-badge ${getLoyaltyClass(c.loyaltyTier)}">
-        ${c.loyaltyTier}
-    </span>
-    <div class="muted">RFM Score: ${c.rfmScore}</div>
-</td>
-
-<td>
-    <div><strong>${c.preferredSize ?? ""}</strong></div>
-    <div class="muted">${c.bodyShape ?? ""}</div>
-</td>
-
-<td class="tags">
-    ${renderTags(c.styleTags)}
-</td>
-
-<td>
-    <div>${c.returnRate}%</div>
-    <div class="progress">
-        <div class="progress-bar ${c.returnRate > 30 ? "high-return" : ""}"
-             style="width:${c.returnRate}%">
-        </div>
-    </div>
-</td>
-
-<td>${c.lastPurchase ?? ""}</td>
-
-    <td class="actions">
-        <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-        </button>
-
-        <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
-            <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <div class="action-wrapper">
-            <button class="action-icon-btn menu-btn">
-                <i class="fa-solid fa-ellipsis"></i>
-            </button>
-            <div class="action-menu">
-                <div class="action-menu-item" onclick="openPreview(${c.customerId})">
-                    <i class="fa-regular fa-id-card"></i>
-                    <span>Preview</span>
-                </div>
-                <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
-                    <i class="fa-solid fa-angles-up"></i>
-                    <span>Upgrade</span>
-                </div>
-        <div class="action-menu-item downgrade-item" onclick="downgradeCustomer(${c.customerId})">
-                                        <i class="fa-solid fa-angles-down"></i>
-                                        <span>Downgrade</span>
-                                    </div>
-                <div class="action-menu-divider"></div>
-                <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
-                    <i class="fa-regular fa-trash-can"></i>
-                    <span>Delete</span>
-                </div>
-            </div>
-        </div>
-    </td>
-<td style="display: none;">${c.email}</td>
-                        <td style="display: none;">${c.gender}</td>
-                        <td style="display: none;">${c.height}</td>
-                        <td style="display: none;">${c.weight}</td>
-</tr>
-`;
-            });
-
-            tbody.innerHTML = html;
+        const checkAll = document.querySelector(".check-all");
+        if (checkAll) {
+            checkAll.checked = total === checked;
         }
-        // Fade in
-        tbody.style.opacity = '1';
-    }, 150);
-}
 
-function renderTags(tags) {
-
-    if (!tags)
-        return "";
-
-    return tags.slice(0, 2).map(tag =>
-        `<span class="tag">${tag}</span>`
-    ).join("");
-}
-
-function getLoyaltyClass(tier) {
-    if (tier === "DIAMOND")
-        return "diamond";
-    if (tier === "PLATINUM")
-        return "platinum";
-    if (tier === "GOLD")
-        return "gold";
-    if (tier === "SILVER")
-        return "silver";
-    if (tier === "BRONZE")
-        return "bronze";
-    if (tier === "BLACKLIST")
-        return "blacklist";
-    return "";
-}
-
-function renderPagination(totalPages, currentPage) {
-
-    const container = document.getElementById("paginationControls");
-
-    if (!totalPages || totalPages <= 1) {
-        container.innerHTML = `<button class="active btn btn-light">1</button>`;
-        return;
     }
 
-    function getPageRange(current, total) {
-        const delta = 2;
-        const range = [];
-        const rangeWithDots = [];
-
-        for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
-            range.push(i);
-        }
-
-        if (range[0] > 2) rangeWithDots.push(1, '...');
-        else rangeWithDots.push(1);
-
-        rangeWithDots.push(...range);
-
-        if (range[range.length - 1] < total - 1) rangeWithDots.push('...', total);
-        else rangeWithDots.push(total);
-
-        return rangeWithDots;
-    }
-
-    const pages = getPageRange(currentPage, totalPages);
-
-    let html = "";
-
-    // Prev button
-    html += `
-        <button onclick="loadPage(${currentPage - 1}, ${rowsPerPage})"
-            class="btn btn-light btn-nav"
-            ${currentPage === 1 ? "disabled" : ""}>
-            <i class="fas fa-chevron-left"></i> Prev
-        </button>
-    `;
-
-    // Page number buttons
-    pages.forEach(p => {
-        if (p === '...') {
-            html += `<span class="pagination-dots">...</span>`;
-        } else {
-            html += `
-                <button onclick="loadPage(${p}, ${rowsPerPage})"
-                    class="btn btn-light ${p === currentPage ? "active" : ""}">
-                    ${p}
-                </button>
-            `;
-        }
-    });
-
-    // Next button
-    html += `
-        <button onclick="loadPage(${currentPage + 1}, ${rowsPerPage})"
-            class="btn btn-light btn-nav"
-            ${currentPage === totalPages ? "disabled" : ""}>
-            Next <i class="fas fa-chevron-right"></i>
-        </button>
-    `;
-
-    container.innerHTML = html;
-}
-
-document.getElementById("rowsPerPage")?.addEventListener("change", function () {
-    const value = this.value === "all" ? 999999 : parseInt(this.value);
-    rowsPerPage = value;
-    paginationSessionId = null;  // PageSize thay đổi → keyset anchor không còn hợp lệ
-    loadPage(1, value);
 });
+

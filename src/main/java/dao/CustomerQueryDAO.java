@@ -1,10 +1,8 @@
 package dao;
 
-import com.microsoft.sqlserver.jdbc.SQLServerCallableStatement;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
-import dto.CustomerFilterRequest;
 import dto.CustomerListDTO;
-import dto.CustomerPageResult;
+import model.Customer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -12,6 +10,22 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CustomerQueryDAO {
+
+    private final String BASE_QUERY = """
+            SELECT  [customer_id]
+                  ,[name]
+                  ,[phone]
+                  ,[email]
+                  ,[birthday]
+                  ,[gender]
+                  ,[address]
+                  ,[source]
+                  ,[status]
+                  ,[loyalty_tier]
+                  ,[return_rate]
+                  ,[last_purchase]
+              FROM [Customers]
+            """;
 
     private CustomerListDTO mapRow(ResultSet rs) throws SQLException {
 
@@ -44,92 +58,61 @@ public class CustomerQueryDAO {
         return dto;
     }
 
-    public CustomerPageResult getCustomerList(
+    public List<Customer> getCustomerList(
             Connection connection,
             int page,
-            int size,
-            String sessionId) throws SQLException {
+            int size
+    ) throws SQLException {
+        List<Customer> customerList = new ArrayList<>();
+        String sql = BASE_QUERY + """
+                  Order by customer_id
+                  OFFSET (? - 1) * ? Rows
+                  FETCH NEXT ? ROWS only
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, page);
+            stm.setInt(2, size);
+            stm.setInt(3, size);
+            ResultSet rs = stm.executeQuery();
 
-        List<CustomerListDTO> customerList = new ArrayList<>();
-        int totalRecords = 0;
-        int totalPages = 0;
-        String returnedSessionId = sessionId;
-        String nextAnchorRfm = null;
-        int nextAnchorId = 0;
-
-        // Trang đầu hoặc chưa có session → fetch total + tạo session mới
-        boolean isNewSession = (sessionId == null || sessionId.isBlank());
-        boolean fetchTotal = isNewSession || page == 1;
-
-        String sql = """
-                {call sp_GetCustomersPaged(?, ?, ?, ?)}""";
-        // @PageSize, @PageNumber, @SessionID (NULL nếu mới), @FetchTotal
-
-        try (CallableStatement cs = connection.prepareCall(sql)) {
-            cs.setInt(1, size);
-            cs.setInt(2, page);
-
-            if (isNewSession) {
-                cs.setNull(3, Types.CHAR); // @SessionID = NULL → SP tự tạo
-            } else {
-                cs.setString(3, sessionId);
-            }
-
-            cs.setBoolean(4, fetchTotal); // @FetchTotal
-
-            boolean hasResult = cs.execute();
-
-            // ── ResultSet 1: TotalRecords + TotalPages + SessionID (chỉ khi fetchTotal =
-            // 1) ──
-            if (fetchTotal && hasResult) {
-                try (ResultSet rsTotal = cs.getResultSet()) {
-                    if (rsTotal.next()) {
-                        totalRecords = rsTotal.getInt("TotalRecords");
-                        totalPages = rsTotal.getInt("TotalPages");
-                        returnedSessionId = rsTotal.getString("SessionID");
-                    }
+            while (rs.next()) {
+                Customer customer = new Customer();
+                customer.setCustomerId(rs.getInt("customer_id"));
+                customer.setName(rs.getString("name"));
+                customer.setPhone(rs.getString("phone"));
+                customer.setEmail(rs.getString("email"));
+                customer.setBirthday(rs.getDate("birthday").toLocalDate());
+                customer.setGender(rs.getString("gender"));
+                customer.setAddress(rs.getString("address"));
+                customer.setSource(rs.getString("source"));
+                customer.setStatus(rs.getString("status"));
+                customer.setLoyaltyTier(rs.getString("loyalty_tier"));
+                customer.setReturnRate(rs.getDouble("return_rate"));
+                Timestamp ts = rs.getTimestamp("last_purchase");
+                if (ts != null) {
+                    customer.setLastPurchase(ts.toLocalDateTime());
                 }
-                hasResult = cs.getMoreResults(); // tiến đến ResultSet data
-            }
+                customerList.add(customer);
 
-            // ── ResultSet 2 (hoặc 1 nếu không fetch total): Danh sách customers ──
-            if (hasResult) {
-                try (ResultSet rs = cs.getResultSet()) {
-                    while (rs.next()) {
-                        CustomerListDTO dto = mapRow(rs);
-                        customerList.add(dto);
-
-                        // Lưu anchor của row cuối (dùng để debug hoặc stateless mode)
-                        nextAnchorRfm = rs.getString("next_anchor_rfm");
-                        nextAnchorId = rs.getInt("next_anchor_id");
-                    }
-                }
             }
+            return customerList;
         }
 
-        return new CustomerPageResult(
-                customerList,
-                totalRecords,
-                totalPages,
-                page,
-                size,
-                returnedSessionId, // App giữ lại, truyền vào request tiếp theo
-                nextAnchorRfm,
-                nextAnchorId);
     }
 
-//    public int countTotalCustomers(Connection connection) throws SQLException {
-//        String sql = """
-//                SELECT COUNT(*) FROM Customers
-//                """;
-//
-//        try (PreparedStatement stm = connection.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
-//            if (rs.next()) {
-//                return rs.getInt(1);
-//            }
-//        }
-//        return 0;
-//    }
+    public int countTotalCustomers(Connection connection, String raturnRate
+            , String keyword, List<String> loyaltyTier, List<String> source) throws SQLException {
+        String sql = """
+                SELECT COUNT(*) FROM Customers
+                """;
+
+        try (PreparedStatement stm = connection.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
 
     // Xóa dữ liệu liên quan đến customer (để chuẩn bị xóa customer)
     public void deleteCustomerRelatedData(int customerId, Connection connection) throws SQLException {
@@ -225,91 +208,13 @@ public class CustomerQueryDAO {
         return tvp;
     }
 
-    public CustomerPageResult filterAdvanced(
-            Connection connection,
-            CustomerFilterRequest filterRequest,
-            String sessionId) throws SQLException {
+    public List<Customer> filterAdvanced(
+            Connection connection) throws SQLException {
 
-        List<CustomerListDTO> list = new ArrayList<>();
+        List<Customer> list = new ArrayList<>();
         int totalRecords = 0;
         int totalPages = 0;
-        String returnedSessionId = sessionId;
 
-        boolean isNewSession = (sessionId == null || sessionId.isBlank());
-        boolean fetchTotal = isNewSession || filterRequest.getPage() == 1;
-
-        // @PageSize, @PageNumber, @Keyword, @LoyaltyTiers, @BodyShapes,
-        // @Sizes, @TagIds, @ReturnRateMode, @SessionID, @FetchTotal
-        String sql = """
-                {call dbo.sp_FilterCustomersAdvanced(?,?,?,?,?,?,?,?,?,?)}""";
-
-        try (CallableStatement cs = connection.prepareCall(sql)) {
-
-            cs.setInt(1, filterRequest.getPageSize());
-            cs.setInt(2, filterRequest.getPage());
-
-            if (filterRequest.getKeyword() == null || filterRequest.getKeyword().isBlank()) {
-                cs.setNull(3, Types.NVARCHAR);
-            } else {
-                cs.setString(3, filterRequest.getKeyword());
-            }
-
-            // ===== TVP PARAMS =====
-            SQLServerCallableStatement scs = cs.unwrap(SQLServerCallableStatement.class);
-
-            scs.setStructured(4, "dbo.StringList", toStringTVP(filterRequest.getLoyaltyTiers()));
-            scs.setStructured(5, "dbo.StringList", toStringTVP(filterRequest.getBodyShapes()));
-            scs.setStructured(6, "dbo.StringList", toStringTVP(filterRequest.getSizes()));
-            scs.setStructured(7, "dbo.IntList", toIntTVP(filterRequest.getTagIds()));
-
-            if (filterRequest.getReturnRateMode() == null) {
-                cs.setNull(8, Types.NVARCHAR);
-            } else {
-                cs.setString(8, filterRequest.getReturnRateMode());
-            }
-
-            if (isNewSession) {
-                cs.setNull(9, Types.CHAR); // @SessionID = NULL → SP tự tạo
-            } else {
-                cs.setString(9, sessionId);
-            }
-
-            cs.setBoolean(10, fetchTotal); // @FetchTotal
-
-            // ===== EXECUTE =====
-            boolean hasResult = cs.execute();
-
-            // ResultSet 1: TotalRecords + TotalPages + SessionID (chỉ khi fetchTotal =
-            // true)
-            if (fetchTotal && hasResult) {
-                try (ResultSet rs = cs.getResultSet()) {
-                    if (rs.next()) {
-                        totalRecords = rs.getInt("TotalRecords");
-                        totalPages = rs.getInt("TotalPages");
-                        returnedSessionId = rs.getString("SessionID");
-                    }
-                }
-                hasResult = cs.getMoreResults();
-            }
-
-            // ResultSet 2 (hoặc 1 nếu không fetchTotal): danh sách customers
-            if (hasResult) {
-                try (ResultSet rs = cs.getResultSet()) {
-                    while (rs.next()) {
-                        list.add(mapRow(rs));
-                    }
-                }
-            }
-        }
-
-        return new CustomerPageResult(
-                list,
-                totalRecords,
-                totalPages,
-                filterRequest.getPage(),
-                filterRequest.getPageSize(),
-                returnedSessionId,
-                null, // nextAnchorRfm — filter mode không cần expose
-                0);
+        return null;
     }
 }

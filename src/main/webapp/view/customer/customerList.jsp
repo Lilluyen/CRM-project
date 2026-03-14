@@ -5,17 +5,17 @@
 <%@ page isELIgnored="false" %>
 
 <div class="content">
-<div class="d-flex align-items-center gap-3 list__header">
-    <i class="fas fa-users"></i>
+    <div class="d-flex align-items-center gap-3 list__header">
+        <i class="fas fa-users"></i>
         <h1>Customer Center</h1>
-</div>
+    </div>
     <div class="sub">Managing ${totalRecord} customers & body profiles</div>
 
     <div class="top-bar">
         <div class="filter-section">
             <div>
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search by name, phone, or style..." />
+                    <input type="text" id="searchInput" placeholder="Search by name, phone, or style..."/>
                     <button class="btn btn-filter" onclick="applyFilters()">Filter</button>
                 </div>
             </div>
@@ -23,57 +23,53 @@
             <div class="filter-buttons">
                 <button class="filter-btn gold-members" onclick="toggleFilterTag('GOLD')">Gold Members</button>
                 <button class="filter-btn high-return" onclick="toggleFilterTag('HIGH_RETURN')">High Return</button>
-                <button class="filter-btn advanced" onclick="openAdvancedFilter()"><i class="fas fa-sliders-h"></i> Advanced</button>
+                <button class="filter-btn advanced" onclick="openAdvancedFilter()"><i class="fas fa-sliders-h"></i>
+                    Advanced
+                </button>
             </div>
         </div>
 
         <div style="display:flex;align-items:center;gap:12px;flex-direction:column;">
-            <div style="display:flex;gap:8px;flex-wrap:wrap; order:2;">
-                <label style="font-weight:600;margin-right:6px;">Rows per page:</label>
-                <select id="rowsPerPage" class="form-select form-select-sm" style="width:auto;">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
-                    <option value="15">15</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="all">All</option>
-                </select>
-            </div>
-
-            <button class="btn btn-add" style="order:1;"><a href="${pageContext.request.contextPath}/customers/add-customer">+ Add New Customer</a></button>
+            <button class="btn btn-add" style="order:1;"><a
+                    href="${pageContext.request.contextPath}/customers/add-customer">+ Add New Customer</a></button>
         </div>
     </div>
 
     <div class="card" id="customerTable">
         <table>
             <thead>
-                <tr>
-                    <th>Customer</th>
-                    <th>Loyalty & RFM</th>
-                    <th>Fit Profile</th>
-                    <th>Styles</th>
-                    <th>Return Rate</th>
-                    <th>Last Purchase</th>
-                    <th></th>
-                </tr>
+            <tr>
+                <th>
+                    <input type="checkbox" style="transform: scale(1.3);" class="check-all"
+                    />
+                </th>
+                <th>Customer</th>
+                <th>Loyalty & RFM</th>
+                <th>Email</th>
+                <th>Source</th>
+                <th>Return Rate</th>
+                <th>Last Purchase</th>
+                <th></th>
+            </tr>
             </thead>
             <tbody id="customerTableBody">
-                <c:forEach var="c" items="${customerList}">
-                    <tr class="card-body-row">
+            <c:forEach var="c" items="${customerList}">
+                <tr class="card-body-row">
+                    <td style="padding: 20px">
+                        <input type="checkbox" style="transform: scale(1.3);" class="check-item"
+                               value="${c.customerId}"/>
+                    </td>
 
-                        <td class="customer-info">
-                            <div class="avatar">
-                                <c:if test="${not empty c.name}">
-                                    ${fn:toUpperCase(fn:substring(c.name,0,1))}
-                                </c:if>
-                            </div>
-                            <div>
-                                <div onclick="viewCustomer(${c.customerId})" style="cursor:pointer;"><strong>${c.name}</strong></div>
-                                <div class="muted">${c.phone}</div>
-                            </div>
-                        </td>
+                    <td class="customer-info">
 
-                        <td>
+                        <div>
+                            <div onclick="viewCustomer(${c.customerId})" style="cursor:pointer;">
+                                <strong>${c.name}</strong></div>
+                            <div class="muted">${c.phone}</div>
+                        </div>
+                    </td>
+
+                    <td>
                             <span class="loyalty-badge
                                   <c:choose>
                                       <c:when test="${c.loyaltyTier == 'DIAMOND'}">diamond</c:when>
@@ -83,89 +79,77 @@
                                       <c:when test="${c.loyaltyTier == 'BRONZE'}">bronze</c:when>
                                       <c:when test="${c.loyaltyTier == 'BLACKLIST'}">blacklist</c:when>
                                   </c:choose>">
-                                ${c.loyaltyTier}
+                                    ${c.loyaltyTier}
                             </span>
 
-                            <div class="muted table_rfm_score">RFM Score: ${c.rfmScore}</div>
-                        </td>
+                    </td>
 
-                        <td>
-                            <div><strong>${c.preferredSize}</strong></div>
-                            <div class="muted">${c.bodyShape}</div>
-                        </td>
+                    <td>
+                        <div class="muted">${c.email}</div>
+                    </td>
 
-                        <td class="tags">
-                            <c:forEach items="${c.styleTags}" var="tag" begin="0" end="1">
-                                <span class="tag">${tag}</span>
-                            </c:forEach>
-                        </td>
+                    <td class="tags">
+                        <div>${c.source}</div>
+                    </td>
 
-                        <td>
-                            <div>${c.returnRate}%</div>
-                            <div class="progress">
-                                <div class="progress-bar
+                    <td>
+                        <div>${c.returnRate}%</div>
+                        <div class="progress">
+                            <div class="progress-bar
                                      <c:if test="${c.returnRate > 40}">high-return</c:if>"
-                                     style="width:${c.returnRate}%">
-                                </div>
+                                 style="width:${c.returnRate}%">
                             </div>
-                        </td>
+                        </div>
+                    </td>
 
-                        <td>
+                    <td>
                             ${c.lastPurchaseDate}
-                        </td>
+                    </td>
 
 
-                        <td class="actions">
-                            <button class="action-icon-btn view-btn" title="View Details" onclick="viewCustomer(${c.customerId})">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <td class="actions">
+                        <button class="action-icon-btn view-btn" title="View Details"
+                                onclick="viewCustomer(${c.customerId})">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </button>
+
+                        <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <div class="action-wrapper">
+                            <button class="action-icon-btn menu-btn">
+                                <i class="fa-solid fa-ellipsis"></i>
                             </button>
-
-                            <button class="action-icon-btn edit-btn" title="Edit" onclick="editCustomer(${c.customerId})">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <div class="action-wrapper">
-                                <button class="action-icon-btn menu-btn">
-                                    <i class="fa-solid fa-ellipsis"></i>
-                                </button>
-                                <div class="action-menu" id="customerMenuAction">
-                                    <div class="action-menu-item" onclick="openPreview(${c.customerId})">
-                                        <i class="fa-regular fa-id-card"></i>
-                                        <span>Preview</span>
-                                    </div>
-                                    <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
-                                        <i class="fa-solid fa-angles-up"></i>
-                                        <span>Upgrade</span>
-                                    </div>
-                                    <div class="action-menu-item downgrade-item" onclick="downgradeCustomer(${c.customerId})">
-                                        <i class="fa-solid fa-angles-down"></i>
-                                        <span>Downgrade</span>
-                                    </div>
-                                    <div class="action-menu-divider"></div>
-                                    <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
-                                        <i class="fa-regular fa-trash-can"></i>
-                                        <span>Delete</span>
-                                    </div>
+                            <div class="action-menu" id="customerMenuAction">
+                                <div class="action-menu-item" onclick="openPreview(${c.customerId})">
+                                    <i class="fa-regular fa-id-card"></i>
+                                    <span>Preview</span>
+                                </div>
+                                <div class="action-menu-item upgrade-item" onclick="upgradeCustomer(${c.customerId})">
+                                    <i class="fa-solid fa-angles-up"></i>
+                                    <span>Upgrade</span>
+                                </div>
+                                <div class="action-menu-item downgrade-item"
+                                     onclick="downgradeCustomer(${c.customerId})">
+                                    <i class="fa-solid fa-angles-down"></i>
+                                    <span>Downgrade</span>
+                                </div>
+                                <div class="action-menu-divider"></div>
+                                <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                    <span>Delete</span>
                                 </div>
                             </div>
-                        </td>
-                        <td style="display: none;">${c.email}</td>
-                        <td style="display: none;">${c.gender}</td>
-                        <td style="display: none;">${c.height}</td>
-                        <td style="display: none;">${c.weight}</td>
-                    </tr> 
-                </c:forEach>
+                        </div>
+                    </td>
+                </tr>
+            </c:forEach>
             </tbody>
 
 
         </table>
         <!-- pagination controls -->
-        <div id="paginationControls" style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
-            <c:forEach begin="1" end="${totalPages}" var="i">
-                <button onclick="loadPage(${i})" class="btn btn-light ${i == currentPage ? 'active' : ''}"> 
-                    ${i}
-                </button> 
-            </c:forEach>
-        </div>
+        <jsp:include page="/view/components/pagination.jsp"/>
     </div>
 
     <div id="toast" class="toast">
@@ -189,7 +173,8 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h2><i class="fas fa-sliders-h" style="font-size:13px;opacity:.7;margin-right:6px;"></i>Advanced Filter</h2>
+                <h2><i class="fas fa-sliders-h" style="font-size:13px;opacity:.7;margin-right:6px;"></i>Advanced Filter
+                </h2>
                 <span class="close-btn" onclick="closeAdvancedFilter()">&#x2715;</span>
             </div>
 
@@ -200,27 +185,27 @@
                     <label>&#x1F451; Loyalty Tier</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item" data-tier="diamond">
-                            <input type="checkbox" name="loyaltyFilter" value="DIAMOND" />
+                            <input type="checkbox" name="loyaltyFilter" value="DIAMOND"/>
                             Diamond
                         </label>
                         <label class="checkbox-item" data-tier="platinum">
-                            <input type="checkbox" name="loyaltyFilter" value="PLATINUM" />
+                            <input type="checkbox" name="loyaltyFilter" value="PLATINUM"/>
                             Platinum
                         </label>
                         <label class="checkbox-item" data-tier="gold">
-                            <input type="checkbox" name="loyaltyFilter" value="GOLD" />
+                            <input type="checkbox" name="loyaltyFilter" value="GOLD"/>
                             Gold
                         </label>
                         <label class="checkbox-item" data-tier="silver">
-                            <input type="checkbox" name="loyaltyFilter" value="SILVER" />
+                            <input type="checkbox" name="loyaltyFilter" value="SILVER"/>
                             Silver
                         </label>
                         <label class="checkbox-item" data-tier="bronze">
-                            <input type="checkbox" name="loyaltyFilter" value="BRONZE" />
+                            <input type="checkbox" name="loyaltyFilter" value="BRONZE"/>
                             Bronze
                         </label>
                         <label class="checkbox-item" data-tier="blacklist">
-                            <input type="checkbox" name="loyaltyFilter" value="BLACKLIST" />
+                            <input type="checkbox" name="loyaltyFilter" value="BLACKLIST"/>
                             Blacklist
                         </label>
                     </div>
@@ -231,27 +216,27 @@
                     <label>&#x1F9CD; Body Shape</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item">
-                            <input type="checkbox" name="bodyShapeFilter" value="HOURGLASS" />
+                            <input type="checkbox" name="bodyShapeFilter" value="HOURGLASS"/>
                             &#x231B; Hourglass
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="bodyShapeFilter" value="PEAR" />
+                            <input type="checkbox" name="bodyShapeFilter" value="PEAR"/>
                             &#x1F350; Pear
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="bodyShapeFilter" value="APPLE" />
+                            <input type="checkbox" name="bodyShapeFilter" value="APPLE"/>
                             &#x1F34E; Apple
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="bodyShapeFilter" value="RECTANGLE" />
+                            <input type="checkbox" name="bodyShapeFilter" value="RECTANGLE"/>
                             &#x25AC; Rectangle
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="bodyShapeFilter" value="INVERTED TRIANGLE" />
+                            <input type="checkbox" name="bodyShapeFilter" value="INVERTED TRIANGLE"/>
                             &#x25BD; Inv. Triangle
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="bodyShapeFilter" value="SLENDER" />
+                            <input type="checkbox" name="bodyShapeFilter" value="SLENDER"/>
                             &#x2736; Slender
                         </label>
                     </div>
@@ -262,19 +247,19 @@
                     <label>&#x1F3F7; Preferred Size</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item">
-                            <input type="checkbox" name="sizeFilter" value="S" />
+                            <input type="checkbox" name="sizeFilter" value="S"/>
                             S
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="sizeFilter" value="M" />
+                            <input type="checkbox" name="sizeFilter" value="M"/>
                             M
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="sizeFilter" value="L" />
+                            <input type="checkbox" name="sizeFilter" value="L"/>
                             L
                         </label>
                         <label class="checkbox-item">
-                            <input type="checkbox" name="sizeFilter" value="XL" />
+                            <input type="checkbox" name="sizeFilter" value="XL"/>
                             XL
                         </label>
                     </div>
@@ -285,11 +270,11 @@
                     <label>&#x21BA; Return Rate</label>
                     <div class="checkbox-group">
                         <label class="checkbox-item" data-return="HIGH">
-                            <input type="checkbox" name="returnRateFilter" value="HIGH" />
+                            <input type="checkbox" name="returnRateFilter" value="HIGH"/>
                             High &gt; 40%
                         </label>
                         <label class="checkbox-item" data-return="NORMAL">
-                            <input type="checkbox" name="returnRateFilter" value="NORMAL" />
+                            <input type="checkbox" name="returnRateFilter" value="NORMAL"/>
                             Normal &#x2264; 40%
                         </label>
                     </div>
@@ -308,8 +293,8 @@
 
                                 <td style="height: 15px; padding: 3px 0;">
                                     <label class="checkbox-item">
-                                        <input type="checkbox" name="styleTagFilter" value="${style.tagId}" />
-                                        ${style.tagName}
+                                        <input type="checkbox" name="styleTagFilter" value="${style.tagId}"/>
+                                            ${style.tagName}
                                     </label>
                                 </td>
                                 <c:if test="${loop.index % 4 == 3}">
@@ -415,12 +400,12 @@
     </div>
 
 
-            <script>
-                window.__PAGE_STATUS__      = "<c:out value='${param.status}' default='' />";
-                window.__CTX__              = "${pageContext.request.contextPath}";
-                window.__SESSION_ID__       = "<c:out value='${sessionId}' default='' />";
-                window.__TOTAL_PAGES__      = ${not empty totalPages ? totalPages : 1};
-                window.__TOTAL_RECORDS__    = ${not empty totalRecord ? totalRecord : 0};
-                window.__CURRENT_PAGE__     = ${not empty currentPage ? currentPage : 1};
-            </script>
+    <script>
+        window.__PAGE_STATUS__ = "<c:out value='${param.status}' default='' />";
+        window.__CTX__ = "${pageContext.request.contextPath}";
+        window.__SESSION_ID__ = "<c:out value='${sessionId}' default='' />";
+        window.__TOTAL_PAGES__ = ${not empty totalPages ? totalPages : 1};
+        window.__TOTAL_RECORDS__ = ${not empty totalRecord ? totalRecord : 0};
+        window.__CURRENT_PAGE__ = ${not empty currentPage ? currentPage : 1};
+    </script>
 
