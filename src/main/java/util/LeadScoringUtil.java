@@ -11,7 +11,7 @@ public class LeadScoringUtil {
      *
      * @return score (0-70)
      */
-    public static int calculateScore(String fullName, String email, String phone, int campaignId) {
+    public static int calculateScore(String fullName, String email, String phone, int campaignId, String interest) {
         int score = 0;
 
         // Có họ tên
@@ -34,20 +34,24 @@ public class LeadScoringUtil {
             score += 10;
         }
 
+        if (interest != null && !interest.trim().isEmpty()) {
+            score += 10;
+        }
+
         return Math.min(score, 100);
     }
 
     /**
      * Xác định trạng thái Lead tự động dựa trên score < 10: LOST < 20: NEW_LEAD
-     * < 50:  CONTACTED
-     * >= 50: QUALIFIED
+     * < 70:  CONTACTED
+     * >= 70: QUALIFIED
      */
     public static String determineStatus(int score) {
         if (score < 10) {
             return "LOST";
         } else if (score < 20) {
             return "NEW_LEAD";
-        } else if (score < 50) {
+        } else if (score < 70) {
             return "CONTACTED";
         } else {
             return "QUALIFIED";

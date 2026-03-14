@@ -44,7 +44,7 @@ public class LeadExportController extends HttpServlet {
         } catch (NumberFormatException ignored) {
         }
 
-        List<Lead> leads = leadService.searchLeadsForExport(keyword, status, campaignId);
+        List<Lead> leads = leadService.searchLeadsForExport(keyword, status, campaignId, null);
 
         String filename = "leads_" + LocalDate.now() + ".xlsx";
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

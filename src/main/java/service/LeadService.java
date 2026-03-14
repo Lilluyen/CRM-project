@@ -18,19 +18,19 @@ public class LeadService {
     /**
      * Tìm kiếm leads theo keyword + status, có phân trang
      */
-    public List<Lead> searchLeads(String keyword, String status, int campaignId, int page, int pageSize) {
-        return leadDAO.searchLeads(keyword, status, campaignId, page, pageSize);
+    public List<Lead> searchLeads(String keyword, String status, int campaignId,String interest, int page, int pageSize) {
+        return leadDAO.searchLeads(keyword, status, campaignId, interest, page, pageSize);
     }
 
     /**
      * Đếm tổng leads theo điều kiện lọc (dùng cho phân trang)
      */
-    public int countLeads(String keyword, String status, int campaignId) {
-        return leadDAO.countLeads(keyword, status, campaignId);
+    public int countLeads(String keyword, String status, int campaignId, String interest) {
+        return leadDAO.countLeads(keyword, status, campaignId, interest);
     }
 
-    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId) {
-        return leadDAO.searchLeadsForExport(keyword, status, campaignId);
+    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId, String interest) {
+        return leadDAO.searchLeadsForExport(keyword, status, campaignId, interest);
     }
 
     // ==============================
@@ -50,7 +50,7 @@ public class LeadService {
 
         // Tạo Lead mới (mỗi campaign có Lead record riêng, cùng email OK)
         int score = LeadScoringUtil.calculateScore(
-                lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId());
+                lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId(), lead.getInterest());
         lead.setScore(score);
         lead.setStatus(LeadScoringUtil.determineStatus(score));
 
@@ -82,7 +82,7 @@ public class LeadService {
         // Auto re-score & auto-status dựa trên thông tin mới
         // Giữ nguyên DEAL_CREATED nếu sale đã tạo deal
         int newScore = LeadScoringUtil.calculateScore(
-                lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId());
+                lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId(), lead.getInterest());
         lead.setScore(newScore);
 
         if (!"DEAL_CREATED".equals(lead.getStatus())) {
@@ -109,7 +109,7 @@ public class LeadService {
 
             // Tạo Lead mới (mỗi campaign có record riêng)
             int score = LeadScoringUtil.calculateScore(
-                    lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId());
+                    lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId(), lead.getInterest());
             lead.setScore(score);
             lead.setStatus(LeadScoringUtil.determineStatus(score));
             int newId = leadDAO.createLead(lead);
@@ -189,7 +189,7 @@ public class LeadService {
     }
 
     /**
-     * Chấm điểm Lead + auto-qualify nếu score >= 50
+     * Chấm điểm Lead + auto-qualify nếu score >= 70
      */
     public boolean scoreLead(int leadId, int score) {
         if (score < 0 || score > 100) {

@@ -61,20 +61,21 @@ public class LeadListController extends HttpServlet {
         }
 
         // --- Đếm tổng bản ghi ---
-        int totalItems = leadService.countLeads(keyword, status, campaignId);
+        int totalItems = leadService.countLeads(keyword, status, campaignId, request.getParameter("interest"));
 
         // --- Tạo Pagination DTO ---
         Pagination pagination = new Pagination(page, pageSize, totalItems);
 
         // --- Lấy danh sách theo trang ---
         List<Lead> leads = leadService.searchLeads(
-                keyword, status, campaignId, pagination.getCurrentPage(), pageSize);
+                keyword, status, campaignId, request.getParameter("interest"), pagination.getCurrentPage(), pageSize);
 
         // --- Đặt request attributes ---
         request.setAttribute("leads", leads);
         request.setAttribute("pagination", pagination);
         request.setAttribute("searchKeyword", keyword);
         request.setAttribute("filterStatus", status);
+        request.setAttribute("filterInterest", request.getParameter("interest"));
 
         // Nếu đang lọc theo campaign → load thông tin campaign
         if (campaignId > 0) {
