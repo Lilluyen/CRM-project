@@ -55,7 +55,7 @@ public class CustomerListController extends HttpServlet {
             if (page < 1) {
                 page = 1;
             }
-            int totalRecords = customerService.countTotalCustomer(null, null, null, null);
+            int totalRecords = customerService.countTotalCustomer(null, null, null, null, null, null);
             List<Customer> customers;
             Pagination pagination = new Pagination(page, size, totalRecords);
             customers = customerService.getCustomerList(page, size);

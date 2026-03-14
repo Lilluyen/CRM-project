@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const rowsSelect = document.getElementById('rowsPerPage');
     if (rowsSelect) rowsSelect.value = rowsPerPage;
 
-    setupEventListeners();
 
     const pageStatus = window.__PAGE_STATUS__;
     if (pageStatus) {
@@ -45,6 +44,56 @@ document.addEventListener('DOMContentLoaded', function () {
         showToast(pageStatus, toastType);
     }
 });
+
+document.querySelectorAll(".btn-return-rate").forEach(btn => {
+    btn.addEventListener("click", function () {
+
+        const isActive = this.classList.contains("btn-primary");
+
+        document.querySelectorAll(".btn-return-rate")
+            .forEach(b => b.classList.remove("btn-primary"));
+
+        if (!isActive) {
+            this.classList.add("btn-primary");
+        }
+
+    });
+});
+
+function search() {
+    const keyword = document.getElementById('searchInput').value;
+    const ctx = window.__CTX__ || "";
+    const url = `${ctx}/customers/filter?keyword=${encodeURIComponent(keyword)}`;
+    window.location.href = url;
+}
+
+function filter() {
+    const keyword = document.getElementById('searchInput').value;
+    const loyaltys = document.querySelector('.loyaltyFilter').value;
+    const sources = document.querySelector('.source').value;
+    const active = document.querySelector(".btn-return-rate.btn-primary");
+    let returnRate
+    if (active) {
+        returnRate = active.classList.contains("btn-high-return")
+            ? "HIGH"
+            : "LOW";
+
+    }
+
+    const params = new URLSearchParams();
+
+    if (keyword) params.append("keyword", keyword);
+    if (loyaltys && loyaltys !== 'ALL') params.append("loyaltyFilter", loyaltys);
+    if (sources && sources !== 'ALL') params.append("source", sources);
+    if (returnRate) params.append("returnRateFilter", returnRate);
+
+    const ctx = window.__CTX__ || "";
+    const url = `${ctx}/customers/filter?${params.toString()}`;
+
+    console.log(url)
+    window.location.href = url;
+
+}
 
 // Parse data từ các hidden <td> mà JSP đã render sẵn
 // Dùng khi F5 — lúc này JS chưa gọi API nào nhưng DOM đã có data
@@ -74,146 +123,45 @@ function parseCustomersFromDOM() {
     return customers;
 }
 
-
-function extractCustomerId(actionCell) {
-    const viewIcon = actionCell.querySelector('[onclick*="viewCustomer"]');
-    if (viewIcon) {
-        const match = viewIcon.getAttribute('onclick').match(/viewCustomer\((\d+)\)/);
-        return match ? match[1] : Math.random().toString(36).substr(2, 9);
-    }
-    return Math.random().toString(36).substr(2, 9);
-}
-
-// ===== EVENT LISTENERS =====
-function setupEventListeners() {
-
-
-    // Sync modal loyalty checkbox ↔ quick-filter Gold button
-    const goldCb = document.querySelector('input[name="loyaltyFilter"][value="GOLD"]');
-    if (goldCb) {
-        goldCb.addEventListener('change', function () {
-            document.querySelector('.gold-members')?.classList.toggle('active', this.checked);
-        });
-    }
-
-    // Sync modal return-rate checkbox ↔ quick-filter High Return button
-    const highCb = document.querySelector('input[name="returnRateFilter"][value="HIGH"]');
-    if (highCb) {
-        highCb.addEventListener('change', function () {
-            document.querySelector('.high-return')?.classList.toggle('active', this.checked);
-        });
-    }
-}
-
-
-// ===== FILTER FUNCTIONS =====
-function toggleFilterTag(type) {
-    if (type === 'GOLD') {
-        toggleArrayValue(advancedFilters.loyaltyTiers, 'GOLD');
-        const goldButton = document.querySelector('.gold-members');
-        goldButton.classList.toggle('active');
-        document.querySelector('input[name="loyaltyFilter"][value="GOLD"]').checked = goldButton.classList.contains('active');
-    }
-
-    if (type === 'HIGH_RETURN') {
-        advancedFilters.returnRateMode =
-            advancedFilters.returnRateMode === 'HIGH' ? null : 'HIGH';
-        const highReturnButton = document.querySelector('.high-return');
-        highReturnButton.classList.toggle('active');
-        document.querySelector('input[name="returnRateFilter"][value="HIGH"]').checked = highReturnButton.classList.contains('active');
-    }
-
-    currentPage = 1;
-    paginationSessionId = null;  // Filter thay đổi → reset keyset session
-    applyFilters();
-}
-
-// Sync modal checkboxes ↔ quick-filter buttons
-// (registered after DOM ready — see setupEventListeners)
-
-
-// ===== ADVANCED FILTER MODAL =====
 function openAdvancedFilter() {
-    const modal = document.getElementById('advancedFilterModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        requestAnimationFrame(() => modal.classList.add('open'));
-        checkCurrentFilters();
+    const advancedFilterModal = document.getElementById('advancedFilterModal');
+    if (advancedFilterModal) {
+        advancedFilterModal.classList.add('show');
     }
 }
 
 function closeAdvancedFilter() {
-    const modal = document.getElementById('advancedFilterModal');
-    if (modal) {
-        modal.classList.remove('open');
-        // wait for CSS transition then hide
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 200);
+    const advancedFilterModal = document.getElementById('advancedFilterModal');
+    if (advancedFilterModal) {
+        advancedFilterModal.classList.remove('show');
     }
 }
 
-function checkCurrentFilters() {
+const btn = document.querySelector(".add-condition");
+const container = document.querySelector(".conditions");
+const template = document.querySelector("#condition-template");
 
-    document.querySelectorAll('input[name="loyaltyFilter"]').forEach(cb => {
-        cb.checked = advancedFilters.loyaltyTiers.includes(cb.value);
-    });
+btn.addEventListener("click", () => {
 
-    document.querySelectorAll('input[name="bodyShapeFilter"]').forEach(cb => {
-        cb.checked = advancedFilters.bodyShapes.includes(cb.value);
-    });
+    const clone = template.content.cloneNode(true);
 
-    document.querySelectorAll('input[name="sizeFilter"]').forEach(cb => {
-        cb.checked = advancedFilters.sizes.includes(cb.value);
-    });
+    container.appendChild(clone);
 
-    document.querySelectorAll('input[name="styleTagFilter"]').forEach(cb => {
-        cb.checked = advancedFilters.tagIds.includes(parseInt(cb.value));
-    });
+});
 
-    document.querySelectorAll('input[name="returnRateFilter"]').forEach(cb => {
-        cb.checked = advancedFilters.returnRateMode === cb.value;
-    });
-}
+document.addEventListener("click", function (e) {
 
-function applyAdvancedFilter() {
+    if (e.target.classList.contains("delete")) {
+        e.target.parentElement.remove();
+        document.querySelector('.sub-condition').remove();
+    }
 
-    // Loyalty
-    advancedFilters.loyaltyTiers = Array.from(
-        document.querySelectorAll('input[name="loyaltyFilter"]:checked')
-    ).map(cb => cb.value);
-
-    // Body shape
-    advancedFilters.bodyShapes = Array.from(
-        document.querySelectorAll('input[name="bodyShapeFilter"]:checked')
-    ).map(cb => cb.value);
-
-    // Sizes
-    advancedFilters.sizes = Array.from(
-        document.querySelectorAll('input[name="sizeFilter"]:checked')
-    ).map(cb => cb.value);
-
-    // Style Tags → map sang tagIds (INT)
-    advancedFilters.tagIds = Array.from(
-        document.querySelectorAll('input[name="styleTagFilter"]:checked')
-    ).map(cb => parseInt(cb.value));
-
-    // Return Rate (radio → chỉ lấy 1)
-    const returnRate = document.querySelector('input[name="returnRateFilter"]:checked');
-    advancedFilters.returnRateMode = returnRate ? returnRate.value : null;
-
-    closeAdvancedFilter();
-    paginationSessionId = null;  // Filter thay đổi → reset keyset session
-    callFilterAPI(1);
-}
+});
 
 function resetAdvancedFilter() {
 
     advancedFilters = {
         loyaltyTiers: [],
-        tagIds: [],
-        bodyShapes: [],
-        sizes: [],
         returnRateMode: null
     };
 
@@ -221,15 +169,54 @@ function resetAdvancedFilter() {
         cb.checked = false;
     });
 
-    const highReturnButton = document.querySelector('.high-return');
-    highReturnButton.classList.remove('active');
+    document.querySelectorAll('.btn-return-rate')
+        .forEach(b => {
+            b.classList.remove('btn-primary');
+        });
+    document.querySelectorAll('.condition-row').forEach(r => r.remove());
+}
 
-    const goldButton = document.querySelector('.gold-members');
-    goldButton.classList.remove('active');
+function getCheckedValues(selector) {
+    return [...document.querySelectorAll(selector + ":checked")]
+        .map(el => el.value);
+}
 
-    // Reset session pagination khi filter thay đổi
-    paginationSessionId = null;
-    callFilterAPI(1);
+function applyAdvancedFilter() {
+    const keyword = document.getElementById('searchInput').value;
+    const loyaltys = getCheckedValues('input[name="loyaltyFilter"]');
+    const sources = getCheckedValues('input[name="source"]');
+    const gender = document.querySelector('input[name="gender"]:checked')?.value;
+    const returnRate = document.querySelector('input[name="returnRateFilter"]:checked')?.value;
+
+    const params = new URLSearchParams();
+
+    if (keyword) params.append("keyword", keyword);
+    loyaltys.forEach(l => params.append("loyaltyFilter", l));
+    sources.forEach(s => params.append("source", s));
+    if (gender) params.append("gender", gender);
+    if (returnRate) params.append("returnRateFilter", returnRate);
+
+    document.querySelectorAll(".condition-row").forEach(row => {
+
+        const field = row.querySelector('[name="time_conditions"]').value;
+        const operator = row.querySelector('[name="operators"]').value;
+        const date = row.querySelector('[name="dates"]').value;
+        const subCondition = row.querySelector('[name="subconditions"]').value;
+
+        if (date) {
+            params.append("time_conditions", field);
+            params.append("operators", operator);
+            params.append("dates", date);
+            params.append("subconditions", subCondition);
+        }
+    });
+    const ctx = window.__CTX__ || "";
+    const url = `${ctx}/customers/filter?${params.toString()}`;
+
+    console.log(url);
+
+    window.location.href = url;
+
 }
 
 // ===== CUSTOMER ACTIONS =====
