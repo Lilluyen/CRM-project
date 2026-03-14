@@ -93,7 +93,11 @@
                             <option value="LOST"         ${filterStatus == 'LOST'         ? 'selected' : ''}>Lost</option>
                         </select>
                     </div>
-
+                    <div class="col-md-3">
+                        <label class="form-label">Sở thích</label>
+                        <input type="text" class="form-control" name="interest" 
+                               value="${filterInterest}" placeholder="Nhập sở thích...">
+                    </div>
                     <div class="col-md-3 d-flex align-items-end gap-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-search me-1"></i> Tìm kiếm
@@ -120,7 +124,7 @@
             <%-- Có leads --%>
             <c:when test="${not empty leads}">
 
-                <div class="card shadow-sm mb-3 border-0 bg-primary text-white stats-card" style="border-radius: 10px;">
+                <div class="card shadow-sm mb-3 border-0 bg-primary text-white stats-card bg-total-lead" style="border-radius: 10px;">
                     <div class="card-body py-3 px-4">
                         <span class="fs-2 fw-bold">${pagination.totalItems}</span>
                         <span class="ms-2">
@@ -142,6 +146,7 @@
                                     <th>Email</th>
                                     <th>Điện thoại</th>
                                     <th>Điểm số</th>
+                                    <th>Interest</th>
                                     <th>Trạng thái</th>
                                     <th>Campaign</th>
                                     <th class="text-center">Hành động</th>
@@ -179,20 +184,24 @@
                                         </td>
 
                                         <td>
+                                                 <c:out value="${lead.interest != null ? lead.interest : '-'}"/>
+                                        </td>
+
+                                        <td>
                                             <c:choose>
-                                                <c:when test="${lead.status == 'New'}">
+                                                <c:when test="${lead.status == 'New' || lead.status == 'NEW'}">
                                                     <span class="badge-status badge-new">New</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'Qualified'}">
+                                                <c:when test="${lead.status == 'Qualified' || lead.status == 'QUALIFIED'}">
                                                     <span class="badge-status badge-qualified">Qualified</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'Contacted'}">
+                                                <c:when test="${lead.status == 'Contacted' || lead.status == 'CONTACTED'}">
                                                     <span class="badge-status badge-contacted">Contacted</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'Converted'}">
+                                                <c:when test="${lead.status == 'Converted' || lead.status == 'CONVERTED'}">
                                                     <span class="badge-status badge-deal">Converted</span>
                                                 </c:when>
-                                                <c:when test="${lead.status == 'Lost'}">
+                                                <c:when test="${lead.status == 'Lost' || lead.status == 'LOST'}">
                                                     <span class="badge-status badge-lost">Lost</span>
                                                 </c:when>
                                                 <c:otherwise>

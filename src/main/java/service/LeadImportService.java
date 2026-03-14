@@ -92,7 +92,8 @@ public class LeadImportService {
                     lead.getFullName(),
                     lead.getEmail(),
                     lead.getPhone(),
-                    (campaignId != null) ? campaignId : 0
+                    (campaignId != null) ? campaignId : 0,
+                    lead.getInterest()
             );
             lead.setScore(score);
             lead.setStatus(LeadScoringUtil.determineStatus(score));

@@ -1,7 +1,8 @@
 package util;
 
 public class PhoneCheck {
-    private static final String PHONE_REGEX = "^(\\+?[0-9]{9,15})$";
+
+    private static final String PHONE_REGEX = "^[0-9]{10}$";
 
     public static boolean isValidPhone(String phone) {
         if (phone == null) {

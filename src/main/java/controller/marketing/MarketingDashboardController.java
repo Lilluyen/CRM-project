@@ -1,6 +1,5 @@
 package controller.marketing;
 
-
 import java.io.IOException;
 import java.util.List;
 
@@ -23,14 +22,14 @@ public class MarketingDashboardController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        
         // Tổng quan Leads
-        int totalLeads = leadService.countLeads(null, null, 0);
-        int newLeads = leadService.countLeads(null, "NEW_LEAD", 0);
-        int contactedLeads = leadService.countLeads(null, "CONTACTED", 0);
-        int qualifiedLeads = leadService.countLeads(null, "QUALIFIED", 0);
-        int dealCreatedLeads = leadService.countLeads(null, "DEAL_CREATED", 0);
-        int lostLeads = leadService.countLeads(null, "LOST", 0);
+        int totalLeads = leadService.countLeads(null, null, 0, request.getParameter("interest"));
+        int newLeads = leadService.countLeads(null, "NEW_LEAD", 0, request.getParameter("interest"));
+        int contactedLeads = leadService.countLeads(null, "CONTACTED", 0, request.getParameter("interest"));
+        int qualifiedLeads = leadService.countLeads(null, "QUALIFIED", 0, request.getParameter("interest"));
+        int dealCreatedLeads = leadService.countLeads(null, "DEAL_CREATED", 0, request.getParameter("interest"));
+        int lostLeads = leadService.countLeads(null, "LOST", 0, request.getParameter("interest"));
+        int interestLeads = leadService.countLeads(null, null, 0, request.getParameter("interest"));
 
         // Tổng quan Campaigns
         int totalCampaigns = campaignService.countCampaigns(null, null);
@@ -42,7 +41,7 @@ public class MarketingDashboardController extends HttpServlet {
         List<Campaign> topCampaigns = campaignService.searchCampaigns(null, "ACTIVE", 1, 5);
 
         // Leads mới nhất (5 leads)
-        List<model.Lead> recentLeads = leadService.searchLeads(null, null, 0, 1, 5);
+        List<model.Lead> recentLeads = leadService.searchLeads(null, null, 0, request.getParameter("interest"), 1, 5);
 
         // Conversion rate tổng
         double conversionRate = totalLeads > 0
