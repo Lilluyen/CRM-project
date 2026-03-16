@@ -166,7 +166,7 @@ public class SegmentDetailDAO {
         return row;
     }
 
-    //13
+    //14
     public void updateSegmentCount(Connection conn, int id) throws SQLException {
         String sql = """
                     UPDATE Customer_Segments

@@ -300,6 +300,24 @@ select.method {
 }
 
 /* TABLE */
+.segment-right .card {
+    overflow-y: scroll;
+}
+
+.customer-header {
+    position: sticky;
+    top: -20px;
+    background: white;
+    z-index: 2;
+    padding: 20px;
+}
+
+.customer-table thead th {
+    position: sticky;
+    top: 100px;
+    background: white;
+    z-index: 2;
+}
 
 .customer-search {
     width: 95%;
@@ -311,7 +329,9 @@ select.method {
 .customer-table {
     width: 100%;
     border-collapse: collapse;
+
 }
+
 
 .customer-table th {
     text-align: left;

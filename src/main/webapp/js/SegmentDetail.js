@@ -101,6 +101,7 @@ function changeInputType(fieldSelect) {
 
         newInput = document.createElement("input");
         newInput.className = "value";
+        newInput.name = 'value';
 
         if (type === "date") {
             newInput.type = "date";

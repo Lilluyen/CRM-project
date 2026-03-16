@@ -102,212 +102,218 @@
 
 
             <!-- CONFIG -->
-            <div class="tab-content" id="config">
-
-                <div class="card">
-                    <button
-                            style="background-color: #0a58ca;
+            <form method="post" action="${pageContext.request.contextPath}/customers/config-segment">
+                <div class="tab-content" id="config">
+                    <input type="hidden" name="segmentId" value="${segmentInfo.segmentId}">
+                    <div class="card">
+                        <button type="submit"
+                                style="background-color: #0a58ca;
                                 width: 70px;
                                 padding: 5px;
                                  border-radius: 5px;
                                 border: none;
                                 margin-left: 80%">
-                        <i class="fas fa-save" style="color: white"></i>
-                        <span style="margin-left: 5px; color: white">Save</span>
-                    </button>
-                    <div class="config-row" style="padding: 5px 0">
-                        <strong style="font-size: 18px">FILTER</strong>
+                            <i class="fas fa-save" style="color: white"></i>
+                            <span style="margin-left: 5px; color: white">Save</span>
+                        </button>
+                        <div class="config-row" style="padding: 5px 0">
+                            <strong style="font-size: 18px">FILTER</strong>
 
-                    </div>
+                        </div>
 
 
-                    <div class="config-row btn-add-filter" style="">
+                        <div class="config-row btn-add-filter" style="">
 
-                        <div class="group-condition">
+                            <div class="group-condition">
 
-                            <!-- template điều kiện -->
-                            <div id="conditions-container">
+                                <!-- template điều kiện -->
+                                <div id="conditions-container">
 
-                                <c:forEach items="${configs}" var="f">
+                                    <c:forEach items="${configs}" var="f">
+                                        <div class="condition-row">
+
+                                            <!-- FIELD -->
+                                            <select class="field" name="field">
+                                                <option value="last_purchase" data-type="date"
+                                                        <c:if test="${f.field eq 'last_purchase'}">selected</c:if>>Last
+                                                    Purchase
+                                                </option>
+
+                                                <option value="birthday" data-type="date" <c:if test="${f.field eq
+                                            'birthday'}">selected</c:if>>Birth Day
+                                                </option>
+
+                                                <option value="return_rate" data-type="number" <c:if test="${f.field eq
+                                            'return_rate'}">selected</c:if>>Return Rate
+                                                </option>
+
+                                                <option value="source" data-input="select" data-source="source-options"
+                                                        <c:if test="${f.field eq 'source'}">selected</c:if>>
+                                                    Source
+                                                </option>
+
+                                                <option value="loyalty_tier" data-input="select"
+                                                        data-source="loyalty-options"
+                                                        <c:if test="${f.field eq 'loyalty_tier'}">selected</c:if>>
+                                                    Loyalty Tier
+                                                </option>
+                                            </select>
+
+                                            <!-- OPERATOR -->
+                                            <select class="operator" name="operator">
+                                                <option value="=" <c:if test="${f.operator eq '='}">selected</c:if>>
+                                                    Equal
+                                                </option>
+                                                <option value=">" <c:if test="${f.operator eq '>'}">selected</c:if>>
+                                                    Greater
+                                                </option>
+                                                <option value="<" <c:if test="${f.operator eq '<'}">selected</c:if>>Less
+                                                </option>
+                                                <option value="LIKE"
+                                                        <c:if test="${f.operator eq 'LIKE'}">selected</c:if>>
+                                                    Contains
+                                                </option>
+                                            </select>
+
+                                            <!-- VALUE -->
+
+                                            <c:choose>
+                                                <c:when test="${f.field eq 'last_purchase' or f.field eq 'birthday'}">
+                                                    <input class="value" type="date" value="${f.value}" name="value"
+                                                           style="width: 110px;"/>
+                                                </c:when>
+
+                                                <c:when test="${f.field eq 'return_rate'}">
+                                                    <input class="value" type="number" step="any" value="${f.value}"
+                                                           name="value"
+                                                           style="width: 110px;"/>
+                                                </c:when>
+
+                                                <c:when test="${f.field eq 'source'}">
+                                                    <select style=" width: 110px" class="value" name="value">
+                                                        <c:forEach items="${sources}" var="s">
+                                                            <option value="${s}"
+                                                                    <c:if test="${f.value eq s}">selected</c:if>>${s}</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </c:when>
+
+                                                <c:otherwise>
+                                                    <select style=" width: 110px" class="value" name="value">
+                                                        <c:forEach items="${ranks}" var="r">
+                                                            <option value="${r}"
+                                                                    <c:if test="${f.value eq r}">selected</c:if>>${r}</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </c:otherwise>
+                                            </c:choose>
+
+                                            <!-- LOGIC -->
+
+                                            <select class="logic-operator" name="logic">
+                                                <option value="AND" <c:if test="${f.logic eq 'AND'}">selected</c:if>>AND
+                                                </option>
+                                                <option value="OR" <c:if test="${f.logic eq 'OR'}">selected</c:if>>OR
+                                                </option>
+                                            </select>
+                                            <button type="button" class="delete-condition">🗑</button>
+                                        </div>
+                                    </c:forEach>
+                                </div>
+
+                                <button type="button" id="add-condition">+ Add Condition</button>
+
+                                <template id="condition-template">
                                     <div class="condition-row">
 
                                         <!-- FIELD -->
-                                        <select class="field">
-                                            <option value="last_purchase" data-type="date"
-                                                    <c:if test="${f.field eq 'last_purchase'}">selected</c:if>>Last
-                                                Purchase
-                                            </option>
+                                        <select class="field" name="field">
+                                            <option value="last_purchase" data-type="date">Last Purchase</option>
 
-                                            <option value="birthday" data-type="date" <c:if test="${f.field eq
-                                            'birthday'}">selected</c:if>>Birth Day
-                                            </option>
+                                            <option value="birthday" data-type="date">Birth Day</option>
 
-                                            <option value="return_rate" data-type="number" <c:if test="${f.field eq
-                                            'return_rate'}">selected</c:if>>Return Rate
-                                            </option>
+                                            <option value="return_rate" data-type="number">Return Rate</option>
 
-                                            <option value="source" data-input="select" data-source="source-options"
-                                                    <c:if test="${f.field eq 'source'}">selected</c:if>>
+                                            <option value="source" data-input="select" data-source="source-options">
                                                 Source
                                             </option>
 
                                             <option value="loyalty_tier" data-input="select"
-                                                    data-source="loyalty-options"
-                                                    <c:if test="${f.field eq 'loyalty_tier'}">selected</c:if>>
+                                                    data-source="loyalty-options">
                                                 Loyalty Tier
                                             </option>
                                         </select>
 
                                         <!-- OPERATOR -->
-                                        <select class="operator">
-                                            <option value="=" <c:if test="${f.operator eq '='}">selected</c:if>>Equal
-                                            </option>
-                                            <option value=">" <c:if test="${f.operator eq '>'}">selected</c:if>>
-                                                Greater
-                                            </option>
-                                            <option value="<" <c:if test="${f.operator eq '<'}">selected</c:if>>Less
-                                            </option>
-                                            <option value="LIKE" <c:if test="${f.operator eq 'LIKE'}">selected</c:if>>
-                                                Contains
-                                            </option>
+                                        <select class="operator" name="operator">
+                                            <option value="=">Equal</option>
+                                            <option value=">">Greater</option>
+                                            <option value="<">Less</option>
+                                            <option value="LIKE">Contains</option>
                                         </select>
 
                                         <!-- VALUE -->
+                                        <select id="source-options" style="display: none; width: 115px" name="value">
 
-                                        <c:choose>
-                                            <c:when test="${f.field eq 'last_purchase' or f.field eq 'birthday'}">
-                                                <input class="value" type="date" value="${f.value}"
-                                                       style="width: 110px;"/>
-                                            </c:when>
+                                            <c:forEach items="${sources}" var="s">
+                                                <option value="${s}">${s}</option>
+                                            </c:forEach>
+                                        </select>
 
-                                            <c:when test="${f.field eq 'return_rate'}">
-                                                <input class="value" type="number" step="any" value="${f.value}"
-                                                       style="width: 110px;"/>
-                                            </c:when>
+                                        <select id="loyalty-options" style="display: none; width: 115px" name="value">
 
-                                            <c:when test="${f.field eq 'source'}">
-                                                <select style=" width: 110px" class="value">
-                                                    <c:forEach items="${sources}" var="s">
-                                                        <option value="${s}"
-                                                                <c:if test="${f.value eq s}">selected</c:if>>${s}</option>
-                                                    </c:forEach>
-                                                </select>
-                                            </c:when>
-
-                                            <c:otherwise>
-                                                <select style=" width: 110px" class="value">
-                                                    <c:forEach items="${ranks}" var="r">
-                                                        <option value="${r}"
-                                                                <c:if test="${f.value eq r}">selected</c:if>>${r}</option>
-                                                    </c:forEach>
-                                                </select>
-                                            </c:otherwise>
-                                        </c:choose>
+                                            <c:forEach items="${ranks}" var="r">
+                                                <option value="${r}">${r}</option>
+                                            </c:forEach>
+                                        </select>
 
                                         <!-- LOGIC -->
 
-                                        <select class="logic-operator">
-                                            <option value="AND" <c:if test="${f.logic eq 'AND'}">selected</c:if>>AND
-                                            </option>
-                                            <option value="OR" <c:if test="${f.logic eq 'OR'}">selected</c:if>>OR
-                                            </option>
+                                        <select class="logic-operator" name="logic">
+                                            <option value="AND">AND</option>
+                                            <option value="OR">OR</option>
                                         </select>
                                         <button type="button" class="delete-condition">🗑</button>
                                     </div>
-                                </c:forEach>
+
+                                </template>
+                            </div>
+                        </div>
+                        <div class="config-row">
+
+                            <div>
+                                <strong style="font-size: 18px">Auto Assignment</strong>
+                                <p class="config-desc">
+                                    Automatically assign customers to staff
+                                </p>
                             </div>
 
-                            <button type="button" id="add-condition">+ Add Condition</button>
+                            <label class="switch">
+                                <input type="checkbox"
+                                       <c:if test="${segmentInfo.segmentType eq 'DYNAMIC'}">checked</c:if>>
+                                <span class="slider"></span>
 
-                            <template id="condition-template">
-                                <div class="condition-row">
 
-                                    <!-- FIELD -->
-                                    <select class="field">
-                                        <option value="last_purchase" data-type="date">Last Purchase</option>
+                            </label>
 
-                                        <option value="birthday" data-type="date">Birth Day</option>
 
-                                        <option value="return_rate" data-type="number">Return Rate</option>
-
-                                        <option value="source" data-input="select" data-source="source-options">
-                                            Source
-                                        </option>
-
-                                        <option value="loyalty_tier" data-input="select" data-source="loyalty-options">
-                                            Loyalty Tier
-                                        </option>
-                                    </select>
-
-                                    <!-- OPERATOR -->
-                                    <select class="operator">
-                                        <option value="=">Equal</option>
-                                        <option value=">">Greater</option>
-                                        <option value="<">Less</option>
-                                        <option value="LIKE">Contains</option>
-                                    </select>
-
-                                    <!-- VALUE -->
-                                    <select id="source-options" style="display: none; width: 115px">
-
-                                        <c:forEach items="${sources}" var="s">
-                                            <option value="${s}">${s}</option>
-                                        </c:forEach>
-                                    </select>
-
-                                    <select id="loyalty-options" style="display: none; width: 115px">
-
-                                        <c:forEach items="${ranks}" var="r">
-                                            <option value="${r}">${r}</option>
-                                        </c:forEach>
-                                    </select>
-
-                                    <!-- LOGIC -->
-
-                                    <select class="logic-operator">
-                                        <option value="AND">AND</option>
-                                        <option value="OR">OR</option>
-                                    </select>
-                                    <button type="button" class="delete-condition">🗑</button>
-                                </div>
-
-                            </template>
                         </div>
-                    </div>
-                    <div class="config-row">
+                        <span class="method">Method assign customer to staff</span>
+                        <select class="method" name="assignmentType">
 
-                        <div>
-                            <strong style="font-size: 18px">Auto Assignment</strong>
-                            <p class="config-desc">
-                                Automatically assign customers to staff
-                            </p>
-                        </div>
-
-                        <label class="switch">
-                            <input type="checkbox"
-                                   <c:if test="${segmentInfo.segmentType eq 'DYNAMIC'}">checked</c:if>>
-                            <span class="slider"></span>
-
-
-                        </label>
-
+                            <option value="ROUND_ROBIN" <c:if test="${segmentInfo.assignType eq 'ROUND_ROBIN'}">checked
+                            </c:if>>Default
+                            </option>
+                            <option value="LEAST_CUSTOMERS"
+                                    <c:if test="${segmentInfo.assignType eq 'LEAST_CUSTOMERS'}">checked
+                            </c:if> >Least Customer is Assign first
+                            </option>
+                        </select>
 
                     </div>
-                    <span class="method">Method assign customer to staff</span>
-                    <select class="method">
-
-                        <option value="ROUND_ROBIN" <c:if test="${segmentInfo.assignType eq 'ROUND_ROBIN'}">checked
-                        </c:if>>Default
-                        </option>
-                        <option value="LEAST_CUSTOMERS"
-                                <c:if test="${segmentInfo.assignType eq 'LEAST_CUSTOMERS'}">checked
-                        </c:if> >Least Customer is Assign first
-                        </option>
-                    </select>
 
                 </div>
-
-            </div>
+            </form>
 
 
             <!-- HISTORY -->
