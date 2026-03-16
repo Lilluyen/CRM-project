@@ -14,6 +14,7 @@ import model.Lead;
 import model.User;
 import service.CampaignService;
 import service.LeadService;
+import util.PhoneCheck;
 
 @WebServlet(name = "LeadFormController", urlPatterns = {"/marketing/leads/form"})
 public class LeadFormController extends HttpServlet {
@@ -164,6 +165,9 @@ public class LeadFormController extends HttpServlet {
         }
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
+        }
+        if (phone != null && !phone.trim().isEmpty() && !PhoneCheck.isValidPhone(phone.trim())) {
+            throw new IllegalArgumentException("Số điện thoại phải gồm đúng 10 chữ số.");
         }
 
         Lead lead = new Lead();

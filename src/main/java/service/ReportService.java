@@ -58,8 +58,8 @@ public class ReportService {
      * Tạo report thống kê cho một campaign (dùng trong Campaign Detail).
      */
     public CampaignReport generateReport(int campaignId) {
-        int totalLead = leadDAO.countLeads(null, null, campaignId);
-        int qualifiedLead = leadDAO.countLeads(null, "QUALIFIED", campaignId);
+        int totalLead = leadDAO.countLeads(null, null, campaignId, null);
+        int qualifiedLead = leadDAO.countLeads(null, "QUALIFIED", campaignId, null);
 
         DealResultReportDTO dealResult = getDealResultReport(campaignId, null, null);
         int convertedLead = dealResult.getTotalDeals(); // Deals Created

@@ -129,6 +129,22 @@ public class LeadDAO {
         return null;
     }
 
+    //Tìm lead theo interest
+    public List<Lead> findLeadByInterest(String interest) {
+        String sql = "SELECT * FROM Leads WHERE interest = ?";
+        List<Lead> leads = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, interest);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                leads.add(mapResultSetToLead(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return leads;
+    }
+
     /**
      * Tìm lead theo email + campaign_id (kiểm tra trùng trong cùng campaign). 1
      * người có thể tham gia nhiều campaign → mỗi campaign có Lead record riêng.
@@ -383,62 +399,53 @@ public class LeadDAO {
     // ==============================
     // SEARCH + PAGINATION (OFFSET / FETCH)
     // ==============================
-    public List<Lead> searchLeads(String keyword, String status, int campaignId, int page, int pageSize) {
-        String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
-                + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
-
-        // Nếu lọc theo campaign → LEFT JOIN Campaign_Leads + kiểm tra cả 2 nguồn
-        if (campaignId > 0) {
-            sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
-        }
-
-        sql += "WHERE 1=1";
-        List<Object> params = new ArrayList<>();
-
-        if (campaignId > 0) {
-            sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
-            params.add(campaignId);
-            params.add(campaignId);
-        }
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
-            String kw = "%" + keyword.trim() + "%";
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
-        }
-        if (status != null && !status.trim().isEmpty()) {
-            sql += " AND l.status = ?";
-            params.add(status);
-        }
-
-        sql += " ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        int offset = (page - 1) * pageSize;
-        params.add(offset);
-        params.add(pageSize);
-
-        List<Lead> leads = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Lead lead = mapResultSetToLead(rs);
-                // Set campaign name từ LEFT JOIN
-                String campName = rs.getString("campaign_name");
-                if (campName != null) {
-                    lead.setCampaignName(campName);
-                }
-                leads.add(lead);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return leads;
+    public List<Lead> searchLeads(String keyword, String status, int campaignId, String interest, int page, int pageSize) {
+    String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
+            + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
+    if (campaignId > 0) {
+        sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
     }
+    sql += "WHERE 1=1";
+    List<Object> params = new ArrayList<>();
+    if (campaignId > 0) {
+        sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
+        params.add(campaignId);
+        params.add(campaignId);
+    }
+    if (keyword != null && !keyword.trim().isEmpty()) {
+        sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
+        String kw = "%" + keyword.trim() + "%";
+        params.add(kw); params.add(kw); params.add(kw);
+    }
+    if (status != null && !status.trim().isEmpty()) {
+        sql += " AND l.status = ?";
+        params.add(status);
+    }
+    if (interest != null && !interest.trim().isEmpty()) {
+        sql += " AND l.interest LIKE ?";
+        params.add("%" + interest.trim() + "%");
+    }
+    sql += " ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+    int offset = (page - 1) * pageSize;
+    params.add(offset); params.add(pageSize);
 
-    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId) {
+    List<Lead> leads = new ArrayList<>();
+    try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            Lead lead = mapResultSetToLead(rs);
+            String campName = rs.getString("campaign_name");
+            if (campName != null) lead.setCampaignName(campName);
+            leads.add(lead);
+        }
+    } catch (Exception e) { e.printStackTrace(); }
+    return leads;
+}
+
+    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId, String interest) {
         String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
                 + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
 
@@ -464,6 +471,10 @@ public class LeadDAO {
         if (status != null && !status.trim().isEmpty()) {
             sql += " AND l.status = ?";
             params.add(status);
+        }
+        if (interest != null && !interest.trim().isEmpty()) {
+            sql += " AND l.interest LIKE ?";
+            params.add("%" + interest.trim() + "%");
         }
 
         sql += " ORDER BY l.updated_at DESC";
@@ -491,7 +502,7 @@ public class LeadDAO {
     // ==============================
     // COUNT FOR PAGINATION
     // ==============================
-    public int countLeads(String keyword, String status, int campaignId) {
+    public int countLeads(String keyword, String status, int campaignId, String interest) {
         String sql = "SELECT COUNT(DISTINCT l.lead_id) FROM Leads l ";
 
         // Nếu lọc theo campaign → LEFT JOIN Campaign_Leads + kiểm tra cả 2 nguồn
@@ -518,6 +529,11 @@ public class LeadDAO {
             sql += " AND l.status = ?";
             params.add(status);
         }
+        if (interest != null && !interest.trim().isEmpty()) {
+            sql += " AND l.interest LIKE ?";
+            params.add("%" + interest.trim() + "%");
+        }
+
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             for (int i = 0; i < params.size(); i++) {

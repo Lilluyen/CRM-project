@@ -4,7 +4,7 @@
  * ==================================== */
 
 .col-10 > .container-fluid {
-    margin-top: 100px;
+  margin-top: 100px;
 }
 
 /* ====================================
@@ -12,20 +12,20 @@
  * ==================================== */
 
 .filter-card {
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-radius: 8px;
-    margin-bottom: 2rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  margin-bottom: 2rem;
 }
 
 .filter-card .card-body {
-    padding: 1.5rem;
+  padding: 1.5rem;
 }
 
 .filter-card h6 {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 1rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 1rem;
 }
 
 /* ====================================
@@ -33,9 +33,9 @@
  * ==================================== */
 
 .table-wrapper {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* ====================================
@@ -43,36 +43,36 @@
  * ==================================== */
 
 .badge-status {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    border-radius: 4px;
-    display: inline-block;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 4px;
+  display: inline-block;
 }
 
 .badge-new {
-    background-color: #d1ecf1;
-    color: #0c5460;
+  background-color: #d1ecf1;
+  color: #0c5460;
 }
 
 .badge-contacted {
-    background-color: #fff3cd;
-    color: #856404;
+  background-color: #fff3cd;
+  color: #856404;
 }
 
 .badge-qualified {
-    background-color: #d4edda;
-    color: #155724;
+  background-color: #d4edda;
+  color: #155724;
 }
 
 .badge-deal {
-    background-color: #cce5ff;
-    color: #004085;
+  background-color: #cce5ff;
+  color: #004085;
 }
 
 .badge-lost {
-    background-color: #f8d7da;
-    color: #721c24;
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 /* ====================================
@@ -80,28 +80,28 @@
  * ==================================== */
 
 .score-badge {
-    display: inline-block;
-    padding: 0.35rem 0.65rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    min-width: 45px;
-    text-align: center;
+  display: inline-block;
+  padding: 0.35rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: center;
 }
 
 .score-hot {
-    background-color: #f8d7da;
-    color: #721c24;
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 .score-warm {
-    background-color: #fff3cd;
-    color: #856404;
+  background-color: #fff3cd;
+  color: #856404;
 }
 
 .score-cold {
-    background-color: #d1ecf1;
-    color: #0c5460;
+  background-color: #d1ecf1;
+  color: #0c5460;
 }
 
 /* ====================================
@@ -109,12 +109,12 @@
  * ==================================== */
 
 .btn-action {
-    transition: all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* ====================================
@@ -122,24 +122,24 @@
  * ==================================== */
 
 .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
+  text-align: center;
+  padding: 3rem 1rem;
 }
 
 .empty-state i {
-    font-size: 4rem;
-    color: #ccc;
-    margin-bottom: 1rem;
+  font-size: 4rem;
+  color: #ccc;
+  margin-bottom: 1rem;
 }
 
 .empty-state h5 {
-    color: #6c757d;
-    font-weight: 500;
+  color: #6c757d;
+  font-weight: 500;
 }
 
 .empty-state p {
-    color: #999;
-    margin-bottom: 1rem;
+  color: #999;
+  margin-bottom: 1rem;
 }
 
 /* ====================================
@@ -147,20 +147,24 @@
  * ==================================== */
 
 .stats-card {
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
 }
 
 .stats-card .card-body {
-    padding: 1.5rem;
+  padding: 1.5rem;
 }
 
 .stats-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #0d6efd;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d6efd;
+}
+
+.bg-total-lead {
+  background-color: #0b0c0b !important; /* hoặc màu bạn muốn */
 }
 
 /* ====================================
@@ -168,12 +172,12 @@
  * ==================================== */
 
 @media (max-width: 768px) {
-    .filter-card .row > div {
-        margin-bottom: 0.5rem;
-    }
+  .filter-card .row > div {
+    margin-bottom: 0.5rem;
+  }
 
-    .score-badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-    }
+  .score-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
 }
