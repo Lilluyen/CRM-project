@@ -1,6 +1,7 @@
 package dto.report;
 
 public class CampaignPerformanceReportDTO {
+
     private String campaignName;
     private int totalLeads;
     private int dealsCreated;
@@ -8,7 +9,8 @@ public class CampaignPerformanceReportDTO {
     private int dealsLost;
     private double conversionRate;
 
-    public CampaignPerformanceReportDTO() {}
+    public CampaignPerformanceReportDTO() {
+    }
 
     public CampaignPerformanceReportDTO(String campaignName, int totalLeads, int dealsCreated,
             int dealsWon, int dealsLost, double conversionRate) {
@@ -20,21 +22,51 @@ public class CampaignPerformanceReportDTO {
         this.conversionRate = conversionRate;
     }
 
-    public String getCampaignName() { return campaignName; }
-    public void setCampaignName(String campaignName) { this.campaignName = campaignName; }
+    public String getCampaignName() {
+        return campaignName;
+    }
 
-    public int getTotalLeads() { return totalLeads; }
-    public void setTotalLeads(int totalLeads) { this.totalLeads = totalLeads; }
+    public void setCampaignName(String campaignName) {
+        this.campaignName = campaignName;
+    }
 
-    public int getDealsCreated() { return dealsCreated; }
-    public void setDealsCreated(int dealsCreated) { this.dealsCreated = dealsCreated; }
+    public int getTotalLeads() {
+        return totalLeads;
+    }
 
-    public int getDealsWon() { return dealsWon; }
-    public void setDealsWon(int dealsWon) { this.dealsWon = dealsWon; }
+    public void setTotalLeads(int totalLeads) {
+        this.totalLeads = totalLeads;
+    }
 
-    public int getDealsLost() { return dealsLost; }
-    public void setDealsLost(int dealsLost) { this.dealsLost = dealsLost; }
+    public int getDealsCreated() {
+        return dealsCreated;
+    }
 
-    public double getConversionRate() { return conversionRate; }
-    public void setConversionRate(double conversionRate) { this.conversionRate = conversionRate; }
+    public void setDealsCreated(int dealsCreated) {
+        this.dealsCreated = dealsCreated;
+    }
+
+    public int getDealsWon() {
+        return dealsWon;
+    }
+
+    public void setDealsWon(int dealsWon) {
+        this.dealsWon = dealsWon;
+    }
+
+    public int getDealsLost() {
+        return dealsLost;
+    }
+
+    public void setDealsLost(int dealsLost) {
+        this.dealsLost = dealsLost;
+    }
+
+    public double getConversionRate() {
+        return conversionRate;
+    }
+
+    public void setConversionRate(double conversionRate) {
+        this.conversionRate = conversionRate;
+    }
 }

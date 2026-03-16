@@ -3,6 +3,7 @@ package controller.marketing;
 import java.io.IOException;
 import java.util.List;
 
+import dto.report.DealResultReportDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,25 +12,26 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Campaign;
 import service.CampaignService;
 import service.LeadService;
+import service.ReportService;
 
 @WebServlet(name = "MarketingDashboardController", urlPatterns = {"/marketing/dashboard"})
 public class MarketingDashboardController extends HttpServlet {
 
     private final LeadService leadService = new LeadService();
     private final CampaignService campaignService = new CampaignService();
+    private final ReportService reportService = new ReportService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Tổng quan Leads
-        int totalLeads = leadService.countLeads(null, null, 0, request.getParameter("interest"));
-        int newLeads = leadService.countLeads(null, "NEW_LEAD", 0, request.getParameter("interest"));
-        int contactedLeads = leadService.countLeads(null, "CONTACTED", 0, request.getParameter("interest"));
-        int qualifiedLeads = leadService.countLeads(null, "QUALIFIED", 0, request.getParameter("interest"));
-        int dealCreatedLeads = leadService.countLeads(null, "DEAL_CREATED", 0, request.getParameter("interest"));
-        int lostLeads = leadService.countLeads(null, "LOST", 0, request.getParameter("interest"));
-        int interestLeads = leadService.countLeads(null, null, 0, request.getParameter("interest"));
+        // Tổng quan Leads (toàn hệ thống, không filter theo interest)
+        int totalLeads = leadService.countLeads(null, null, 0, null);
+        int newLeads = leadService.countLeads(null, "NEW_LEAD", 0, null);
+        int contactedLeads = leadService.countLeads(null, "CONTACTED", 0, null);
+        int qualifiedLeads = leadService.countLeads(null, "QUALIFIED", 0, null);
+        int dealCreatedLeads = leadService.countLeads(null, "DEAL_CREATED", 0, null);
+        int lostLeads = leadService.countLeads(null, "LOST", 0, null);
 
         // Tổng quan Campaigns
         int totalCampaigns = campaignService.countCampaigns(null, null);
@@ -40,12 +42,16 @@ public class MarketingDashboardController extends HttpServlet {
         // Top 5 campaigns đang chạy
         List<Campaign> topCampaigns = campaignService.searchCampaigns(null, "ACTIVE", 1, 5);
 
-        // Leads mới nhất (5 leads)
-        List<model.Lead> recentLeads = leadService.searchLeads(null, null, 0, request.getParameter("interest"), 1, 5);
+        // Leads mới nhất (5 leads, toàn hệ thống)
+        List<model.Lead> recentLeads = leadService.searchLeads(
+                null, null, 0, null, 1, 5);
 
-        // Conversion rate tổng
+        // Conversion rate tổng (thống nhất với ReportService):
+        // deals WON / total leads * 100
+        DealResultReportDTO overallDealResult = reportService.getDealResultReport(null, null, null);
         double conversionRate = totalLeads > 0
-                ? (double) dealCreatedLeads / totalLeads * 100 : 0;
+                ? overallDealResult.getDealsWon() * 100.0 / totalLeads
+                : 0;
 
         // Set attributes
         request.setAttribute("totalLeads", totalLeads);
