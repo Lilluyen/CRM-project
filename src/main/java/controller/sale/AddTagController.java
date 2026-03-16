@@ -1,20 +1,16 @@
 package controller.sale;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.CustomerService;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @WebServlet("/add-tag")
 public class AddTagController extends HttpServlet {
@@ -34,25 +30,29 @@ public class AddTagController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request,
-            HttpServletResponse response)
+                         HttpServletResponse response)
             throws ServletException, IOException {
-        int customerId = Integer.parseInt(request.getParameter("customerId"));
+
+        int customerId;
         try {
+            customerId = Integer.parseInt(request.getParameter("customerId"));
             response.sendRedirect(request.getContextPath() + "/customers/detail?customerId=" + customerId);
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/customers");
         } catch (Exception e) {
             log("Error redirecting to customer detail", e);
 
-            response.sendRedirect(request.getContextPath() + "/customers/detail?customerId=" + customerId);
+            response.sendRedirect(request.getContextPath() + "/customers");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request,
-            HttpServletResponse response)
+                          HttpServletResponse response)
             throws ServletException, IOException {
-        int customerId = Integer.parseInt(request.getParameter("customerId"));
+        int customerId;
         try {
-
+            customerId = Integer.parseInt(request.getParameter("customerId"));
             List<Integer> styleTags = new ArrayList<>();
             String[] tagParams = request.getParameterValues("tagIds");
 
@@ -65,10 +65,12 @@ public class AddTagController extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/customers/detail?customerId=" + customerId);
 
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
         } catch (Exception e) {
             log("Error adding tags to customer", e);
             request.setAttribute("errorMessage", "Failed to add tags to customer.");
-            response.sendRedirect(request.getContextPath() + "/customers/detail?customerId=" + customerId);
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
         }
 
     }

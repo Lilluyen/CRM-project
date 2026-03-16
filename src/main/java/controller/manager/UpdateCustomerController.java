@@ -1,17 +1,6 @@
 package controller.manager;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import dto.CustomerCreateDTO;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
@@ -22,7 +11,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.CustomerService;
 
-@WebServlet(name = "UpdateCustomerController", urlPatterns = { "/customers/edit" })
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
 public class UpdateCustomerController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -45,30 +41,22 @@ public class UpdateCustomerController extends HttpServlet {
         String customerIdRaw = request.getParameter("customerId");
 
         if (customerIdRaw == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             return;
         }
 
         try {
             int customerId = Integer.parseInt(customerIdRaw);
 
-            request.setAttribute("customerDetail",
-                    customerService.getCustomerDetail(customerId));
-
-            request.setAttribute("allStyleTags",
-                    customerService.getListStyleTags());
-
-            // Layout attributes
-            request.setAttribute("pageTitle", "Customer Edit | Clothes CRM");
-            request.setAttribute("contentPage", "customer/edit_customer.jsp");
-            request.setAttribute("pageCss", "customer-add.css");
-            // request.setAttribute("pageJs", "customer-edit.js");
-            request.setAttribute("page", "customer-add");
-
+            reloadFormData(request, customerId);
             request.getRequestDispatcher("/view/layout.jsp")
                     .forward(request, response);
 
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
+
         } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             throw new ServletException(e);
         }
     }
@@ -85,144 +73,147 @@ public class UpdateCustomerController extends HttpServlet {
         try {
 
             customerId = Integer.parseInt(customerIdRaw);
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
 
-        // Trim trước khi validate
-        String name = request.getParameter("name") != null
-                ? request.getParameter("name").trim()
-                : null;
 
-        String phone = request.getParameter("phone") != null
-                ? request.getParameter("phone").trim()
-                : null;
+            // Trim trước khi validate
+            String name = request.getParameter("name") != null
+                    ? request.getParameter("name").trim()
+                    : null;
 
-        String email = request.getParameter("email") != null
-                ? request.getParameter("email").trim()
-                : null;
+            String phone = request.getParameter("phone") != null
+                    ? request.getParameter("phone").trim()
+                    : null;
 
-        String gender = request.getParameter("gender");
-        String birthdayRaw = request.getParameter("birthday");
-        String address = request.getParameter("address");
-        String source = request.getParameter("source");
-        String[] tagIdsRaw = request.getParameterValues("tagIds");
+            String email = request.getParameter("email") != null
+                    ? request.getParameter("email").trim()
+                    : null;
 
-        // ======================
-        // VALIDATION
-        // ======================
-        if (name == null || name.isEmpty()) {
-            errors.add("Name is required !");
-        }
+            String gender = request.getParameter("gender");
+            String birthdayRaw = request.getParameter("birthday");
+            String address = request.getParameter("address");
+            String source = request.getParameter("source");
+            String[] tagIdsRaw = request.getParameterValues("tagIds");
 
-        if (phone == null || phone.isEmpty()) {
-            errors.add("Phone is required !");
-        } else if (!phone.matches("^[0-9]{9,15}$")) {
-            errors.add("Phone must be 9-11 digits");
-        }
-
-        if (email == null || email.isEmpty()) {
-            errors.add("Email is required !");
-        } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            errors.add("Invalid email format !");
-        }
-
-        LocalDate birthday = null;
-
-        if (birthdayRaw == null || birthdayRaw.isBlank()) {
-            errors.add("Birthday is required !");
-        } else {
-            try {
-                birthday = LocalDate.parse(birthdayRaw);
-                if (birthday.isAfter(LocalDate.now())) {
-                    errors.add("Birthday must be in the past !");
-                }
-            } catch (DateTimeParseException e) {
-                errors.add("Invalid birthday format !");
+            // ======================
+            // VALIDATION
+            // ======================
+            if (name == null || name.isEmpty()) {
+                errors.add("Name is required !");
             }
-        }
 
-        if (gender == null
-                || (!gender.equalsIgnoreCase("Male")
-                        && !gender.equalsIgnoreCase("Female"))) {
-            errors.add("Invalid gender !");
-        }
+            if (phone == null || phone.isEmpty()) {
+                errors.add("Phone is required !");
+            } else if (!phone.matches("^[0-9]{9,15}$")) {
+                errors.add("Phone must be 9-11 digits");
+            }
 
-        BigDecimal height = parseBigDecimal(request.getParameter("height"));
-        BigDecimal weight = parseBigDecimal(request.getParameter("weight"));
-        String preferredSize = request.getParameter("preferred_size");
+            if (email == null || email.isEmpty()) {
+                errors.add("Email is required !");
+            } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                errors.add("Invalid email format !");
+            }
 
-        BigDecimal bust = parseBigDecimal(request.getParameter("bust"));
-        BigDecimal waist = parseBigDecimal(request.getParameter("waist"));
-        BigDecimal hips = parseBigDecimal(request.getParameter("hips"));
-        BigDecimal shoulder = parseBigDecimal(request.getParameter("shoulder"));
+            LocalDate birthday = null;
 
-        String bodyShape = request.getParameter("bodyShape");
+            if (birthdayRaw == null || birthdayRaw.isBlank()) {
+                errors.add("Birthday is required !");
+            } else {
+                try {
+                    birthday = LocalDate.parse(birthdayRaw);
+                    if (birthday.isAfter(LocalDate.now())) {
+                        errors.add("Birthday must be in the past !");
+                    }
+                } catch (DateTimeParseException e) {
+                    errors.add("Invalid birthday format !");
+                }
+            }
 
-        // ======================
-        // Nếu có lỗi → reload data
-        // ======================
-        if (!errors.isEmpty()) {
+            if (gender == null
+                    || (!gender.equalsIgnoreCase("Male")
+                    && !gender.equalsIgnoreCase("Female"))) {
+                errors.add("Invalid gender !");
+            }
 
+            BigDecimal height = parseBigDecimal(request.getParameter("height"));
+            BigDecimal weight = parseBigDecimal(request.getParameter("weight"));
+            String preferredSize = request.getParameter("preferred_size");
+
+            BigDecimal bust = parseBigDecimal(request.getParameter("bust"));
+            BigDecimal waist = parseBigDecimal(request.getParameter("waist"));
+            BigDecimal hips = parseBigDecimal(request.getParameter("hips"));
+            BigDecimal shoulder = parseBigDecimal(request.getParameter("shoulder"));
+
+            String bodyShape = request.getParameter("bodyShape");
+
+            // ======================
+            // Nếu có lỗi → reload data
+            // ======================
+            if (!errors.isEmpty()) {
+
+                reloadFormData(request, customerId);
+
+                request.setAttribute("errors", errors);
+                request.getRequestDispatcher("/view/layout.jsp")
+                        .forward(request, response);
+                return;
+            }
+
+            try {
+                List<Integer> tagIds = new ArrayList<>();
+
+                if (tagIdsRaw != null) {
+                    for (String id : tagIdsRaw) {
+                        tagIds.add(Integer.parseInt(id));
+                    }
+                }
+
+                CustomerCreateDTO dto = new CustomerCreateDTO();
+                dto.setCustomer_id(customerId);
+                dto.setName(name);
+                dto.setPhone(phone);
+                dto.setEmail(email);
+                dto.setGender(gender);
+                dto.setBirthday(birthday);
+                dto.setAddress(address);
+                dto.setSource(source);
+                dto.setStyleTags(tagIds);
+                dto.setHeight(height);
+                dto.setWeight(weight);
+                dto.setPreferredSize(preferredSize);
+
+                dto.setBust(bust);
+                dto.setWaist(waist);
+                dto.setHips(hips);
+                dto.setShoulder(shoulder);
+                dto.setBodyShape(bodyShape);
+
+                customerService.updateCustomer(dto, customerId);
+
+                response.sendRedirect(
+                        request.getContextPath()
+                                + "/customers/detail?customerId=" + customerId);
+                return;
+
+            } catch (DuplicateEmailException e) {
+                errors.add("Email already exists !");
+            } catch (DuplicatePhoneException e) {
+                errors.add("Phone already exists !");
+            } catch (Exception e) {
+                errors.add("System error: " + e.getMessage());
+            }
+
+            // Nếu exception xảy ra → reload lại form
             reloadFormData(request, customerId);
 
             request.setAttribute("errors", errors);
             request.getRequestDispatcher("/view/layout.jsp")
                     .forward(request, response);
-            return;
-        }
-
-        try {
-            List<Integer> tagIds = new ArrayList<>();
-
-            if (tagIdsRaw != null) {
-                for (String id : tagIdsRaw) {
-                    tagIds.add(Integer.parseInt(id));
-                }
-            }
-
-            CustomerCreateDTO dto = new CustomerCreateDTO();
-            dto.setCustomer_id(customerId);
-            dto.setName(name);
-            dto.setPhone(phone);
-            dto.setEmail(email);
-            dto.setGender(gender);
-            dto.setBirthday(birthday);
-            dto.setAddress(address);
-            dto.setSource(source);
-            dto.setStyleTags(tagIds);
-            dto.setHeight(height);
-            dto.setWeight(weight);
-            dto.setPreferredSize(preferredSize);
-
-            dto.setBust(bust);
-            dto.setWaist(waist);
-            dto.setHips(hips);
-            dto.setShoulder(shoulder);
-            dto.setBodyShape(bodyShape);
-
-            customerService.updateCustomer(dto, customerId);
-
-            response.sendRedirect(
-                    request.getContextPath()
-                            + "/customers/detail?customerId=" + customerId);
-            return;
-
-        } catch (DuplicateEmailException e) {
-            errors.add("Email already exists !");
-        } catch (DuplicatePhoneException e) {
-            errors.add("Phone already exists !");
         } catch (Exception e) {
-            errors.add("System error: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
+
         }
 
-        // Nếu exception xảy ra → reload lại form
-        reloadFormData(request, customerId);
 
-        request.setAttribute("errors", errors);
-        request.getRequestDispatcher("/view/layout.jsp")
-                .forward(request, response);
     }
 
     private void reloadFormData(HttpServletRequest request, int customerId)

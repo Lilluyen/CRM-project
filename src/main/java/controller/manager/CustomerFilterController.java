@@ -47,8 +47,8 @@ public class CustomerFilterController extends HttpServlet {
             page = getPage(request, "page");
             size = getSize(request, "size");
             String keyword = trimToNull(request.getParameter("keyword"));
-            List<String> loyaltyTiers = parseCSV(request.getParameter("loyaltyFilter"));
-            List<String> source = parseCSV(request.getParameter("source"));
+            List<String> loyaltyTiers = parseCSV(request.getParameterValues("loyaltyFilter"));
+            List<String> source = parseCSV(request.getParameterValues("source"));
             String returnRate = (trimToNull(request.getParameter("returnRateFilter")));
             String gender = trimToNull(request.getParameter("gender"));
             List<TimeCondition> timeConditions = getTimeConditionDatas(request);
@@ -90,11 +90,11 @@ public class CustomerFilterController extends HttpServlet {
         return s.isEmpty() ? null : s;
     }
 
-    private List<String> parseCSV(String raw) {
-        if (raw == null || raw.isBlank()) {
+    private List<String> parseCSV(String[] raw) {
+        if (raw == null || raw.length == 0) {
             return null;
         }
-        return Arrays.stream(raw.split(","))
+        return Arrays.stream(raw)
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
@@ -121,7 +121,7 @@ public class CustomerFilterController extends HttpServlet {
         List<TimeCondition> timeConditions = new ArrayList<>();
         if (dates != null) {
             for (int i = 0; i < dates.length; i++) {
-                if (dates[i] != null && !dates[i].isBlank()) {
+                if (ControllerUltil.parseDate(dates[i]) != null && !dates[i].isBlank()) {
                     TimeCondition t = new TimeCondition(fields[i], operators[i], LocalDate.parse(dates[i]),
                             (i + 1 == dates.length) ? null : subConditions[i]);
                     timeConditions.add(t);

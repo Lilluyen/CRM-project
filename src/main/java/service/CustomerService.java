@@ -3,6 +3,7 @@ package service;
 import dao.*;
 import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
+import dto.TimeCondition;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
 import mapper.CustomerMapper;
@@ -135,9 +136,9 @@ public class CustomerService {
     }
 
     public int countTotalCustomer(String raturnRate
-            , String keyword, List<String> loyaltyTier, List<String> source) throws SQLException {
+            , String keyword, List<String> loyaltyTier, List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
-            int totalCustomer = customerQueryDAO.countTotalCustomers(conn, raturnRate, keyword, loyaltyTier, source);
+            int totalCustomer = customerQueryDAO.countTotalCustomers(conn, raturnRate, keyword, loyaltyTier, source, gender, timeConditions);
             return totalCustomer;
         }
     }
@@ -259,10 +260,12 @@ public class CustomerService {
         }
     }
 
-    public List<Customer> filterAdvanced(
+    public List<Customer> filterAdvanced(String keyword,
+                                         String returnRate, List<String> loyaltyTier,
+                                         List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size
     ) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
-            return customerQueryDAO.filterAdvanced(conn);
+            return customerQueryDAO.filterAdvanced(conn, keyword, returnRate, loyaltyTier, source, gender, timeConditions, page, size);
         }
     }
 
@@ -294,5 +297,15 @@ public class CustomerService {
         }
     }
 
+    public List<String> getSources() throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return customerDAO.getSources(conn);
+        }
+    }
 
+    public List<String> getRanks() throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return customerDAO.getRanks(conn);
+        }
+    }
 }

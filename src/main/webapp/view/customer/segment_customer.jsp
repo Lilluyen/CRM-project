@@ -110,7 +110,8 @@
                 <tr>
                     <td>
                         <div
-                                class="seg-name"><a class="seg-name" href="${pageContext.request.contextPath}/#">
+                                class="seg-name"><a class="seg-name"
+                                                    href="${pageContext.request.contextPath}/customers/segment-detail?segment_id=${c.segmentId}">
                                 ${c.segmentName}
                         </a></div>
                         <div class="seg-desc">

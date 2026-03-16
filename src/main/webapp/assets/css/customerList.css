@@ -71,9 +71,9 @@ h1 {
 .search-box input {
     width: 350px;
     padding: 10px 16px;
-    border: 2px solid black;
     border-radius: 10px;
     outline: none;
+    border: 1px solid var(--border);
 }
 
 .btn-filter {
@@ -87,10 +87,20 @@ h1 {
     margin-top: 25px;
 }
 
+.btn-filter:hover {
+    background-color: #fe820e;
+    color: white;
+}
+
 .btn-return-rate {
     background: white;
     border: 2px solid var(--border);
     border-radius: 4px;
+}
+
+.btn-return-rate:hover {
+    background-color: #fe820e;
+    color: white;
 }
 
 .btn-add {
@@ -153,6 +163,35 @@ h1 {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+.btn-segment {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 20px;
+
+    position: absolute;
+    top: 228px;
+    left: 45.8%;
+}
+
+.btn-segment:hover {
+    background-color: #fe820e;
+    color: white;
+}
+
+.btn-assign-task {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 20px;
+    position: absolute;
+    top: 228px;
+    left: 61%;
+}
+
+.btn-assign-task:hover {
+    background-color: #fe820e;
+    color: white;
 }
 
 /* Table Card Styling */
@@ -1074,7 +1113,5 @@ td:nth-child(7) {
     height: 100%;
     z-index: -1;
 }
-
-/* ...existing code... */
 
 /* ...existing code... */

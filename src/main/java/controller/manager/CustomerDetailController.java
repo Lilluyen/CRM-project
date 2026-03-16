@@ -1,13 +1,6 @@
 package controller.manager;
 
-import java.io.IOException;
-import java.util.List;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,9 +9,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.StyleTag;
 import service.CustomerService;
-import util.ControllerUltil;
 
-@WebServlet(name = "CustomerDetailController", urlPatterns = { "/customers/detail" })
+import java.io.IOException;
+import java.util.List;
+
+@WebServlet(name = "CustomerDetailController", urlPatterns = {"/customers/detail"})
 public class CustomerDetailController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -42,16 +37,23 @@ public class CustomerDetailController extends HttpServlet {
             String customerIdRaw = request.getParameter("customerId");
 
             if (customerIdRaw == null || customerIdRaw.isBlank()) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "customerId is required");
+                response.sendRedirect(request.getContextPath() + "/customers");
                 return;
             }
-            int customerId = Integer.parseInt(customerIdRaw);
+            int customerId;
+            try {
+                customerId = Integer.parseInt(customerIdRaw);
+            } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/customers");
+
+                return;
+            }
 
             // 🔥 GỌI SERVICE
             CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
             List<StyleTag> styleTags = customerService.getListStyleTags();
             if (customerDetail == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Customer not found");
+                response.sendRedirect(request.getContextPath() + "/customers");
                 return;
             }
 
@@ -70,24 +72,19 @@ public class CustomerDetailController extends HttpServlet {
                     .forward(request, response);
 
         } catch (NumberFormatException e) {
-
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid customerId");
+            response.sendRedirect(request.getContextPath() + "/customers");
 
         } catch (Exception e) {
 
             log("Error while loading customer detail", e);
-
-            ControllerUltil.forwardError(
-                    request,
-                    response,
-                    "Internal server error occurred while processing your request.");
+            response.sendRedirect(request.getContextPath() + "/customers");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        response.sendRedirect(request.getContextPath() + "/customers");
         response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 }

@@ -36,7 +36,7 @@
                         <span style="margin-left: 5px">Search</span>
 
                     </button>
-                    <div style="position: absolute; right: 45px; top: 230px;">
+                    <div style="position: absolute; right: 95px; top: 294.5px; border: 2px solid var(--border); ">
                         <a href="${pageContext.request.contextPath}/customers"
                            class="btn btn-outline-secondary w-100">
                             <i class="fas fa-redo me-1"></i> Reset
@@ -133,26 +133,39 @@
                         </select>
                     </label>
 
-                    <label style="margin-left: 20px"><strong>Return Rate: </strong>
-                        <button name="returnRateFilter" class="btn-return-rate btn-high-return btn <c:if test="${not
+                    <label style="margin-left: 20px"><strong>Return Rate: </strong></label>
+                    <button name="returnRateFilter" class="btn-high-return btn btn-return-rate <c:if test="${not
                         empty returnRateFilter && returnRateFilter eq 'HIGH'}">btn-primary</c:if>"
-                                style="margin-left: 9px">High Return ( >40% )
-                        </button>
-                        <button name="returnRateFilter" class="btn-return-rate btn-low-return btn <c:if test="${not
+                            style="margin-left: 9px">High Return ( >40% )
+                    </button>
+                    <button name="returnRateFilter" class="btn-low-return btn btn-return-rate <c:if test="${not
                         empty returnRateFilter && returnRateFilter eq 'LOW'}">btn-primary</c:if>"
-                                style="margin-left: 9px">Low Return (<= 40%)
-                        </button>
-                    </label>
+                            style="margin-left: 9px">Low Return (<= 40%)
+                    </button>
 
-                    <button class="advance-filter btn-filter btn-primary" style="margin-top: 0px"
+
+                    <button class="advance-filter btn-filter btn-primary" style="margin-top: -122px"
                             onclick="openAdvancedFilter()">
                         <i class="fas fa-sliders-h"></i>
                         <span>Advanced Filter</span>
                     </button>
 
-                    <button class="btn-filter" onclick="filter()" style="margin-top: 0px">
+                    <button class="btn-filter" onclick="filter()"
+                            style="margin-top: 2px; transform: translateX(-175px);">
                         <i class="fas fa-filter" style="margin-right: 5px;"></i>
                         <span>Filter</span>
+                    </button>
+
+                    <button class="btn btn-segment"
+                            onclick="createSegment()">
+                        <i class="fas fa-folder-plus"></i>
+                        <span>Create Segment</span>
+                    </button>
+
+                    <button class="btn btn-assign-task"
+                            onclick="assignTask()">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Assign Task</span>
                     </button>
                 </div>
 

@@ -8,13 +8,21 @@ public class CustomerSegment {
     private String segmentName;
     private String criteriaLogic;
     private String segmentType;
-
+    private String assignType;
     private String status;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
     private int numberData;
+
+    public String getAssignType() {
+        return assignType;
+    }
+
+    public void setAssignType(String assignType) {
+        this.assignType = assignType;
+    }
 
     public String getSegmentType() {
         return segmentType;

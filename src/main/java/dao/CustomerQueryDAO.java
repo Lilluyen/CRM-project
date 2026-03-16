@@ -1,13 +1,11 @@
 package dao;
 
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
-import dto.CustomerListDTO;
 import dto.TimeCondition;
 import model.Customer;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,36 +27,36 @@ public class CustomerQueryDAO {
               FROM [Customers]
             """;
 
-    private CustomerListDTO mapRow(ResultSet rs) throws SQLException {
-
-        CustomerListDTO dto = new CustomerListDTO();
-
-        dto.setCustomerId(rs.getInt("customer_id"));
-        dto.setName(rs.getString("name"));
-        dto.setPhone(rs.getString("phone"));
-        dto.setEmail(rs.getString("email"));
-        dto.setGender(rs.getString("gender"));
-        dto.setLoyaltyTier(rs.getString("loyalty_tier"));
-        dto.setRfmScore(rs.getInt("rfm_score"));
-        dto.setPreferredSize(rs.getString("fit_profile"));
-        dto.setBodyShape(rs.getString("body_shape"));
-        dto.setHeight(rs.getBigDecimal("height"));
-        dto.setWeight(rs.getBigDecimal("weight"));
-
-        String styleTagsStr = rs.getString("style_tags");
-        if (styleTagsStr != null && !styleTagsStr.isBlank()) {
-            dto.setStyleTags(Arrays.asList(styleTagsStr.split("\\s*,\\s*")));
-        }
-
-        dto.setReturnRate(rs.getDouble("return_rate"));
-
-        Timestamp ts = rs.getTimestamp("last_purchase_date");
-        if (ts != null) {
-            dto.setLastPurchase(ts.toLocalDateTime());
-        }
-
-        return dto;
-    }
+//    private CustomerListDTO mapRow(ResultSet rs) throws SQLException {
+//
+//        CustomerListDTO dto = new CustomerListDTO();
+//
+//        dto.setCustomerId(rs.getInt("customer_id"));
+//        dto.setName(rs.getString("name"));
+//        dto.setPhone(rs.getString("phone"));
+//        dto.setEmail(rs.getString("email"));
+//        dto.setGender(rs.getString("gender"));
+//        dto.setLoyaltyTier(rs.getString("loyalty_tier"));
+//        dto.setRfmScore(rs.getInt("rfm_score"));
+//        dto.setPreferredSize(rs.getString("fit_profile"));
+//        dto.setBodyShape(rs.getString("body_shape"));
+//        dto.setHeight(rs.getBigDecimal("height"));
+//        dto.setWeight(rs.getBigDecimal("weight"));
+//
+//        String styleTagsStr = rs.getString("style_tags");
+//        if (styleTagsStr != null && !styleTagsStr.isBlank()) {
+//            dto.setStyleTags(Arrays.asList(styleTagsStr.split("\\s*,\\s*")));
+//        }
+//
+//        dto.setReturnRate(rs.getDouble("return_rate"));
+//
+//        Timestamp ts = rs.getTimestamp("last_purchase_date");
+//        if (ts != null) {
+//            dto.setLastPurchase(ts.toLocalDateTime());
+//        }
+//
+//        return dto;
+//    }
 
     public List<Customer> getCustomerList(
             Connection connection,
@@ -314,8 +312,8 @@ public class CustomerQueryDAO {
 
         // keyword search
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (name LIKE ? OR phone LIKE ? OR email LIKE ?)");
-            String value = "%" + keyword + "%";
+            sql.append(" AND (LOWER(name) LIKE ? OR phone LIKE ? OR email LIKE ?)");
+            String value = "%" + keyword.trim().toLowerCase() + "%";
             params.add(value);
             params.add(value);
             params.add(value);

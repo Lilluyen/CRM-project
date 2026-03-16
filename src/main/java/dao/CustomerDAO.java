@@ -1,13 +1,15 @@
 package dao;
 
+import dto.CustomerDetailDTO;
+import model.Customer;
+import util.DBContext;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import dto.CustomerDetailDTO;
-import model.Customer;
-import util.DBContext;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CustomerDAO {
 
@@ -203,7 +205,7 @@ public class CustomerDAO {
 
     public void updateBasicInfo(Customer customer, Connection conn)
             throws SQLException {
-        
+
         System.out.println("Customer ID = " + customer.getCustomerId());
 
         String sql = """
@@ -275,6 +277,38 @@ public class CustomerDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
+        }
+    }
+
+    public List<String> getSources(Connection conn) throws SQLException {
+        String sql = """
+                    SELECT DISTINCT source
+                    FROM Customers
+                
+                """;
+        List<String> sources = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                sources.add(rs.getString("source"));
+            }
+            return sources;
+        }
+    }
+
+    public List<String> getRanks(Connection conn) throws SQLException {
+        String sql = """
+                    SELECT DISTINCT loyalty_tier
+                                  FROM Customers
+                
+                """;
+        List<String> ranks = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ranks.add(rs.getString("loyalty_tier"));
+            }
+            return ranks;
         }
     }
 }

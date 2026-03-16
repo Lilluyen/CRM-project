@@ -1,16 +1,9 @@
-// ===== GLOBAL STATE =====
-let currentPage = 1;
-let rowsPerPage = 10;
-
 // Hybrid Keyset Pagination state
 let paginationSessionId = window.__SESSION_ID__ || null;
 let totalPages = window.__TOTAL_PAGES__ || 1;
 let totalRecords = window.__TOTAL_RECORDS__ || 0;
 let advancedFilters = {
     loyaltyTiers: [],
-    tagIds: [],
-    bodyShapes: [],
-    sizes: [],
     returnRateMode: null
 };
 
@@ -164,7 +157,7 @@ function resetAdvancedFilter() {
         loyaltyTiers: [],
         returnRateMode: null
     };
-
+    localStorage.removeItem("advancedFilter");
     document.querySelectorAll('#advancedFilterModal input').forEach(cb => {
         cb.checked = false;
     });
@@ -181,6 +174,13 @@ function getCheckedValues(selector) {
         .map(el => el.value);
 }
 
+document.getElementById("searchInput").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        applyAdvancedFilter();
+    }
+});
+
 function applyAdvancedFilter() {
     const keyword = document.getElementById('searchInput').value;
     const loyaltys = getCheckedValues('input[name="loyaltyFilter"]');
@@ -195,7 +195,7 @@ function applyAdvancedFilter() {
     sources.forEach(s => params.append("source", s));
     if (gender) params.append("gender", gender);
     if (returnRate) params.append("returnRateFilter", returnRate);
-
+    const timeConditions = [];
     document.querySelectorAll(".condition-row").forEach(row => {
 
         const field = row.querySelector('[name="time_conditions"]').value;
@@ -208,8 +208,27 @@ function applyAdvancedFilter() {
             params.append("operators", operator);
             params.append("dates", date);
             params.append("subconditions", subCondition);
+
+            timeConditions.push({
+                field,
+                operator,
+                date,
+                subCondition
+            });
         }
     });
+
+    // 🔥 LƯU LOCALSTORAGE
+    const filterData = {
+        keyword,
+        loyaltys,
+        sources,
+        gender,
+        returnRate,
+        timeConditions
+    };
+
+    localStorage.setItem("advancedFilter", JSON.stringify(filterData));
     const ctx = window.__CTX__ || "";
     const url = `${ctx}/customers/filter?${params.toString()}`;
 
@@ -218,6 +237,69 @@ function applyAdvancedFilter() {
     window.location.href = url;
 
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const data = JSON.parse(localStorage.getItem("advancedFilter"));
+
+    if (!data) return;
+
+    // keyword
+    if (data.keyword) {
+        document.getElementById("searchInput").value = data.keyword;
+    }
+
+    // loyalty
+    document.querySelectorAll('input[name="loyaltyFilter"]').forEach(cb => {
+        if (data.loyaltys.includes(cb.value)) {
+            cb.checked = true;
+        }
+    });
+
+    // source
+    document.querySelectorAll('input[name="source"]').forEach(cb => {
+        if (data.sources.includes(cb.value)) {
+            cb.checked = true;
+        }
+    });
+
+    // gender
+    if (data.gender) {
+        const g = document.querySelector(`input[name="gender"][value="${data.gender}"]`);
+        if (g) g.checked = true;
+    }
+
+    // return rate
+    if (data.returnRate) {
+        const r = document.querySelector(`input[name="returnRateFilter"][value="${data.returnRate}"]`);
+        if (r) r.checked = true;
+    }
+
+    // time conditions
+    if (data.timeConditions && data.timeConditions.length > 0) {
+
+        const container = document.querySelector(".conditions");
+        const template = document.getElementById("condition-template");
+
+        data.timeConditions.forEach(cond => {
+
+            const clone = template.content.cloneNode(true);
+
+            const row = clone.querySelector(".condition-row");
+
+            row.querySelector('[name="time_conditions"]').value = cond.field;
+            row.querySelector('[name="operators"]').value = cond.operator;
+            row.querySelector('[name="dates"]').value = cond.date;
+            row.querySelector('[name="subconditions"]').value = cond.subCondition;
+
+            container.appendChild(clone);
+
+        });
+
+    }
+
+});
+
 
 // ===== CUSTOMER ACTIONS =====
 function openPreview(customerId) {
@@ -383,7 +465,8 @@ function showToast(message, type = 'success', duration = 3000) {
     };
 
     toastIcon.innerHTML = icons[type] || icons.info;
-    toastMessage.textContent = `========       ${message}       ========`;
+    toastMessage.textContent = `${message}`;
+    toastMessage.style = "text-align: center;"
 
     // Set bar color
     toastBar.style.background = barColors[type] || barColors.info;
@@ -455,4 +538,43 @@ document.addEventListener("change", function (e) {
     }
 
 });
+
+let selectedCustomers = JSON.parse(localStorage.getItem("selected")) || [];
+document.querySelectorAll('.check-item').forEach(cb => {
+    cb.addEventListener("change", () => {
+        let id = cb.value;
+        if (cb.checked) {
+            selectedCustomers.push(id);
+        } else {
+            selectedCustomers = selectedCustomers.filter(c => c !== id);
+        }
+        localStorage.setItem('selected', JSON.stringify(selectedCustomers));
+    })
+});
+
+window.onload = function () {
+    const selected = JSON.parse(localStorage.getItem('selected')) || [];
+    document.querySelectorAll('.check-item').forEach(cb => {
+        if (selected.includes(cb.value)) {
+            cb.checked = true;
+        }
+    })
+}
+
+document.querySelector('.btn-outline-secondary').addEventListener('click', function () {
+    localStorage.removeItem('selected');
+})
+
+function assignTask() {
+    const check = document.querySelectorAll('.check-item:checked').length;
+    if (!check) {
+        alert('Please select a customer to assign the task to.');
+    } else {
+
+    }
+}
+
+function createSegment() {
+
+}
 
