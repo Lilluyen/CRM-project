@@ -15,9 +15,9 @@ public final class DBContext {
         try {
             DB_DRIVER = getEnv("DB_DRIVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
             DB_URL = getEnv("DB_URL",
-                    "jdbc:sqlserver://localhost:1433;databaseName=CRM_System;encrypt=true;trustServerCertificate=true");
+                    "jdbc:sqlserver://DESKTOP-H60G0Q5;databaseName=CRM_System;encrypt=true;trustServerCertificate=true");
             DB_USERNAME = getEnv("DB_USERNAME", "sa");
-            DB_PASSWORD = getEnv("DB_PASSWORD", "123");
+            DB_PASSWORD = getEnv("DB_PASSWORD", "123456");
 
             Class.forName(DB_DRIVER);
         } catch (ClassNotFoundException e) {
@@ -37,4 +37,10 @@ public final class DBContext {
         String value = System.getenv(key);
         return (value == null || value.isBlank()) ? defaultValue : value;
     }
+
+    public static void main(String[] args) throws Exception {
+    Connection conn = DBContext.getConnection();
+    System.out.println("Connected!");
+}
+
 }

@@ -122,15 +122,20 @@ isELIgnored="false" %> <%-- Xác định role prefix dựa trên role của user
           </a>
           <ul>
             <li>
-              <a href="${pageContext.request.contextPath}/category">Category</a>
+              <a href="${pageContext.request.contextPath}${rolePrefix}/category/list">Category</a>
             </li>
             <li>
-              <a href="${pageContext.request.contextPath}/product">Product</a>
+              <a href="${pageContext.request.contextPath}${rolePrefix}/product/list">Product</a>
             </li>
-            <li><a href="${pageContext.request.contextPath}/deal">Deals</a></li>
+            <li><a href="${pageContext.request.contextPath}${rolePrefix}/deal/list">Deals</a></li>
             <li>
               <a href="${pageContext.request.contextPath}/funnel"
                 >Sales Funnel</a
+              >
+            </li>
+            <li>
+              <a href="${pageContext.request.contextPath}/forecast"
+                >Revenue Forecast</a
               >
             </li>
           </ul>
