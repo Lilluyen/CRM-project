@@ -158,4 +158,9 @@ public class Customer {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public String getLastPurchaseDate() {
+        if (lastPurchase == null) return "";
+        return lastPurchase.toLocalDate().toString();
+    }
 }

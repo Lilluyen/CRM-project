@@ -1,28 +1,23 @@
 package service;
 
+import dao.*;
+import dto.CustomerCreateDTO;
+import dto.CustomerDetailDTO;
+import dto.TimeCondition;
+import exception.DuplicateEmailException;
+import exception.DuplicatePhoneException;
+import mapper.CustomerMapper;
+import model.Customer;
+import model.CustomerMeasurement;
+import model.StyleTag;
+import util.DBContext;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
-import dto.CustomerCreateDTO;
-import dto.CustomerDetailDTO;
-import dto.CustomerFilterRequest;
-import dto.CustomerPageResult;
-import dto.KpiSummaryDTO;
-import exception.DuplicateEmailException;
-import exception.DuplicatePhoneException;
-import mapper.CustomerMapper;
-import model.CustomerMeasurement;
-import model.StyleTag;
-import util.DBContext;
 
 public class CustomerService {
 
@@ -33,10 +28,10 @@ public class CustomerService {
     private final CustomerSegmentDAO customerSegmentDAO;
 
     public CustomerService(CustomerDAO customerDAO,
-            CustomerStyleDAO customerStyleDAO,
-            CustomerQueryDAO customerQueryDAO,
-            CustomerMeasurementDAO customerMeasurementDAO,
-            CustomerSegmentDAO customerSegmentDAO) {
+                           CustomerStyleDAO customerStyleDAO,
+                           CustomerQueryDAO customerQueryDAO,
+                           CustomerMeasurementDAO customerMeasurementDAO,
+                           CustomerSegmentDAO customerSegmentDAO) {
         this.customerDAO = customerDAO;
         this.customerStyleDAO = customerStyleDAO;
         this.customerQueryDAO = customerQueryDAO;
@@ -131,12 +126,20 @@ public class CustomerService {
         }
     }
 
-    public CustomerPageResult getCustomerList(int page, int size, String sessionId) throws SQLException {
+    public List<Customer> getCustomerList(int page, int size) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
-            CustomerPageResult customerList = customerQueryDAO.getCustomerList(conn, page, size, sessionId);
+            List<Customer> customerList = customerQueryDAO.getCustomerList(conn, page, size);
             return customerList;
 
+        }
+    }
+
+    public int countTotalCustomer(String raturnRate
+            , String keyword, List<String> loyaltyTier, List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            int totalCustomer = customerQueryDAO.countTotalCustomers(conn, raturnRate, keyword, loyaltyTier, source, gender, timeConditions);
+            return totalCustomer;
         }
     }
 
@@ -257,10 +260,12 @@ public class CustomerService {
         }
     }
 
-    public CustomerPageResult filterAdvanced(CustomerFilterRequest filterRequest,
-            String sessionId) throws SQLException {
+    public List<Customer> filterAdvanced(String keyword,
+                                         String returnRate, List<String> loyaltyTier,
+                                         List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size
+    ) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
-            return customerQueryDAO.filterAdvanced(conn, filterRequest, sessionId);
+            return customerQueryDAO.filterAdvanced(conn, keyword, returnRate, loyaltyTier, source, gender, timeConditions, page, size);
         }
     }
 
@@ -292,14 +297,15 @@ public class CustomerService {
         }
     }
 
-//    public KpiSummaryDTO kpiSummarySegment() throws SQLException, Exception {
-//        try (Connection conn = DBContext.getConnection()) {
-//            try {
-//                return customerSegmentDAO.kpiSummarySegment(conn);
-//            } catch (SQLException e) {
-//                throw e;
-//            }
-//        }
-//    }
+    public List<String> getSources() throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return customerDAO.getSources(conn);
+        }
+    }
 
+    public List<String> getRanks() throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return customerDAO.getRanks(conn);
+        }
+    }
 }

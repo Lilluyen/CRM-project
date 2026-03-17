@@ -108,11 +108,22 @@
 .rpt-kpi-value {
   font-size: 1.7rem; font-weight: 800; color: var(--rpt-text);
   line-height: 1; letter-spacing: -.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .rpt-kpi-label {
   font-size: .78rem; color: var(--rpt-muted); margin-top: 3px;
   font-weight: 500; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 900px) {
+  .rpt-kpi-value { font-size: 1.45rem; }
+}
+
+@media (max-width: 520px) {
+  .rpt-kpi-value { font-size: 1.25rem; }
 }
 
 /* ── Section title ── */

@@ -1,18 +1,6 @@
 package controller.sale;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import dto.CustomerCreateDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -28,7 +16,15 @@ import util.EmailCheck;
 import util.NameCheck;
 import util.PhoneCheck;
 
-@WebServlet(name = "CreateCustomerController", urlPatterns = { "/customers/add-customer" })
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
 public class CreateCustomerController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -114,7 +110,7 @@ public class CreateCustomerController extends HttpServlet {
                     errors.add("Birthday is required");
                 } else {
                     try {
-                        birthday = LocalDate.parse(birthdayRaw);
+                        birthday = ControllerUltil.parseDate(birthdayRaw);
                         if (birthday.isAfter(LocalDate.now())) {
                             errors.add("Birthday must be in the past");
                             resp.sendRedirect(req.getContextPath() + "/customers?status=failed");

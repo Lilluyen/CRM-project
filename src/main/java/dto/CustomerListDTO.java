@@ -1,30 +1,14 @@
 package dto;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-
-
 public class CustomerListDTO {
 
     private int customerId;
     private String name;
-    private String phone;
     private String email;
-    private String gender;
 
     private String loyaltyTier;
-    private int rfmScore;
-
-    private String preferredSize;
-    private String bodyShape;
-    private BigDecimal height;
-    private BigDecimal weight;
-
-    private List<String> styleTags;
-
-    private double returnRate;
-    private LocalDateTime lastPurchase;
+    private String source;
+    private String owner;
 
     public int getCustomerId() {
         return customerId;
@@ -42,12 +26,12 @@ public class CustomerListDTO {
         this.name = name;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getEmail() {
+        return email;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getLoyaltyTier() {
@@ -58,90 +42,19 @@ public class CustomerListDTO {
         this.loyaltyTier = loyaltyTier;
     }
 
-    public int getRfmScore() {
-        return rfmScore;
+    public String getSource() {
+        return source;
     }
 
-    public void setRfmScore(int rfmScore) {
-        this.rfmScore = rfmScore;
+    public void setSource(String source) {
+        this.source = source;
     }
 
-    public String getPreferredSize() {
-        return preferredSize;
+    public String getOwner() {
+        return owner;
     }
 
-    public void setPreferredSize(String preferredSize) {
-        this.preferredSize = preferredSize;
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
-
-    public String getBodyShape() {
-        return bodyShape;
-    }
-
-    public void setBodyShape(String bodyShape) {
-        this.bodyShape = bodyShape;
-    }
-
-    public List<String> getStyleTags() {
-        return styleTags;
-    }
-
-    public void setStyleTags(List<String> styleTags) {
-        this.styleTags = styleTags;
-    }
-
-    public double getReturnRate() {
-        return returnRate;
-    }
-
-    public void setReturnRate(double returnRate) {
-        this.returnRate = returnRate;
-    }
-
-    public LocalDateTime getLastPurchase() {
-        return lastPurchase;
-    }
-
-    public void setLastPurchase(LocalDateTime lastPurchase) {
-        this.lastPurchase = lastPurchase;
-    }
-
-    public BigDecimal getHeight() {
-        return height;
-    }
-
-    public void setHeight(BigDecimal height) {
-        this.height = height;
-    }
-
-    public BigDecimal getWeight() {
-        return weight;
-    }
-
-    public void setWeight(BigDecimal weight) {
-        this.weight = weight;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-public String getLastPurchaseDate() {
-    if (lastPurchase == null) return "";
-    return lastPurchase.toLocalDate().toString();
-}
-    
-    
 }

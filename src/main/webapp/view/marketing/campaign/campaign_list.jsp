@@ -80,7 +80,7 @@
             <%-- Có campaign --%>
             <c:when test="${not empty campaigns}">
 
-                <div class="card shadow-sm mb-3 border-0 bg-primary text-white" style="border-radius: 10px;">
+                <div class="card shadow-sm mb-3 border-0 bg-primary text-white total-campaign" style="border-radius: 10px;">
                     <div class="card-body py-3 px-4">
                         <span class="fs-2 fw-bold">${pagination.totalItems}</span>
                         <span class="ms-2">
