@@ -154,11 +154,6 @@
                 href="${pageContext.request.contextPath}/forecast"
               >Revenue Forecast</a>
             </li>
-            <li>
-              <a href="${pageContext.request.contextPath}/forecast"
-                >Revenue Forecast</a
-              >
-            </li>
           </ul>
         </li>
 

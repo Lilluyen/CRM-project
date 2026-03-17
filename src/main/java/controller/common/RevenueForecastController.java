@@ -31,7 +31,7 @@ public class RevenueForecastController extends HttpServlet {
 
         User user = (User) session.getAttribute("user");
         int roleId = user.getRole() != null ? user.getRole().getRoleId() : 0;
-        if (roleId != 5) {
+        if (roleId != 1) {
             response.sendRedirect(request.getContextPath() + "/login?error=accessDenied");
             return;
         }
@@ -79,7 +79,6 @@ public class RevenueForecastController extends HttpServlet {
             request.setAttribute("pageCss", "revenue_forecast.css");
             request.setAttribute("page", "revenue-forecast");
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
-            request.getRequestDispatcher("/view/sale/forecast/revenueForecast.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);

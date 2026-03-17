@@ -6,7 +6,7 @@ import dto.CustomerDetailDTO;
 import dto.TimeCondition;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
-import mapper.CustomerMapper;
+import Mapper.CustomerMapper;
 import model.Customer;
 import model.CustomerMeasurement;
 import model.StyleTag;
