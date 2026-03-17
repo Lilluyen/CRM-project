@@ -116,6 +116,9 @@
                             <i class="fas fa-save" style="color: white"></i>
                             <span style="margin-left: 5px; color: white">Save</span>
                         </button>
+
+                        <button type="submit" class="reload_btn" style=" "><i
+                                class="fas fa-sync"></i></button>
                         <div class="config-row" style="padding: 5px 0">
                             <strong style="font-size: 18px">FILTER</strong>
 
@@ -175,7 +178,6 @@
                                                 </option>
                                             </select>
 
-                                            <!-- VALUE -->
 
                                             <c:choose>
                                                 <c:when test="${f.field eq 'last_purchase' or f.field eq 'birthday'}">
@@ -191,6 +193,7 @@
 
                                                 <c:when test="${f.field eq 'source'}">
                                                     <select style=" width: 110px" class="value" name="value">
+                                                        <option value="">--Select--</option>
                                                         <c:forEach items="${sources}" var="s">
                                                             <option value="${s}"
                                                                     <c:if test="${f.value eq s}">selected</c:if>>${s}</option>
@@ -200,6 +203,7 @@
 
                                                 <c:otherwise>
                                                     <select style=" width: 110px" class="value" name="value">
+                                                        <option value="">--Select--</option>
                                                         <c:forEach items="${ranks}" var="r">
                                                             <option value="${r}"
                                                                     <c:if test="${f.value eq r}">selected</c:if>>${r}</option>
@@ -254,16 +258,17 @@
 
                                         <!-- VALUE -->
                                         <select id="source-options" style="display: none; width: 115px" name="value">
-
+                                            <option value="">--Select--</option>
                                             <c:forEach items="${sources}" var="s">
                                                 <option value="${s}">${s}</option>
                                             </c:forEach>
                                         </select>
 
                                         <select id="loyalty-options" style="display: none; width: 115px" name="value">
-
-                                            <c:forEach items="${ranks}" var="r">
-                                                <option value="${r}">${r}</option>
+                                            <option value="">--Select--</option>
+                                            <c:forEach items="${ranks}" var="r" varStatus="loop">
+                                                <option value="${r}"
+                                                >${r}</option>
                                             </c:forEach>
                                         </select>
 
@@ -301,11 +306,12 @@
                         <span class="method">Method assign customer to staff</span>
                         <select class="method" name="assignmentType">
 
-                            <option value="ROUND_ROBIN" <c:if test="${segmentInfo.assignType eq 'ROUND_ROBIN'}">checked
+                            <option value="ROUND_ROBIN"
+                                    <c:if test="${segmentInfo.assignType eq 'ROUND_ROBIN' }">selected
                             </c:if>>Default
                             </option>
                             <option value="LEAST_CUSTOMERS"
-                                    <c:if test="${segmentInfo.assignType eq 'LEAST_CUSTOMERS'}">checked
+                                    <c:if test="${segmentInfo.assignType eq 'LEAST_CUSTOMERS' }">selected
                             </c:if> >Least Customer is Assign first
                             </option>
                         </select>
@@ -373,6 +379,7 @@
                     <p><strong style="font-size: 21px">Customers</strong></p>
 
                     <input type="text"
+                           id="searchInput"
                            placeholder="Search customer..."
                            class="customer-search">
                     <button onclick=""
@@ -404,10 +411,26 @@
                             </td>
 
                             <td> ${c.owner}</td>
-                            <td> ${c.loyaltyTier}</td>
+                            <td> <span class="loyalty-badge ${c.loyaltyTier}">
+                                    ${c.loyaltyTier}
+                            </span></td>
                             <td> ${c.email}</td>
                             <td> ${c.source}</td>
-                            <td></td>
+                            <td class="action-cell">
+                                <form action="${pageContext.request.contextPath}/customers/segment/remove-customer"
+                                      method="post">
+                                    <button class="btn-delete" data-id="" title="Remove from segment" type="submit">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <input type="hidden" value="${c.customerId}" name="customer_id"/>
+                                    <input type="hidden" value="${segmentInfo.segmentId}" name="segment_id"/>
+                                </form>
+
+                                <button class="btn-assign" data-id="${c.customerId}" title="Change owner">
+                                    <i class="fas fa-user-edit"></i>
+                                </button>
+
+                            </td>
                         </tr>
                     </c:forEach>
 
@@ -438,6 +461,48 @@
         <div id="toastBar"></div>
     </div>
 </div>
+
+<form method="post"
+      action="${pageContext.request.contextPath}/customers/segment/change-owner">
+    <div id="assignModal" class="modal">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h3>Assign Owner</h3>
+                <span class="close-btn" id="closeAssignModal">&times;</span>
+            </div>
+
+            <input type="text" id="staffSearch" placeholder="Search staff..."
+                   class="modal-search">
+
+            <div class="staff-list" id="staffList">
+                <c:forEach var="u" items="${staffs}">
+                    <label class="staff-item">
+
+                        <!-- radio ẩn -->
+                        <input type="radio" name="user_id" value="${u.userId}" class="staff-radio">
+
+                        <div class="staff-info">
+                            <span><strong>${u.fullName}</strong></span>
+                            <p>${u.email}</p>
+                        </div>
+
+                    </label>
+                </c:forEach>
+            </div>
+
+            <div class="modal-footer">
+                <button id="confirmAssign" disabled type="submit">Confirm</button>
+                <button class="btn-primary" onclick="closeChangeOwnerModal()" type="button">Cancel</button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <%--    <input type="hidden" value="${c.customerId}" name="customer_id"/>--%>
+    <input type="hidden" value="${segmentInfo.segmentId}" name="segment_id"/>
+</form>
 
 
 <script>

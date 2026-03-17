@@ -56,17 +56,19 @@ public class ConfigSegmentController extends HttpServlet {
 
                     SegmentConfig f = new SegmentConfig();
 
-                    f.setField(fields[i]);
-                    f.setOperator(operators[i]);
-                    f.setValue(values[i]);
+                    if (values[i] != null && !(values[i].trim().isEmpty())) {
+                        f.setField(fields[i]);
+                        f.setOperator(operators[i]);
+                        f.setValue(values[i]);
 
-                    if (logics != null && i < logics.length) {
-                        f.setLogic(logics[i]);
-                    } else {
-                        f.setLogic(null);
+                        if (logics != null && i < logics.length) {
+                            f.setLogic(logics[i]);
+                        } else {
+                            f.setLogic(null);
+                        }
+
+                        configs.add(f);
                     }
-
-                    configs.add(f);
                 }
             }
 

@@ -156,10 +156,10 @@
                         <span>Filter</span>
                     </button>
 
-                    <button class="btn btn-segment"
-                            onclick="createSegment()">
+                    <button class="btn btn-segment" id="assign-segment-btn"
+                    >
                         <i class="fas fa-folder-plus"></i>
-                        <span>Create Segment</span>
+                        <span>Assign Segment</span>
                     </button>
 
                     <button class="btn btn-assign-task"
@@ -498,6 +498,53 @@
 
 
     </div>
+
+    <div id="segment-modal" class="modal">
+        <div class="modal-content">
+
+            <form method="post" action="${pageContext.request.contextPath}/customers/assign-segment">
+
+                <!-- HEADER -->
+                <div class="modal-header">
+                    <h3>Assign to Segment</h3>
+                    <span class="close-btn" onclick="closeSegmentModal()">&times;</span>
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body">
+
+                    <label>Chọn Segment:</label>
+
+                    <div class="segment-list">
+
+                        <c:forEach items="${segments}" var="s">
+                            <div class="segment-item">
+                                <input type="radio" name="segmentId" value="${s.segmentId}" id="seg-${s.segmentId}">
+
+                                <label for="seg-${s.segmentId}" class="segment-card">
+                                    <span class="segment-name"><strong>${s.segmentName}</strong></span>
+                                    <p>${s.criteriaLogic}</p>
+                                </label>
+                            </div>
+                        </c:forEach>
+
+                    </div>
+
+                    <!-- hidden customerIds -->
+                    <input type="hidden" name="customerIds" id="customerIdsInput">
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer">
+                    <button class="btn-success" type="submit">Assign</button>
+                    <button class="btn-primary" type="button" onclick="closeSegmentModal()">Cancel</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
 </div>
 
 
@@ -573,6 +620,12 @@
             </div>
         </div>
     </div>
+</div>
+
+
+<!-- hidden customerIds -->
+<input type="hidden" name="customerIds" id="customerIdsInput">
+
 </div>
 
 

@@ -269,6 +269,7 @@ public class CustomerQueryDAO {
             stm.setInt(1, customerId);
             stm.executeUpdate();
         }
+
     }
 
     private SQLServerDataTable toStringTVP(List<String> list) throws SQLException {

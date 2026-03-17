@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Customer;
+import model.CustomerSegment;
+import service.CustomerSegmentService;
 import service.CustomerService;
 import util.ControllerUltil;
 
@@ -24,7 +26,7 @@ public class CustomerListController extends HttpServlet {
     private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
     private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
-
+    private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
     private final CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
@@ -59,12 +61,13 @@ public class CustomerListController extends HttpServlet {
             List<Customer> customers;
             Pagination pagination = new Pagination(page, size, totalRecords);
             customers = customerService.getCustomerList(page, size);
-
+            List<CustomerSegment> customerSegments = customerSegmentService.getStaticSegments();
             request.setAttribute("pagination", pagination);
 
             request.setAttribute("currentPage", page);
             request.setAttribute("customerList", customers);
             request.setAttribute("totalRecord", totalRecords);
+            request.setAttribute("segments", customerSegments);
             request.setAttribute("pageTitle", "Customer List | Clothes CRM");
             request.setAttribute("contentPage", "customer/customerList.jsp");
             request.setAttribute("pageCss", "customerList.css");

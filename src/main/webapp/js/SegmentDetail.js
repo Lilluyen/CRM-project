@@ -77,9 +77,10 @@ function changeInputType(fieldSelect) {
 
     const row = fieldSelect.closest(".condition-row");
 
-    const oldValue = row.querySelector(".value");
-    console.log("old: ", oldValue)
-    if (oldValue) oldValue.remove();
+    const oldValueEl = row.querySelector(".value");
+    const oldValue = oldValueEl ? oldValueEl.value : null;
+
+    if (oldValueEl) oldValueEl.remove();
 
     let newInput;
 
@@ -87,58 +88,48 @@ function changeInputType(fieldSelect) {
 
         newInput = document.createElement("select");
         newInput.className = "value";
+        newInput.name = "value";
 
         const sourceSelect = template.content.querySelector(`#${sourceId}`);
-        console.log(sourceId)
-        console.log(sourceSelect)
+
         if (sourceSelect) {
             newInput.innerHTML = sourceSelect.innerHTML;
-            newInput.style = "width: 110px"
-            console.log("new: ", newInput)
+            newInput.style = "width: 110px";
+
+            // ✅ FIX 2: set lại selected
+            if (oldValue) {
+                newInput.value = oldValue;
+            }
         }
 
     } else {
 
         newInput = document.createElement("input");
         newInput.className = "value";
-        newInput.name = 'value';
+        newInput.name = "value";
 
         if (type === "date") {
             newInput.type = "date";
-            newInput.style = "width: 110px"
         } else if (type === "number") {
             newInput.type = "number";
-            newInput.style = "width: 110px"
             newInput.step = "any";
         } else {
             newInput.type = "text";
-            newInput.style = "width: 115px"
         }
+
+        newInput.style = "width: 110px";
+
+        // ✅ giữ lại value cũ
+        if (oldValue) {
+            newInput.value = oldValue;
+        }
+
 
     }
 
     row.querySelector(".operator").after(newInput);
 }
 
-
-function getFilters() {
-
-    const rows = document.querySelectorAll(".condition-row");
-    const filters = [];
-
-    rows.forEach(row => {
-
-        filters.push({
-            field: row.querySelector(".field").value,
-            operator: row.querySelector(".operator").value,
-            value: row.querySelector(".value").value,
-            logic: row.querySelector(".logic-operator").value
-        });
-
-    });
-
-    return filters;
-}
 
 const slicer = document.querySelector('.switch input[type="checkbox"]');
 if (slicer.checked) {
@@ -272,78 +263,57 @@ document.querySelector('#editBtn').addEventListener('click', function () {
     }
 });
 
-
-document.addEventListener("DOMContentLoaded", function () {
-    const pageStatus = window.__PAGE_STATUS__;
-
-    if (pageStatus) {
-        let toastType = 'info';
-        if (pageStatus.toLowerCase().includes('success') || pageStatus.toLowerCase().includes('successfully') || pageStatus.toLowerCase().includes('created')) {
-            toastType = 'success';
-        } else if (pageStatus.toLowerCase().includes('error') || pageStatus.toLowerCase().includes('fail')) {
-            toastType = 'error';
-        } else if (pageStatus.toLowerCase().includes('warning')) {
-            toastType = 'warning';
+document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+        const isConform = confirm('Do you want to delete this customer ?')
+        if (!isConform) {
+            e.preventDefault();
+            return;
         }
-        showToast(pageStatus, toastType);
-    }
+    })
 })
 
-// ===== TOAST NOTIFICATIONS =====
-function showToast(message, type = 'success', duration = 3000) {
-    const toast = document.getElementById('toast');
-    const toastIcon = document.getElementById('toastIcon');
-    const toastMessage = document.getElementById('toastMessage');
-    const toastBar = document.getElementById('toastBar');
 
-    if (!toast)
-        return;
+let selectedUserId = null;
+let currentCustomerId = null;
 
-    // Set icon based on type
-    const icons = {
-        success: '<i class="fas fa-check-circle" style="color: #10b981; font-size: 20px;"></i>',
-        error: '<i class="fas fa-exclamation-circle" style="color: #ef4444; font-size: 20px;"></i>',
-        info: '<i class="fas fa-info-circle" style="color: #3b82f6; font-size: 20px;"></i>',
-        warning: '<i class="fas fa-warning" style="color: #f59e0b; font-size: 20px;"></i>'
-    };
+// mở modal
+document.querySelectorAll(".btn-assign").forEach(btn => {
+    btn.addEventListener("click", function () {
+        currentCustomerId = this.dataset.id;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'customer_id';
+        input.value = currentCustomerId;
+        document.querySelector('#assignModal').appendChild(input);
+        document.getElementById("assignModal").style.display = "block";
+    });
+});
 
-    // Set bar color based on type
-    const barColors = {
-        success: '#10b981',
-        error: '#ef4444',
-        info: '#3b82f6',
-        warning: '#f59e0b'
-    };
+// đóng modal
+document.getElementById("closeAssignModal").onclick = () => {
+    document.getElementById("assignModal").style.display = "none";
+    document.querySelector('input[name="customer_id"]').remove();
+};
 
-    toastIcon.innerHTML = icons[type] || icons.info;
-    toastMessage.textContent = `${message}`;
-    toastMessage.style = "text-align: center;"
-
-    // Set bar color
-    toastBar.style.background = barColors[type] || barColors.info;
-
-    // Reset animation
-    toast.classList.remove('show', 'hide');
-    toastBar.style.animation = 'none';
-
-    // Show toast
-    toast.classList.add('show');
-
-    // Trigger animation
-    setTimeout(() => {
-        toastBar.style.animation = `slideOut ${duration}ms ease-out forwards`;
-    }, 10);
-
-    // Hide after duration
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-    }, duration);
+function closeChangeOwnerModal() {
+    document.getElementById("assignModal").style.display = "none";
 }
 
-// Toast close button
-document.getElementById('toastCloseBtn')?.addEventListener('click', function () {
-    const toast = document.getElementById('toast');
-    toast.classList.remove('show');
-    toast.classList.add('hide');
+
+document.querySelectorAll(".staff-radio").forEach(radio => {
+    radio.addEventListener("change", () => {
+        document.getElementById("confirmAssign").disabled = false;
+    });
 });
+
+// search staff
+document.getElementById("staffSearch").addEventListener("input", function () {
+    const keyword = this.value.toLowerCase();
+
+    document.querySelectorAll(".staff-item").forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(keyword) ? "" : "none";
+    });
+});
+
