@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import model.Campaign;
 import model.Lead;
 import util.DBContext;
 
@@ -101,6 +102,22 @@ public class CampaignLeadDAO {
         return 0;
     }
 
+    // Kiểm tra lead đã trong campaign chưa
+    public boolean isLeadInCampaign(int campaignId, int leadId) {
+        String sql = "SELECT COUNT(*) FROM Campaign_Leads WHERE campaign_id = ? AND lead_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ps.setInt(2, leadId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // Đếm tổng số lead trong một campaign
     public int countTotalLeadsByCampaign(int campaignId) {
         String sql = "SELECT COUNT(*) as cnt FROM Campaign_Leads WHERE campaign_id = ?";
@@ -123,7 +140,6 @@ public class CampaignLeadDAO {
                 rs.getString("full_name"),
                 rs.getString("email"),
                 rs.getString("phone"),
-                rs.getString("company_name"),
                 rs.getString("interest"),
                 rs.getString("source"),
                 rs.getString("status"),
@@ -133,5 +149,37 @@ public class CampaignLeadDAO {
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime()
         );
+    }
+
+    /**
+     * Lấy danh sách Campaigns mà lead tham gia (qua bảng Campaign_Leads)
+     */
+    public List<Campaign> getCampaignsByLeadId(int leadId) {
+        String sql = "SELECT c.campaign_id, c.name, c.status, c.channel, "
+                + "c.start_date, c.end_date, cl.lead_status, cl.assigned_at "
+                + "FROM Campaign_Leads cl "
+                + "INNER JOIN Campaigns c ON cl.campaign_id = c.campaign_id "
+                + "WHERE cl.lead_id = ? "
+                + "ORDER BY cl.assigned_at DESC";
+        List<Campaign> campaigns = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, leadId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Campaign c = new Campaign();
+                c.setCampaignId(rs.getInt("campaign_id"));
+                c.setName(rs.getString("name"));
+                c.setStatus(rs.getString("status"));
+                c.setChannel(rs.getString("channel"));
+                c.setStartDate(rs.getDate("start_date") != null
+                        ? rs.getDate("start_date").toLocalDate() : null);
+                c.setEndDate(rs.getDate("end_date") != null
+                        ? rs.getDate("end_date").toLocalDate() : null);
+                campaigns.add(c);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return campaigns;
     }
 }

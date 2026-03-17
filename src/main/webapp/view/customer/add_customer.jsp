@@ -2,7 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page isELIgnored="false" %>
 
-<div class="cf col-10 mt-5">
+<div class="cf mt-5">
     <div class="cf__container ">
 
         <div class="cf__header">
@@ -52,8 +52,8 @@
                 </div>
 
                 <div class="cf__field">
-                    <label class="cf__label">Social Link</label>
-                    <input class="cf__input" type="text" name="socialLink" placeholder="Ex: https://www.facebook.com/username">
+                    <label class="cf__label">Source</label>
+                    <input class="cf__input" type="text" name="source" placeholder="Ex: Facebook, Instagram, etc.">
                 </div>
 
                 <div class="cf__field">
@@ -113,7 +113,19 @@
                         <label class="cf__label">Shoulder (cm)</label>
                         <input class="cf__input" type="number" step="0.1" name="shoulder" placeholder="Ex: 40.0">
                     </div>
+
                 </div>
+                     <div class="cf__field">
+                        <label class="cf__label">Body Shape</label>
+                        <select name="bodyShape" class="cf__input">
+                            <option value="HOURGLASS">Hourglass</option>
+                            <option value="PEAR">Pear</option>
+                            <option value="APPLE">Apple</option>
+                            <option value="RECTANGLE">Rectangle</option>
+                            <option value="INVERTED TRIANGLE">Inverted Triangle</option>
+                            <option value="SLENDER">Slender</option>
+                        </select>
+                    </div>
             </section>
 
             <!-- STYLE -->

@@ -10,6 +10,7 @@ public class ImportLeadResponse {
 
     private boolean success;
     private int totalImported;
+    private int totalLinked;  // Lead cũ được gắn vào campaign mới
     private int totalFailed;
     private String message;
     private List<String> errors; // Danh sách lỗi chi tiết
@@ -24,6 +25,14 @@ public class ImportLeadResponse {
         this.totalFailed = totalFailed;
         this.message = message;
         this.errors = new ArrayList<>();
+    }
+
+    public int getTotalLinked() {
+        return totalLinked;
+    }
+
+    public void setTotalLinked(int totalLinked) {
+        this.totalLinked = totalLinked;
     }
 
     public boolean isSuccess() {

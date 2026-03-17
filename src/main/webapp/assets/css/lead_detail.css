@@ -1,0 +1,203 @@
+/* ====================================
+ * LEAD DETAIL PAGE - STYLES
+ * Chỉ custom classes, KHÔNG override Bootstrap/theme globals
+ * ==================================== */
+
+.col-10>.container-fluid {
+    margin-top: 100px;
+}
+
+/* ====================================
+ * BADGES & STATUS (custom classes)
+ * ==================================== */
+
+.badge-status {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.badge-new {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-contacted {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-qualified {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-deal {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.badge-lost {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* ====================================
+ * SCORE BADGES (custom classes)
+ * ==================================== */
+
+.score-badge {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 45px;
+    text-align: center;
+}
+
+.score-badge-lg {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    min-width: 80px;
+    text-align: center;
+}
+
+.score-hot {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.score-warm {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.score-cold {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+/* ====================================
+ * DETAIL SECTIONS (custom classes)
+ * ==================================== */
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    align-items: start;
+}
+
+.detail-label {
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.detail-value {
+    color: #212529;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* ====================================
+ * ACTION BUTTONS (custom classes)
+ * ==================================== */
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn-large {
+    flex: 1;
+    min-width: 150px;
+}
+
+.btn-large {
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-warning-custom {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+}
+
+.btn-warning-custom:hover {
+    background-color: #e0a800;
+    color: #212529;
+}
+
+.btn-secondary-custom {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-secondary-custom:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+@media (min-width: 992px) {
+    .mini-sidebar .badge {
+        display: inline-block !important;
+    }
+
+    .mini-sidebar.expand-menu .badge {
+        display: inline-block !important;
+    }
+}
+
+/* ====================================
+ * RESPONSIVE
+ * ==================================== */
+
+@media (max-width: 768px) {
+    .detail-row {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons .btn-large {
+        width: 100%;
+    }
+
+    .score-badge-lg {
+        font-size: 1.2rem;
+        padding: 0.5rem 1rem;
+    }
+}

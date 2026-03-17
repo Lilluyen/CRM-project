@@ -1,44 +1,44 @@
-package filter;
+// package filter;
 
-import java.io.IOException;
+// import java.io.IOException;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebFilter;
-import jakarta.servlet.http.HttpFilter;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+// import jakarta.servlet.FilterChain;
+// import jakarta.servlet.ServletException;
+// import jakarta.servlet.annotation.WebFilter;
+// import jakarta.servlet.http.HttpFilter;
+// import jakarta.servlet.http.HttpServletRequest;
+// import jakarta.servlet.http.HttpServletResponse;
+// import jakarta.servlet.http.HttpSession;
 
-import model.User;
+// import model.User;
 
-@WebFilter("/marketing/*")
-public class MarketingFilter extends HttpFilter {
+// @WebFilter("/marketing/*")
+// public class MarketingFilter extends HttpFilter {
 
-    @Override
-    protected void doFilter(HttpServletRequest request,
-                            HttpServletResponse response,
-                            FilterChain chain)
-            throws IOException, ServletException {
+//     @Override
+//     protected void doFilter(HttpServletRequest request,
+//                             HttpServletResponse response,
+//                             FilterChain chain)
+//             throws IOException, ServletException {
 
-        String context = request.getContextPath();
+//         String context = request.getContextPath();
 
-        // ❗ Không tạo session mới
-        HttpSession session = request.getSession(false);
+//         // ❗ Không tạo session mới
+//         HttpSession session = request.getSession(false);
 
-        // ===== 1️⃣ Chưa login =====
-        if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect(context + "/login");
-            return;
-        }
+//         // ===== 1️⃣ Chưa login =====
+//         if (session == null || session.getAttribute("user") == null) {
+//             response.sendRedirect(context + "/login");
+//             return;
+//         }
 
-        User user = (User) session.getAttribute("user");
+//         User user = (User) session.getAttribute("user");
 
-        if (3 != user.getRole().getRoleId()) {
-            response.sendRedirect(context + "/login?error=accessDenied");
-            return;
-        }
+//         if (3 != user.getRole().getRoleId()) {
+//             response.sendRedirect(context + "/login?error=accessDenied");
+//             return;
+//         }
 
-        chain.doFilter(request, response);
-    }
-}
+//         chain.doFilter(request, response);
+//     }
+// }

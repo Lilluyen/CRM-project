@@ -10,7 +10,7 @@ import model.User;
 
 public class CustomerMapper {
 
-    public static Customer toCustomer(CustomerCreateDTO dto, int userId) {
+    public static Customer toCustomerForCreate(CustomerCreateDTO dto, int userId) {
         Customer customer = new Customer();
         customer.setName(dto.getName());
         customer.setPhone(dto.getPhone());
@@ -18,13 +18,32 @@ public class CustomerMapper {
         customer.setEmail(dto.getEmail());
         customer.setGender(dto.getGender());
         customer.setAddress(dto.getAddress());
-        customer.setSocialLink(dto.getSocialLink());
+        customer.setSource(dto.getSource());
 
         User owner = new User();
         owner.setUserId(userId);
         customer.setOwner(owner);
 
         customer.setCreatedAt(LocalDateTime.now());
+        return customer;
+    }
+    
+    public static Customer toCustomerForUpdate(CustomerCreateDTO dto, int userId) {
+        Customer customer = new Customer();
+        customer.setCustomerId(dto.getCustomer_id());
+        customer.setName(dto.getName());
+        customer.setPhone(dto.getPhone());
+        customer.setBirthday(dto.getBirthday());
+        customer.setEmail(dto.getEmail());
+        customer.setGender(dto.getGender());
+        customer.setAddress(dto.getAddress());
+        customer.setSource(dto.getSource());
+
+        User owner = new User();
+        owner.setUserId(userId);
+        customer.setOwner(owner);
+
+        customer.setUpdatedAt(LocalDateTime.now());
         return customer;
     }
 
@@ -54,9 +73,7 @@ public class CustomerMapper {
         dto.setBirthday(c.getBirthday());
         dto.setGender(c.getGender());
         dto.setAddress(c.getAddress());
-        dto.setSocialLink(c.getSocialLink());
-
-        dto.setCustomerType(c.getCustomerType());
+        dto.setSource(c.getSource());
         dto.setStatus(c.getStatus());
         dto.setLoyaltyTier(c.getLoyaltyTier());
         dto.setRfmScore(c.getRfmScore());

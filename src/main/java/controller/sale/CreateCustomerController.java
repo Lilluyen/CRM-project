@@ -1,12 +1,6 @@
 package controller.sale;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
+import dao.*;
 import dto.CustomerCreateDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -22,16 +16,33 @@ import util.EmailCheck;
 import util.NameCheck;
 import util.PhoneCheck;
 
-@WebServlet(name = "CreateCustomerController", urlPatterns = { "/customers/add-customer" })
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
 public class CreateCustomerController extends HttpServlet {
 
-    private final CustomerService customerService = new CustomerService();
+    CustomerDAO customerDAO = new CustomerDAO();
+    CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+
+    CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // TODO Auto-generated method stub
-
-        CustomerService customerService = new CustomerService();
 
         try {
             List<StyleTag> styleTagList = customerService.getListStyleTags();
@@ -59,6 +70,7 @@ public class CreateCustomerController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
+        List<String> errors = new ArrayList<>();
         HttpSession session = req.getSession(false);
 
         if (session != null) {
@@ -72,8 +84,9 @@ public class CreateCustomerController extends HttpServlet {
                 String phone = req.getParameter("phone");
                 String gender = req.getParameter("gender");
                 String email = req.getParameter("email");
-                String socialLink = req.getParameter("socialLink");
+                String source = req.getParameter("source");
                 String address = req.getParameter("address");
+                String birthdayRaw = req.getParameter("birthday");
 
                 // Validate name
                 if (!NameCheck.isValidName(name)) {
@@ -91,7 +104,24 @@ public class CreateCustomerController extends HttpServlet {
                     return;
                 }
 
-                LocalDate birthday = parseDate(req.getParameter("birthday"));
+                LocalDate birthday = null;
+
+                if (birthdayRaw == null || birthdayRaw.isBlank()) {
+                    errors.add("Birthday is required");
+                } else {
+                    try {
+                        birthday = ControllerUltil.parseDate(birthdayRaw);
+                        if (birthday.isAfter(LocalDate.now())) {
+                            errors.add("Birthday must be in the past");
+                            resp.sendRedirect(req.getContextPath() + "/customers?status=failed");
+                            return;
+                        }
+                    } catch (DateTimeParseException e) {
+                        errors.add("Invalid birthday format");
+                        resp.sendRedirect(req.getContextPath() + "/customers?status=failed");
+                        return;
+                    }
+                }
 
                 // ===== 2. FIT PROFILE (BigDecimal) =====
                 BigDecimal height = parseDecimal(req.getParameter("height"));
@@ -122,7 +152,7 @@ public class CreateCustomerController extends HttpServlet {
                 dto.setGender(gender);
                 dto.setEmail(email);
                 dto.setBirthday(birthday);
-                dto.setSocialLink(socialLink);
+                dto.setSource(source);
                 dto.setAddress(address);
 
                 dto.setHeight(height);
@@ -159,10 +189,4 @@ public class CreateCustomerController extends HttpServlet {
         return new BigDecimal(value);
     }
 
-    private LocalDate parseDate(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return LocalDate.parse(value);
-    }
 }

@@ -3,7 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="customer-detail col-10 mt-5">
+<div class="customer-detail mt-5">
 
     <!-- HEADER -->
     <div class="customer-detail__header">
@@ -30,6 +30,11 @@
         </div>
 
         <div class="customer-detail__actions">
+            <a href="${pageContext.request.contextPath}/customer-journey?type=customer&customerId=${customerDetail.customerId}"
+               class="customer-detail__btn customer-detail__btn--outline">
+                View Journey
+            </a>
+
             <a href="${pageContext.request.contextPath}/customers/edit?customerId=${customerDetail.customerId}"
                class="customer-detail__btn customer-detail__btn--outline">
                 Edit
@@ -62,8 +67,8 @@
                 <div class="customer-detail__row">
                     <span>Birthday</span>
                     <strong>
-                        <fmt:formatDate value="${customerDetail.birthday}"
-                                        pattern="dd/MM/yyyy"/>
+                        ${customerDetail.birthday}
+                                        
                     </strong>
                 </div>
 
@@ -73,11 +78,9 @@
                 </div>
 
                 <div class="customer-detail__row">
-                    <span>Social</span>
+                    <span>Source</span>
                     <strong>
-                        <a href="${customerDetail.socialLink}" target="_blank">
-                            View Profile
-                        </a>
+                        ${customerDetail.source}
                     </strong>
                 </div>
             </div>
@@ -100,7 +103,35 @@
                             No style tags
                         </span>
                     </c:if>
+                    <!-- ADD TAG BUTTON -->
+                    <button type="button"
+                            class="customer-detail__add-tag"
+                            onclick="toggleTagPicker()">
+                        + Add Tag
+                    </button>
+
+                    <!-- TAG PICKER -->
+                    <div id="tagPicker" class="tag-picker hidden">
+                        <form action="${pageContext.request.contextPath}/add-tag" method="post">
+                            <input type="hidden" name="customerId" value="${customerDetail.customerId}" />
+
+                            <div class="tag-picker__list">
+                                <c:forEach var="tag" items="${allStyleTags}">
+                                    <label class="tag-picker__item">
+                                        <input type="checkbox" name="tagIds" value="${tag.tagId}" />
+                                        <span>${tag.tagName}</span>
+                                    </label>
+                                </c:forEach>
+                            </div>
+
+                            <div class="tag-picker__actions">
+                                <button type="submit">Add</button>
+                                <button type="button" onclick="toggleTagPicker()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
             </div>
 
         </div>
@@ -116,14 +147,6 @@
 
                 <div class="customer-detail__metrics">
 
-                    <div class="customer-detail__metric">
-                        <span class="customer-detail__metric-label">
-                            Customer Type
-                        </span>
-                        <span class="customer-detail__metric-value">
-                            ${customerDetail.customerType}
-                        </span>
-                    </div>
 
                     <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">
@@ -166,7 +189,7 @@
                             Last Purchase
                         </span>
                         <span class="customer-detail__metric-value">
-                            ${customerDetail.lastPurchase}
+                            ${customerDetail.lastPurchaseDate}
                         </span>
                     </div>
 
@@ -228,3 +251,9 @@
     </div>
 
 </div>
+
+<script>
+    function toggleTagPicker() {
+        document.getElementById("tagPicker").classList.toggle("hidden");
+    }
+</script>

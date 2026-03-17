@@ -1,75 +1,60 @@
 package util;
 
 /**
- * Tính điểm Lead dựa trên các tiêu chí
+ * Tính điểm Lead dựa trên các tiêu chí - Họ tên: +20 - Email: +20 - Phone: +20
+ * - Campaign: +10 Max: 70
  */
 public class LeadScoringUtil {
 
     /**
      * Tính leadScore dựa trên thông tin
-     * @return score (0-100)
+     *
+     * @return score (0-70)
      */
-    public static int calculateScore(String email, String phone, String source) {
+    public static int calculateScore(String fullName, String email, String phone, int campaignId, String interest) {
         int score = 0;
 
-        // Có email công ty (chứa domain không phải gmail, yahoo, etc)
-        if (email != null && !email.isEmpty()) {
-            if (isCompanyEmail(email)) {
-                score += 20;
-            } else {
-                score += 10; // Email cá nhân
-            }
-        }
-
-        // Có phone hợp lệ
-        if (phone != null && PhoneCheck.isValidPhone(phone)) {
+        // Có họ tên
+        if (fullName != null && !fullName.trim().isEmpty()) {
             score += 20;
         }
 
-        // Source scoring
-        if (source != null) {
-            switch (source.toUpperCase()) {
-                case "EVENT":
-                    score += 30;
-                    break;
-                case "FACEBOOK":
-                case "INSTAGRAM":
-                case "SOCIAL_MEDIA":
-                    score += 10;
-                    break;
-                case "WEBSITE":
-                    score += 15;
-                    break;
-                case "REFERRAL":
-                    score += 25;
-                    break;
-                default:
-                    score += 5;
-            }
+        // Có email
+        if (email != null && !email.trim().isEmpty()) {
+            score += 20;
         }
 
-        // Cap score at 100
+        // Có số điện thoại hợp lệ
+        if (phone != null && !phone.trim().isEmpty() && PhoneCheck.isValidPhone(phone)) {
+            score += 20;
+        }
+
+        // Thuộc campaign
+        if (campaignId > 0) {
+            score += 10;
+        }
+
+        if (interest != null && !interest.trim().isEmpty()) {
+            score += 10;
+        }
+
         return Math.min(score, 100);
     }
 
     /**
-     * Phân loại Lead dựa trên score
+     * Xác định trạng thái Lead tự động dựa trên score < 10: LOST < 20: NEW_LEAD
+     * < 70:  CONTACTED
+     * >= 70: QUALIFIED
      */
-    public static String classifyLead(int score) {
-        if (score >= 70) {
-            return "HOT";
-        } else if (score >= 40) {
-            return "WARM";
+    public static String determineStatus(int score) {
+        if (score < 10) {
+            return "LOST";
+        } else if (score < 20) {
+            return "NEW_LEAD";
+        } else if (score < 70) {
+            return "CONTACTED";
         } else {
-            return "COLD";
+            return "QUALIFIED";
         }
-    }
-
-    /**
-     * Check email công ty
-     */
-    private static boolean isCompanyEmail(String email) {
-        String domain = email.substring(email.lastIndexOf("@") + 1);
-        return !domain.matches("(gmail|yahoo|hotmail|outlook|tmail)\\.com");
     }
 }

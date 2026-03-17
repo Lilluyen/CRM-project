@@ -8,27 +8,27 @@ public class Lead {
     private String fullName;
     private String email;
     private String phone;
-    private String companyName;
     private String interest;
     private String source;
     private String status;
     private int score;
     private int campaignId;
+    private String campaignName; // transient - lấy từ JOIN Campaigns
     private int assignedTo;
+    private String assignedToName; // transient - lấy từ JOIN Users
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public Lead() {
     }
 
-    public Lead(int leadId, String fullName, String email, String phone, String companyName,
+    public Lead(int leadId, String fullName, String email, String phone,
             String interest, String source, String status, int score, int campaignId, int assignedTo,
             LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.leadId = leadId;
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
-        this.companyName = companyName;
         this.interest = interest;
         this.source = source;
         this.status = status;
@@ -72,14 +72,6 @@ public class Lead {
         this.phone = phone;
     }
 
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
-
     public String getInterest() {
         return interest;
     }
@@ -112,12 +104,28 @@ public class Lead {
         this.campaignId = campaignId;
     }
 
+    public String getCampaignName() {
+        return campaignName;
+    }
+
+    public void setCampaignName(String campaignName) {
+        this.campaignName = campaignName;
+    }
+
     public int getAssignedTo() {
         return assignedTo;
     }
 
     public void setAssignedTo(int assignedTo) {
         this.assignedTo = assignedTo;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
     }
 
     public LocalDateTime getCreatedAt() {

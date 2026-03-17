@@ -1,15 +1,36 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<%@ page isELIgnored="false" %>
+<%@ taglib
+        uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib
+        uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ page
+        isELIgnored="false" %> <%-- Xác định role prefix dựa trên role của user --%>
+<c:set var="userRole" value="${sessionScope.user.role.roleName}"/>
+<c:choose>
+    <c:when test="${fn:toUpperCase(userRole) eq 'ADMIN'}">
+        <c:set var="rolePrefix" value="/admin"/>
+    </c:when>
+    <c:when test="${fn:toUpperCase(userRole) eq 'SALE'}">
+        <c:set var="rolePrefix" value="/sale"/>
+    </c:when>
+    <c:when test="${fn:toUpperCase(userRole) eq 'MARKETING'}">
+        <c:set var="rolePrefix" value="/marketing"/>
+    </c:when>
+    <c:when test="${fn:toUpperCase(userRole) eq 'CS'}">
+        <c:set var="rolePrefix" value="/cs"/>
+    </c:when>
+    <c:otherwise>
+        <c:set var="rolePrefix" value=""/>
+    </c:otherwise>
+</c:choose>
+
 <div class="sidebar" id="sidebar">
     <div class="sidebar-inner slimscroll">
         <div id="sidebar-menu" class="sidebar-menu">
             <ul>
-
                 <!-- DASHBOARD -->
                 <li>
-                    <a href="${pageContext.request.contextPath}/dashboard">
+                    <a href="${pageContext.request.contextPath}${rolePrefix}/dashboard">
                         <i class="fas fa-home"></i>
                         <span>Dashboard</span>
                     </a>
@@ -22,9 +43,33 @@
                         <span>Campaign</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <ul>
-                        <li><a href="${pageContext.request.contextPath}/campaign/list">Campaign List</a></li>
-                        <li><a href="${pageContext.request.contextPath}/campaign/create">Create Campaign</a></li>
+                    <ul
+                            style="${fn:startsWith(page, 'campaign-') ? 'display:block;' : ''}"
+                    >
+                        <li>
+                            <a
+                                    class="${page eq 'campaign-list' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/marketing/campaign"
+                            >
+                                Campaign List
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'campaign-form' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/marketing/campaign/form"
+                            >
+                                Add New Campaign
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'campaign-detail' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/marketing/campaign"
+                            >
+                                Campaign Update
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
@@ -35,9 +80,39 @@
                         <span>Leads</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <ul>
-                        <li><a href="${pageContext.request.contextPath}/lead/list">Lead List</a></li>
-                        <li><a href="${pageContext.request.contextPath}/lead/import">Import Leads</a></li>
+                    <ul style="${fn:startsWith(page, 'lead-') ? 'display:block;' : ''}">
+                        <li>
+                            <a
+                                    class="${page eq 'lead-list' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/marketing/leads"
+                            >
+                                Lead List
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'lead-form' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/marketing/leads/form"
+                            >
+                                Add New Lead
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'lead-detail' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/marketing/leads"
+                            >
+                                Update Lead
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'lead-import' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/marketing/leads/import"
+                            >
+                                Import Leads
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
@@ -49,10 +124,18 @@
                         <span class="menu-arrow"></span>
                     </a>
                     <ul>
-                        <li><a href="${pageContext.request.contextPath}/category">Category</a></li>
-                        <li><a href="${pageContext.request.contextPath}/product">Product</a></li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/sale/category/list">Category</a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/product">Product</a>
+                        </li>
                         <li><a href="${pageContext.request.contextPath}/deal">Deals</a></li>
-                        <li><a href="${pageContext.request.contextPath}/funnel">Sales Funnel</a></li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/funnel"
+                            >Sales Funnel</a
+                            >
+                        </li>
                     </ul>
                 </li>
 
@@ -66,26 +149,34 @@
 
                     <ul style="${page eq 'customer-list' ? 'display:block;' : ''}">
                         <li>
-                            <a class="${page eq 'customer-list' ? 'active' : ''}"
-                               href="${pageContext.request.contextPath}/customers">
+                            <a
+                                    class="${page eq 'customer-list' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/customers"
+                            >
                                 Customer List
                             </a>
                         </li>
                         <li>
-                            <a class="${page eq 'customer-add' ? 'active' : ''}"
-                               href="${pageContext.request.contextPath}/customers/add-customer">
+                            <a
+                                    class="${page eq 'customer-add' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/customers/add-customer"
+                            >
                                 Add New Customer
                             </a>
                         </li>
                         <li>
-                            <a class="${page eq 'customer-detail' ? 'active' : ''}"
-                               href="${pageContext.request.contextPath}/customers">
+                            <a
+                                    class="${page eq 'customer-detail' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/customers"
+                            >
                                 Customer View 360
                             </a>
                         </li>
                         <li>
-                            <a class="${page eq 'customer-segments' ? 'active' : ''}"
-                               href="${pageContext.request.contextPath}/customers/segments">
+                            <a
+                                    class="${page eq 'customer-segments' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/customers/segments"
+                            >
                                 Customer Segments
                             </a>
                         </li>
@@ -93,21 +184,91 @@
                 </li>
 
                 <!-- ACTIVITIES -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/activity">
+                <li class="submenu">
+                    <a href="javascript:void(0);">
                         <i class="fas fa-history"></i>
                         <span>Activities</span>
+                        <span class="menu-arrow"></span>
                     </a>
-                </li>
 
+                    <ul style="${page eq 'activity-list' ? 'display:block;' : ''}">
+                        <li>
+                            <a
+                                    class="${page eq 'activity-list' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/activities/list"
+                            >
+                                Activities List
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'activity-create' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/activities/create"
+                            >
+                                Create Activity
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'activity-details' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/activities/details"
+                            >
+                                Activity Details
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'activity-edit' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/activities/edit"
+                            >
+                                Edit Activity
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <!-- TASKS -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/task">
+                <li class="submenu">
+                    <a href="javascript:void(0);">
                         <i class="fas fa-tasks"></i>
                         <span>Tasks</span>
+                        <span class="menu-arrow"></span>
                     </a>
-                </li>
 
+                    <ul style="${page eq 'task-list' ? 'display:block;' : ''}">
+                        <li>
+                            <a
+                                    class="${page eq 'task-list' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/tasks/list"
+                            >
+                                Tasks List
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'task-create' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/tasks/create"
+                            >
+                                Create Task
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'task-details' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/tasks/details"
+                            >
+                                Task Details
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'task-edit' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/tasks/edit"
+                            >
+                                Edit Task
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <!-- SUPPORT -->
                 <li>
                     <a href="${pageContext.request.contextPath}/ticket">
@@ -117,12 +278,16 @@
                 </li>
 
                 <!-- REPORT -->
-                <li>
-                    <a href="${pageContext.request.contextPath}/report">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Reports</span>
-                    </a>
-                </li>
+                <c:if
+                        test="${fn:toUpperCase(userRole) eq 'ADMIN' || fn:toUpperCase(userRole) eq 'MARKETING'}"
+                >
+                    <li>
+                        <a href="${pageContext.request.contextPath}/marketing/report">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                </c:if>
 
                 <!-- ADMIN -->
                 <li class="submenu">
@@ -133,13 +298,17 @@
                     </a>
                     <ul>
                         <li><a href="${pageContext.request.contextPath}/user">Users</a></li>
-                        <li><a href="${pageContext.request.contextPath}/monitor">Monitoring</a></li>
-                        <li><a href="${pageContext.request.contextPath}/settings">Settings</a></li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/monitor"
+                            >Monitoring</a
+                            >
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/settings">Settings</a>
+                        </li>
                     </ul>
                 </li>
-
             </ul>
         </div>
     </div>
 </div>
-
