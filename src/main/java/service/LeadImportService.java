@@ -35,6 +35,11 @@ public class LeadImportService {
     /**
      * Import leads với validation, scoring và round-robin assign cho danh sách
      * sale đã chọn.
+     *
+     * Logic:
+     * - Cùng email + cùng campaign → lỗi "đã tồn tại trong campaign"
+     * - Cùng email + khác campaign → OK (1 người có thể ở nhiều campaign)
+     * - File có mix dữ liệu mới + cũ → import dữ liệu mới, báo lỗi dữ liệu cũ
      */
     public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId, List<Integer> assignedToIds) {
         ImportLeadResponse response = new ImportLeadResponse();
@@ -47,22 +52,22 @@ public class LeadImportService {
 
             // Validate fullName
             if (lead.getFullName() == null || lead.getFullName().trim().isEmpty()) {
-                errors.add("Row " + rowNumber + ": Tên không được để trống");
+                errors.add("Tên không được để trống");
             }
 
             // Validate email
             if (lead.getEmail() == null || !EmailCheck.isValidEmail(lead.getEmail())) {
-                errors.add("Row " + rowNumber + ": Email không hợp lệ: " + lead.getEmail());
+                errors.add("Email không hợp lệ: " + lead.getEmail());
             }
 
             // Validate phone (nếu có)
             if (lead.getPhone() != null && !lead.getPhone().isEmpty()) {
                 if (!PhoneCheck.isValidPhone(lead.getPhone())) {
-                    errors.add("Row " + rowNumber + ": Số điện thoại không hợp lệ: " + lead.getPhone());
+                    errors.add("Số điện thoại không hợp lệ: " + lead.getPhone());
                 }
             }
 
-            // Check duplicate dùng rule chung từ LeadService
+            // Check duplicate - chỉ khi không có lỗi validation khác
             if (errors.isEmpty()) {
                 if (campaignId != null) {
                     lead.setCampaignId(campaignId);
@@ -71,7 +76,8 @@ public class LeadImportService {
                 try {
                     leadService.validateLeadUniqueness(lead);
                 } catch (IllegalArgumentException ex) {
-                    errors.add("Row " + rowNumber + ": " + ex.getMessage());
+                    // Duplicate in same campaign → báo lỗi rõ ràng
+                    errors.add(ex.getMessage());
                 }
             }
 
@@ -80,7 +86,10 @@ public class LeadImportService {
             if (errors.isEmpty()) {
                 validLeads.add(lead);
             } else {
-                response.addError(String.join(" | ", errors));
+                // Format: "Row X - Nguyễn Văn A (email@...) : lý do lỗi"
+                String leadInfo = (lead.getFullName() != null ? lead.getFullName() : "N/A")
+                        + " (" + (lead.getEmail() != null ? lead.getEmail() : "N/A") + ")";
+                response.addError("Row " + (rowNumber - 1) + " - " + leadInfo + ": " + String.join(", ", errors));
             }
         }
 
@@ -114,7 +123,13 @@ public class LeadImportService {
         // ===== IMPORT PHASE (Transaction) =====
         if (validLeads.isEmpty()) {
             response.setSuccess(false);
-            response.setMessage("Không có lead nào hợp lệ!");
+            int totalFailed = leads.size();
+            response.setTotalFailed(totalFailed);
+            if (totalFailed == 1) {
+                response.setMessage("Không có lead nào hợp lệ để import.");
+            } else {
+                response.setMessage("Không có lead nào hợp lệ để import. Tất cả " + totalFailed + " leads đều bị lỗi.");
+            }
             return response;
         }
 
@@ -136,8 +151,15 @@ public class LeadImportService {
                 }
             }
 
-            response.setSuccess(true);
-            response.setMessage("Import thành công " + imported + " leads!");
+            // Build success message
+            String campaignInfo = (campaignId != null) ? " vào campaign" : "";
+            if (response.getTotalFailed() > 0) {
+                response.setSuccess(true);
+                response.setMessage("Import thành công " + imported + " leads" + campaignInfo + ". " + response.getTotalFailed() + " leads bị lỗi (trùng lặp hoặc dữ liệu không hợp lệ).");
+            } else {
+                response.setSuccess(true);
+                response.setMessage("Import thành công " + imported + " leads" + campaignInfo + "!");
+            }
         } catch (Exception e) {
             response.setSuccess(false);
             response.setMessage("Lỗi import: " + e.getMessage());
