@@ -327,19 +327,38 @@ prefix="c" %>
     importedCount.textContent = result.totalImported || 0;
     failedCount.textContent = result.totalFailed || 0;
 
-    // Show errors
+    // Show errors with better formatting
     errorContainer.innerHTML = "";
     if (result.errors && result.errors.length > 0) {
-      let errorItems = result.errors
-        .map((err) => "<li>" + err + "</li>")
-        .join("");
-      const errorHtml =
-        '<div class="error-list">' +
-        '<strong><i class="fas fa-exclamation-triangle me-1"></i> Chi tiết lỗi:</strong>' +
-        "<ul>" +
-        errorItems +
-        "</ul>" +
-        "</div>";
+      // Group errors by type
+      const duplicateErrors = result.errors.filter(e => e.includes("đã tồn tại"));
+      const validationErrors = result.errors.filter(e => !e.includes("đã tồn tại"));
+
+      let errorHtml = '<div class="error-list mt-3">';
+
+      // Show duplicates prominently
+      if (duplicateErrors.length > 0) {
+        errorHtml += '<div class="alert alert-warning">';
+        errorHtml += '<strong><i class="fas fa-exclamation-triangle me-1"></i> Các lead bị trùng (đã tồn tại trong campaign này):</strong>';
+        errorHtml += '<ul class="mb-0 mt-2" style="max-height: 200px; overflow-y: auto;">';
+        duplicateErrors.forEach(err => {
+          errorHtml += '<li class="text-warning">' + err + '</li>';
+        });
+        errorHtml += '</ul></div>';
+      }
+
+      // Show validation errors
+      if (validationErrors.length > 0) {
+        errorHtml += '<div class="alert alert-danger mt-2">';
+        errorHtml += '<strong><i class="fas fa-times-circle me-1"></i> Các lead có dữ liệu không hợp lệ:</strong>';
+        errorHtml += '<ul class="mb-0 mt-2" style="max-height: 200px; overflow-y: auto;">';
+        validationErrors.forEach(err => {
+          errorHtml += '<li>' + err + '</li>';
+        });
+        errorHtml += '</ul></div>';
+      }
+
+      errorHtml += '</div>';
       errorContainer.innerHTML = errorHtml;
     }
 
