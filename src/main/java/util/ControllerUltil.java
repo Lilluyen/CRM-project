@@ -1,16 +1,22 @@
 package util;
 
-import java.io.IOException;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.regex.Pattern;
+
 public class ControllerUltil {
 
+    private static final Pattern DATE_PATTERN =
+            Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
+
     public static void forwardError(HttpServletRequest request,
-            HttpServletResponse response,
-            String message) {
+                                    HttpServletResponse response,
+                                    String message) {
         try {
             request.setAttribute("errorMessage", message);
             request.getRequestDispatcher("/view/error/error.jsp")
@@ -44,4 +50,22 @@ public class ControllerUltil {
             return 10;
         }
     }
+
+
+    public static LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isBlank()) {
+            return null;
+        }
+
+        if (!DATE_PATTERN.matcher(dateStr).matches()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(dateStr);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
 }

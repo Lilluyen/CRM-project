@@ -104,11 +104,20 @@ public class LeadImportController extends HttpServlet {
                 }
             }
 
-            // ===== Read Excel =====
-            List<Lead> leads = ExcelUtil.readLeadsFromExcel(filePart.getInputStream());
+            // ===== Read Excel (collect errors per row instead of stopping) =====
+            List<String> parseErrors = new ArrayList<>();
+            List<Lead> leads = ExcelUtil.readLeadsFromExcel(filePart.getInputStream(), parseErrors);
 
             // ===== Import =====
             ImportLeadResponse importResponse = importService.importLeads(leads, source, campaignId, assignedToIds);
+
+            // Add parse errors to response
+            if (!parseErrors.isEmpty()) {
+                for (String err : parseErrors) {
+                    importResponse.addError(err);
+                }
+                importResponse.setTotalFailed(importResponse.getTotalFailed() + parseErrors.size());
+            }
 
             // ===== Response =====
             response.getWriter().write(gson.toJson(importResponse));

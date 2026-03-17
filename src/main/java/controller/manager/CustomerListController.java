@@ -1,35 +1,38 @@
 package controller.manager;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializer;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
-import dto.CustomerPageResult;
+import dao.*;
+import dto.Pagination;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import model.StyleTag;
+import model.Customer;
+import model.CustomerSegment;
+import service.CustomerSegmentService;
 import service.CustomerService;
 import util.ControllerUltil;
 
-@WebServlet(name = "CustomerListController", urlPatterns = { "/customers" })
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+
+@WebServlet(name = "CustomerListController", urlPatterns = {"/customers"})
 public class CustomerListController extends HttpServlet {
 
     private static final int DEFAULT_SIZE = 10;
+    private final CustomerDAO customerDAO = new CustomerDAO();
+    private final CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
+    private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
+    private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+    private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
+    private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
+    private final CustomerService customerService = new CustomerService(
+            customerDAO,
+            customerStyleDAO,
+            customerQueryDAO,
+            customerMeasurementDAO,
+            customerSegmentDAO);
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
@@ -41,67 +44,30 @@ public class CustomerListController extends HttpServlet {
             throws IOException, ServletException {
         int page = 1;
         int size = DEFAULT_SIZE;
+
+
         try {
-            if (request.getParameter("page") != null) {
-                page = ControllerUltil.parsePage(request.getParameter("page"));
+            page = getPage(request, "page");
+            size = getSize(request, "pageSize");
+
+            // Giới hạn size hợp lệ
+            if (size != 5 && size != 10 && size != 20) {
+                size = 10;
             }
-            if (request.getParameter("size") != null) {
-                size = ControllerUltil.parseSize(request.getParameter("size"));
+            if (page < 1) {
+                page = 1;
             }
+            int totalRecords = customerService.countTotalCustomer(null, null, null, null, null, null);
+            List<Customer> customers;
+            Pagination pagination = new Pagination(page, size, totalRecords);
+            customers = customerService.getCustomerList(page, size);
+            List<CustomerSegment> customerSegments = customerSegmentService.getStaticSegments();
+            request.setAttribute("pagination", pagination);
 
-            // Lấy sessionId từ HTTP session (null nếu lần đầu)
-            HttpSession httpSession = request.getSession();
-            String sessionId = (String) httpSession.getAttribute("customerPagingSession");
-
-            // Nếu JS không gửi lên thì fallback lấy từ HttpSession
-            if (sessionId == null || sessionId.isBlank()) {
-                sessionId = (String) httpSession.getAttribute("customerFilterSession");
-            }
-
-            // Reset session nếu user quay về trang 1
-            if (page == 1) {
-                sessionId = null;
-                httpSession.removeAttribute("customerPagingSession");
-            }
-
-            CustomerDAO customerDAO = new CustomerDAO();
-            CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
-            CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-            CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
-            CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
-
-            CustomerService customerService = new CustomerService(
-                    customerDAO,
-                    customerStyleDAO,
-                    customerQueryDAO,
-                    customerMeasurementDAO,
-                    customerSegmentDAO);
-            CustomerPageResult result = customerService.getCustomerList(page, size, sessionId);
-            List<StyleTag> styleTagList = customerService.getListStyleTags();
-
-            // Lưu sessionId mới vào HTTP session cho request tiếp theo
-            if (result.getSessionId() != null) {
-                httpSession.setAttribute("customerPagingSession", result.getSessionId());
-            }
-
-            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                Gson gson = new GsonBuilder()
-                        .registerTypeAdapter(LocalDateTime.class,
-                                (JsonSerializer<LocalDateTime>) (src, typeOfSrc,
-                                        context) -> new JsonPrimitive(src.toString()))
-                        .create();
-                response.getWriter().write(gson.toJson(result));
-                return;
-            }
-
-            request.setAttribute("customerList", result.getData());
-            request.setAttribute("totalPages", result.getTotalPages());
-            request.setAttribute("totalRecord", result.getTotalRecords());
-            request.setAttribute("sessionId", result.getSessionId()); // ← Truyền xuống JSP nếu cần
-            request.setAttribute("styleTagList", styleTagList);
             request.setAttribute("currentPage", page);
+            request.setAttribute("customerList", customers);
+            request.setAttribute("totalRecord", totalRecords);
+            request.setAttribute("segments", customerSegments);
             request.setAttribute("pageTitle", "Customer List | Clothes CRM");
             request.setAttribute("contentPage", "customer/customerList.jsp");
             request.setAttribute("pageCss", "customerList.css");
@@ -113,5 +79,18 @@ public class CustomerListController extends HttpServlet {
             ControllerUltil.forwardError(request, response, "Database error.");
         }
     }
+
+    private int getPage(HttpServletRequest request, String param) {
+        String value = request.getParameter(param);
+        if (value == null) return 1;
+        return ControllerUltil.parsePage(value);
+    }
+
+    private int getSize(HttpServletRequest request, String param) {
+        String value = request.getParameter(param);
+        if (value == null) return DEFAULT_SIZE;
+        return ControllerUltil.parseSize(value);
+    }
+
 
 }

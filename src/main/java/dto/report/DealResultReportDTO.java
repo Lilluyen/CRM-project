@@ -21,4 +21,12 @@ public class DealResultReportDTO {
 
     public int getDealsLost() { return dealsLost; }
     public void setDealsLost(int dealsLost) { this.dealsLost = dealsLost; }
+
+    /**
+     * Calculate win rate as percentage
+     */
+    public double getWinRate() {
+        if (totalDeals == 0) return 0;
+        return Math.round((double) dealsWon * 10000.0 / totalDeals) / 100.0;
+    }
 }

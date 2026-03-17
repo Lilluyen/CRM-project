@@ -161,19 +161,8 @@ public class Customer {
         this.updatedAt = updatedAt;
     }
 
-    public String getCustomerType() {
-        return customerType;
-    }
-
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
-    }
-
-    public String getInterest() {
-        return interest;
-    }
-
-    public void setInterest(String interest) {
-        this.interest = interest;
+    public String getLastPurchaseDate() {
+        if (lastPurchase == null) return "";
+        return lastPurchase.toLocalDate().toString();
     }
 }

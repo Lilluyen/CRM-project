@@ -8,6 +8,7 @@ import dto.report.CampaignPerformanceReportDTO;
 import dto.report.DealResultReportDTO;
 import dto.report.LeadFunnelReportDTO;
 import dto.report.LeadSourceReportDTO;
+import dto.report.MarketingReportKpiDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -86,6 +87,9 @@ public class CampaignReportController extends HttpServlet {
         DealResultReportDTO dealResult =
                 reportService.getDealResultReport(campaignId, fromDate, toDate);
 
+        MarketingReportKpiDTO reportKpi =
+                reportService.getMarketingReportKpi(campaignId, fromDate, toDate);
+
         // ── Filter dropdown data ─────────────────────────────────────────────
         List<Object[]> allCampaigns = reportService.getAllCampaignsForFilter();
         List<String>   allSources   = reportService.getAllSourcesForFilter();
@@ -96,6 +100,7 @@ public class CampaignReportController extends HttpServlet {
         request.setAttribute("leadSources",         leadSources);
         request.setAttribute("leadFunnel",          leadFunnel);
         request.setAttribute("dealResult",          dealResult);
+        request.setAttribute("reportKpi",           reportKpi);
         request.setAttribute("allCampaigns",        allCampaigns);
         request.setAttribute("allSources",          allSources);
 

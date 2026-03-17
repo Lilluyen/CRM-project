@@ -103,11 +103,19 @@ public class CampaignFormController extends HttpServlet {
                 throw new IllegalArgumentException("Ngân sách không hợp lệ.");
             }
 
-            LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+            if (startDateStr == null || startDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày bắt đầu không được để trống.");
+            }
+            if (endDateStr == null || endDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày kết thúc không được để trống.");
+            }
+            LocalDate startDate = LocalDate.parse(startDateStr);
             if (startDate.isBefore(LocalDate.now())) {
                 throw new IllegalArgumentException("Ngày bắt đầu phải là ngày hôm nay hoặc sau đó.");
             }
-            LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+            LocalDate endDate = LocalDate.parse(endDateStr);
             if (endDate.isBefore(LocalDate.now())) {
                 throw new IllegalArgumentException("Ngày kết thúc phải là ngày hôm nay hoặc sau đó.");
             }
@@ -163,26 +171,60 @@ public class CampaignFormController extends HttpServlet {
                 throw new IllegalArgumentException("Ngân sách không hợp lệ.");
             }
 
-            LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
-            if (startDate.isBefore(LocalDate.now())) {
-                throw new IllegalArgumentException("Ngày bắt đầu phải là ngày hôm nay hoặc sau đó.");
+            String status = request.getParameter("status");
+            if (status == null || status.trim().isEmpty()) {
+                throw new IllegalArgumentException("Trạng thái không được để trống.");
             }
-            LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
-            if (endDate.isBefore(LocalDate.now())) {
-                throw new IllegalArgumentException("Ngày kết thúc phải là ngày hôm nay hoặc sau đó.");
+
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+            if (startDateStr == null || startDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày bắt đầu không được để trống.");
             }
+            if (endDateStr == null || endDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày kết thúc không được để trống.");
+            }
+            LocalDate startDate = LocalDate.parse(startDateStr);
+            LocalDate endDate = LocalDate.parse(endDateStr);
             if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
                 throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
+            }
+
+            LocalDate today = LocalDate.now();
+            String normalizedStatus = status.trim().toUpperCase();
+            if ("PLANNING".equals(normalizedStatus)) {
+                if (startDate.isBefore(today)) {
+                    throw new IllegalArgumentException("Campaign đang ở trạng thái LÊN KẾ HOẠCH: ngày bắt đầu phải là hôm nay hoặc sau đó.");
+                }
+                if (endDate.isBefore(today)) {
+                    throw new IllegalArgumentException("Campaign đang ở trạng thái LÊN KẾ HOẠCH: ngày kết thúc phải là hôm nay hoặc sau đó.");
+                }
+            } else if ("ACTIVE".equals(normalizedStatus)) {
+                // ACTIVE: hôm nay phải nằm trong khoảng chạy
+                if (startDate.isAfter(today)) {
+                    throw new IllegalArgumentException("Campaign đang ở trạng thái ĐANG CHẠY: ngày bắt đầu không được sau hôm nay.");
+                }
+                if (endDate.isBefore(today)) {
+                    throw new IllegalArgumentException("Campaign đang ở trạng thái ĐANG CHẠY: ngày kết thúc phải là hôm nay hoặc sau đó.");
+                }
+            } else if ("COMPLETED".equals(normalizedStatus)) {
+                // COMPLETED: đã kết thúc (endDate ở quá khứ hoặc hôm nay)
+                if (endDate.isAfter(today)) {
+                    throw new IllegalArgumentException("Campaign đang ở trạng thái KẾT THÚC: ngày kết thúc không được sau hôm nay.");
+                }
+            } else if ("PAUSED".equals(normalizedStatus)) {
+                // PAUSED: có thể tạm dừng trước khi chạy hoặc trong khi chạy,
+                // nhưng không hợp lý nếu endDate đã qua (nên là COMPLETED).
+                if (endDate.isBefore(today)) {
+                    throw new IllegalArgumentException("Campaign đã qua ngày kết thúc. Vui lòng chọn trạng thái KẾT THÚC.");
+                }
+            } else {
+                throw new IllegalArgumentException("Trạng thái campaign không hợp lệ.");
             }
 
             String channel = request.getParameter("channel");
             if (channel == null || channel.trim().isEmpty()) {
                 throw new IllegalArgumentException("Kênh marketing không được để trống.");
-            }
-
-            String status = request.getParameter("status");
-            if (status == null || status.trim().isEmpty()) {
-                throw new IllegalArgumentException("Trạng thái không được để trống.");
             }
 
             Campaign campaign = new Campaign(campaignId, name, description, budget, startDate,

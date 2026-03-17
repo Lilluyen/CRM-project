@@ -26,7 +26,7 @@ public class DeleteCategoryController extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             dao.delete(id);
 
-            response.sendRedirect("list");
+            response.sendRedirect(request.getContextPath() + "/sale/category/list");
 
         } catch (Exception e) {
             throw new ServletException(e);

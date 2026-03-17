@@ -1,20 +1,14 @@
 package controller.manager;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.CustomerService;
-import util.ControllerUltil;
+
+import java.io.IOException;
 
 @WebServlet("/customers/remove")
 public class CustomerRemoveController extends HttpServlet {
@@ -42,7 +36,7 @@ public class CustomerRemoveController extends HttpServlet {
         try {
             String idParam = request.getParameter("customerId");
             if (idParam == null || idParam.trim().isEmpty()) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Customer ID is required");
+                response.sendRedirect(request.getContextPath() + "/customers?status=failed");
                 return;
             }
 
@@ -50,7 +44,7 @@ public class CustomerRemoveController extends HttpServlet {
             try {
                 customerId = Integer.parseInt(idParam.trim());
             } catch (NumberFormatException e) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid customer ID format");
+                response.sendRedirect(request.getContextPath() + "/customers?status=failed");
                 return;
             }
 
@@ -58,14 +52,12 @@ public class CustomerRemoveController extends HttpServlet {
 
             if (deleted) {
                 request.getSession().setAttribute("successMessage", "Khách hàng đã được xóa thành công");
-                response.sendRedirect(request.getContextPath() + "/customers");
+                response.sendRedirect(request.getContextPath() + "/customers?status=success");
             } else {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Khách hàng không tồn tại");
+                response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             }
-        } catch (SQLException e) {
-            ControllerUltil.forwardError(request, response, "Database error: " + e.getMessage());
         } catch (Exception e) {
-            ControllerUltil.forwardError(request, response, "Error: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
         }
     }
 

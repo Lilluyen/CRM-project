@@ -35,6 +35,7 @@ public class LeadExportController extends HttpServlet {
 
         String keyword = request.getParameter("search");
         String status = request.getParameter("status");
+        String interest = request.getParameter("interest");
 
         int campaignId = 0;
         try {
@@ -44,7 +45,7 @@ public class LeadExportController extends HttpServlet {
         } catch (NumberFormatException ignored) {
         }
 
-        List<Lead> leads = leadService.searchLeadsForExport(keyword, status, campaignId);
+        List<Lead> leads = leadService.searchLeadsForExport(keyword, status, campaignId, interest);
 
         String filename = "leads_" + LocalDate.now() + ".xlsx";
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -56,7 +57,8 @@ public class LeadExportController extends HttpServlet {
 
             Row header = sheet.createRow(0);
             String[] headers = {
-                "Mã Lead", "Họ tên", "Email", "Điện thoại", "Điểm số", "Trạng thái", "Campaign", "Nguồn", "Ngày tạo"
+                "Mã Lead", "Họ tên", "Email", "Điện thoại", "Điểm số", "Trạng thái",
+                "Quan tâm", "Campaign", "Nguồn", "Ngày tạo", "Ngày cập nhật"
             };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = header.createCell(i);
@@ -76,10 +78,13 @@ public class LeadExportController extends HttpServlet {
                 row.createCell(3).setCellValue(text(lead.getPhone()));
                 row.createCell(4).setCellValue(lead.getScore());
                 row.createCell(5).setCellValue(text(lead.getStatus()));
-                row.createCell(6).setCellValue(text(lead.getCampaignName()));
-                row.createCell(7).setCellValue(text(lead.getSource()));
-                row.createCell(8).setCellValue(lead.getCreatedAt() != null
+                row.createCell(6).setCellValue(text(lead.getInterest()));
+                row.createCell(7).setCellValue(text(lead.getCampaignName()));
+                row.createCell(8).setCellValue(text(lead.getSource()));
+                row.createCell(9).setCellValue(lead.getCreatedAt() != null
                         ? lead.getCreatedAt().format(DATE_TIME_FORMAT) : "");
+                row.createCell(10).setCellValue(lead.getUpdatedAt() != null
+                        ? lead.getUpdatedAt().format(DATE_TIME_FORMAT) : "");
             }
 
             for (int i = 0; i < headers.length; i++) {

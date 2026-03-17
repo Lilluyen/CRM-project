@@ -14,6 +14,8 @@ import model.Lead;
 import model.User;
 import service.CampaignService;
 import service.LeadService;
+import util.EmailCheck;
+import util.PhoneCheck;
 
 @WebServlet(name = "LeadFormController", urlPatterns = {"/marketing/leads/form"})
 public class LeadFormController extends HttpServlet {
@@ -100,7 +102,8 @@ public class LeadFormController extends HttpServlet {
         try {
             Lead lead = extractLeadFromRequest(request);
 
-            int newId = leadService.createLead(lead);
+            // Pass false to allow manual score/status from form
+            int newId = leadService.createLead(lead, false);
             if (newId > 0) {
                 request.getSession().setAttribute("successMessage",
                         "Lead \"" + lead.getFullName() + "\" đã được tạo thành công!");
@@ -128,7 +131,8 @@ public class LeadFormController extends HttpServlet {
             Lead lead = extractLeadFromRequest(request);
             lead.setLeadId(leadId);
 
-            if (leadService.updateLead(lead)) {
+            // Pass false to allow manual score/status from form
+            if (leadService.updateLead(lead, false)) {
                 request.getSession().setAttribute("successMessage",
                         "Lead \"" + lead.getFullName() + "\" đã được cập nhật thành công!");
                 response.sendRedirect(request.getContextPath() + "/marketing/leads");
@@ -164,6 +168,12 @@ public class LeadFormController extends HttpServlet {
         }
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
+        }
+        if (!EmailCheck.isValidEmail(email.trim())) {
+            throw new IllegalArgumentException("Email không hợp lệ.");
+        }
+        if (phone != null && !phone.trim().isEmpty() && !PhoneCheck.isValidPhone(phone.trim())) {
+            throw new IllegalArgumentException("Số điện thoại phải gồm đúng 10 chữ số.");
         }
 
         Lead lead = new Lead();
@@ -214,6 +224,10 @@ public class LeadFormController extends HttpServlet {
             String campaignIdStr = request.getParameter("campaignId");
             lead.setCampaignId(campaignIdStr != null && !campaignIdStr.isEmpty()
                     ? Integer.parseInt(campaignIdStr) : 0);
+            // Restore assignedTo
+            String assignedToStr = request.getParameter("assignedTo");
+            lead.setAssignedTo(assignedToStr != null && !assignedToStr.isEmpty()
+                    ? Integer.parseInt(assignedToStr) : 0);
         } catch (Exception ignored) {
         }
         return lead;
