@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Deal {
-     private int dealId;
-    private int customerId;
+    private int dealId;
+    private Integer customerId;
     private int leadId;
     private String dealName;
     private BigDecimal expectedValue;
@@ -49,7 +49,7 @@ public class Deal {
         this.dealId = dealId;
     }
 
-    public int getCustomerId() {
+    public Integer getCustomerId() {
         return customerId;
     }
 
