@@ -2,12 +2,10 @@ package dao;
 
 import dto.CustomerDetailDTO;
 import model.Customer;
+import model.Lead;
 import util.DBContext;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -184,7 +182,8 @@ public class CustomerDAO {
                 dto.setName(rs.getString("name"));
                 dto.setPhone(rs.getString("phone"));
                 dto.setEmail(rs.getString("email"));
-                dto.setBirthday(rs.getDate("birthday").toLocalDate());
+                Date dob = rs.getDate("birthday");
+                dto.setBirthday(dob != null ? dob.toLocalDate() : null);
                 dto.setGender(rs.getString("gender"));
                 dto.setAddress(rs.getString("address"));
                 dto.setSource(rs.getString("source"));
@@ -310,5 +309,60 @@ public class CustomerDAO {
             }
             return ranks;
         }
+    }
+
+    public int insertFromLead(Connection conn, Lead lead) throws SQLException {
+        String sql = """
+                    INSERT INTO Customers (name, phone, email, source, status, owner_id, created_at, updated_at, interest, [last_purchase])
+                    VALUES (?, ?, ?, ?, 'ACTIVE', ?, GETDATE(), GETDATE(), ?, GETDATE())
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, lead.getFullName());
+            ps.setString(2, lead.getPhone());
+            ps.setString(3, lead.getEmail());
+            ps.setString(4, lead.getSource());
+            Integer ownerId = lead.getAssignedTo();
+
+            UserDAO userDAO = new UserDAO();
+            if (ownerId == null || ownerId <= 0 || userDAO.getUserById(ownerId) == null) {
+                ownerId = null; // hoặc gán default
+            }
+
+            if (ownerId != null) {
+                ps.setInt(5, ownerId);
+            } else {
+                ps.setNull(5, Types.INTEGER);
+            }
+            ps.setString(6, lead.getInterest());
+
+            ps.executeUpdate();
+
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public Customer findByPhoneOrEmail(Connection conn, String phone, String email) throws SQLException {
+        String sql = "SELECT * FROM Customers WHERE phone = ? OR email = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setString(2, email);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Customer c = new Customer();
+
+                c.setCustomerId(rs.getInt("customer_id"));
+                ;
+                return c;
+            }
+
+        }
+        return null;
     }
 }

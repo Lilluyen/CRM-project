@@ -14,17 +14,19 @@ public class Lead {
     private int score;
     private int campaignId;
     private String campaignName; // transient - lấy từ JOIN Campaigns
-    private int assignedTo;
+    private Integer assignedTo;
     private String assignedToName; // transient - lấy từ JOIN Users
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean isConverted;
+    private int convertedCustomerId;
 
     public Lead() {
     }
 
     public Lead(int leadId, String fullName, String email, String phone,
-            String interest, String source, String status, int score, int campaignId, int assignedTo,
-            LocalDateTime createdAt, LocalDateTime updatedAt) {
+                String interest, String source, String status, int score, int campaignId, int assignedTo,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.leadId = leadId;
         this.fullName = fullName;
         this.email = email;
@@ -112,7 +114,7 @@ public class Lead {
         this.campaignName = campaignName;
     }
 
-    public int getAssignedTo() {
+    public Integer getAssignedTo() {
         return assignedTo;
     }
 
@@ -152,4 +154,19 @@ public class Lead {
         this.score = score;
     }
 
+    public boolean isConverted() {
+        return isConverted;
+    }
+
+    public void setConverted(boolean converted) {
+        isConverted = converted;
+    }
+
+    public int getConvertedCustomerId() {
+        return convertedCustomerId;
+    }
+
+    public void setConvertedCustomerId(int convertedCustomerId) {
+        this.convertedCustomerId = convertedCustomerId;
+    }
 }

@@ -1,18 +1,12 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
+import model.Lead;
+import util.DBContext;
+
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import model.Lead;
-import util.DBContext;
 
 public class LeadDAO {
 
@@ -406,50 +400,55 @@ public class LeadDAO {
     // SEARCH + PAGINATION (OFFSET / FETCH)
     // ==============================
     public List<Lead> searchLeads(String keyword, String status, int campaignId, String interest, int page, int pageSize) {
-    String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
-            + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
-    if (campaignId > 0) {
-        sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
-    }
-    sql += "WHERE 1=1";
-    List<Object> params = new ArrayList<>();
-    if (campaignId > 0) {
-        sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
-        params.add(campaignId);
-        params.add(campaignId);
-    }
-    if (keyword != null && !keyword.trim().isEmpty()) {
-        sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
-        String kw = "%" + keyword.trim() + "%";
-        params.add(kw); params.add(kw); params.add(kw);
-    }
-    if (status != null && !status.trim().isEmpty()) {
-        sql += " AND l.status = ?";
-        params.add(status);
-    }
-    if (interest != null && !interest.trim().isEmpty()) {
-        sql += " AND l.interest LIKE ?";
-        params.add("%" + interest.trim() + "%");
-    }
-    sql += " ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-    int offset = (page - 1) * pageSize;
-    params.add(offset); params.add(pageSize);
+        String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
+                + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
+        if (campaignId > 0) {
+            sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
+        }
+        sql += "WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+        if (campaignId > 0) {
+            sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
+            params.add(campaignId);
+            params.add(campaignId);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND l.status = ?";
+            params.add(status);
+        }
+        if (interest != null && !interest.trim().isEmpty()) {
+            sql += " AND l.interest LIKE ?";
+            params.add("%" + interest.trim() + "%");
+        }
+        sql += " ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        int offset = (page - 1) * pageSize;
+        params.add(offset);
+        params.add(pageSize);
 
-    List<Lead> leads = new ArrayList<>();
-    try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-        for (int i = 0; i < params.size(); i++) {
-            ps.setObject(i + 1, params.get(i));
+        List<Lead> leads = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
+                String campName = rs.getString("campaign_name");
+                if (campName != null) lead.setCampaignName(campName);
+                leads.add(lead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            Lead lead = mapResultSetToLead(rs);
-            String campName = rs.getString("campaign_name");
-            if (campName != null) lead.setCampaignName(campName);
-            leads.add(lead);
-        }
-    } catch (Exception e) { e.printStackTrace(); }
-    return leads;
-}
+        return leads;
+    }
 
     public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId, String interest) {
         String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
@@ -570,5 +569,22 @@ public class LeadDAO {
                 rs.getInt("assigned_to"),
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime());
+    }
+
+    public void markConverted(Connection conn, int leadId, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Leads
+                    SET is_converted = 1,
+                        converted_customer_id = ?,
+                        status = 'Converted',
+                        updated_at = GETDATE()
+                    WHERE [lead_id] = ?
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, leadId);
+            ps.executeUpdate();
+        }
     }
 }
