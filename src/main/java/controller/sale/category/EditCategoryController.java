@@ -28,9 +28,12 @@ public class EditCategoryController extends HttpServlet {
             Category c = dao.getById(id);
 
             request.setAttribute("category", c);
-
-            request.getRequestDispatcher(
-                    "/view/sale/category/categoryForm.jsp").forward(request, response);
+            request.setAttribute("pageTitle", "Edit Category - CRM");
+            request.setAttribute("contentPage", "sale/category/categoryForm.jsp");
+            request.setAttribute("pageCss", "category_form.css");
+            request.setAttribute("pageJs", "category_form.js");
+            request.setAttribute("page", "category-form");
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);
