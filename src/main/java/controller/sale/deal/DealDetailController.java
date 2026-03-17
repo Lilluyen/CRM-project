@@ -1,9 +1,5 @@
 package controller.sale.deal;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.util.List;
-
 import dao.CustomerLookupDAO;
 import dao.DealDAO;
 import dao.DealProductDAO;
@@ -18,6 +14,10 @@ import model.Customer;
 import model.Deal;
 import model.Lead;
 import util.DBContext;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.util.List;
 
 @WebServlet("/sale/deal/detail")
 public class DealDetailController extends HttpServlet {
@@ -73,7 +73,7 @@ public class DealDetailController extends HttpServlet {
             request.setAttribute("pageCss", "deal_detail.css");
             request.setAttribute("page", "deal-detail");
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
-            request.getRequestDispatcher("/view/sale/deal/dealDetail.jsp").forward(request, response);
+//            request.getRequestDispatcher("/view/sale/deal/dealDetail.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);
