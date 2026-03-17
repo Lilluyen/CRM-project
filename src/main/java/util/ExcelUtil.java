@@ -19,10 +19,11 @@ public class ExcelUtil {
 
     /**
      * Đọc Leads từ file XLSX
+     * Trả về List<Lead> và collect các lỗi vào List<String>
      *
      * Format Excel: fullName | email | phone | companyName | interest | source
      */
-    public static List<Lead> readLeadsFromExcel(InputStream inputStream) throws Exception {
+    public static List<Lead> readLeadsFromExcel(InputStream inputStream, List<String> errors) throws Exception {
         List<Lead> leads = new ArrayList<>();
 
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
@@ -39,19 +40,18 @@ public class ExcelUtil {
                     String fullName = getCellValue(row.getCell(0));
                     String email = getCellValue(row.getCell(1));
                     String phone = getCellValue(row.getCell(2));
-                    String companyName = getCellValue(row.getCell(3));
                     String interest = getCellValue(row.getCell(4));
                     String source = getCellValue(row.getCell(5));
 
-                    // Validation
+                    // Validation - throw without "Row X:" prefix (will be added by catch)
                     if (fullName == null || fullName.trim().isEmpty()) {
-                        throw new Exception("Row " + (i + 1) + ": Tên không được để trống");
+                        throw new Exception("Tên không được để trống");
                     }
                     if (email == null || !EmailCheck.isValidEmail(email)) {
-                        throw new Exception("Row " + (i + 1) + ": Email không hợp lệ");
+                        throw new Exception("Email không hợp lệ");
                     }
                     if (phone != null && !phone.isEmpty() && !PhoneCheck.isValidPhone(phone)) {
-                        throw new Exception("Row " + (i + 1) + ": Số điện thoại không hợp lệ");
+                        throw new Exception("Số điện thoại không hợp lệ (phải gồm 10 chữ số)");
                     }
 
                     Lead lead = new Lead();
@@ -65,11 +65,24 @@ public class ExcelUtil {
                     leads.add(lead);
 
                 } catch (Exception e) {
-                    throw new Exception("Row " + (i + 1) + ": " + e.getMessage());
+                    // Collect error but continue processing other rows
+                    errors.add("Row " + (i + 1) + ": " + e.getMessage());
                 }
             }
         }
 
+        return leads;
+    }
+
+    /**
+     * Overload for backward compatibility - throws exception if any row has error
+     */
+    public static List<Lead> readLeadsFromExcel(InputStream inputStream) throws Exception {
+        List<String> errors = new ArrayList<>();
+        List<Lead> leads = readLeadsFromExcel(inputStream, errors);
+        if (!errors.isEmpty()) {
+            throw new Exception(String.join("; ", errors));
+        }
         return leads;
     }
 
@@ -85,7 +98,15 @@ public class ExcelUtil {
             case STRING:
                 return cell.getStringCellValue().trim();
             case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue());
+                // Keep as string to preserve leading zeros for phone numbers
+                double numericValue = cell.getNumericCellValue();
+                // Handle numbers like 0912345678 - they should be parsed as string
+                if (numericValue == Math.floor(numericValue)) {
+                    // It's a whole number - format with leading zeros preserved
+                    return String.format("%.0f", numericValue);
+                } else {
+                    return String.valueOf(numericValue);
+                }
             default:
                 return null;
         }

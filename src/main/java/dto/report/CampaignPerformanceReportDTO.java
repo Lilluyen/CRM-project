@@ -9,6 +9,9 @@ public class CampaignPerformanceReportDTO {
     private int dealsLost;
     private double conversionRate;
     private double roi;
+    private double revenue;
+    private double cost;
+    private double profitLoss; // Revenue - Cost
 
     public CampaignPerformanceReportDTO() {
     }
@@ -22,6 +25,20 @@ public class CampaignPerformanceReportDTO {
         this.dealsLost = dealsLost;
         this.conversionRate = conversionRate;
         this.roi = roi;
+    }
+
+    public CampaignPerformanceReportDTO(String campaignName, int totalLeads, int dealsCreated,
+            int dealsWon, int dealsLost, double conversionRate, double roi, double revenue, double cost) {
+        this.campaignName = campaignName;
+        this.totalLeads = totalLeads;
+        this.dealsCreated = dealsCreated;
+        this.dealsWon = dealsWon;
+        this.dealsLost = dealsLost;
+        this.conversionRate = conversionRate;
+        this.roi = roi;
+        this.revenue = revenue;
+        this.cost = cost;
+        this.profitLoss = revenue - cost;
     }
 
     public String getCampaignName() {
@@ -78,5 +95,36 @@ public class CampaignPerformanceReportDTO {
 
     public void setRoi(double roi) {
         this.roi = roi;
+    }
+
+    public double getRevenue() {
+        return revenue;
+    }
+
+    public void setRevenue(double revenue) {
+        this.revenue = revenue;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public void setCost(double cost) {
+        this.cost = cost;
+    }
+
+    public double getProfitLoss() {
+        return profitLoss;
+    }
+
+    public void setProfitLoss(double profitLoss) {
+        this.profitLoss = profitLoss;
+    }
+
+    /**
+     * Trả về true nếu campaign có lãi (revenue > cost)
+     */
+    public boolean isProfitable() {
+        return profitLoss > 0;
     }
 }

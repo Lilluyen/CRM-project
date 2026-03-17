@@ -103,11 +103,19 @@ public class CampaignFormController extends HttpServlet {
                 throw new IllegalArgumentException("Ngân sách không hợp lệ.");
             }
 
-            LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+            if (startDateStr == null || startDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày bắt đầu không được để trống.");
+            }
+            if (endDateStr == null || endDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày kết thúc không được để trống.");
+            }
+            LocalDate startDate = LocalDate.parse(startDateStr);
             if (startDate.isBefore(LocalDate.now())) {
                 throw new IllegalArgumentException("Ngày bắt đầu phải là ngày hôm nay hoặc sau đó.");
             }
-            LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+            LocalDate endDate = LocalDate.parse(endDateStr);
             if (endDate.isBefore(LocalDate.now())) {
                 throw new IllegalArgumentException("Ngày kết thúc phải là ngày hôm nay hoặc sau đó.");
             }
@@ -168,8 +176,16 @@ public class CampaignFormController extends HttpServlet {
                 throw new IllegalArgumentException("Trạng thái không được để trống.");
             }
 
-            LocalDate startDate = LocalDate.parse(request.getParameter("startDate"));
-            LocalDate endDate = LocalDate.parse(request.getParameter("endDate"));
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+            if (startDateStr == null || startDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày bắt đầu không được để trống.");
+            }
+            if (endDateStr == null || endDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Ngày kết thúc không được để trống.");
+            }
+            LocalDate startDate = LocalDate.parse(startDateStr);
+            LocalDate endDate = LocalDate.parse(endDateStr);
             if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
                 throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
             }

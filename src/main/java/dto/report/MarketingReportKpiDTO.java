@@ -78,5 +78,19 @@ public class MarketingReportKpiDTO {
     public void setRoi(double roi) {
         this.roi = roi;
     }
+
+    /**
+     * Lãi/Lỗ = Revenue - Cost
+     */
+    public double getProfitLoss() {
+        return revenue - cost;
+    }
+
+    /**
+     * Trả về true nếu có lãi
+     */
+    public boolean isProfitable() {
+        return revenue > cost;
+    }
 }
 

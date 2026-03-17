@@ -68,7 +68,7 @@ public class ReportService {
         int qualifiedLead = leadDAO.countLeads(null, "QUALIFIED", campaignId, null);
 
         DealResultReportDTO dealResult = getDealResultReport(campaignId, null, null);
-        int convertedLead = dealResult.getTotalDeals(); // Deals Created
+        int convertedLead = dealResult.getDealsWon(); // Deals Won (not total deals created)
 
         CampaignReport report = new CampaignReport();
         report.setReportId(0);

@@ -83,7 +83,7 @@ public class CampaignReportDAO {
                 + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
                 + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
                 + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
-                + "MAX(ISNULL(c.budget, 0)) AS cost "
+                + "ISNULL(SUM(c.budget), 0) AS cost "
                 + "FROM Campaigns c "
                 + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
                 + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
@@ -93,6 +93,15 @@ public class CampaignReportDAO {
         if (campaignId != null) {
             sql.append(" AND c.campaign_id = ? ");
             params.add(campaignId);
+        }
+        // Date filter - filter by campaign start date
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND c.start_date >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND c.start_date <= ? ");
+            params.add(toDate);
         }
         sql.append(" GROUP BY c.campaign_id, c.name ORDER BY c.name");
 
@@ -106,13 +115,17 @@ public class CampaignReportDAO {
                 int dealsCreated = rs.getInt("deals_created");
                 int dealsWon = rs.getInt("deals_won");
                 int dealsLost = rs.getInt("deals_lost");
-                double conversionRate = totalLeads > 0 ? dealsWon * 100.0 / totalLeads : 0;
+                double conversionRate = totalLeads > 0
+                        ? Math.round(dealsWon * 10000.0 / totalLeads) / 100.0
+                        : 0;
                 double revenue = rs.getDouble("revenue");
                 double cost = rs.getDouble("cost");
-                double roi = cost > 0 ? ((revenue - cost) * 100.0 / cost) : 0;
+                double roi = cost > 0
+                        ? Math.round(((revenue - cost) * 10000.0 / cost)) / 100.0
+                        : 0;
                 result.add(new CampaignPerformanceReportDTO(
                         rs.getString("campaign_name"),
-                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi));
+                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi, revenue, cost));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -136,6 +149,14 @@ public class CampaignReportDAO {
         if (campaignId != null) {
             sql.append(" AND c.campaign_id = ? ");
             params.add(campaignId);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND c.start_date >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND c.start_date <= ? ");
+            params.add(toDate);
         }
         sql.append(" GROUP BY c.campaign_id, c.name ) AS t");
 
@@ -166,7 +187,7 @@ public class CampaignReportDAO {
                 + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
                 + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
                 + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
-                + "MAX(ISNULL(c.budget, 0)) AS cost "
+                + "ISNULL(SUM(c.budget), 0) AS cost "
                 + "FROM Campaigns c "
                 + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
                 + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
@@ -176,6 +197,15 @@ public class CampaignReportDAO {
         if (campaignId != null) {
             sql.append(" AND c.campaign_id = ? ");
             params.add(campaignId);
+        }
+        // Date filter - filter by campaign start date
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND c.start_date >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND c.start_date <= ? ");
+            params.add(toDate);
         }
         sql.append(" GROUP BY c.campaign_id, c.name ORDER BY c.name OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
@@ -200,7 +230,7 @@ public class CampaignReportDAO {
                 double roi = cost > 0 ? Math.round(((revenue - cost) * 10000.0 / cost)) / 100.0 : 0;
                 result.add(new CampaignPerformanceReportDTO(
                         rs.getString("campaign_name"),
-                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi));
+                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi, revenue, cost));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -221,8 +251,21 @@ public class CampaignReportDAO {
             params.add(campaignId);
         }
         if (source != null && !source.isEmpty()) {
-            sql.append(" AND ISNULL(l.source, '') = ? ");
-            params.add(source);
+            // Handle "Unknown" source - map both null and empty string to "Unknown"
+            if ("Unknown".equals(source)) {
+                sql.append(" AND (l.source IS NULL OR l.source = '') ");
+            } else {
+                sql.append(" AND l.source = ? ");
+                params.add(source);
+            }
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND l.created_at >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND l.created_at <= DATEADD(day, 1, CAST(? AS DATE)) ");
+            params.add(toDate);
         }
         sql.append(" GROUP BY ISNULL(l.source, 'Unknown') ORDER BY lead_count DESC");
 
@@ -268,6 +311,14 @@ public class CampaignReportDAO {
             sql.append(" AND l.campaign_id = ? ");
             params.add(campaignId);
         }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND l.created_at >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND l.created_at <= DATEADD(day, 1, CAST(? AS DATE)) ");
+            params.add(toDate);
+        }
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -303,6 +354,14 @@ public class CampaignReportDAO {
             sql.append(" AND l.campaign_id = ? ");  // ✅ chỉ 1 điều kiện duy nhất
             params.add(campaignId);
         }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND d.created_at >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND d.created_at <= DATEADD(day, 1, CAST(? AS DATE)) ");
+            params.add(toDate);
+        }
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -322,42 +381,80 @@ public class CampaignReportDAO {
 
     public dto.report.MarketingReportKpiDTO getMarketingReportKpi(
             Integer campaignId, String fromDate, String toDate) {
+        // Build date filter conditions
+        String dateConditionLeads = "";
+        String dateConditionDeals = "";
+        String dateConditionCampaigns = "";
+        if (fromDate != null && !fromDate.isEmpty()) {
+            dateConditionLeads += " AND l.created_at >= ? ";
+            dateConditionDeals += " AND d.created_at >= ? ";
+            dateConditionCampaigns += " AND c.start_date >= ? ";
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            dateConditionLeads += " AND l.created_at <= DATEADD(day, 1, CAST(? AS DATE)) ";
+            dateConditionDeals += " AND d.created_at <= DATEADD(day, 1, CAST(? AS DATE)) ";
+            dateConditionCampaigns += " AND c.start_date <= ? ";
+        }
+
+        // Count total parameter placeholders needed
+        int paramCount = 0;
+        if (campaignId != null) paramCount += 5;
+        if (fromDate != null && !fromDate.isEmpty()) paramCount += 3;
+        if (toDate != null && !toDate.isEmpty()) paramCount += 3;
+
         StringBuilder sql = new StringBuilder(
                 "SELECT "
                 + " (SELECT COUNT(DISTINCT l.lead_id) "
                 + "  FROM Leads l "
                 + "  WHERE 1 = 1 "
                 + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + dateConditionLeads
                 + " ) AS total_leads, "
                 + " (SELECT COUNT(DISTINCT d.deal_id) "
                 + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
                 + "  WHERE 1 = 1 "
                 + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + dateConditionDeals
                 + " ) AS deals_created, "
                 + " (SELECT COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) "
                 + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
                 + "  WHERE 1 = 1 "
                 + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + dateConditionDeals
                 + " ) AS deals_won, "
                 + " (SELECT ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) "
                 + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
                 + "  WHERE 1 = 1 "
                 + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + dateConditionDeals
                 + " ) AS revenue, "
                 + " (SELECT ISNULL(SUM(c.budget), 0) "
                 + "  FROM Campaigns c "
                 + "  WHERE 1 = 1 "
                 + (campaignId != null ? " AND c.campaign_id = ? " : "")
+                + dateConditionCampaigns
                 + " ) AS cost");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
+            int paramIndex = 1;
             if (campaignId != null) {
                 // campaignId appears 5 times in the SQL above
-                for (int i = 1; i <= 5; i++) {
-                    ps.setInt(i, campaignId);
+                for (int i = 0; i < 5; i++) {
+                    ps.setInt(paramIndex++, campaignId);
                 }
+            }
+            // Set date parameters in order: fromDate (3x), toDate (3x)
+            if (fromDate != null && !fromDate.isEmpty()) {
+                ps.setString(paramIndex++, fromDate); // leads
+                ps.setString(paramIndex++, fromDate); // deals
+                ps.setString(paramIndex++, fromDate); // campaigns
+            }
+            if (toDate != null && !toDate.isEmpty()) {
+                ps.setString(paramIndex++, toDate); // leads
+                ps.setString(paramIndex++, toDate); // deals
+                ps.setString(paramIndex++, toDate); // campaigns
             }
 
             ResultSet rs = ps.executeQuery();
