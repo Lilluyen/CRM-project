@@ -13,7 +13,6 @@
         <meta name="author" content="Dreamguys - Bootstrap Admin Template" />
         <meta name="robots" content="noindex, nofollow" />
         <title>${pageTitle}</title>
-
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/Inventory-Management-Admin-Dashboard-main/assets/css/bootstrap.min.css" />
 

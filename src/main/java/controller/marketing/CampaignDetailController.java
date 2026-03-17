@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import dto.report.DealResultReportDTO;
 import model.Campaign;
 import model.CampaignReport;
 import service.CampaignService;
@@ -43,6 +44,17 @@ public class CampaignDetailController extends HttpServlet {
             // Generate campaign statistics report
             CampaignReport report = reportService.generateReport(campaignId);
             request.setAttribute("report", report);
+
+            // Deal metrics for this campaign
+            DealResultReportDTO dealResult = reportService.getDealResultReport(campaignId, null, null);
+            request.setAttribute("dealsWon", dealResult.getDealsWon());
+            request.setAttribute("dealsCreated", dealResult.getTotalDeals());
+            request.setAttribute("dealsLost", dealResult.getDealsLost());
+
+            double conversionRate = (report != null && report.getTotalLead() > 0)
+                    ? dealResult.getDealsWon() * 100.0 / report.getTotalLead()
+                    : 0;
+            request.setAttribute("conversionRate", String.format("%.1f", conversionRate));
 
             // Flash success message from session (PRG pattern)
             String successMsg = (String) request.getSession().getAttribute("successMessage");

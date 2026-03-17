@@ -49,9 +49,12 @@ public class ViewCategoryListController extends HttpServlet {
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
 
-            request.getRequestDispatcher(
-                "/view/sale/category/categoryList.jsp"
-            ).forward(request, response);
+            request.setAttribute("pageTitle", "Category Management - CRM");
+            request.setAttribute("contentPage", "sale/category/categoryList.jsp");
+            request.setAttribute("pageCss", "category_list.css");
+            request.setAttribute("pageJs", "category_list.js");
+            request.setAttribute("page", "category-list");
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);

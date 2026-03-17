@@ -285,7 +285,18 @@
                         <div class="stat-label">Deals Created</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">${report != null ? report.roi : 0}%</div>
+                        <div class="stat-number">${dealsWon}</div>
+                        <div class="stat-label">Deals Won</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">
+                            <c:choose>
+                                <c:when test="${report != null && report.totalLead > 0}">
+                                    ${conversionRate}%
+                                </c:when>
+                                <c:otherwise>0%</c:otherwise>
+                            </c:choose>
+                        </div>
                         <div class="stat-label">Conversion Rate</div>
                     </div>
                 </div>

@@ -116,28 +116,46 @@
                     </ul>
                 </li>
 
-                <!-- SALES -->
-                <li class="submenu">
-                    <a href="javascript:void(0);">
-                        <i class="fas fa-handshake"></i>
-                        <span>Sales</span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <ul>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/sale/category/list">Category</a>
-                        </li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/product">Product</a>
-                        </li>
-                        <li><a href="${pageContext.request.contextPath}/deal">Deals</a></li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/funnel"
-                            >Sales Funnel</a
-                            >
-                        </li>
-                    </ul>
-                </li>
+        <!-- SALES -->
+        <li class="submenu">
+          <a href="javascript:void(0);">
+            <i class="fas fa-handshake"></i>
+            <span>Sales</span>
+            <span class="menu-arrow"></span>
+          </a>
+          <ul style="${fn:startsWith(page, 'product-') || fn:startsWith(page, 'deal-') || fn:startsWith(page, 'category-') || page eq 'sales-funnel' || page eq 'revenue-forecast' ? 'display:block;' : ''}">
+            <li>
+              <a
+                class="${fn:startsWith(page, 'category-') ? 'active' : ''}"
+                href="${pageContext.request.contextPath}${rolePrefix}/category/list"
+              >Category</a>
+            </li>
+            <li>
+              <a
+                class="${fn:startsWith(page, 'product-') ? 'active' : ''}"
+                href="${pageContext.request.contextPath}${rolePrefix}/product/list"
+              >Product</a>
+            </li>
+            <li>
+              <a
+                class="${fn:startsWith(page, 'deal-') ? 'active' : ''}"
+                href="${pageContext.request.contextPath}${rolePrefix}/deal/list"
+              >Deals</a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'sales-funnel' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/funnel"
+              >Sales Funnel</a>
+            </li>
+            <li>
+              <a
+                class="${page eq 'revenue-forecast' ? 'active' : ''}"
+                href="${pageContext.request.contextPath}/forecast"
+              >Revenue Forecast</a>
+            </li>
+          </ul>
+        </li>
 
                 <!-- CUSTOMERS -->
                 <li class="submenu">

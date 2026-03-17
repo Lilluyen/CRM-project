@@ -18,6 +18,45 @@ public class CategoryDAO {
         this.conn = conn;
     }
 
+    public List<Category> getAllCategories(String status) throws SQLException {
+
+        List<Category> list = new ArrayList<>();
+
+        if (status == null) {
+            status = "";
+        }
+
+        String sql =
+            "SELECT category_id, category_name, description, status, created_at " +
+            "FROM Categories " +
+            "WHERE (? = '' OR status = ?) " +
+            "ORDER BY category_name ASC";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setString(2, status);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Category c = new Category();
+                    c.setCategoryId(rs.getInt("category_id"));
+                    c.setCategoryName(rs.getString("category_name"));
+                    c.setDescription(rs.getString("description"));
+                    c.setStatus(rs.getString("status"));
+
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    if (ts != null) {
+                        c.setCreatedAt(ts.toLocalDateTime());
+                    }
+
+                    list.add(c);
+                }
+            }
+        }
+
+        return list;
+    }
+
     // ==============================
     // GET LIST + SEARCH + STATUS + PAGINATION
     // ==============================
@@ -148,7 +187,7 @@ public class CategoryDAO {
     }
 
     // ==============================
-    // UPDATE  (🔥 BẠN ĐANG THIẾU HÀM NÀY)
+    // UPDATE  ( BẠN ĐANG THIẾU HÀM NÀY)
     // ==============================
     public void update(Category c) throws SQLException {
 

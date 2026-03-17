@@ -8,6 +8,7 @@ import java.util.List;
 
 public class Deal {
      private int dealId;
+    private int customerId;
     private int leadId;
     private String dealName;
     private BigDecimal expectedValue;
@@ -46,6 +47,14 @@ public class Deal {
 
     public void setDealId(int dealId) {
         this.dealId = dealId;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
     }
 
     public int getLeadId() {

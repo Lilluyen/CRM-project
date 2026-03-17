@@ -1,4 +1,4 @@
-package mapper;
+package Mapper;
 
 import java.time.LocalDateTime;
 
