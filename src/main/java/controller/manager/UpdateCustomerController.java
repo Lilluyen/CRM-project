@@ -15,8 +15,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
 public class UpdateCustomerController extends HttpServlet {
@@ -39,7 +38,6 @@ public class UpdateCustomerController extends HttpServlet {
             throws ServletException, IOException {
 
         String customerIdRaw = request.getParameter("customerId");
-
         if (customerIdRaw == null) {
             response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             return;
@@ -47,14 +45,10 @@ public class UpdateCustomerController extends HttpServlet {
 
         try {
             int customerId = Integer.parseInt(customerIdRaw);
-
-            reloadFormData(request, customerId);
-            request.getRequestDispatcher("/view/layout.jsp")
-                    .forward(request, response);
-
+            reloadFormData(request, customerId, null, null);
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/customers?status=failed");
-
         } catch (Exception e) {
             response.sendRedirect(request.getContextPath() + "/customers?status=failed");
             throw new ServletException(e);
@@ -65,183 +59,212 @@ public class UpdateCustomerController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        List<String> errors = new ArrayList<>();
-
         String customerIdRaw = request.getParameter("customerId");
-
         int customerId;
+
         try {
-
             customerId = Integer.parseInt(customerIdRaw);
+        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
+            return;
+        }
 
+        try {
+            request.setCharacterEncoding("UTF-8");
 
-            // Trim trước khi validate
-            String name = request.getParameter("name") != null
-                    ? request.getParameter("name").trim()
-                    : null;
+            // ── Read raw values ──────────────────────────────────────────
+            String name = trim(request.getParameter("name"));
+            String phone = trim(request.getParameter("phone"));
+            String email = trim(request.getParameter("email"));
+            String gender = trim(request.getParameter("gender"));
+            String birthdayRaw = trim(request.getParameter("birthday"));
+            String address = trim(request.getParameter("address"));
+            String source = trim(request.getParameter("source"));
 
-            String phone = request.getParameter("phone") != null
-                    ? request.getParameter("phone").trim()
-                    : null;
+            String heightRaw = trim(request.getParameter("height"));
+            String weightRaw = trim(request.getParameter("weight"));
+            String preferredSize = request.getParameter("preferred_size");
+            String bustRaw = trim(request.getParameter("bust"));
+            String waistRaw = trim(request.getParameter("waist"));
+            String hipsRaw = trim(request.getParameter("hips"));
+            String shoulderRaw = trim(request.getParameter("shoulder"));
+            String bodyShape = request.getParameter("bodyShape");
 
-            String email = request.getParameter("email") != null
-                    ? request.getParameter("email").trim()
-                    : null;
-
-            String gender = request.getParameter("gender");
-            String birthdayRaw = request.getParameter("birthday");
-            String address = request.getParameter("address");
-            String source = request.getParameter("source");
             String[] tagIdsRaw = request.getParameterValues("tagIds");
 
-            // ======================
-            // VALIDATION
-            // ======================
-            if (name == null || name.isEmpty()) {
-                errors.add("Name is required !");
+            // ── Field-level error map ────────────────────────────────────
+            Map<String, String> fieldErrors = new LinkedHashMap<>();
+
+            // Name
+            if (name == null || name.isBlank()) {
+                fieldErrors.put("name", "Full name is required.");
+            } else if (name.length() > 100) {
+                fieldErrors.put("name", "Name must not exceed 100 characters.");
             }
 
-            if (phone == null || phone.isEmpty()) {
-                errors.add("Phone is required !");
+            // Phone
+            if (phone == null || phone.isBlank()) {
+                fieldErrors.put("phone", "Phone number is required.");
             } else if (!phone.matches("^[0-9]{9,15}$")) {
-                errors.add("Phone must be 9-11 digits");
+                fieldErrors.put("phone", "Phone must be 9–15 digits.");
             }
 
-            if (email == null || email.isEmpty()) {
-                errors.add("Email is required !");
+            // Email
+            if (email == null || email.isBlank()) {
+                fieldErrors.put("email", "Email is required.");
             } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-                errors.add("Invalid email format !");
+                fieldErrors.put("email", "Invalid email format.");
             }
 
-            LocalDate birthday = null;
+            // Gender
+            if (gender == null || gender.isBlank()) {
+                fieldErrors.put("gender", "Please select a gender.");
+            } else if (!gender.equalsIgnoreCase("MALE")
+                    && !gender.equalsIgnoreCase("FEMALE")
+                    && !gender.equalsIgnoreCase("OTHER")) {
+                fieldErrors.put("gender", "Invalid gender value.");
+            }
 
+            // Birthday
+            LocalDate birthday = null;
             if (birthdayRaw == null || birthdayRaw.isBlank()) {
-                errors.add("Birthday is required !");
+                fieldErrors.put("birthday", "Date of birth is required.");
             } else {
                 try {
                     birthday = LocalDate.parse(birthdayRaw);
                     if (birthday.isAfter(LocalDate.now())) {
-                        errors.add("Birthday must be in the past !");
+                        fieldErrors.put("birthday", "Birthday must be in the past.");
                     }
                 } catch (DateTimeParseException e) {
-                    errors.add("Invalid birthday format !");
+                    fieldErrors.put("birthday", "Invalid date format.");
                 }
             }
 
-            if (gender == null
-                    || (!gender.equalsIgnoreCase("Male")
-                    && !gender.equalsIgnoreCase("Female"))) {
-                errors.add("Invalid gender !");
-            }
+            // Measurements (optional, positive only)
+            BigDecimal height = parseDecimalValidated(heightRaw, "height", fieldErrors);
+            BigDecimal weight = parseDecimalValidated(weightRaw, "weight", fieldErrors);
+            BigDecimal bust = parseDecimalValidated(bustRaw, "bust", fieldErrors);
+            BigDecimal waist = parseDecimalValidated(waistRaw, "waist", fieldErrors);
+            BigDecimal hips = parseDecimalValidated(hipsRaw, "hips", fieldErrors);
+            BigDecimal shoulder = parseDecimalValidated(shoulderRaw, "shoulder", fieldErrors);
 
-            BigDecimal height = parseBigDecimal(request.getParameter("height"));
-            BigDecimal weight = parseBigDecimal(request.getParameter("weight"));
-            String preferredSize = request.getParameter("preferred_size");
+            // ── If errors → reload form ──────────────────────────────────
+            if (!fieldErrors.isEmpty()) {
+                // Pass old values back
+                request.setAttribute("oldName", name);
+                request.setAttribute("oldPhone", phone);
+                request.setAttribute("oldEmail", email);
+                request.setAttribute("oldGender", gender);
+                request.setAttribute("oldBirthday", birthdayRaw);
+                request.setAttribute("oldSource", source);
+                request.setAttribute("oldAddress", address);
+                request.setAttribute("oldHeight", heightRaw);
+                request.setAttribute("oldWeight", weightRaw);
+                request.setAttribute("oldPreferredSize", preferredSize);
+                request.setAttribute("oldBust", bustRaw);
+                request.setAttribute("oldWaist", waistRaw);
+                request.setAttribute("oldHips", hipsRaw);
+                request.setAttribute("oldShoulder", shoulderRaw);
+                request.setAttribute("oldBodyShape", bodyShape);
 
-            BigDecimal bust = parseBigDecimal(request.getParameter("bust"));
-            BigDecimal waist = parseBigDecimal(request.getParameter("waist"));
-            BigDecimal hips = parseBigDecimal(request.getParameter("hips"));
-            BigDecimal shoulder = parseBigDecimal(request.getParameter("shoulder"));
+                Set<String> selectedTagSet = new HashSet<>();
+                if (tagIdsRaw != null) Collections.addAll(selectedTagSet, tagIdsRaw);
+                request.setAttribute("selectedTags", selectedTagSet);
 
-            String bodyShape = request.getParameter("bodyShape");
-
-            // ======================
-            // Nếu có lỗi → reload data
-            // ======================
-            if (!errors.isEmpty()) {
-
-                reloadFormData(request, customerId);
-
-                request.setAttribute("errors", errors);
-                request.getRequestDispatcher("/view/layout.jsp")
-                        .forward(request, response);
+                reloadFormData(request, customerId, fieldErrors, null);
+                request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
                 return;
             }
 
-            try {
-                List<Integer> tagIds = new ArrayList<>();
-
-                if (tagIdsRaw != null) {
-                    for (String id : tagIdsRaw) {
-                        tagIds.add(Integer.parseInt(id));
-                    }
-                }
-
-                CustomerCreateDTO dto = new CustomerCreateDTO();
-                dto.setCustomer_id(customerId);
-                dto.setName(name);
-                dto.setPhone(phone);
-                dto.setEmail(email);
-                dto.setGender(gender);
-                dto.setBirthday(birthday);
-                dto.setAddress(address);
-                dto.setSource(source);
-                dto.setStyleTags(tagIds);
-                dto.setHeight(height);
-                dto.setWeight(weight);
-                dto.setPreferredSize(preferredSize);
-
-                dto.setBust(bust);
-                dto.setWaist(waist);
-                dto.setHips(hips);
-                dto.setShoulder(shoulder);
-                dto.setBodyShape(bodyShape);
-
-                customerService.updateCustomer(dto, customerId);
-
-                response.sendRedirect(
-                        request.getContextPath()
-                                + "/customers/detail?customerId=" + customerId);
-                return;
-
-            } catch (DuplicateEmailException e) {
-                errors.add("Email already exists !");
-            } catch (DuplicatePhoneException e) {
-                errors.add("Phone already exists !");
-            } catch (Exception e) {
-                errors.add("System error: " + e.getMessage());
+            // ── Build DTO ────────────────────────────────────────────────
+            List<Integer> tagIds = new ArrayList<>();
+            if (tagIdsRaw != null) {
+                for (String id : tagIdsRaw) tagIds.add(Integer.parseInt(id));
             }
 
-            // Nếu exception xảy ra → reload lại form
-            reloadFormData(request, customerId);
+            CustomerCreateDTO dto = new CustomerCreateDTO();
+            dto.setCustomer_id(customerId);
+            dto.setName(name);
+            dto.setPhone(phone);
+            dto.setEmail(email);
+            dto.setGender(gender);
+            dto.setBirthday(birthday);
+            dto.setAddress(address);
+            dto.setSource(source);
+            dto.setStyleTags(tagIds);
+            dto.setHeight(height);
+            dto.setWeight(weight);
+            dto.setPreferredSize(preferredSize);
+            dto.setBust(bust);
+            dto.setWaist(waist);
+            dto.setHips(hips);
+            dto.setShoulder(shoulder);
+            dto.setBodyShape(bodyShape);
 
-            request.setAttribute("errors", errors);
-            request.getRequestDispatcher("/view/layout.jsp")
-                    .forward(request, response);
+            customerService.updateCustomer(dto, customerId);
+            response.sendRedirect(
+                    request.getContextPath() + "/customers/detail?customerId=" + customerId);
+
+        } catch (DuplicateEmailException e) {
+            Map<String, String> fieldErrors = new LinkedHashMap<>();
+            fieldErrors.put("email", "This email is already registered.");
+            reloadFormData(request, customerId, fieldErrors, null);
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+
+        } catch (DuplicatePhoneException e) {
+            Map<String, String> fieldErrors = new LinkedHashMap<>();
+            fieldErrors.put("phone", "This phone number is already registered.");
+            reloadFormData(request, customerId, fieldErrors, null);
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+
         } catch (Exception e) {
+            log("Update customer error", e);
             response.sendRedirect(request.getContextPath() + "/customers?status=failed");
-
         }
-
-
     }
 
-    private void reloadFormData(HttpServletRequest request, int customerId)
+    // ── Reload form: always fetch fresh customer data from DB ─────────────
+    private void reloadFormData(HttpServletRequest request, int customerId,
+                                Map<String, String> fieldErrors, String globalMessage)
             throws ServletException {
-
         try {
             request.setAttribute("customerDetail",
                     customerService.getCustomerDetail(customerId));
-
             request.setAttribute("allStyleTags",
                     customerService.getListStyleTags());
-
-            // Layout attributes
+            if (fieldErrors != null) {
+                request.setAttribute("fieldErrors", fieldErrors);
+            }
+            if (globalMessage != null) {
+                request.setAttribute("globalError", globalMessage);
+            }
             request.setAttribute("pageTitle", "Customer Edit | Clothes CRM");
             request.setAttribute("contentPage", "customer/edit_customer.jsp");
             request.setAttribute("pageCss", "customer-add.css");
-            // request.setAttribute("pageJs", "customer-edit.js");
             request.setAttribute("page", "customer-add");
         } catch (Exception e) {
             throw new ServletException(e);
         }
     }
 
-    private BigDecimal parseBigDecimal(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return new BigDecimal(value);
+    // ── Helpers ──────────────────────────────────────────────────────────
+    private String trim(String value) {
+        return value != null ? value.trim() : null;
     }
 
+    private BigDecimal parseDecimalValidated(String value, String fieldName,
+                                             Map<String, String> errors) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            BigDecimal bd = new BigDecimal(value);
+            if (bd.compareTo(BigDecimal.ZERO) < 0) {
+                errors.put(fieldName, "Value must be greater than 0.");
+                return null;
+            }
+            return bd;
+        } catch (NumberFormatException e) {
+            errors.put(fieldName, "Invalid number.");
+            return null;
+        }
+    }
 }
