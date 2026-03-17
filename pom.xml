@@ -183,6 +183,16 @@
     <build>
         <finalName>crm</finalName>
         <plugins>
+            <plugin>
+                    <groupId>org.apache.tomcat.maven</groupId>
+                    <artifactId>tomcat10-maven-plugin</artifactId>
+                    <version>10.0.0</version>
+                    <configuration>
+                        <port>8080</port>
+                        <path>/crm</path>
+                        <uriEncoding>UTF-8</uriEncoding>
+                    </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.cargo</groupId>

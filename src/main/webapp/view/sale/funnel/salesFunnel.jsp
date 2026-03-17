@@ -108,3 +108,9 @@
     </div>
 
 </div>
+
+<script src="${pageContext.request.contextPath}/assets/js/jquery-3.6.0.min.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

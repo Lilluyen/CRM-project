@@ -1,7 +1,7 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
+<!-- <%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib
 uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> <%@ taglib
 uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> <%@ page
-isELIgnored="false" %> <%-- Xác định role prefix dựa trên role của user --%>
+isELIgnored="false" %> <%-- Xác định role prefix dựa trên role của user --%> -->
 <c:set var="userRole" value="${sessionScope.user.role.roleName}" />
 <c:choose>
   <c:when test="${fn:toUpperCase(userRole) eq 'ADMIN'}">
@@ -150,6 +150,11 @@ isELIgnored="false" %> <%-- Xác định role prefix dựa trên role của user
                 class="${page eq 'revenue-forecast' ? 'active' : ''}"
                 href="${pageContext.request.contextPath}/forecast"
               >Revenue Forecast</a>
+            </li>
+            <li>
+              <a href="${pageContext.request.contextPath}/forecast"
+                >Revenue Forecast</a
+              >
             </li>
           </ul>
         </li>

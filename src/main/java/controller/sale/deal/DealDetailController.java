@@ -73,6 +73,7 @@ public class DealDetailController extends HttpServlet {
             request.setAttribute("pageCss", "deal_detail.css");
             request.setAttribute("page", "deal-detail");
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/sale/deal/dealDetail.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);

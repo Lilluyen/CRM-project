@@ -51,6 +51,7 @@ public class ViewDealListController extends HttpServlet {
             request.setAttribute("pageCss", "deal_list.css");
             request.setAttribute("page", "deal-list");
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/sale/deal/dealList.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);

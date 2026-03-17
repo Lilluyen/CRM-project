@@ -34,7 +34,8 @@ public class CreateProductController extends HttpServlet {
             request.setAttribute("contentPage", "sale/product/productForm.jsp");
             request.setAttribute("pageCss", "product_form.css");
             request.setAttribute("page", "product-form");
-            request.getRequestDispatcher("/view/layout.jsp")
+            request.getRequestDispatcher("/view/layout.jsp");
+            request.getRequestDispatcher("/view/sale/product/productForm.jsp")
                     .forward(request, response);
 
         } catch (Exception e) {
@@ -78,7 +79,8 @@ public class CreateProductController extends HttpServlet {
             request.setAttribute("contentPage", "sale/product/productForm.jsp");
             request.setAttribute("pageCss", "product_form.css");
             request.setAttribute("page", "product-form");
-            request.getRequestDispatcher("/view/layout.jsp")
+            request.getRequestDispatcher("/view/layout.jsp");
+            request.getRequestDispatcher("/view/sale/product/productForm.jsp")
                     .forward(request, response);
         }
     }

@@ -37,4 +37,10 @@ public final class DBContext {
         String value = System.getenv(key);
         return (value == null || value.isBlank()) ? defaultValue : value;
     }
+
+    public static void main(String[] args) throws Exception {
+        Connection conn = DBContext.getConnection();
+        System.out.println("Connected!");
+    }
+
 }

@@ -79,6 +79,7 @@ public class RevenueForecastController extends HttpServlet {
             request.setAttribute("pageCss", "revenue_forecast.css");
             request.setAttribute("page", "revenue-forecast");
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/sale/forecast/revenueForecast.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException(e);

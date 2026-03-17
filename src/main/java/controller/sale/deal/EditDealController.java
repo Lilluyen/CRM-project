@@ -34,6 +34,7 @@ public class EditDealController extends HttpServlet {
         request.setAttribute("pageCss", "deal_form.css");
         request.setAttribute("page", "deal-form");
         request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/sale/deal/dealForm.jsp").forward(request, response);
     }
 
     private void loadLookups(Connection conn, HttpServletRequest request) throws Exception {

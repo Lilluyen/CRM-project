@@ -50,7 +50,8 @@ public class ViewProductListController extends HttpServlet {
             request.setAttribute("pageCss", "product_list.css");
             request.setAttribute("pageJs", "product_list.js");
             request.setAttribute("page", "product-list");
-            request.getRequestDispatcher("/view/layout.jsp")
+            request.getRequestDispatcher("/view/layout.jsp");
+            request.getRequestDispatcher("/view/sale/product/productList.jsp")
                     .forward(request, response);
 
         } catch (Exception e) {
