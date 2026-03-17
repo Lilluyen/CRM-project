@@ -46,8 +46,8 @@ public class MarketingDashboardController extends HttpServlet {
         List<model.Lead> recentLeads = leadService.searchLeads(
                 null, null, 0, null, 1, 5);
 
-        // Conversion rate tổng (thống nhất với ReportService):
-        // deals WON / total leads * 100
+        // Conversion rate tổng: deals WON / total leads * 100
+        // Thống nhất với Campaign Detail — đo tỷ lệ lead chuyển đổi thành deal thắng
         DealResultReportDTO overallDealResult = reportService.getDealResultReport(null, null, null);
         int dealsCreated = overallDealResult.getTotalDeals();
         int dealsWon = overallDealResult.getDealsWon();

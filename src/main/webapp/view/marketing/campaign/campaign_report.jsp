@@ -149,6 +149,17 @@
         <div class="rpt-kpi-label">ROI</div>
       </div>
     </div>
+
+    <div class="rpt-kpi <c:choose><c:when test="${reportKpi.profitable}">kpi-green</c:when><c:otherwise>kpi-red</c:otherwise></c:choose>">
+      <div class="rpt-kpi-icon"><c:choose><c:when test="${reportKpi.profitable}"><i class="fas fa-arrow-trend-up"></i></c:when><c:otherwise><i class="fas fa-arrow-trend-down"></i></c:otherwise></c:choose></div>
+      <div class="rpt-kpi-body">
+        <fmt:formatNumber value="${reportKpi.profitLoss}" type="currency" currencySymbol="₫" maxFractionDigits="0" var="profitLossFmt"/>
+        <div class="rpt-kpi-value" style="<c:if test="${not reportKpi.profitable}">color:#dc2626</c:if>">
+          <span title="${profitLossFmt}">${profitLossFmt}</span>
+        </div>
+        <div class="rpt-kpi-label"><c:choose><c:when test="${reportKpi.profitable}">Profit</c:when><c:otherwise>Loss</c:otherwise></c:choose></div>
+      </div>
+    </div>
   </div>
 
   <!-- ── Charts row: Lead Source + Lead Funnel ─────────────────── -->
@@ -166,6 +177,32 @@
         <c:when test="${not empty leadSources}">
           <div class="rpt-chart-wrap">
             <canvas id="leadSourceChart"></canvas>
+          </div>
+          <!-- Bảng chi tiết Lead Source -->
+          <div style="margin-top:20px; padding:0 10px;">
+            <table class="rpt-table" style="font-size:13px;">
+              <thead>
+                <tr>
+                  <th style="text-align:left">Nguồn</th>
+                  <th style="text-align:right">Số Lead</th>
+                  <th style="text-align:right">Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <c:forEach var="ls" items="${leadSources}">
+                  <tr>
+                    <td><i class="fas fa-circle" style="color:${ls.percent >= 30 ? '#10b981' : ls.percent >= 15 ? '#f59e0b' : '#6b7280'}; font-size:8px; margin-right:8px"></i>${ls.sourceName}</td>
+                    <td style="text-align:right">${ls.leadCount}</td>
+                    <td style="text-align:right">
+                      <div style="display:inline-block; min-width:50px; text-align:right;">${ls.percent}%</div>
+                      <div style="display:inline-block; width:60px; height:6px; background:#e5e7eb; border-radius:3px; margin-left:8px; overflow:hidden;">
+                        <div style="width:${ls.percent}%; height:100%; background:${ls.percent >= 30 ? '#10b981' : ls.percent >= 15 ? '#f59e0b' : '#6b7280'}; border-radius:3px;"></div>
+                      </div>
+                    </td>
+                  </tr>
+                </c:forEach>
+              </tbody>
+            </table>
           </div>
         </c:when>
         <c:otherwise>
@@ -328,6 +365,9 @@
                 <th style="text-align:right">Deals Won</th>
                 <th style="text-align:right">Deals Lost</th>
                 <th style="text-align:center">Conversion Rate</th>
+                <th style="text-align:right">Revenue</th>
+                <th style="text-align:right">Cost</th>
+                <th style="text-align:right">Profit/Loss</th>
                 <th style="text-align:center">ROI</th>
               </tr>
             </thead>
@@ -349,6 +389,15 @@
                       </c:choose>">
                       <fmt:formatNumber value="${cp.conversionRate}" maxFractionDigits="1"/>%
                     </span>
+                  </td>
+                  <td class="td-number">
+                    <fmt:formatNumber value="${cp.revenue}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
+                  </td>
+                  <td class="td-number">
+                    <fmt:formatNumber value="${cp.cost}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
+                  </td>
+                  <td class="td-number" style="color:<c:choose><c:when test="${cp.profitable}">var(--rpt-success)</c:when><c:otherwise>#dc2626</c:otherwise></c:choose>; font-weight:600">
+                    <fmt:formatNumber value="${cp.profitLoss}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
                   </td>
                   <td class="td-center">
                     <span class="conv-badge">
@@ -388,12 +437,16 @@
     const rawLabels  = [];
     const rawData    = [];
     const rawPercent = [];
+    let totalLeads = 0;
 
     <c:forEach var="ls" items="${leadSources}">
       rawLabels.push('${fn:escapeXml(ls.sourceName)}');
       rawData.push(${ls.leadCount});
       rawPercent.push(${ls.percent});
     </c:forEach>
+
+    // Calculate total
+    rawData.forEach(function(count) { totalLeads += count; });
 
     if (rawData.length === 0) return;
 
@@ -419,12 +472,35 @@
         maintainAspectRatio: false,
         cutout: '65%',
         plugins: {
-          legend: { position: 'right', labels: { font: { size: 12 }, padding: 14 } },
+          legend: {
+            position: 'right',
+            labels: {
+              font: { size: 12 },
+              padding: 14,
+              generateLabels: function(chart) {
+                const data = chart.data;
+                return data.labels.map(function(label, i) {
+                  const value = data.datasets[0].data[i];
+                  const percent = totalLeads > 0 ? ((value / totalLeads) * 100).toFixed(1) : 0;
+                  return {
+                    text: label + ': ' + value + ' (' + percent + '%)',
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    hidden: false,
+                    index: i
+                  };
+                });
+              }
+            }
+          },
           tooltip: {
             callbacks: {
-              label: ctx => {
-                const idx = ctx.dataIndex;
-                return ` ${rawLabels[idx]}: ${rawData[idx]} (${rawPercent[idx]}%)`;
+              label: function(context) {
+                const value = context.raw;
+                const percent = totalLeads > 0 ? ((value / totalLeads) * 100).toFixed(1) : 0;
+                return context.label + ': ' + value + ' leads (' + percent + '%)';
+              },
+              afterBody: function() {
+                return 'Total: ' + totalLeads + ' leads';
               }
             }
           }

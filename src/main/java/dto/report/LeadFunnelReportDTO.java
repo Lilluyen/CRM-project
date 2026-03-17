@@ -32,4 +32,34 @@ public class LeadFunnelReportDTO {
 
     public int getLostCount() { return lostCount; }
     public void setLostCount(int lostCount) { this.lostCount = lostCount; }
+
+    /**
+     * Tổng số leads trong funnel
+     */
+    public int getTotal() {
+        return newCount + contactedCount + qualifiedCount + convertedCount + lostCount;
+    }
+
+    /**
+     * Tính phần trăm cho từng stage
+     */
+    public double getNewPercent() {
+        return getTotal() > 0 ? Math.round(newCount * 10000.0 / getTotal()) / 100.0 : 0;
+    }
+
+    public double getContactedPercent() {
+        return getTotal() > 0 ? Math.round(contactedCount * 10000.0 / getTotal()) / 100.0 : 0;
+    }
+
+    public double getQualifiedPercent() {
+        return getTotal() > 0 ? Math.round(qualifiedCount * 10000.0 / getTotal()) / 100.0 : 0;
+    }
+
+    public double getConvertedPercent() {
+        return getTotal() > 0 ? Math.round(convertedCount * 10000.0 / getTotal()) / 100.0 : 0;
+    }
+
+    public double getLostPercent() {
+        return getTotal() > 0 ? Math.round(lostCount * 10000.0 / getTotal()) / 100.0 : 0;
+    }
 }
