@@ -347,7 +347,13 @@ public class LeadDAO {
                 }
 
                 int[] results = ps.executeBatch();
-                importedCount = results.length;
+                // Count only successful operations (positive values)
+                importedCount = 0;
+                for (int result : results) {
+                    if (result > 0) {
+                        importedCount++;
+                    }
+                }
 
                 conn.commit(); // Commit transaction
             } catch (Exception e) {
@@ -477,7 +483,7 @@ public class LeadDAO {
             params.add("%" + interest.trim() + "%");
         }
 
-        sql += " ORDER BY l.updated_at DESC";
+        sql += " ORDER BY l.updated_at DESC OFFSET 0 ROWS FETCH NEXT 10000 ROWS ONLY";
 
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
