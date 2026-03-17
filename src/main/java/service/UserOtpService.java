@@ -82,7 +82,7 @@ public class UserOtpService {
 
         // 3️⃣ Tạo OTP
         String rawOtp = generateOtp();
-        String hashedOtp = hashOtp("123456");
+        String hashedOtp = hashOtp(rawOtp);
         LocalDateTime expireTime = now.plusMinutes(OTP_EXPIRE_MINUTES);
 
         if (existingOtp == null) {
@@ -108,8 +108,8 @@ public class UserOtpService {
             otpDAO.updateOTP(existingOtp);
         }
 
-//        // Gửi email
-//        sendOtpEmail(user.getEmail(), rawOtp);
+            // Gửi email
+           sendOtpEmail(user.getEmail(), rawOtp);
     }
 
     /* =============================
