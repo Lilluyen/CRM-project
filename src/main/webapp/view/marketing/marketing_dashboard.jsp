@@ -50,8 +50,15 @@
             <div class="col-md-2">
                 <div class="stat-card stat-purple">
                     <div class="stat-icon"><i class="fas fa-handshake"></i></div>
-                    <div class="stat-number">${dealCreatedLeads}</div>
-                    <div class="stat-label">Deal Created</div>
+                    <div class="stat-number">${dealsCreated}</div>
+                    <div class="stat-label">Deals Created</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card stat-success">
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-number">${dealsWon}</div>
+                    <div class="stat-label">Deals Won</div>
                 </div>
             </div>
             <div class="col-md-2">

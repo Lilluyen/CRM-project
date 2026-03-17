@@ -80,8 +80,10 @@ public class CampaignReportDAO {
                 "SELECT c.name AS campaign_name, "
                 + "COUNT(DISTINCT l.lead_id) AS total_leads, "
                 + "COUNT(DISTINCT d.deal_id) AS deals_created, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'WON' THEN 1 ELSE 0 END), 0) AS deals_won, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'LOST' THEN 1 ELSE 0 END), 0) AS deals_lost "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
+                + "MAX(ISNULL(c.budget, 0)) AS cost "
                 + "FROM Campaigns c "
                 + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
                 + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
@@ -105,9 +107,12 @@ public class CampaignReportDAO {
                 int dealsWon = rs.getInt("deals_won");
                 int dealsLost = rs.getInt("deals_lost");
                 double conversionRate = totalLeads > 0 ? dealsWon * 100.0 / totalLeads : 0;
+                double revenue = rs.getDouble("revenue");
+                double cost = rs.getDouble("cost");
+                double roi = cost > 0 ? ((revenue - cost) * 100.0 / cost) : 0;
                 result.add(new CampaignPerformanceReportDTO(
                         rs.getString("campaign_name"),
-                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate));
+                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,8 +163,10 @@ public class CampaignReportDAO {
                 "SELECT c.name AS campaign_name, "
                 + "COUNT(DISTINCT l.lead_id) AS total_leads, "
                 + "COUNT(DISTINCT d.deal_id) AS deals_created, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'WON' THEN 1 ELSE 0 END), 0) AS deals_won, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'LOST' THEN 1 ELSE 0 END), 0) AS deals_lost "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
+                + "MAX(ISNULL(c.budget, 0)) AS cost "
                 + "FROM Campaigns c "
                 + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
                 + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
@@ -188,9 +195,12 @@ public class CampaignReportDAO {
                 double conversionRate = totalLeads > 0
                         ? Math.round(dealsWon * 10000.0 / totalLeads) / 100.0
                         : 0;
+                double revenue = rs.getDouble("revenue");
+                double cost = rs.getDouble("cost");
+                double roi = cost > 0 ? Math.round(((revenue - cost) * 10000.0 / cost)) / 100.0 : 0;
                 result.add(new CampaignPerformanceReportDTO(
                         rs.getString("campaign_name"),
-                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate));
+                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -283,8 +293,8 @@ public class CampaignReportDAO {
 
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(DISTINCT d.deal_id) AS total_deals, "
-                + "COUNT(DISTINCT CASE WHEN UPPER(d.stage) = 'WON' THEN d.deal_id END) AS deals_won, "
-                + "COUNT(DISTINCT CASE WHEN UPPER(d.stage) = 'LOST' THEN d.deal_id END) AS deals_lost " // ✅ thêm dấu cách
+                + "COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) AS deals_won, "
+                + "COUNT(DISTINCT CASE WHEN d.stage = 'Closed Lost' THEN d.deal_id END) AS deals_lost "
                 + "FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
                 + "WHERE 1 = 1 ");  // ✅ dùng WHERE 1=1 thay vì hardcode campaign_id
 
@@ -308,6 +318,66 @@ public class CampaignReportDAO {
             e.printStackTrace();
         }
         return dto;
+    }
+
+    public dto.report.MarketingReportKpiDTO getMarketingReportKpi(
+            Integer campaignId, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT "
+                + " (SELECT COUNT(DISTINCT l.lead_id) "
+                + "  FROM Leads l "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS total_leads, "
+                + " (SELECT COUNT(DISTINCT d.deal_id) "
+                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS deals_created, "
+                + " (SELECT COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) "
+                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS deals_won, "
+                + " (SELECT ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) "
+                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS revenue, "
+                + " (SELECT ISNULL(SUM(c.budget), 0) "
+                + "  FROM Campaigns c "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND c.campaign_id = ? " : "")
+                + " ) AS cost");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            if (campaignId != null) {
+                // campaignId appears 5 times in the SQL above
+                for (int i = 1; i <= 5; i++) {
+                    ps.setInt(i, campaignId);
+                }
+            }
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int totalLeads = rs.getInt("total_leads");
+                int dealsCreated = rs.getInt("deals_created");
+                int dealsWon = rs.getInt("deals_won");
+                double revenue = rs.getDouble("revenue");
+                double cost = rs.getDouble("cost");
+
+                double conversionRate = totalLeads > 0 ? dealsWon * 100.0 / totalLeads : 0;
+                double roi = cost > 0 ? ((revenue - cost) * 100.0 / cost) : 0;
+
+                return new dto.report.MarketingReportKpiDTO(
+                        totalLeads, dealsCreated, dealsWon, revenue, cost, conversionRate, roi);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new dto.report.MarketingReportKpiDTO(0, 0, 0, 0, 0, 0, 0);
     }
 
     public List<Object[]> getAllCampaignsForFilter() {

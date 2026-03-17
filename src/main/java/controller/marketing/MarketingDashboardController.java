@@ -49,8 +49,10 @@ public class MarketingDashboardController extends HttpServlet {
         // Conversion rate tổng (thống nhất với ReportService):
         // deals WON / total leads * 100
         DealResultReportDTO overallDealResult = reportService.getDealResultReport(null, null, null);
+        int dealsCreated = overallDealResult.getTotalDeals();
+        int dealsWon = overallDealResult.getDealsWon();
         double conversionRate = totalLeads > 0
-                ? overallDealResult.getDealsWon() * 100.0 / totalLeads
+                ? dealsWon * 100.0 / totalLeads
                 : 0;
 
         // Set attributes
@@ -68,6 +70,8 @@ public class MarketingDashboardController extends HttpServlet {
 
         request.setAttribute("topCampaigns", topCampaigns);
         request.setAttribute("recentLeads", recentLeads);
+        request.setAttribute("dealsCreated", dealsCreated);
+        request.setAttribute("dealsWon", dealsWon);
         request.setAttribute("conversionRate", String.format("%.1f", conversionRate));
 
         // Layout
