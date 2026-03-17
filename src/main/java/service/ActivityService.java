@@ -2,7 +2,6 @@ package service;
 
 import dao.ActivityDAO;
 import model.Activity;
-import model.User;
 
 import java.sql.Connection;
 import java.util.Collections;
@@ -14,7 +13,8 @@ import java.util.List;
  * Responsibilities:
  *   - Validate input data before delegating to DAO
  *   - Apply role-based visibility (optional extension point)
- *   - Coordinate notification when activities are created
+ *   - Expose task-specific timeline queries for TaskService
+ *   - Expose dashboard "recent activities" query
  */
 public class ActivityService {
 
@@ -52,7 +52,7 @@ public class ActivityService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // READ – LIST (paged)
+    // READ – LIST (paged + filtered)
     // ─────────────────────────────────────────────────────────────────────────
     public List<Activity> getActivitiesPaged(String subject, String activityType,
                                               String relatedType,
@@ -84,6 +84,43 @@ public class ActivityService {
     public List<Activity> getAllActivities() {
         try {
             return activityDAO.getAllActivities();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TASK TIMELINE – used by TaskService for the task detail page
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Returns paged activities where entity_type = 'task' AND entity_id = taskId.
+     * Ordered newest-first.
+     */
+    public List<Activity> getActivitiesByTask(int taskId, int page, int pageSize) {
+        try {
+            return activityDAO.getActivitiesByTask(taskId, page, pageSize);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    public int countActivitiesByTask(int taskId) {
+        try {
+            return activityDAO.countActivitiesByTask(taskId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // DASHBOARD – most recent N activities (Scenario 16)
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<Activity> getRecentActivities(int limit) {
+        try {
+            return activityDAO.getRecentActivities(limit > 0 ? limit : 20);
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();

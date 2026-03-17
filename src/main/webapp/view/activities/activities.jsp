@@ -12,10 +12,6 @@
 <%
     List<Activity> activities = request.getAttribute("activities") != null
             ? (List<Activity>) request.getAttribute("activities") : new ArrayList<>();
-    int currentPage  = request.getAttribute("currentPage")  != null ? (Integer)request.getAttribute("currentPage")  : 1;
-    int totalPages   = request.getAttribute("totalPages")   != null ? (Integer)request.getAttribute("totalPages")   : 1;
-    int totalRecords = request.getAttribute("totalRecords") != null ? (Integer)request.getAttribute("totalRecords") : 0;
-    int pageSize     = request.getAttribute("pageSize")     != null ? (Integer)request.getAttribute("pageSize")     : 10;
 
     String p_subject      = request.getParameter("subject")      != null ? request.getParameter("subject")      : "";
     String p_activityType = request.getParameter("activityType") != null ? request.getParameter("activityType") : "";
@@ -26,13 +22,8 @@
 
 <style>
   @media (min-width: 992px){
-        .mini-sidebar .badge {
-            display: inline-block !important;
-        }
-
-        .mini-sidebar.expand-menu .badge {
-            display: inline-block !important;
-        }
+        .mini-sidebar .badge { display: inline-block !important; }
+        .mini-sidebar.expand-menu .badge { display: inline-block !important; }
     }
 </style>
 <div>
@@ -87,7 +78,9 @@
               <a href="${pageContext.request.contextPath}/activities/list" class="btn btn-outline-secondary">
                 <i class="fa fa-times me-1"></i> Reset
               </a>
-              <span class="text-muted small align-self-center ms-2"><%= totalRecords %> record<%= totalRecords != 1 ? "s" : "" %></span>
+              <span class="text-muted small align-self-center ms-2">
+                ${pagination.totalItems} record${pagination.totalItems != 1 ? 's' : ''}
+              </span>
             </div>
           </div>
         </form>
@@ -125,12 +118,10 @@
                 </td>
               </tr>
               <% } else {
-                  
                   for (Activity a : activities) {
                       String typeBadge = "bg-secondary";
                       String at = (a.getActivityType() != null ? a.getActivityType() : "-").toUpperCase();
-                      
-                      if ("CALL".equals(at))    typeBadge = "bg-info text-dark";
+                      if ("CALL".equals(at))         typeBadge = "bg-info text-dark";
                       else if ("EMAIL".equals(at))   typeBadge = "bg-primary";
                       else if ("MEETING".equals(at)) typeBadge = "bg-success";
                       else if ("NOTE".equals(at))    typeBadge = "bg-warning text-dark";
@@ -170,9 +161,10 @@
             </tbody>
           </table>
         </div>
-        <div class="mt-3">
-          <%@ include file="/view/components/paging.jsp" %>
-        </div>
+
+        <%-- Dùng jsp:include (không phải <%@ include %>) để component con thấy request attribute "pagination" --%>
+        <jsp:include page="/view/components/pagination.jsp" />
+
       </div>
     </div>
   </div>
