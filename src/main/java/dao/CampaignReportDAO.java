@@ -23,8 +23,7 @@ public class CampaignReportDAO {
     public int createCampaignReport(CampaignReport report) {
         String sql = "INSERT INTO Campaign_Reports(campaign_id, total_lead, qualified_lead, converted_lead, cost_per_lead, roi, created_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, report.getCampaignId());
             ps.setInt(2, report.getTotalLead());
             ps.setInt(3, report.getQualifiedLead());
@@ -74,7 +73,6 @@ public class CampaignReportDAO {
     }
 
     // ── Report methods (cho trang Marketing Report) ───────────────────────────
-
     public List<CampaignPerformanceReportDTO> getCampaignPerformance(
             Integer campaignId, String fromDate, String toDate) {
         List<CampaignPerformanceReportDTO> result = new ArrayList<>();
@@ -82,8 +80,10 @@ public class CampaignReportDAO {
                 "SELECT c.name AS campaign_name, "
                 + "COUNT(DISTINCT l.lead_id) AS total_leads, "
                 + "COUNT(DISTINCT d.deal_id) AS deals_created, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'WON' THEN 1 ELSE 0 END), 0) AS deals_won, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'LOST' THEN 1 ELSE 0 END), 0) AS deals_lost "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
+                + "MAX(ISNULL(c.budget, 0)) AS cost "
                 + "FROM Campaigns c "
                 + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
                 + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
@@ -96,8 +96,7 @@ public class CampaignReportDAO {
         }
         sql.append(" GROUP BY c.campaign_id, c.name ORDER BY c.name");
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -108,9 +107,12 @@ public class CampaignReportDAO {
                 int dealsWon = rs.getInt("deals_won");
                 int dealsLost = rs.getInt("deals_lost");
                 double conversionRate = totalLeads > 0 ? dealsWon * 100.0 / totalLeads : 0;
+                double revenue = rs.getDouble("revenue");
+                double cost = rs.getDouble("cost");
+                double roi = cost > 0 ? ((revenue - cost) * 100.0 / cost) : 0;
                 result.add(new CampaignPerformanceReportDTO(
                         rs.getString("campaign_name"),
-                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate));
+                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -118,7 +120,9 @@ public class CampaignReportDAO {
         return result;
     }
 
-    /** Đếm tổng số campaign performance (cho phân trang). */
+    /**
+     * Đếm tổng số campaign performance (cho phân trang).
+     */
     public int countCampaignPerformance(Integer campaignId, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) AS cnt FROM ("
@@ -135,8 +139,7 @@ public class CampaignReportDAO {
         }
         sql.append(" GROUP BY c.campaign_id, c.name ) AS t");
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -150,7 +153,9 @@ public class CampaignReportDAO {
         return 0;
     }
 
-    /** Lấy campaign performance có phân trang (OFFSET / FETCH). */
+    /**
+     * Lấy campaign performance có phân trang (OFFSET / FETCH).
+     */
     public List<CampaignPerformanceReportDTO> getCampaignPerformancePaginated(
             Integer campaignId, String fromDate, String toDate, int offset, int limit) {
         List<CampaignPerformanceReportDTO> result = new ArrayList<>();
@@ -158,8 +163,10 @@ public class CampaignReportDAO {
                 "SELECT c.name AS campaign_name, "
                 + "COUNT(DISTINCT l.lead_id) AS total_leads, "
                 + "COUNT(DISTINCT d.deal_id) AS deals_created, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'WON' THEN 1 ELSE 0 END), 0) AS deals_won, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'LOST' THEN 1 ELSE 0 END), 0) AS deals_lost "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
+                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
+                + "MAX(ISNULL(c.budget, 0)) AS cost "
                 + "FROM Campaigns c "
                 + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
                 + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
@@ -175,8 +182,7 @@ public class CampaignReportDAO {
         params.add(offset);
         params.add(limit);
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -186,10 +192,15 @@ public class CampaignReportDAO {
                 int dealsCreated = rs.getInt("deals_created");
                 int dealsWon = rs.getInt("deals_won");
                 int dealsLost = rs.getInt("deals_lost");
-                double conversionRate = totalLeads > 0 ? dealsWon * 100.0 / totalLeads : 0;
+                double conversionRate = totalLeads > 0
+                        ? Math.round(dealsWon * 10000.0 / totalLeads) / 100.0
+                        : 0;
+                double revenue = rs.getDouble("revenue");
+                double cost = rs.getDouble("cost");
+                double roi = cost > 0 ? Math.round(((revenue - cost) * 10000.0 / cost)) / 100.0 : 0;
                 result.add(new CampaignPerformanceReportDTO(
                         rs.getString("campaign_name"),
-                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate));
+                        totalLeads, dealsCreated, dealsWon, dealsLost, conversionRate, roi));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -217,8 +228,7 @@ public class CampaignReportDAO {
 
         List<LeadSourceReportDTO> tmp = new ArrayList<>();
         int total = 0;
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -230,7 +240,7 @@ public class CampaignReportDAO {
                 tmp.add(new LeadSourceReportDTO(src, cnt, 0));
             }
             for (LeadSourceReportDTO dto : tmp) {
-                double percent = total > 0 ? dto.getLeadCount() * 100.0 / total : 0;
+                double percent = total > 0 ? Math.round(dto.getLeadCount() * 10000.0 / total) / 100.0 : 0;
                 dto.setPercent(percent);
                 result.add(dto);
             }
@@ -259,8 +269,7 @@ public class CampaignReportDAO {
             params.add(campaignId);
         }
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -281,20 +290,21 @@ public class CampaignReportDAO {
     public DealResultReportDTO getDealResultReport(
             Integer campaignId, String fromDate, String toDate) {
         DealResultReportDTO dto = new DealResultReportDTO(0, 0, 0);
+
         StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(*) AS total_deals, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'WON' THEN 1 ELSE 0 END), 0) AS deals_won, "
-                + "ISNULL(SUM(CASE WHEN UPPER(d.stage) = 'LOST' THEN 1 ELSE 0 END), 0) AS deals_lost "
-                + "FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id WHERE 1 = 1 ");
+                "SELECT COUNT(DISTINCT d.deal_id) AS total_deals, "
+                + "COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) AS deals_won, "
+                + "COUNT(DISTINCT CASE WHEN d.stage = 'Closed Lost' THEN d.deal_id END) AS deals_lost "
+                + "FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "WHERE 1 = 1 ");  // ✅ dùng WHERE 1=1 thay vì hardcode campaign_id
 
         List<Object> params = new ArrayList<>();
         if (campaignId != null) {
-            sql.append(" AND l.campaign_id = ? ");
+            sql.append(" AND l.campaign_id = ? ");  // ✅ chỉ 1 điều kiện duy nhất
             params.add(campaignId);
         }
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -310,12 +320,70 @@ public class CampaignReportDAO {
         return dto;
     }
 
+    public dto.report.MarketingReportKpiDTO getMarketingReportKpi(
+            Integer campaignId, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT "
+                + " (SELECT COUNT(DISTINCT l.lead_id) "
+                + "  FROM Leads l "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS total_leads, "
+                + " (SELECT COUNT(DISTINCT d.deal_id) "
+                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS deals_created, "
+                + " (SELECT COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) "
+                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS deals_won, "
+                + " (SELECT ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) "
+                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + " ) AS revenue, "
+                + " (SELECT ISNULL(SUM(c.budget), 0) "
+                + "  FROM Campaigns c "
+                + "  WHERE 1 = 1 "
+                + (campaignId != null ? " AND c.campaign_id = ? " : "")
+                + " ) AS cost");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            if (campaignId != null) {
+                // campaignId appears 5 times in the SQL above
+                for (int i = 1; i <= 5; i++) {
+                    ps.setInt(i, campaignId);
+                }
+            }
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int totalLeads = rs.getInt("total_leads");
+                int dealsCreated = rs.getInt("deals_created");
+                int dealsWon = rs.getInt("deals_won");
+                double revenue = rs.getDouble("revenue");
+                double cost = rs.getDouble("cost");
+
+                double conversionRate = totalLeads > 0 ? dealsWon * 100.0 / totalLeads : 0;
+                double roi = cost > 0 ? ((revenue - cost) * 100.0 / cost) : 0;
+
+                return new dto.report.MarketingReportKpiDTO(
+                        totalLeads, dealsCreated, dealsWon, revenue, cost, conversionRate, roi);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new dto.report.MarketingReportKpiDTO(0, 0, 0, 0, 0, 0, 0);
+    }
+
     public List<Object[]> getAllCampaignsForFilter() {
         List<Object[]> result = new ArrayList<>();
         String sql = "SELECT campaign_id, name FROM Campaigns ORDER BY created_at DESC";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 result.add(new Object[]{rs.getInt("campaign_id"), rs.getString("name")});
             }
@@ -328,9 +396,7 @@ public class CampaignReportDAO {
     public List<String> getAllSourcesForFilter() {
         List<String> result = new ArrayList<>();
         String sql = "SELECT DISTINCT source FROM Leads WHERE source IS NOT NULL AND source <> '' ORDER BY source";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 result.add(rs.getString("source"));
             }

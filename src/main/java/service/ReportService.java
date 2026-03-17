@@ -10,6 +10,7 @@ import dto.report.CampaignPerformanceReportDTO;
 import dto.report.DealResultReportDTO;
 import dto.report.LeadFunnelReportDTO;
 import dto.report.LeadSourceReportDTO;
+import dto.report.MarketingReportKpiDTO;
 import model.CampaignReport;
 
 public class ReportService {
@@ -54,6 +55,11 @@ public class ReportService {
         return reportDAO.getAllSourcesForFilter();
     }
 
+    public MarketingReportKpiDTO getMarketingReportKpi(
+            Integer campaignId, String fromDate, String toDate) {
+        return reportDAO.getMarketingReportKpi(campaignId, fromDate, toDate);
+    }
+
     /**
      * Tạo report thống kê cho một campaign (dùng trong Campaign Detail).
      */
@@ -64,10 +70,6 @@ public class ReportService {
         DealResultReportDTO dealResult = getDealResultReport(campaignId, null, null);
         int convertedLead = dealResult.getTotalDeals(); // Deals Created
 
-        double conversionRate = totalLead > 0
-                ? dealResult.getDealsWon() * 100.0 / totalLead
-                : 0;
-
         CampaignReport report = new CampaignReport();
         report.setReportId(0);
         report.setCampaignId(campaignId);
@@ -75,7 +77,7 @@ public class ReportService {
         report.setQualifiedLead(qualifiedLead);
         report.setConvertedLead(convertedLead);
         report.setCostPerLead(null);
-        report.setRoi(BigDecimal.valueOf(conversionRate));
+        report.setRoi(BigDecimal.ZERO);
         report.setCreatedAt(LocalDateTime.now());
         return report;
     }

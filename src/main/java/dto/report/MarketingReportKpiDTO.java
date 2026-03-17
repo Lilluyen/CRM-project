@@ -1,35 +1,26 @@
 package dto.report;
 
-public class CampaignPerformanceReportDTO {
-
-    private String campaignName;
+public class MarketingReportKpiDTO {
     private int totalLeads;
     private int dealsCreated;
     private int dealsWon;
-    private int dealsLost;
+    private double revenue;
+    private double cost;
     private double conversionRate;
     private double roi;
 
-    public CampaignPerformanceReportDTO() {
+    public MarketingReportKpiDTO() {
     }
 
-    public CampaignPerformanceReportDTO(String campaignName, int totalLeads, int dealsCreated,
-            int dealsWon, int dealsLost, double conversionRate, double roi) {
-        this.campaignName = campaignName;
+    public MarketingReportKpiDTO(int totalLeads, int dealsCreated, int dealsWon,
+            double revenue, double cost, double conversionRate, double roi) {
         this.totalLeads = totalLeads;
         this.dealsCreated = dealsCreated;
         this.dealsWon = dealsWon;
-        this.dealsLost = dealsLost;
+        this.revenue = revenue;
+        this.cost = cost;
         this.conversionRate = conversionRate;
         this.roi = roi;
-    }
-
-    public String getCampaignName() {
-        return campaignName;
-    }
-
-    public void setCampaignName(String campaignName) {
-        this.campaignName = campaignName;
     }
 
     public int getTotalLeads() {
@@ -56,12 +47,20 @@ public class CampaignPerformanceReportDTO {
         this.dealsWon = dealsWon;
     }
 
-    public int getDealsLost() {
-        return dealsLost;
+    public double getRevenue() {
+        return revenue;
     }
 
-    public void setDealsLost(int dealsLost) {
-        this.dealsLost = dealsLost;
+    public void setRevenue(double revenue) {
+        this.revenue = revenue;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public void setCost(double cost) {
+        this.cost = cost;
     }
 
     public double getConversionRate() {
@@ -80,3 +79,4 @@ public class CampaignPerformanceReportDTO {
         this.roi = roi;
     }
 }
+

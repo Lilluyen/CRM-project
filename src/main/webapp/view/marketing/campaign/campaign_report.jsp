@@ -87,43 +87,66 @@
     <div class="rpt-kpi kpi-blue">
       <div class="rpt-kpi-icon"><i class="fas fa-users"></i></div>
       <div class="rpt-kpi-body">
-        <div class="rpt-kpi-value">${leadFunnel.newCount + leadFunnel.contactedCount + leadFunnel.qualifiedCount + leadFunnel.convertedCount + leadFunnel.lostCount}</div>
+        <div class="rpt-kpi-value">${reportKpi.totalLeads}</div>
         <div class="rpt-kpi-label">Total Leads</div>
       </div>
     </div>
-    <div class="rpt-kpi kpi-green">
-      <div class="rpt-kpi-icon"><i class="fas fa-user-check"></i></div>
-      <div class="rpt-kpi-body">
-        <div class="rpt-kpi-value">${leadFunnel.qualifiedCount}</div>
-        <div class="rpt-kpi-label">Qualified Leads</div>
-      </div>
-    </div>
+
     <div class="rpt-kpi kpi-purple">
       <div class="rpt-kpi-icon"><i class="fas fa-handshake"></i></div>
       <div class="rpt-kpi-body">
-        <div class="rpt-kpi-value">${dealResult.totalDeals}</div>
-        <div class="rpt-kpi-label">Total Deals</div>
+        <div class="rpt-kpi-value">${reportKpi.dealsCreated}</div>
+        <div class="rpt-kpi-label">Deals Created</div>
       </div>
     </div>
+
     <div class="rpt-kpi kpi-teal">
       <div class="rpt-kpi-icon"><i class="fas fa-trophy"></i></div>
       <div class="rpt-kpi-body">
-        <div class="rpt-kpi-value">${dealResult.dealsWon}</div>
+        <div class="rpt-kpi-value">${reportKpi.dealsWon}</div>
         <div class="rpt-kpi-label">Deals Won</div>
       </div>
     </div>
-    <div class="rpt-kpi kpi-red">
-      <div class="rpt-kpi-icon"><i class="fas fa-times-circle"></i></div>
+
+    <div class="rpt-kpi kpi-amber">
+      <div class="rpt-kpi-icon"><i class="fas fa-percentage"></i></div>
       <div class="rpt-kpi-body">
-        <div class="rpt-kpi-value">${dealResult.dealsLost}</div>
-        <div class="rpt-kpi-label">Deals Lost</div>
+        <div class="rpt-kpi-value">
+          <fmt:formatNumber value="${reportKpi.conversionRate}" maxFractionDigits="1"/>%
+        </div>
+        <div class="rpt-kpi-label">Conversion Rate</div>
       </div>
     </div>
-    <div class="rpt-kpi kpi-amber">
-      <div class="rpt-kpi-icon"><i class="fas fa-bullhorn"></i></div>
+
+    <div class="rpt-kpi kpi-green">
+      <div class="rpt-kpi-icon"><i class="fas fa-coins"></i></div>
       <div class="rpt-kpi-body">
-        <div class="rpt-kpi-value">${fn:length(campaignPerformance)}</div>
-        <div class="rpt-kpi-label">Campaigns Tracked</div>
+        <fmt:formatNumber value="${reportKpi.revenue}" type="currency" currencySymbol="₫" maxFractionDigits="0" var="revenueFmt"/>
+        <div class="rpt-kpi-value">
+          <span title="${revenueFmt}">${revenueFmt}</span>
+        </div>
+        <div class="rpt-kpi-label">Revenue</div>
+      </div>
+    </div>
+
+    <div class="rpt-kpi kpi-red">
+      <div class="rpt-kpi-icon"><i class="fas fa-wallet"></i></div>
+      <div class="rpt-kpi-body">
+        <fmt:formatNumber value="${reportKpi.cost}" type="currency" currencySymbol="₫" maxFractionDigits="0" var="costFmt"/>
+        <div class="rpt-kpi-value">
+          <span title="${costFmt}">${costFmt}</span>
+        </div>
+        <div class="rpt-kpi-label">Cost</div>
+      </div>
+    </div>
+
+    <div class="rpt-kpi kpi-green">
+      <div class="rpt-kpi-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="rpt-kpi-body">
+        <div class="rpt-kpi-value">
+          <fmt:formatNumber value="${reportKpi.roi}" maxFractionDigits="1"/>%
+        </div>
+        <div class="rpt-kpi-label">ROI</div>
       </div>
     </div>
   </div>
@@ -305,6 +328,7 @@
                 <th style="text-align:right">Deals Won</th>
                 <th style="text-align:right">Deals Lost</th>
                 <th style="text-align:center">Conversion Rate</th>
+                <th style="text-align:center">ROI</th>
               </tr>
             </thead>
             <tbody>
@@ -324,6 +348,11 @@
                         <c:otherwise>conv-low</c:otherwise>
                       </c:choose>">
                       <fmt:formatNumber value="${cp.conversionRate}" maxFractionDigits="1"/>%
+                    </span>
+                  </td>
+                  <td class="td-center">
+                    <span class="conv-badge">
+                      <fmt:formatNumber value="${cp.roi}" maxFractionDigits="1"/>%
                     </span>
                   </td>
                 </tr>
