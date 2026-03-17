@@ -69,8 +69,15 @@ public class TicketDAO {
         params.add(customerId);
 
         if (subject != null && !subject.trim().isEmpty()) {
-            sql.append(" AND subject LIKE ? ESCAPE '\\' ");
-            params.add("%" + escapeLike(subject.trim()) + "%");
+            String keyword = subject.trim();
+
+            StringBuilder pattern = new StringBuilder("%");
+            for (char c : keyword.toCharArray()) {
+                pattern.append(escapeLike(String.valueOf(c))).append("%");
+            }
+
+            sql.append(" AND subject COLLATE Latin1_General_CI_AI LIKE ? ESCAPE '\\' ");
+            params.add(pattern.toString());
         }
 
         if (status != null && !status.trim().isEmpty()) {

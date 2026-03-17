@@ -94,7 +94,7 @@ public class CustomerOtpService {
 
         // 3️⃣ Tạo OTP
         String rawOtp = generateOtp();
-        String hashedOtp = hashOtp("123456");
+        String hashedOtp = hashOtp(rawOtp);
 
         LocalDateTime expireTime = now.plusMinutes(5);
 
@@ -121,7 +121,7 @@ public class CustomerOtpService {
         }
 
         // Gửi email
-        // sendOtpEmail(customer.getEmail(), rawOtp);
+        sendOtpEmail(customer.getEmail(), rawOtp);
     }
 
     /* =============================
