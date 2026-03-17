@@ -1,16 +1,22 @@
 package controller.sale.deal;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Connection;
-
+import dao.CustomerDAO;
 import dao.DealDAO;
+import dao.LeadDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Customer;
+import model.Deal;
+import model.Lead;
 import util.DBContext;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 @WebServlet("/sale/deal/stage")
 public class UpdateDealStageController extends HttpServlet {
@@ -35,6 +41,11 @@ public class UpdateDealStageController extends HttpServlet {
             DealDAO dao = new DealDAO(conn);
             dao.updateDealStage(dealId, stage, probability, actualValue);
 
+            //xử lý Closed Won
+            if ("Closed Won".equalsIgnoreCase(stage)) {
+                handleClosedWon(dealId, conn);
+            }
+            conn.commit();
             String redirect = request.getHeader("Referer");
             if (redirect == null || redirect.isBlank()) {
                 redirect = request.getContextPath() + "/sale/deal/list";
@@ -43,6 +54,52 @@ public class UpdateDealStageController extends HttpServlet {
 
         } catch (Exception e) {
             throw new ServletException(e);
+        }
+    }
+
+    private void handleClosedWon(int dealId, Connection conn) throws SQLException {
+
+        DealDAO dealDAO = new DealDAO(conn);
+        LeadDAO leadDAO = new LeadDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+
+        // 1. Lấy deal
+        Deal deal = dealDAO.getById(dealId);
+
+        // 2. Nếu đã có customer → bỏ qua
+//        if (deal.getCustomerId() > 0) {
+//            return;
+//        }
+
+        // 3. Nếu có lead → convert
+        if (deal.getLeadId() > 0) {
+
+            Lead lead = leadDAO.getLeadById(deal.getLeadId());
+
+            // ❌ tránh convert lại
+            if (lead.isConverted()) {
+                // chỉ cần gắn lại customer vào deal
+                dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
+                return;
+            }
+
+            // 4. Check duplicate customer (theo phone/email)
+            Customer existing = customerDAO.findByPhoneOrEmail(conn, lead.getPhone(), lead.getEmail());
+
+            int customerId;
+
+            if (existing != null) {
+                customerId = existing.getCustomerId();
+            } else {
+                // 5. Tạo customer mới
+                customerId = customerDAO.insertFromLead(conn, lead);
+            }
+
+            // 6. Update lead
+            leadDAO.markConverted(conn, lead.getLeadId(), customerId);
+
+            // 7. Update deal
+            dealDAO.updateCustomerForDeal(dealId, customerId);
         }
     }
 }

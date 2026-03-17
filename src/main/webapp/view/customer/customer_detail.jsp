@@ -3,7 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="customer-detail mt-5">
+<div class="customer-detail ">
 
     <!-- HEADER -->
     <div class="customer-detail__header">
@@ -68,7 +68,7 @@
                     <span>Birthday</span>
                     <strong>
                         ${customerDetail.birthday}
-                                        
+
                     </strong>
                 </div>
 
@@ -94,7 +94,7 @@
                 <div class="customer-detail__tags">
                     <c:forEach var="tag" items="${customerDetail.styleTags}">
                         <span class="customer-detail__tag">
-                            ${tag.tagName}
+                                ${tag.tagName}
                         </span>
                     </c:forEach>
 
@@ -113,12 +113,12 @@
                     <!-- TAG PICKER -->
                     <div id="tagPicker" class="tag-picker hidden">
                         <form action="${pageContext.request.contextPath}/add-tag" method="post">
-                            <input type="hidden" name="customerId" value="${customerDetail.customerId}" />
+                            <input type="hidden" name="customerId" value="${customerDetail.customerId}"/>
 
                             <div class="tag-picker__list">
                                 <c:forEach var="tag" items="${allStyleTags}">
                                     <label class="tag-picker__item">
-                                        <input type="checkbox" name="tagIds" value="${tag.tagId}" />
+                                        <input type="checkbox" name="tagIds" value="${tag.tagId}"/>
                                         <span>${tag.tagName}</span>
                                     </label>
                                 </c:forEach>

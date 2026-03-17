@@ -1,18 +1,12 @@
 package dao;
 
+import model.Deal;
+
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import model.Deal;
 
 public class DealDAO {
 
@@ -149,12 +143,12 @@ public class DealDAO {
         int offset = (page - 1) * pageSize;
 
         String sql =
-            "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at " +
-            "FROM Deals " +
-            "WHERE (deal_name LIKE ?) " +
-            "AND (? = '' OR stage = ?) " +
-            "ORDER BY updated_at DESC " +
-            "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at " +
+                        "FROM Deals " +
+                        "WHERE (deal_name LIKE ?) " +
+                        "AND (? = '' OR stage = ?) " +
+                        "ORDER BY updated_at DESC " +
+                        "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         List<Deal> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -200,11 +194,11 @@ public class DealDAO {
         if (stage == null) stage = "";
 
         String sql =
-            "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at " +
-            "FROM Deals " +
-            "WHERE (deal_name LIKE ?) " +
-            "AND (? = '' OR stage = ?) " +
-            "ORDER BY updated_at DESC";
+                "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at " +
+                        "FROM Deals " +
+                        "WHERE (deal_name LIKE ?) " +
+                        "AND (? = '' OR stage = ?) " +
+                        "ORDER BY updated_at DESC";
 
         List<Deal> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -285,4 +279,17 @@ public class DealDAO {
         if (s.equalsIgnoreCase("Closed Lost")) return 0;
         return null;
     }
+
+
+    //chuyển id của lead lên id của cus trong deal
+    public void updateCustomerForDeal(int dealId, int customerId) throws SQLException {
+        String sql = "UPDATE Deals SET customer_id = ?, lead_id = NULL WHERE deal_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, dealId);
+            ps.executeUpdate();
+        }
+    }
+
+    
 }

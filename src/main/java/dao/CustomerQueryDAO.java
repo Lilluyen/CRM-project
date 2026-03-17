@@ -81,7 +81,8 @@ public class CustomerQueryDAO {
                 customer.setName(rs.getString("name"));
                 customer.setPhone(rs.getString("phone"));
                 customer.setEmail(rs.getString("email"));
-                customer.setBirthday(rs.getDate("birthday").toLocalDate());
+                Date dob = rs.getDate("birthday");
+                customer.setBirthday(dob != null ? dob.toLocalDate() : null);
                 customer.setGender(rs.getString("gender"));
                 customer.setAddress(rs.getString("address"));
                 customer.setSource(rs.getString("source"));
@@ -403,7 +404,8 @@ public class CustomerQueryDAO {
                     customer.setName(rs.getString("name"));
                     customer.setPhone(rs.getString("phone"));
                     customer.setEmail(rs.getString("email"));
-                    customer.setBirthday(rs.getDate("birthday").toLocalDate());
+                    Date dob = rs.getDate("birthday");
+                    customer.setBirthday(dob != null ? dob.toLocalDate() : null);
                     customer.setGender(rs.getString("gender"));
                     customer.setAddress(rs.getString("address"));
                     customer.setSource(rs.getString("source"));
