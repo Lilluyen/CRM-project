@@ -104,9 +104,29 @@ public class LeadImportController extends HttpServlet {
                 }
             }
 
-            // ===== Read Excel (collect errors per row instead of stopping) =====
+            // ===== Read Excel =====
             List<String> parseErrors = new ArrayList<>();
-            List<Lead> leads = ExcelUtil.readLeadsFromExcel(filePart.getInputStream(), parseErrors);
+            List<Lead> leads;
+            try {
+                leads = ExcelUtil.readLeadsFromExcel(filePart.getInputStream(), parseErrors);
+            } catch (Exception e) {
+                // File format error - can't read Excel
+                ImportLeadResponse errorResponse = new ImportLeadResponse();
+                errorResponse.setSuccess(false);
+                errorResponse.setMessage("Vui lòng nhập file khác vì sai định dạng. File phải là .xlsx và không bị corrupt.");
+                errorResponse.addError("Lỗi đọc file: " + e.getMessage());
+                response.getWriter().write(gson.toJson(errorResponse));
+                return;
+            }
+
+            // Check if file is empty or has no data rows
+            if (leads == null || leads.isEmpty()) {
+                ImportLeadResponse errorResponse = new ImportLeadResponse();
+                errorResponse.setSuccess(false);
+                errorResponse.setMessage("File không có dữ liệu hoặc không đúng định dạng.");
+                response.getWriter().write(gson.toJson(errorResponse));
+                return;
+            }
 
             // ===== Import =====
             ImportLeadResponse importResponse = importService.importLeads(leads, source, campaignId, assignedToIds);
