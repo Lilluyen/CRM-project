@@ -20,8 +20,8 @@ public class Activity {
     private User performedBy;       // performed_by INT -> Users(user_id)
     private String metadata;        // metadata NVARCHAR(MAX)
     private LocalDateTime updatedAt; // updated_at DATETIME
-    private String entityType;      // ✅ THÊM MỚI - entity_type VARCHAR(50)
-    private Integer entityId;       // ✅ THÊM MỚI - entity_id INT
+    private String entityType;      // entity_type VARCHAR(50) - used by application code
+    private Integer entityId;       // entity_id INT - used by application code
 
     public Activity() {}
 

@@ -1,6 +1,5 @@
 package controller.tasks;
 
-import dao.UserDAO;
 import model.Task;
 import model.User;
 import service.NotificationService;
@@ -19,7 +18,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,7 +55,7 @@ public class TaskCreateController extends HttpServlet {
 
         boolean isManager = isManagerOrAdmin(user);
         req.setAttribute("isManager", isManager);
-        if (isManager) loadAllUsers(req);
+        // Users loaded via AJAX from /api/related-entities?type=user
 
         // Giữ lại relatedType/relatedId để form biết mình đang tạo task cho entity nào
         req.setAttribute("relatedType", nvl(req.getParameter("relatedType"), ""));
@@ -109,7 +107,7 @@ public class TaskCreateController extends HttpServlet {
                 req.setAttribute("page",        "task-create");
                 req.setAttribute("relatedType", nvl(relatedTypeFinal, ""));
                 req.setAttribute("relatedId",   nvl(relatedIdRaw,     ""));
-                if (isManager) loadAllUsers(req);
+                // Users loaded via AJAX
                 req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
                 return;
             }
@@ -199,15 +197,6 @@ public class TaskCreateController extends HttpServlet {
             case "ticket"   -> "/tickets/details?id="   + relatedId;
             default         -> "/tasks/list";
         };
-    }
-
-    private void loadAllUsers(HttpServletRequest req) throws ServletException {
-        try (Connection conn = DBContext.getConnection()) {
-            List<User> users = new UserDAO().getAllUsers(conn);
-            req.setAttribute("allUsers", users);
-        } catch (Exception e) {
-            throw new ServletException("Không thể tải danh sách users", e);
-        }
     }
 
     private boolean isManagerOrAdmin(User user) {

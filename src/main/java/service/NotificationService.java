@@ -3,6 +3,7 @@ package service;
 import dao.NotificationDAO;
 import dao.NotificationRuleDAO;
 import model.Notification;
+import model.NotificationRuleEngine;
 import websocket.NotificationWebSocketEndpoint;
 import util.DBContext;
 
@@ -40,22 +41,13 @@ public class NotificationService {
     public boolean createForUser(int userId, String title, String content,
                                  String type, String relatedType, Integer relatedId) {
         try {
-            Notification n = new Notification();
-            n.setTitle(title);
-            n.setContent(content);
-            n.setType(type);
-            n.setRelatedType(relatedType);
-            n.setRelatedId(relatedId);
-
+            Notification n = buildNotification(title, content, type, relatedType, relatedId);
             int notifId = notificationDAO.insertNotification(n);
             if (notifId <= 0) return false;
 
             boolean ok = notificationDAO.addRecipient(notifId, userId);
             if (ok) {
-                // Fetch created_at from DB for consistent rendering
-                Notification full = notificationDAO.findById(notifId);
-                int count = notificationDAO.countUnreadByUser(userId);
-                NotificationWebSocketEndpoint.pushNewUnread(userId, full != null ? full : n, count);
+                pushNotificationToUser(notifId, userId, n);
             }
             return ok;
         } catch (Exception e) {
@@ -80,24 +72,29 @@ public class NotificationService {
                                          String intervalUnit,
                                          LocalDateTime nextRun) {
         try {
-            Notification n = new Notification();
-            n.setTitle(title);
-            n.setContent(content);
-            n.setType(type);
-            n.setRelatedType(relatedType);
-            n.setRelatedId(relatedId);
-
+            Notification n = buildNotification(title, content, type, relatedType, relatedId);
             int notifId = notificationDAO.insertNotification(n);
             if (notifId <= 0) return false;
             if (!notificationDAO.addRecipient(notifId, userId)) return false;
 
-            int ruleId = notificationRuleDAO.insertRule(
-                    notifId, ruleType, intervalValue, intervalUnit, nextRun);
+            // Build rule engine object
+            NotificationRuleEngine rule = new NotificationRuleEngine();
+            rule.setRuleName("Auto-created rule for notification " + notifId);
+            rule.setRuleType(ruleType);
+            rule.setNotificationTitleTemplate(title);
+            rule.setNotificationContentTemplate(content);
+            rule.setNotificationType(type);
+            rule.setNextRunAt(nextRun);
+            rule.setConditionValue(intervalValue);
+            rule.setConditionUnit(intervalUnit);
+            rule.setRecipientType("user");
+            rule.setRecipientUserId(userId);
+            rule.setActive(true);
+
+            int ruleId = notificationRuleDAO.insertRule(rule);
             boolean ok = ruleId > 0;
             if (ok) {
-                Notification full = notificationDAO.findById(notifId);
-                int count = notificationDAO.countUnreadByUser(userId);
-                NotificationWebSocketEndpoint.pushNewUnread(userId, full != null ? full : n, count);
+                pushNotificationToUser(notifId, userId, n);
             }
             return ok;
         } catch (Exception e) {
@@ -118,22 +115,18 @@ public class NotificationService {
      */
     public void broadcastToUsers(List<Integer> userIds, String title, String content,
                                  String type, String relatedType, Integer relatedId) {
+        if (userIds == null || userIds.isEmpty()) return;
         try {
-            Notification n = new Notification();
-            n.setTitle(title);
-            n.setContent(content);
-            n.setType(type);
-            n.setRelatedType(relatedType);
-            n.setRelatedId(relatedId);
-
+            Notification n = buildNotification(title, content, type, relatedType, relatedId);
             int notifId = notificationDAO.insertNotification(n);
             if (notifId <= 0) return;
 
+            // Fetch once outside the loop - avoid N+1 query
+            Notification full = notificationDAO.findById(notifId);
+
             for (int uid : userIds) {
                 if (notificationDAO.addRecipient(notifId, uid)) {
-                    Notification full = notificationDAO.findById(notifId);
-                    int count = notificationDAO.countUnreadByUser(uid);
-                    NotificationWebSocketEndpoint.pushNewUnread(uid, full != null ? full : n, count);
+                    pushNotificationToUser(full != null ? full : n, uid);
                 }
             }
         } catch (Exception e) {
@@ -151,35 +144,80 @@ public class NotificationService {
                                            Integer intervalValue,
                                            String intervalUnit,
                                            LocalDateTime nextRun) {
+        if (userIds == null || userIds.isEmpty()) return false;
         try {
-            Notification n = new Notification();
-            n.setTitle(title);
-            n.setContent(content);
-            n.setType(type);
-            n.setRelatedType(relatedType);
-            n.setRelatedId(relatedId);
-
+            Notification n = buildNotification(title, content, type, relatedType, relatedId);
             int notifId = notificationDAO.insertNotification(n);
             if (notifId <= 0) return false;
 
+            // Batch add all recipients
             for (int uid : userIds) {
                 notificationDAO.addRecipient(notifId, uid);
             }
 
-            int ruleId = notificationRuleDAO.insertRule(
-                    notifId, ruleType, intervalValue, intervalUnit, nextRun);
+            // Build rule engine object
+            NotificationRuleEngine rule = new NotificationRuleEngine();
+            rule.setRuleName("Auto-created broadcast rule for notification " + notifId);
+            rule.setRuleType(ruleType);
+            rule.setNotificationTitleTemplate(title);
+            rule.setNotificationContentTemplate(content);
+            rule.setNotificationType(type);
+            rule.setNextRunAt(nextRun);
+            rule.setConditionValue(intervalValue);
+            rule.setConditionUnit(intervalUnit);
+            rule.setRecipientType("user");
+            rule.setActive(true);
+
+            int ruleId = notificationRuleDAO.insertRule(rule);
             boolean ok = ruleId > 0;
             if (ok) {
+                // Fetch once outside the loop - avoid N+1 query
                 Notification full = notificationDAO.findById(notifId);
                 for (int uid : userIds) {
-                    int count = notificationDAO.countUnreadByUser(uid);
-                    NotificationWebSocketEndpoint.pushNewUnread(uid, full != null ? full : n, count);
+                    pushNotificationToUser(full != null ? full : n, uid);
                 }
             }
             return ok;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PRIVATE HELPERS – Code reuse for notification creation and WebSocket push
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Build Notification model from parameters */
+    private Notification buildNotification(String title, String content,
+                                           String type, String relatedType, Integer relatedId) {
+        Notification n = new Notification();
+        n.setTitle(title);
+        n.setContent(content);
+        n.setType(type);
+        n.setRelatedType(relatedType);
+        n.setRelatedId(relatedId);
+        return n;
+    }
+
+    /** Push notification to user via WebSocket (uses DB fetch for full notification) */
+    private void pushNotificationToUser(int notificationId, int userId, Notification fallback) {
+        try {
+            Notification full = notificationDAO.findById(notificationId);
+            int count = notificationDAO.countUnreadByUser(userId);
+            NotificationWebSocketEndpoint.pushNewUnread(userId, full != null ? full : fallback, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Push notification to user (already has full notification object) */
+    private void pushNotificationToUser(Notification full, int userId) {
+        try {
+            int count = notificationDAO.countUnreadByUser(userId);
+            NotificationWebSocketEndpoint.pushNewUnread(userId, full, count);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -190,6 +228,26 @@ public class NotificationService {
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
+        }
+    }
+
+    /** Notifications (paged) for user, newest first. */
+    public List<Notification> getAllForUserPaged(int userId, int page, int pageSize) {
+        try {
+            return notificationDAO.findByUserPaged(userId, page, pageSize);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    /** Total notification count for user (for pagination). */
+    public int countAllForUser(int userId) {
+        try {
+            return notificationDAO.countByUser(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 

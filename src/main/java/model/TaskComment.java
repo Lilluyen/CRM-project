@@ -16,7 +16,7 @@ public class TaskComment {
 
     private Integer       commentId;
     private int           taskId;
-    private int           userId;           // creator / tagger
+    private int           createdBy;           // creator / tagger
     private String        content;
     private Integer       parentCommentId;  // null = root work item
     private Integer       assignedTo;       // tagged supporter (nullable)
@@ -38,8 +38,8 @@ public class TaskComment {
     public int     getTaskId()                 { return taskId; }
     public void    setTaskId(int v)            { this.taskId = v; }
 
-    public int     getUserId()                 { return userId; }
-    public void    setUserId(int v)            { this.userId = v; }
+    public int     getCreatedBy()                 { return createdBy; }
+    public void    setCreatedBy(int v)            { this.createdBy = v; }
 
     public String  getContent()                { return content; }
     public void    setContent(String v)        { this.content = v; }

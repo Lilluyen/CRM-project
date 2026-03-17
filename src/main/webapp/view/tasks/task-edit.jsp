@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ page import="model.Task, model.TaskAssignee, model.User, java.util.List, java.util.HashSet, java.util.Set" %>
+<%@ page import="model.Task, model.TaskAssignee, model.User, java.util.HashSet, java.util.Set" %>
 <%
     Task task = (Task) request.getAttribute("task");
     if (task == null) { response.sendError(404); return; }
@@ -14,15 +14,13 @@
     String completedAtVal = task.getCompletedAt() != null ? task.getCompletedAt().toString().substring(0, 16) : "";
 
     Set<Integer> currentAssigneeIds = new HashSet<>();
-    if (task.getassignees() != null) {
-        for (TaskAssignee ta : task.getassignees()) {
+    if (task.getAssignees() != null) {
+        for (TaskAssignee ta : task.getAssignees()) {
             if (ta.getUser() != null) currentAssigneeIds.add(ta.getUser().getUserId());
         }
     }
     int prog = task.getProgress() != null ? task.getProgress() : 0;
     String progBarCls = prog < 40 ? "bg-danger" : prog < 75 ? "bg-warning" : "bg-success";
-    @SuppressWarnings("unchecked")
-    List<User> allUsers = (List<User>) request.getAttribute("allUsers");
 %>
 <style>
   .readonly-hint { font-size:.75rem; color:#6c757d; }
@@ -244,10 +242,10 @@
           <div class="col-lg-5">
             <h6 class="fw-semibold mb-3">Current Assignees</h6>
             <div id="currentAssignees" class="d-flex flex-wrap gap-2 mb-3">
-              <% if (task.getassignees() == null || task.getassignees().isEmpty()) { %>
+              <% if (task.getAssignees() == null || task.getAssignees().isEmpty()) { %>
                 <span class="text-muted small">No assignees yet.</span>
               <% } else {
-                  for (TaskAssignee ta : task.getassignees()) {
+                  for (TaskAssignee ta : task.getAssignees()) {
                       if (ta.getUser() == null) continue;
                       String name = ta.getUser().getFullName() != null ? ta.getUser().getFullName() : ta.getUser().getUsername();
               %>
@@ -264,29 +262,12 @@
             <h6 class="fw-semibold mb-3">Add / Remove Assignees</h6>
 
             <input type="text" id="assignSearch" class="form-control"
-                   placeholder="🔍 Search by name or email…"
+                   placeholder="Search by name or email…"
                    oninput="filterUsers(this.value)">
             <div id="assignList">
-              <% if (allUsers != null) {
-                  for (User u : allUsers) { %>
-                <div class="user-item <%= currentAssigneeIds.contains(u.getUserId()) ? "selected" : "" %>"
-                     data-uid="<%= u.getUserId() %>"
-                     data-name="<%= u.getFullName() != null ? u.getFullName().toLowerCase() : "" %>"
-                     data-email="<%= u.getEmail() != null ? u.getEmail().toLowerCase() : "" %>"
-                     onclick="toggleUser(this)">
-                  <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                       style="width:32px;height:32px;flex-shrink:0;font-weight:600">
-                    <%= (u.getFullName() != null && !u.getFullName().isEmpty())
-                        ? u.getFullName().substring(0,1).toUpperCase() : "?" %>
-                  </div>
-                  <div>
-                    <div class="fw-semibold" style="font-size:.88rem"><%= u.getFullName() != null ? u.getFullName() : u.getUsername() %></div>
-                    <div class="text-muted" style="font-size:.78rem"><%= u.getEmail() != null ? u.getEmail() : "" %></div>
-                  </div>
-                  <i class="fa fa-<%= currentAssigneeIds.contains(u.getUserId()) ? "check-circle text-success" : "circle text-muted" %> ms-auto"
-                     id="check-<%= u.getUserId() %>"></i>
-                </div>
-              <% } } %>
+              <div class="text-center py-3 text-muted">
+                <i class="fa fa-spinner fa-spin me-1"></i> Loading users...
+              </div>
             </div>
 
             <div class="d-flex gap-2 mt-3">
@@ -355,7 +336,46 @@ function ajaxStatus(taskId, status, btn) {
     }).catch(e => showToast('Error', 'danger'));
 }
 
-/* ── Assignee live-search ─────────────────────────────────────────── */
+/* ── Assignee AJAX load + live-search ─────────────────────────────── */
+const CURRENT_ASSIGNEE_IDS = new Set([<%= String.join(",", currentAssigneeIds.stream().map(String::valueOf).toArray(String[]::new)) %>]);
+
+function loadAssignUsers() {
+    fetch(CTX + '/api/related-entities?type=user')
+        .then(r => r.json())
+        .then(users => {
+            const box = document.getElementById('assignList');
+            if (!users || !users.length) {
+                box.innerHTML = '<div class="text-muted text-center py-3">No users found.</div>';
+                return;
+            }
+            box.innerHTML = users.map(u => {
+                const nm = esc(u.name || '?');
+                const em = esc(u.email || '');
+                const ini = (u.name || '?').charAt(0).toUpperCase();
+                const sel = CURRENT_ASSIGNEE_IDS.has(u.id);
+                const selClass = sel ? 'selected' : '';
+                const iconClass = sel ? 'fa-check-circle text-success' : 'fa-circle text-muted';
+                return '<div class="user-item ' + selClass + '"' +
+                    ' data-uid="' + u.id + '"' +
+                    ' data-name="' + (u.name || '').toLowerCase() + '"' +
+                    ' data-email="' + (u.email || '').toLowerCase() + '"' +
+                    ' onclick="toggleUser(this)">' +
+                    '<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"' +
+                    ' style="width:32px;height:32px;flex-shrink:0;font-weight:600">' + ini + '</div>' +
+                    '<div>' +
+                    '<div class="fw-semibold" style="font-size:.88rem">' + nm + '</div>' +
+                    '<div class="text-muted" style="font-size:.78rem">' + em + '</div>' +
+                    '</div>' +
+                    '<i class="fa ' + iconClass + ' ms-auto" id="check-' + u.id + '"></i>' +
+                    '</div>';
+            }).join('');
+        })
+        .catch(() => {
+            document.getElementById('assignList').innerHTML =
+                '<div class="text-danger text-center py-3"><i class="fa fa-exclamation-triangle me-1"></i>Failed to load users.</div>';
+        });
+}
+
 function filterUsers(query) {
     const q = query.toLowerCase();
     document.querySelectorAll('#assignList .user-item').forEach(item => {
@@ -370,10 +390,10 @@ function toggleUser(el) {
     el.classList.toggle('selected');
     const uid = el.dataset.uid;
     const icon = document.getElementById('check-' + uid);
-    if (el.classList.contains('selected')) {
-        icon.className = 'fa fa-check-circle text-success ms-auto';
-    } else {
-        icon.className = 'fa fa-circle text-muted ms-auto';
+    if (icon) {
+        icon.className = el.classList.contains('selected')
+            ? 'fa fa-check-circle text-success ms-auto'
+            : 'fa fa-circle text-muted ms-auto';
     }
 }
 
@@ -408,6 +428,11 @@ function saveAssignees(taskId) {
 function esc(s) {
     const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML;
 }
+
+/* ── Load users on page ready ──────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+    loadAssignUsers();
+});
 
 /* ── Toast helper ─────────────────────────────────────────────────── */
 function showToast(msg, type) {

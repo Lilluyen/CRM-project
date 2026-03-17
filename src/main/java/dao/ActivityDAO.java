@@ -242,7 +242,7 @@ public class ActivityDAO {
     public int countActivitiesByTask(int taskId) {
         String sql =
             "SELECT COUNT(*) FROM Activities "
-          + "WHERE entity_type = 'task' AND entity_id = ?";
+          + "WHERE related_type = 'task' AND related_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             try (ResultSet rs = ps.executeQuery()) {

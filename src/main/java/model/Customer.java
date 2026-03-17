@@ -13,9 +13,11 @@ public class Customer {
     private String gender;
     private String address;
     private String source;
+    private String customerType;
 
     private String status;
     private String loyaltyTier;
+    private String interest;
 
     private int rfmScore;
     private double returnRate;
@@ -157,5 +159,21 @@ public class Customer {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getCustomerType() {
+        return customerType;
+    }
+
+    public void setCustomerType(String customerType) {
+        this.customerType = customerType;
+    }
+
+    public String getInterest() {
+        return interest;
+    }
+
+    public void setInterest(String interest) {
+        this.interest = interest;
     }
 }

@@ -10,8 +10,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Activity;
 import model.TaskComment;
 import model.User;
+import service.ActivityService;
 import service.NotificationService;
 import service.TaskService;
 import util.DBContext;
@@ -115,13 +117,14 @@ public class TaskCommentApiController extends HttpServlet {
 
         try (Connection conn = DBContext.getConnection()) {
             TaskService taskSvc = new TaskService(conn);
-            if (taskSvc.getTaskById(body.taskId) == null) {
+            model.Task task = taskSvc.getTaskById(body.taskId);
+            if (task == null) {
                 writeJson(resp, 404, fail("Task not found")); return;
             }
 
             TaskComment item = new TaskComment();
             item.setTaskId(body.taskId);
-            item.setUserId(user.getUserId());
+            item.setCreatedBy(user.getUserId());
             item.setContent(body.content.trim());
             item.setParentCommentId(body.parentCommentId);
             item.setAssignedTo(body.assignedTo);
@@ -132,15 +135,67 @@ public class TaskCommentApiController extends HttpServlet {
                 writeJson(resp, 500, fail("Insert failed")); return;
             }
 
+            NotificationService notifSvc = new NotificationService(conn);
+            String from = user.getFullName() != null ? user.getFullName() : user.getUsername();
+
             // Notify the tagged/assigned user
             if (body.assignedTo != null && body.assignedTo != user.getUserId()) {
-                String from = user.getFullName() != null ? user.getFullName() : user.getUsername();
-                new NotificationService(conn).createForUser(
+                notifSvc.createForUser(
                         body.assignedTo,
                         "You were tagged in a task",
                         from + " tagged you: " + truncate(body.content, 80),
                         "TASK", "Task", body.taskId
                 );
+            }
+
+            // Notify task owner (if not the commenter)
+            if (task.getCreatedBy() != null && task.getCreatedBy().getUserId() != user.getUserId()) {
+                notifSvc.createForUser(
+                        task.getCreatedBy().getUserId(),
+                        "New work item on your task",
+                        from + " added a work item on \"" + truncate(task.getTitle(), 60) + "\"",
+                        "TASK", "Task", body.taskId
+                );
+            }
+
+            // Notify task assignees (except commenter and already-notified tagged user)
+            if (task.getAssignees() != null) {
+                for (model.TaskAssignee ta : task.getAssignees()) {
+                    if (ta.getUser() == null) continue;
+                    int uid = ta.getUser().getUserId();
+                    if (uid == user.getUserId()) continue;
+                    if (body.assignedTo != null && uid == body.assignedTo) continue;
+                    if (task.getCreatedBy() != null && uid == task.getCreatedBy().getUserId()) continue;
+                    notifSvc.createForUser(uid,
+                            "New work item on task",
+                            from + " added a work item on \"" + truncate(task.getTitle(), 60) + "\"",
+                            "TASK", "Task", body.taskId);
+                }
+            }
+
+            // Log activity for task comment (Scenario 6) – link to CRM entity timeline
+            try {
+                Activity activity = new Activity();
+                activity.setSubject("New comment on task");
+                activity.setActivityType("task_comment");
+                // Link to CRM entity (Customer/Lead) if task has related entity
+                if (task.getRelatedType() != null && task.getRelatedId() != null) {
+                    activity.setRelatedType(task.getRelatedType());
+                    activity.setRelatedId(task.getRelatedId());
+                } else {
+                    activity.setRelatedType("Task");
+                    activity.setRelatedId(body.taskId);
+                }
+                activity.setEntityType("task");
+                activity.setEntityId(body.taskId);
+                activity.setDescription(truncate(body.content, 200));
+                activity.setCreatedBy(user);
+                activity.setActivityDate(java.time.LocalDateTime.now());
+                new ActivityService(conn).createActivity(activity);
+            } catch (Exception e) {
+                // Log failure should not fail the whole request
+                Logger.getLogger(TaskCommentApiController.class.getName())
+                        .log(Level.WARNING, "Failed to log activity for task comment", e);
             }
 
             // Recompute and return new progress
@@ -184,13 +239,45 @@ public class TaskCommentApiController extends HttpServlet {
             }
 
             // Permission: the assigned user OR creator OR manager can complete
-            boolean canComplete = existing.getUserId() == user.getUserId()
+            boolean canComplete = existing.getCreatedBy()== user.getUserId()
                     || (existing.getAssignedTo() != null && existing.getAssignedTo() == user.getUserId())
                     || isManagerOrAdmin(user);
 
             if (!canComplete) { writeJson(resp, 403, fail("Forbidden")); return; }
 
             boolean ok = dao.setCompleted(commentId, done);
+
+            // Notify on work item completion
+            if (ok && done) {
+                TaskService taskSvc = new TaskService(conn);
+                model.Task task = taskSvc.getTaskById(existing.getTaskId());
+                if (task != null) {
+                    NotificationService notifSvc = new NotificationService(conn);
+                    String from = user.getFullName() != null ? user.getFullName() : user.getUsername();
+                    String action = "completed a work item on";
+
+                    // Notify task owner
+                    if (task.getCreatedBy() != null && task.getCreatedBy().getUserId() != user.getUserId()) {
+                        notifSvc.createForUser(task.getCreatedBy().getUserId(),
+                                "Work item completed",
+                                from + " " + action + " \"" + truncate(task.getTitle(), 50) + "\"",
+                                "TASK", "Task", existing.getTaskId());
+                    }
+                    // Notify task assignees
+                    if (task.getAssignees() != null) {
+                        for (model.TaskAssignee ta : task.getAssignees()) {
+                            if (ta.getUser() == null) continue;
+                            int uid = ta.getUser().getUserId();
+                            if (uid == user.getUserId()) continue;
+                            if (task.getCreatedBy() != null && uid == task.getCreatedBy().getUserId()) continue;
+                            notifSvc.createForUser(uid,
+                                    "Work item completed",
+                                    from + " " + action + " \"" + truncate(task.getTitle(), 50) + "\"",
+                                    "TASK", "Task", existing.getTaskId());
+                        }
+                    }
+                }
+            }
 
             // Recompute task progress
             int[] prog = dao.countProgress(existing.getTaskId());
@@ -230,7 +317,7 @@ public class TaskCommentApiController extends HttpServlet {
                 writeJson(resp, 404, fail("Not found")); return;
             }
 
-            boolean isOwner = existing.getUserId() == user.getUserId();
+            boolean isOwner = existing.getCreatedBy()== user.getUserId();
             if (!isOwner && !isManagerOrAdmin(user)) {
                 writeJson(resp, 403, fail("Forbidden")); return;
             }
@@ -257,7 +344,7 @@ public class TaskCommentApiController extends HttpServlet {
         JsonObject o = new JsonObject();
         o.addProperty("commentId",       c.getCommentId());
         o.addProperty("taskId",          c.getTaskId());
-        o.addProperty("userId",          c.getUserId());
+        o.addProperty("userId",          c.getCreatedBy());
         o.addProperty("authorName",      c.getAuthorName());
         o.addProperty("content",         c.getContent());
         o.addProperty("assignedTo",      c.getAssignedTo());

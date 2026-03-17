@@ -59,6 +59,10 @@ public class TaskListController extends HttpServlet {
         String priority    = nvl(req.getParameter("priority"),    "");
         String fromDate    = nvl(req.getParameter("fromDate"),    "");
         String toDate      = nvl(req.getParameter("toDate"),      "");
+        // New filters: createdBy, relatedType, relatedId
+        String createdBy   = nvl(req.getParameter("createdBy"),   "");
+        String relatedType = nvl(req.getParameter("relatedType"), "");
+        String relatedId   = nvl(req.getParameter("relatedId"),  "");
 
         // ── Sort params ──
         String sortField = nvl(req.getParameter("sortField"), "");
@@ -72,9 +76,15 @@ public class TaskListController extends HttpServlet {
         try (Connection conn = DBContext.getConnection()) {
             TaskService svc = new TaskService(conn);
 
+            // Parse new filter values
+            Integer createdByInt  = parseIntOrNull(createdBy);
+            Integer relatedIdInt  = parseIntOrNull(relatedId);
+            String  relTypeBlank  = blank(relatedType);
+
             int total = svc.countTasks(user,
                     blank(title), blank(description), blank(status), blank(priority),
-                    blank(fromDate), blank(toDate));
+                    blank(fromDate), blank(toDate),
+                    createdByInt, relTypeBlank, relatedIdInt);
 
             // Build Pagination DTO (clamps page to valid range)
             Pagination pagination = new Pagination(page, pageSize, total);
@@ -82,6 +92,7 @@ public class TaskListController extends HttpServlet {
             List<Task> tasks = svc.getTasksPaged(user,
                     blank(title), blank(description), blank(status), blank(priority),
                     blank(fromDate), blank(toDate),
+                    createdByInt, relTypeBlank, relatedIdInt,
                     sortField, sortDir,
                     pagination.getCurrentPage(), pagination.getPageSize());
 
@@ -104,6 +115,9 @@ public class TaskListController extends HttpServlet {
             req.setAttribute("f_toDate",      toDate);
             req.setAttribute("f_sortField",   sortField);
             req.setAttribute("f_sortDir",     sortDir);
+            req.setAttribute("f_createdBy",   createdBy);
+            req.setAttribute("f_relatedType", relatedType);
+            req.setAttribute("f_relatedId",   relatedId);
 
             req.setAttribute("pageTitle",   "Task List");
             req.setAttribute("contentPage", "/view/tasks/tasklist.jsp");
@@ -144,5 +158,11 @@ public class TaskListController extends HttpServlet {
             ignored.printStackTrace();
         }
         return DEFAULT_PAGE_SIZE;
+    }
+
+    private static Integer parseIntOrNull(String val) {
+        if (val == null || val.isBlank()) return null;
+        try { return Integer.parseInt(val.trim()); }
+        catch (NumberFormatException e) { return null; }
     }
 }

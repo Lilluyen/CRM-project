@@ -1,7 +1,6 @@
 package controller.notifications;
 
 import dto.Pagination;
-import model.Notification;
 import model.NotificationRule;
 import model.User;
 import service.NotificationRuleService;
@@ -15,15 +14,16 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * GET /notifications/rules
  * List notification reminder rules (with pagination).
+ *
+ * Note: NotificationRule stores template fields directly (notificationTitleTemplate,
+ * notificationContentTemplate, etc.), so no separate notification lookup is needed.
  */
 @WebServlet("/notifications/rules")
 public class NotificationRuleListController extends HttpServlet {
@@ -56,22 +56,12 @@ public class NotificationRuleListController extends HttpServlet {
             List<NotificationRule> rules = svc.listRulesForUser(user.getUserId(), isManager,
                     pagination.getCurrentPage(), pagination.getPageSize());
 
-            // Load related notification headers for display
-            Map<Integer, Notification> notificationMap = new HashMap<>();
-            for (NotificationRule r : rules) {
-                int nid = r.getNotificationId();
-                if (!notificationMap.containsKey(nid)) {
-                    Notification n = svc.getNotificationById(nid);
-                    notificationMap.put(nid, n);
-                }
-            }
-
             req.setAttribute("rules", rules);
-            req.setAttribute("notificationMap", notificationMap);
             req.setAttribute("pagination", pagination);
             req.setAttribute("isManager", isManager);
             req.setAttribute("pageTitle", "Notification Rules");
             req.setAttribute("contentPage", "/view/notifications/rule-list.jsp");
+            req.setAttribute("page", "notification-rules");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Cannot load notification rules list", ex);

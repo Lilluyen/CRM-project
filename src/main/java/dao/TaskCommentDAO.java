@@ -47,14 +47,14 @@ public class TaskCommentDAO {
      */
     public List<TaskComment> findByTaskId(int taskId) throws SQLException {
         String sql = """
-                SELECT tc.comment_id, tc.task_id, tc.user_id,
+                SELECT tc.comment_id, tc.task_id, tc.created_by,
                        tc.content, tc.parent_comment_id,
                        tc.assigned_to, tc.is_completed, tc.completed_at,
                        tc.is_deleted, tc.created_at, tc.updated_at,
                        COALESCE(au.full_name, au.username) AS author_name,
                        COALESCE(su.full_name, su.username) AS assigned_name
                 FROM   Task_Comments tc
-                LEFT JOIN Users au ON tc.user_id    = au.user_id
+                LEFT JOIN Users au ON tc.created_by    = au.user_id
                 LEFT JOIN Users su ON tc.assigned_to = su.user_id
                 WHERE  tc.task_id = ? AND tc.is_deleted = 0
                 ORDER  BY tc.created_at ASC
@@ -72,14 +72,14 @@ public class TaskCommentDAO {
     /** Find single work item by PK (any deleted state). */
     public TaskComment findById(int commentId) throws SQLException {
         String sql = """
-                SELECT tc.comment_id, tc.task_id, tc.user_id,
+                SELECT tc.comment_id, tc.task_id, tc.created_by,
                        tc.content, tc.parent_comment_id,
                        tc.assigned_to, tc.is_completed, tc.completed_at,
                        tc.is_deleted, tc.created_at, tc.updated_at,
                        COALESCE(au.full_name, au.username) AS author_name,
                        COALESCE(su.full_name, su.username) AS assigned_name
                 FROM   Task_Comments tc
-                LEFT JOIN Users au ON tc.user_id    = au.user_id
+                LEFT JOIN Users au ON tc.created_by    = au.user_id
                 LEFT JOIN Users su ON tc.assigned_to = su.user_id
                 WHERE  tc.comment_id = ?
                 """;
@@ -100,13 +100,13 @@ public class TaskCommentDAO {
     public boolean insert(TaskComment c) throws SQLException {
         String sql = """
                 INSERT INTO Task_Comments
-                    (task_id, user_id, content, parent_comment_id,
+                    (task_id, created_by, content, parent_comment_id,
                      assigned_to, is_completed, is_deleted, created_at)
                 VALUES (?, ?, ?, ?, ?, 0, 0, ?)
                 """;
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, c.getTaskId());
-            ps.setInt(2, c.getUserId());
+            ps.setInt(2, c.getCreatedBy());
             ps.setString(3, c.getContent());
             if (c.getParentCommentId() != null) ps.setInt(4, c.getParentCommentId());
             else                                 ps.setNull(4, Types.INTEGER);
@@ -212,7 +212,7 @@ public class TaskCommentDAO {
         TaskComment c = new TaskComment();
         c.setCommentId(rs.getInt("comment_id"));
         c.setTaskId(rs.getInt("task_id"));
-        c.setUserId(rs.getInt("user_id"));
+        c.setCreatedBy(rs.getInt("created_by"));
         c.setContent(rs.getString("content"));
 
         int parent = rs.getInt("parent_comment_id");

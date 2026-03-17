@@ -1,13 +1,14 @@
 package controller.tasks;
 
+import dao.TaskCommentDAO;
 import dao.UserDAO;
-import dto.Pagination;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Task;
+import model.TaskComment;
 import model.TaskHistory;
 import model.TaskHistoryDetail;
 import model.User;
@@ -28,21 +29,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * GET /tasks/view-history?id={taskId}[&page=1&pageSize=20]
+ * GET /tasks/view-history?id={taskId}
  *
- * Timeline lịch sử thay đổi task, gom nhóm theo historyId.
- * Hỗ trợ phân trang để xử lý task có nhiều lần thay đổi.
+ * Hiển thị toàn bộ lịch sử task bao gồm:
+ * - Thông tin task
+ * - Danh sách người được giao (assignees)
+ * - Work items / Subtasks với trạng thái
+ * - Lịch sử thay đổi (audit log)
  *
- * Request params:
- *   id       (required) – task_id
- *   page     (optional) – trang hiện tại, default 1
- *   pageSize (optional) – 10 | 20 | 50, default 20
+ * Dùng cho nghiệm thu và chuyển giao công việc.
  */
 @WebServlet("/tasks/view-history")
 public class TaskViewHistoryController extends HttpServlet {
 
-    private static final int    DEFAULT_PAGE_SIZE = 20;
-    private static final int[]  ALLOWED_SIZES     = {10, 20, 50};
     private static final Logger LOG = Logger.getLogger(TaskViewHistoryController.class.getName());
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("HH:mm dd/MM/yy");
 
@@ -70,22 +69,34 @@ public class TaskViewHistoryController extends HttpServlet {
             return;
         }
 
-        int page     = parsePage(req.getParameter("page"));
-        int pageSize = parsePageSize(req.getParameter("pageSize"));
-
         try (Connection conn = DBContext.getConnection()) {
-            TaskService svc  = new TaskService(conn);
+            TaskService svc = new TaskService(conn);
             Task task = svc.getTaskById(taskId);
             if (task == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found: id=" + taskId);
                 return;
             }
 
-            // Load ALL history records for this task (usually a modest number)
+            // Load work items / subtasks
+            TaskCommentDAO commentDAO = new TaskCommentDAO(conn);
+            List<TaskComment> workItems = commentDAO.findByTaskId(taskId);
+
+            // Phân biệt root items và replies
+            List<TaskComment> rootItems = new ArrayList<>();
+            Map<Integer, List<TaskComment>> repliesMap = new HashMap<>();
+            for (TaskComment wi : workItems) {
+                if (wi.getParentCommentId() == null) {
+                    rootItems.add(wi);
+                } else {
+                    repliesMap.computeIfAbsent(wi.getParentCommentId(), k -> new ArrayList<>()).add(wi);
+                }
+            }
+
+            // Load history
             List<TaskHistory> allHistory = svc.getHistoryForTask(taskId);
             UserDAO userDAO = new UserDAO();
 
-            // Collect every user-id referenced in assignee-change details
+            // Resolve assignee names in history details
             Set<Integer> assigneeUserIds = new HashSet<>();
             List<HistoryView> allViews = new ArrayList<>();
 
@@ -112,7 +123,7 @@ public class TaskViewHistoryController extends HttpServlet {
                 allViews.add(new HistoryView(h, time, changerName));
             }
 
-            // Resolve assignee names used in history details
+            // Resolve assignee names for display
             Map<Integer, String> assigneeNames = new HashMap<>();
             for (int uid : assigneeUserIds) {
                 User u = userDAO.getUserById(uid);
@@ -121,26 +132,19 @@ public class TaskViewHistoryController extends HttpServlet {
                 }
             }
 
-            // ── Paginate the view list in-memory ──────────────────────────────
-            int total       = allViews.size();
-            Pagination pagination = new Pagination(page, pageSize, total);
-
-            int fromIdx = pagination.getOffset();
-            int toIdx   = Math.min(fromIdx + pagination.getPageSize(), total);
-            List<HistoryView> pagedViews = (total == 0)
-                    ? new ArrayList<>()
-                    : allViews.subList(fromIdx, toIdx);
-
-            // ── Bind to request ───────────────────────────────────────────────
-            req.setAttribute("task",          task);
-            req.setAttribute("historyViews",  pagedViews);
+            // Bind to request
+            req.setAttribute("task", task);
+            req.setAttribute("rootWorkItems", rootItems);
+            req.setAttribute("repliesMap", repliesMap);
+            req.setAttribute("historyViews", allViews);
             req.setAttribute("assigneeNames", assigneeNames);
-            req.setAttribute("pagination",    pagination);   // for pagination.jsp
+            req.setAttribute("workItemCount", workItems.size());
+            req.setAttribute("completedCount", (int) workItems.stream().filter(TaskComment::isCompleted).count());
 
-            req.setAttribute("pageTitle",   "Task History – "
+            req.setAttribute("pageTitle", "Task Handover - "
                     + (task.getTitle() != null ? task.getTitle() : ("#" + taskId)));
             req.setAttribute("contentPage", "/view/tasks/view-history.jsp");
-            req.setAttribute("page",        "task-history");
+            req.setAttribute("page", "task-history");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
 
         } catch (SQLException ex) {
@@ -148,8 +152,6 @@ public class TaskViewHistoryController extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
-
-    // ── helpers ──────────────────────────────────────────────────────────────
 
     private static void parseUserId(String raw, Set<Integer> out) {
         if (raw == null) return;
@@ -161,40 +163,22 @@ public class TaskViewHistoryController extends HttpServlet {
         }
     }
 
-    private static int parsePage(String val) {
-        try { int p = Integer.parseInt(val); return p > 0 ? p : 1; }
-        catch (Exception e) { return 1; }
-    }
-
-    private static int parsePageSize(String val) {
-        try {
-            int s = Integer.parseInt(val);
-            for (int a : ALLOWED_SIZES) if (a == s) return s;
-        } catch (Exception ignored) {
-            ignored.printStackTrace();
-        }
-        return DEFAULT_PAGE_SIZE;
-    }
-
     private static boolean notBlank(String s) { return s != null && !s.isBlank(); }
-    private static String  safe(String s)      { return s != null ? s : ""; }
+    private static String safe(String s) { return s != null ? s : ""; }
 
-    // ── Inner DTO for JSP rendering ──────────────────────────────────────────
-
-    /** Small view-model for JSP – wraps TaskHistory with display-friendly fields. */
     public static class HistoryView {
         private final TaskHistory history;
-        private final String      changedAtDisplay;
-        private final String      changedByName;
+        private final String changedAtDisplay;
+        private final String changedByName;
 
         public HistoryView(TaskHistory history, String changedAtDisplay, String changedByName) {
-            this.history          = history;
+            this.history = history;
             this.changedAtDisplay = changedAtDisplay;
-            this.changedByName    = changedByName;
+            this.changedByName = changedByName;
         }
 
-        public TaskHistory getHistory()          { return history; }
-        public String getChangedAtDisplay()      { return changedAtDisplay; }
-        public String getChangedByName()         { return changedByName; }
+        public TaskHistory getHistory() { return history; }
+        public String getChangedAtDisplay() { return changedAtDisplay; }
+        public String getChangedByName() { return changedByName; }
     }
 }
