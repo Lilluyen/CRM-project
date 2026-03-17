@@ -98,7 +98,14 @@ function changeInputType(fieldSelect) {
 
             // ✅ FIX 2: set lại selected
             if (oldValue) {
-                newInput.value = oldValue;
+                const exists = Array.from(newInput.options)
+                    .some(opt => opt.value === oldValue);
+
+                if (exists) {
+                    newInput.value = oldValue;
+                } else {
+                    newInput.selectedIndex = 0; // fallback về option đầu
+                }
             }
         }
 
@@ -121,7 +128,14 @@ function changeInputType(fieldSelect) {
 
         // ✅ giữ lại value cũ
         if (oldValue) {
-            newInput.value = oldValue;
+            const exists = Array.from(newInput.options)
+                .some(opt => opt.value === oldValue);
+
+            if (exists) {
+                newInput.value = oldValue;
+            } else {
+                newInput.selectedIndex = 0; // fallback về option đầu
+            }
         }
 
 
