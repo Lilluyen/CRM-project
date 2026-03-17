@@ -244,6 +244,35 @@
                         </li>
                     </ul>
                 </li>
+                <!-- NOTIFICATIONS -->
+                <li class="submenu">
+                    <a href="javascript:void(0);">
+                        <i class="fas fa-bell"></i>
+                        <span>Notifications</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+
+                    <ul style="${fn:startsWith(page, 'notification-') ? 'display:block;' : ''}">
+                        <li>
+                            <a
+                                    class="${page eq 'notification-list' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/notifications/list"
+                            >
+                                <i class="fas fa-inbox"></i>
+                                Notification Inbox
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'notification-rules' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/notifications/rules"
+                            >
+                                <i class="fas fa-clock"></i>
+                                Alarm Rules
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <!-- TASKS -->
                 <li class="submenu">
                     <a href="javascript:void(0);">
@@ -252,13 +281,21 @@
                         <span class="menu-arrow"></span>
                     </a>
 
-                    <ul style="${page eq 'task-list' ? 'display:block;' : ''}">
+                    <ul style="${page eq 'task-list' || page eq 'task-schedule' ? 'display:block;' : ''}">
                         <li>
                             <a
                                     class="${page eq 'task-list' ? 'active' : ''}"
                                     href="${pageContext.request.contextPath}/tasks/list"
                             >
                                 Tasks List
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                    class="${page eq 'task-schedule' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/tasks/schedule"
+                            >
+                                Schedule
                             </a>
                         </li>
                         <li>

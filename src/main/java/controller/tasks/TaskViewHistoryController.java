@@ -1,5 +1,6 @@
 package controller.tasks;
 
+import dao.TaskCommentDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Task;
+import model.TaskComment;
 import model.TaskHistory;
 import model.TaskHistoryDetail;
 import model.User;
@@ -28,7 +30,14 @@ import java.util.logging.Logger;
 
 /**
  * GET /tasks/view-history?id={taskId}
- * Trang timeline lịch sử theo từng lần thay đổi (group theo historyId).
+ *
+ * Hiển thị toàn bộ lịch sử task bao gồm:
+ * - Thông tin task
+ * - Danh sách người được giao (assignees)
+ * - Work items / Subtasks với trạng thái
+ * - Lịch sử thay đổi (audit log)
+ *
+ * Dùng cho nghiệm thu và chuyển giao công việc.
  */
 @WebServlet("/tasks/view-history")
 public class TaskViewHistoryController extends HttpServlet {
@@ -64,20 +73,34 @@ public class TaskViewHistoryController extends HttpServlet {
             TaskService svc = new TaskService(conn);
             Task task = svc.getTaskById(taskId);
             if (task == null) {
-                resp.sendError(404, "Task not found: id=" + taskId);
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found: id=" + taskId);
                 return;
             }
 
-            List<TaskHistory> history = svc.getHistoryForTask(taskId);
+            // Load work items / subtasks
+            TaskCommentDAO commentDAO = new TaskCommentDAO(conn);
+            List<TaskComment> workItems = commentDAO.findByTaskId(taskId);
+
+            // Phân biệt root items và replies
+            List<TaskComment> rootItems = new ArrayList<>();
+            Map<Integer, List<TaskComment>> repliesMap = new HashMap<>();
+            for (TaskComment wi : workItems) {
+                if (wi.getParentCommentId() == null) {
+                    rootItems.add(wi);
+                } else {
+                    repliesMap.computeIfAbsent(wi.getParentCommentId(), k -> new ArrayList<>()).add(wi);
+                }
+            }
+
+            // Load history
+            List<TaskHistory> allHistory = svc.getHistoryForTask(taskId);
             UserDAO userDAO = new UserDAO();
 
-            // resolve changer names + attach details
-            List<HistoryView> views = new ArrayList<>();
-
-            // collect userIds referenced in assignee changes so we can show names
+            // Resolve assignee names in history details
             Set<Integer> assigneeUserIds = new HashSet<>();
+            List<HistoryView> allViews = new ArrayList<>();
 
-            for (TaskHistory h : history) {
+            for (TaskHistory h : allHistory) {
                 List<TaskHistoryDetail> details = svc.getHistoryDetails(h.getHistoryId());
                 h.setDetails(details);
 
@@ -96,12 +119,11 @@ public class TaskViewHistoryController extends HttpServlet {
                 String changerName = changer != null
                         ? (notBlank(changer.getFullName()) ? changer.getFullName() : safe(changer.getUsername()))
                         : "";
-
                 String time = h.getChangedAt() != null ? h.getChangedAt().format(FMT) : "";
-
-                views.add(new HistoryView(h, time, changerName));
+                allViews.add(new HistoryView(h, time, changerName));
             }
 
+            // Resolve assignee names for display
             Map<Integer, String> assigneeNames = new HashMap<>();
             for (int uid : assigneeUserIds) {
                 User u = userDAO.getUserById(uid);
@@ -110,15 +132,24 @@ public class TaskViewHistoryController extends HttpServlet {
                 }
             }
 
+            // Bind to request
             req.setAttribute("task", task);
-            req.setAttribute("historyViews", views);
+            req.setAttribute("rootWorkItems", rootItems);
+            req.setAttribute("repliesMap", repliesMap);
+            req.setAttribute("historyViews", allViews);
             req.setAttribute("assigneeNames", assigneeNames);
-            req.setAttribute("pageTitle", "Task History – " + (task.getTitle() != null ? task.getTitle() : ("#" + taskId)));
+            req.setAttribute("workItemCount", workItems.size());
+            req.setAttribute("completedCount", (int) workItems.stream().filter(TaskComment::isCompleted).count());
+
+            req.setAttribute("pageTitle", "Task Handover - "
+                    + (task.getTitle() != null ? task.getTitle() : ("#" + taskId)));
             req.setAttribute("contentPage", "/view/tasks/view-history.jsp");
+            req.setAttribute("page", "task-history");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
+
         } catch (SQLException ex) {
-            LOG.log(Level.SEVERE, "Error loading task history view", ex);
-            resp.sendError(500);
+            LOG.log(Level.SEVERE, "Error loading task history view id=" + taskId, ex);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -128,19 +159,13 @@ public class TaskViewHistoryController extends HttpServlet {
             int id = Integer.parseInt(raw.trim());
             if (id > 0) out.add(id);
         } catch (Exception ignored) {
-            // ignore parse errors (history may store non-numeric values)
+            ignored.printStackTrace();
         }
     }
 
-    private static boolean notBlank(String s) {
-        return s != null && !s.isBlank();
-    }
+    private static boolean notBlank(String s) { return s != null && !s.isBlank(); }
+    private static String safe(String s) { return s != null ? s : ""; }
 
-    private static String safe(String s) {
-        return s != null ? s : "";
-    }
-
-    /** Small view-model for JSP. */
     public static class HistoryView {
         private final TaskHistory history;
         private final String changedAtDisplay;
@@ -152,17 +177,8 @@ public class TaskViewHistoryController extends HttpServlet {
             this.changedByName = changedByName;
         }
 
-        public TaskHistory getHistory() {
-            return history;
-        }
-
-        public String getChangedAtDisplay() {
-            return changedAtDisplay;
-        }
-
-        public String getChangedByName() {
-            return changedByName;
-        }
+        public TaskHistory getHistory() { return history; }
+        public String getChangedAtDisplay() { return changedAtDisplay; }
+        public String getChangedByName() { return changedByName; }
     }
 }
-

@@ -13,9 +13,11 @@ public class Customer {
     private String gender;
     private String address;
     private String source;
+    private String customerType;
 
     private String status;
     private String loyaltyTier;
+    private String interest;
 
     private int rfmScore;
     private double returnRate;

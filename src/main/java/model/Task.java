@@ -1,34 +1,40 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 /**
- *
- * @author Pham Minh Quan
+ * Maps to [dbo].[Tasks] table.
  */
 public class Task {
-    private Integer taskId;
-    private String title;
-    private String description;
-    private String status;               // DEFAULT 'Pending'
-    private String priority;             // DEFAULT 'Medium'
-    private LocalDateTime dueDate;       // DATETIME in DB
-    private LocalDateTime startDate;     // DATETIME in DB
-    private LocalDateTime completedAt;   // DATETIME in DB
-    private Integer progress;            // DEFAULT 0
-    private User createdBy;           // FK -> Users(user_id)
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private List<TaskAssignee> assignees;     // List of users assigned to this task
-    private List<TaskHistory> historys;
-    public Task() {
-    }
+    private Integer taskId;              // task_id INT IDENTITY PK
+    private String title;                // title NVARCHAR(200) NOT NULL
+    private String description;          // description NVARCHAR(MAX)
+    private String status;               // status VARCHAR(30) NOT NULL, DEFAULT 'Pending'
+    private String priority;             // priority VARCHAR(20) NOT NULL, DEFAULT 'Medium'
+    private LocalDateTime dueDate;       // due_date DATETIME
+    private LocalDateTime startDate;     // start_date DATETIME
+    private LocalDateTime completedAt;   // completed_at DATETIME
+    private LocalDateTime cancelledAt;   // ✅ THÊM MỚI - cancelled_at DATETIME NULL
+    private Integer progress;            // progress INT NOT NULL, DEFAULT 0
+    private User createdBy;              // created_by INT NOT NULL -> Users(user_id)
+    private LocalDateTime createdAt;     // created_at DATETIME NOT NULL
+    private LocalDateTime updatedAt;     // updated_at DATETIME
+    private String relatedType;          // related_type VARCHAR(50)
+    private Integer relatedId;           // related_id INT
 
-    public Task(Integer taskId, String title, String description, String status, String priority, LocalDateTime dueDate, LocalDateTime startDate, LocalDateTime completedAt, Integer progress, User createdBy, LocalDateTime createdAt, LocalDateTime updatedAt, List<TaskAssignee> assignees, List<TaskHistory> historys) {
+    private List<TaskAssignee> assignees;
+    private List<TaskHistory> historys;
+
+    public Task() {}
+
+    public Task(Integer taskId, String title, String description, String status,
+                String priority, LocalDateTime dueDate, LocalDateTime startDate,
+                LocalDateTime completedAt, LocalDateTime cancelledAt,
+                Integer progress, User createdBy,
+                LocalDateTime createdAt, LocalDateTime updatedAt,
+                String relatedType, Integer relatedId,
+                List<TaskAssignee> assignees, List<TaskHistory> historys) {
         this.taskId = taskId;
         this.title = title;
         this.description = description;
@@ -37,15 +43,16 @@ public class Task {
         this.dueDate = dueDate;
         this.startDate = startDate;
         this.completedAt = completedAt;
+        this.cancelledAt = cancelledAt;
         this.progress = progress;
         this.createdBy = createdBy;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.relatedType = relatedType;
+        this.relatedId = relatedId;
         this.assignees = assignees;
         this.historys = historys;
     }
-
-    
 
     public Integer getTaskId() { return taskId; }
     public void setTaskId(Integer taskId) { this.taskId = taskId; }
@@ -71,6 +78,9 @@ public class Task {
     public LocalDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
 
+    public LocalDateTime getCancelledAt() { return cancelledAt; }
+    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
+
     public Integer getProgress() { return progress; }
     public void setProgress(Integer progress) { this.progress = progress; }
 
@@ -83,24 +93,15 @@ public class Task {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public List<TaskAssignee> getassignees() { return assignees; }
-    public void setassignees(List<TaskAssignee> assignees) { this.assignees = assignees; }
+    public String getRelatedType() { return relatedType; }
+    public void setRelatedType(String relatedType) { this.relatedType = relatedType; }
 
-    public List<TaskAssignee> getAssignees() {
-        return assignees;
-    }
+    public Integer getRelatedId() { return relatedId; }
+    public void setRelatedId(Integer relatedId) { this.relatedId = relatedId; }
 
-    public void setAssignees(List<TaskAssignee> assignees) {
-        this.assignees = assignees;
-    }
+    public List<TaskAssignee> getAssignees() { return assignees; }
+    public void setAssignees(List<TaskAssignee> assignees) { this.assignees = assignees; }
 
-    public List<TaskHistory> getHistorys() {
-        return historys;
-    }
-
-    public void setHistorys(List<TaskHistory> historys) {
-        this.historys = historys;
-    }
-    
-    
+    public List<TaskHistory> getHistorys() { return historys; }
+    public void setHistorys(List<TaskHistory> historys) { this.historys = historys; }
 }

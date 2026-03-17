@@ -1,6 +1,5 @@
 package controller.tasks;
 
-import dao.UserDAO;
 import model.Task;
 import model.User;
 import service.TaskService;
@@ -19,7 +18,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,9 +56,10 @@ public class TaskEditController extends HttpServlet {
             req.setAttribute("task",       task);
             req.setAttribute("isManager",  isManagerOrAdmin(user));
             req.setAttribute("canEditDuePriority", canEditDuePriority(task, user));
-            req.setAttribute("allUsers",   loadUsers());
+            // Users loaded via AJAX from /api/related-entities?type=user
             req.setAttribute("pageTitle",  "Edit Task – " + task.getTitle());
             req.setAttribute("contentPage","/view/tasks/task-edit.jsp");
+            req.setAttribute("page", "task-edit");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (SQLException ex) { LOG.log(Level.SEVERE, null, ex); }
     }
@@ -95,7 +94,7 @@ public class TaskEditController extends HttpServlet {
                 req.setAttribute("task",       svc.getTaskById(taskId));
                 req.setAttribute("isManager",  isManagerOrAdmin(user));
                 req.setAttribute("canEditDuePriority", canEditDuePri);
-                req.setAttribute("allUsers",   loadUsers());
+                // Users loaded via AJAX
                 req.setAttribute("error",      "Update failed – please try again.");
                 req.setAttribute("pageTitle",  "Edit Task");
                 req.setAttribute("contentPage","/view/tasks/task-edit.jsp");
@@ -236,11 +235,6 @@ public class TaskEditController extends HttpServlet {
 
     private int parseInt(HttpServletRequest req, String name, int def) {
         try { return Integer.parseInt(req.getParameter(name)); } catch (Exception e) { return def; }
-    }
-
-    private List<User> loadUsers() throws ServletException {
-        try { return new UserDAO().getActiveUsers(); }
-        catch (Exception e) { throw new ServletException("Cannot load users", e); }
     }
 
     private void writeJson(HttpServletResponse resp, int status, String json) throws IOException {

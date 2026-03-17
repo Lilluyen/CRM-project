@@ -39,6 +39,7 @@ public class ActivityEditController extends HttpServlet {
         }
         if (req.getParameter("id") == null) {
             resp.sendRedirect(req.getContextPath()+"/activities/list");
+            return;
         }
         int id = Integer.parseInt(req.getParameter("id"));
 
@@ -51,6 +52,7 @@ public class ActivityEditController extends HttpServlet {
             req.setAttribute("activity",    activity);
             req.setAttribute("pageTitle",   "Edit Activity");
             req.setAttribute("contentPage", "/view/activities/activity-edit.jsp");
+            req.setAttribute("page", "activity-edit");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
         } catch (SQLException ex) {
             Logger.getLogger(ActivityEditController.class.getName()).log(Level.SEVERE, null, ex);
@@ -101,13 +103,30 @@ public class ActivityEditController extends HttpServlet {
 
         String relId = req.getParameter("relatedId");
         if (relId != null && !relId.isBlank()) {
-            a.setRelatedId(Integer.parseInt(relId));
+            try { a.setRelatedId(Integer.parseInt(relId)); } catch (NumberFormatException ignored) {}
         }
 
         String dt = req.getParameter("activityDate");
         if (dt != null && !dt.isBlank()) {
             a.setActivityDate(LocalDateTime.parse(dt, DT_FMT));
         }
+
+        String sourceType = req.getParameter("sourceType");
+        String sourceId = req.getParameter("sourceId");
+        if (sourceType != null && !sourceType.isBlank()) {
+            a.setSourceType(sourceType);
+            if (sourceId != null && !sourceId.isBlank()) {
+                try { a.setSourceId(Integer.parseInt(sourceId)); } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        String performedBy = req.getParameter("performedBy");
+        if (performedBy != null && !performedBy.isBlank()) {
+            User performer = new User();
+            performer.setUserId(Integer.parseInt(performedBy));
+            a.setPerformedBy(performer);
+        }
+
         return a;
     }
 }

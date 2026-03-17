@@ -202,8 +202,8 @@
                String prCls = pr < 40 ? "bg-danger" : pr < 75 ? "bg-warning" : "bg-success";
 
                StringBuilder aNames = new StringBuilder();
-               if (t.getassignees() != null) {
-                   for (TaskAssignee ta : t.getassignees()) {
+               if (t.getAssignees() != null) {
+                   for (TaskAssignee ta : t.getAssignees()) {
                        if (ta.getUser() != null && ta.getUser().getFullName() != null) {
                            if (aNames.length() > 0) aNames.append(", ");
                            aNames.append(ta.getUser().getFullName());

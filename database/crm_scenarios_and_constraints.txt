@@ -1,0 +1,394 @@
+CRM SYSTEM SCENARIOS AND CONSTRAINT ANALYSIS
+
+Overview
+
+This document describes the operational scenarios of a CRM system that
+combines three core modules:
+
+1.  Task Management
+2.  Activity Timeline
+3.  Notification System
+
+The goal is to illustrate how these modules interact, what database
+operations occur, and what constraints exist inside the system. This
+document also analyzes the strengths and weaknesses of the current
+system design.
+
+  ----------------------------------------------------------
+  1. CORE CRM SCENARIO (TASK + ACTIVITIES + NOTIFICATIONS)
+  ----------------------------------------------------------
+
+The CRM workflow follows a typical customer lifecycle.
+
+Customer Lifecycle Example:
+
+Customer Created ↓ Sales creates follow-up task ↓ Task assigned to staff
+↓ Staff performs activity (call / meeting / email) ↓ Activity recorded
+in timeline ↓ Notifications sent to related users ↓ Manager monitors
+progress
+
+Each action generates logs, activities, and possibly notifications.
+
+  ------------------------------
+  2. TASK MANAGEMENT SCENARIOS
+  ------------------------------
+
+Scenario 1: Create Task
+
+User creates a task related to a customer or deal.
+
+System operations:
+
+1.  Insert record into Tasks table
+2.  Insert record into Task_Assignees
+3.  Insert record into Task_History
+4.  Create activity record: task_created
+5.  Send notification to assignees
+
+Constraints:
+
+-   Task must have a creator (user_id)
+-   Task must have status = ‘new’
+-   Task may have multiple assignees
+-   related_type and related_id must exist to connect to entity
+
+Potential Issues:
+
+-   If related_type is missing, task cannot appear in timeline
+-   Without assignees, notification cannot be delivered
+
+------------------------------------------------------------------------
+
+Scenario 2: Assign Task
+
+Manager assigns task to one or more users.
+
+System operations:
+
+1.  Insert into Task_Assignees
+2.  Log change in Task_History
+3.  Create activity: task_assigned
+4.  Send notification to assigned users
+
+Constraints:
+
+-   Task must exist
+-   Assigned user must exist
+-   Duplicate assignments must be avoided
+
+------------------------------------------------------------------------
+
+Scenario 3: Start Task
+
+User begins work.
+
+System operations:
+
+1.  Update Tasks.status = ‘in_progress’
+2.  Update Tasks.start_date
+3.  Insert Task_History record
+4.  Create activity: task_started
+
+Constraints:
+
+-   Task must be assigned to the user
+-   Task status must not be completed
+
+------------------------------------------------------------------------
+
+Scenario 4: Update Task Progress
+
+User updates completion progress.
+
+System operations:
+
+1.  Update Tasks.progress
+2.  Insert Task_History_Detail
+3.  Create activity: task_progress_updated
+
+Constraints:
+
+-   Progress value must be between 0 and 100
+-   Task must not be completed
+
+------------------------------------------------------------------------
+
+Scenario 5: Complete Task
+
+User completes task.
+
+System operations:
+
+1.  Update Tasks.status = completed
+2.  Update completed_at timestamp
+3.  Insert Task_History record
+4.  Create activity: task_completed
+5.  Send notification
+
+Constraints:
+
+-   Progress should normally be 100
+-   Completed tasks should not be edited further
+
+------------------------------------------------------------------------
+
+Scenario 6: Task Comments
+
+Users collaborate inside a task.
+
+System operations:
+
+1.  Insert record into Task_Comments
+2.  Create activity: task_comment
+3.  Notify other participants
+
+Constraints:
+
+-   Comment must reference a valid task
+-   Comment must reference a valid user
+
+  --------------------------------
+  3. ACTIVITY TIMELINE SCENARIOS
+  --------------------------------
+
+Activities represent the timeline of events in CRM.
+
+Examples:
+
+-   task_created
+-   task_completed
+-   call_made
+-   meeting_scheduled
+-   deal_created
+-   note_added
+
+Timeline Example:
+
+Customer timeline includes:
+
+Task Created ↓ Call Logged ↓ Meeting Scheduled ↓ Deal Created ↓ Task
+Completed
+
+System operations:
+
+Activities table stores:
+
+activity_type entity_type entity_id related_type related_id
+
+Constraints:
+
+-   entity_type identifies the source module
+-   entity_id identifies the source record
+-   related_type identifies which CRM object timeline it belongs to
+-   related_id identifies that object
+
+Example:
+
+entity_type = task entity_id = 10
+
+related_type = customer related_id = 5
+
+Meaning:
+
+Task 10 activity appears in Customer 5 timeline.
+
+Potential Problems:
+
+-   Missing entity reference prevents event tracing
+-   Missing related reference breaks timeline
+
+  ---------------------------
+  4. NOTIFICATION SCENARIOS
+  ---------------------------
+
+Notifications inform users about events in the CRM.
+
+Types:
+
+1.  Realtime Notification
+2.  Reminder Notification
+3.  Condition-Based Notification
+4.  Escalation Notification
+5.  Digest Notification
+
+------------------------------------------------------------------------
+
+Realtime Notification
+
+Triggered immediately by an event.
+
+Example:
+
+Task Assigned
+
+System flow:
+
+Event occurs ↓ Notification created ↓ Recipients determined ↓ Realtime
+push (WebSocket / UI alert)
+
+Constraints:
+
+-   Must have recipient
+-   Notification type must be defined
+
+------------------------------------------------------------------------
+
+Reminder Notification
+
+Triggered by scheduler before a deadline.
+
+Example:
+
+Task deadline: 2026-03-20 10:00 Reminder: 1 day before
+
+Scheduler generates notification at:
+
+2026-03-19 10:00
+
+System flow:
+
+Scheduler checks tasks ↓ Find tasks approaching deadline ↓ Create
+notification ↓ Deliver notification
+
+Constraints:
+
+-   due_date must exist
+-   reminder rule must be defined
+
+------------------------------------------------------------------------
+
+Condition-Based Notification
+
+Triggered when a business rule is satisfied.
+
+Examples:
+
+Customer not contacted for 7 days Deal stuck in stage > 10 days Task
+overdue
+
+System flow:
+
+Scheduler scans database ↓ Condition evaluated ↓ Notification generated
+
+Constraints:
+
+-   rule must define condition
+-   scheduler must run periodically
+
+------------------------------------------------------------------------
+
+Escalation Notification
+
+Escalation occurs when tasks remain unresolved.
+
+Example:
+
+Task overdue 2 days ↓ Notify manager
+
+Constraints:
+
+-   system must know reporting hierarchy
+-   escalation delay must be configurable
+
+------------------------------------------------------------------------
+
+Digest Notification
+
+Aggregated notifications.
+
+Example:
+
+Daily Digest
+
+You have:
+
+5 tasks 2 meetings 3 customers to follow up
+
+System flow:
+
+Scheduler runs daily ↓ Aggregate user data ↓ Generate digest
+notification
+
+Constraints:
+
+-   aggregation query must be efficient
+-   digest must avoid duplicate data
+
+  ---------------------
+  5. SYSTEM STRENGTHS
+  ---------------------
+
+1.  Strong task lifecycle tracking
+
+Tables:
+
+Tasks Task_Assignees Task_History Task_History_Detail
+
+This allows:
+
+-   auditing
+-   progress tracking
+-   lifecycle management
+
+2.  Flexible activity timeline
+
+Activities enable:
+
+-   unified CRM timeline
+-   event tracking
+
+3.  Notification foundation exists
+
+Realtime notifications can already be implemented.
+
+  ----------------------
+  6. SYSTEM WEAKNESSES
+  ----------------------
+
+1.  Tasks may not reference CRM entities clearly
+
+Missing related_type and related_id causes:
+
+-   tasks not appearing in entity timelines
+
+2.  Activities may lack source reference
+
+Without entity_type and entity_id:
+
+-   difficult to trace event origin
+
+3.  Lack of task comments
+
+Users cannot collaborate within tasks.
+
+4.  Notification system lacks automation
+
+Missing:
+
+Notification rules Notification queue Scheduler logic
+
+5.  No notification aggregation
+
+Digest notifications not implemented.
+
+6.  Condition monitoring missing
+
+Business automation requires periodic rule evaluation.
+
+  ------------------------------
+  7. OVERALL SYSTEM EVALUATION
+  ------------------------------
+
+Estimated system maturity:
+
+Tasks Module: 80% Activities Module: 80% Notifications Module: 65%
+
+Overall CRM readiness:
+
+Approximately 80% complete.
+
+The system supports core CRM workflows but lacks advanced automation.
+
+------------------------------------------------------------------------
+
+END OF DOCUMENT
