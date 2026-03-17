@@ -17,18 +17,20 @@ import java.util.logging.Logger;
 /**
  * TaskOverdueScheduler – Scenario 9 (Task Quá Hạn)
  *
- * Chạy nền mỗi 60 phút:
+ * Chạy nền mỗi 2 giây:
  *   1. Tìm tất cả task có due_date < NOW và status NOT IN (Done, Cancelled, Overdue)
  *   2. Cập nhật status = Overdue
  *   3. Tạo Activity  activity_type = task_overdue
  *   4. Gửi Notification đến tất cả assignees
  *
+ * Lưu ý: Để đạt độ trễ <=5s, KHUYẾN NGHỊ sử dụng trigger ngay trong TaskService
+ * (gọi checkAndNotifyOverdue() khi tạo/cập nhật task) - scheduler này là backup.
+ *
  * Đăng ký tự động qua @WebListener – không cần khai báo trong web.xml.
  *
  * Tuning:
- *   INITIAL_DELAY_MINUTES – chờ trước khi chạy lần đầu (default 1 phút để
- *                           app khởi động xong)
- *   INTERVAL_MINUTES      – chu kỳ kiểm tra (default 60 phút)
+ *   INITIAL_DELAY_SECONDS – chờ trước khi chạy lần đầu (default 5s để app khởi động xong)
+ *   INTERVAL_SECONDS      – chu kỳ kiểm tra (default 2s)
  *   BATCH_SIZE            – số task tối đa xử lý mỗi lần chạy (default 500)
  */
 @WebListener
@@ -36,8 +38,8 @@ public class TaskOverdueScheduler implements ServletContextListener {
 
     private static final Logger LOG = Logger.getLogger(TaskOverdueScheduler.class.getName());
 
-    private static final long INITIAL_DELAY_MINUTES = 1;
-    private static final long INTERVAL_MINUTES      = 60;
+    private static final long INITIAL_DELAY_SECONDS = 1;
+    private static final long INTERVAL_SECONDS      = 1;
     private static final int  BATCH_SIZE            = 500;
 
     private ScheduledExecutorService scheduler;
@@ -54,15 +56,15 @@ public class TaskOverdueScheduler implements ServletContextListener {
             return t;
         });
 
-        scheduler.scheduleAtFixedRate(
+        scheduler.scheduleWithFixedDelay(
                 this::runOverdueCheck,
-                INITIAL_DELAY_MINUTES,
-                INTERVAL_MINUTES,
-                TimeUnit.MINUTES
+                INITIAL_DELAY_SECONDS,
+                INTERVAL_SECONDS,
+                TimeUnit.SECONDS
         );
 
         LOG.info("TaskOverdueScheduler started – runs every "
-                + INTERVAL_MINUTES + " minute(s), batch size=" + BATCH_SIZE);
+                + INTERVAL_SECONDS + " second(s), batch size=" + BATCH_SIZE);
     }
 
     @Override

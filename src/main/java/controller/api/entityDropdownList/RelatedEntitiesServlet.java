@@ -50,8 +50,11 @@ public class RelatedEntitiesServlet extends HttpServlet {
                     case "deal":
                         sql = "SELECT deal_id as id, deal_name as name FROM Deals ORDER BY deal_name";
                         break;
+                    case "task":
+                        sql = "SELECT task_id as id, title as name FROM Tasks ORDER BY title";
+                        break;
                     case "user":
-                        sql = "SELECT user_id as id, COALESCE(full_name, username) as name, email FROM Users WHERE status = 1 ORDER BY full_name";
+                        sql = "SELECT user_id as id, COALESCE(full_name, username) as name, email FROM Users WHERE status = 'Active' ORDER BY full_name";
                         break;
                     default:
                         sql = "SELECT customer_id as id, name FROM Customers WHERE 1=0"; // empty

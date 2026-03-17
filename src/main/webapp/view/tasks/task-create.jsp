@@ -1,12 +1,16 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c"  uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ page import="model.User" %>
+<%@ page import="model.User, java.util.List" %>
 <%
   boolean isManager   = Boolean.TRUE.equals(request.getAttribute("isManager"));
   User    currentUser = (User) session.getAttribute("user");
   String  relatedType = (String) request.getAttribute("relatedType"); if(relatedType==null)relatedType="";
   String  relatedId   = (String) request.getAttribute("relatedId");   if(relatedId==null)relatedId="";
+
+  // Get users from server-side (loaded by controller for managers)
+  List<User> allUsers = (List<User>) request.getAttribute("allUsers");
+  if (allUsers == null) allUsers = java.util.Collections.emptyList();
 %>
 <div><div class="content">
 
@@ -24,48 +28,12 @@
                 <form method="post" action="${pageContext.request.contextPath}/tasks/create">
                     <input type="hidden" name="relatedType" value="${fn:escapeXml(relatedType)}">
                     <input type="hidden" name="relatedId"   value="${fn:escapeXml(relatedId)}">
-                    <%-- Progress always 0 on create (calculated from work items later) --%>
                     <input type="hidden" name="progress" value="0">
-
-                    <style>
-                        #assignList{
-                            max-height:260px;
-                            overflow-y:auto;
-                            border:1px solid #dee2e6;
-                            border-top:0;
-                            border-radius:0 0 6px 6px
-                        }
-                        #assignList .user-item{
-                            padding:8px 12px;
-                            cursor:pointer;
-                            border-bottom:1px solid #f1f3f5;
-                            display:flex;
-                            align-items:center;
-                            gap:8px
-                        }
-                        #assignList .user-item:hover{
-                            background:#f8f9fa
-                        }
-                        #assignList .user-item.selected{
-                            background:#e7f5ff
-                        }
-                        .status-fixed{
-                            display:inline-flex;
-                            align-items:center;
-                            gap:8px;
-                            padding:7px 14px;
-                            background:#0d6efd15;
-                            border:1px solid #0d6efd40;
-                            border-radius:6px;
-                            font-weight:600;
-                            color:#0d6efd
-                        }
-                    </style>
 
                     <div class="row g-3">
                         <div class="col-md-8">
-                            <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="form-control" required maxlength="200" placeholder="Enter task title">
+                            <label for="taskTitle" class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                            <input type="text" id="taskTitle" name="title" class="form-control" required maxlength="200" placeholder="Enter task title">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Priority</label>
@@ -80,7 +48,6 @@
                             <textarea name="description" class="form-control" rows="4" placeholder="Describe the task…"></textarea>
                         </div>
 
-                        <%-- STATUS: In Progress default; only manager can change --%>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Status</label>
                             <% if(isManager){ %>
@@ -107,7 +74,6 @@
                             <input type="datetime-local" name="dueDate" class="form-control">
                         </div>
 
-                        <%-- Progress display only --%>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Progress</label>
                             <div class="d-flex align-items-center gap-2 mt-1">
@@ -119,27 +85,42 @@
                             <small class="text-muted d-block mt-1"><i class="fa fa-calculator me-1"></i>Auto-calculated from work items.</small>
                         </div>
 
-                        <%-- Assignees - AJAX load from API --%>
                         <div class="col-12">
-                            <% if(isManager){ %>
                             <label class="form-label fw-semibold">Assign To</label>
-                            <input type="text" id="assignSearch" class="form-control" placeholder="Search…" oninput="filterUsers(this.value)"
-                                   style="border-radius:6px 6px 0 0">
-                            <div id="assignList">
-                                <div class="text-center py-3 text-muted">
-                                    <i class="fa fa-spinner fa-spin me-1"></i> Loading users...
+                            <% if(isManager){ %>
+                            <div id="assignList" class="border rounded" style="max-height: 250px; overflow-y: auto;">
+                                <% for(User u : allUsers) {
+                                    String uName = (u.getFullName() != null && !u.getFullName().isBlank()) ? u.getFullName() : u.getUsername();
+                                    String uEmail = u.getEmail() != null ? u.getEmail() : "";
+                                    String initial = uName.substring(0, 1).toUpperCase();
+                                    // Generate color based on name
+                                    int hash = uName.hashCode();
+                                    String color = String.format("#%06x", (Math.abs(hash) % 0xAAAAAA) + 0x404040);
+                                %>
+                                <div class="user-item" data-uid="<%= u.getUserId() %>"
+                                     data-name="<%= uName.toLowerCase() %>"
+                                     data-email="<%= uEmail.toLowerCase() %>"
+                                     onclick="toggleUser(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUser(this);}"
+                                     role="checkbox" aria-checked="false" tabindex="0"
+                                     style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f1f3f5; display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: <%= color %>; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;"><%= initial %></div>
+                                    <div>
+                                        <div class="fw-semibold" style="font-size: .88rem"><%= org.apache.taglibs.standard.functions.Functions.escapeXml(uName) %></div>
+                                        <div class="text-muted" style="font-size: .78rem"><%= org.apache.taglibs.standard.functions.Functions.escapeXml(uEmail) %></div>
+                                    </div>
+                                    <i class="fa fa-circle text-muted ms-auto"></i>
                                 </div>
+                                <% } %>
                             </div>
-                            <small class="text-muted d-block mt-1">Select multiple assignees.</small>
+                            <small class="text-muted d-block mt-1">Click to select assignees.</small>
                             <div id="assigneeHidden"></div>
                             <% }else{ %>
-                            <label class="form-label fw-semibold">Assign To</label>
                             <div class="d-flex align-items-center gap-2 p-2 bg-light border rounded">
                                 <i class="fa fa-user-circle text-primary"></i>
                                 <span class="fw-semibold">
-                                    <%= currentUser!=null?((currentUser.getFullName()!=null&&!currentUser.getFullName().isBlank())?currentUser.getFullName():currentUser.getUsername()):"-" %>
+                                    <%= currentUser != null ? ((currentUser.getFullName() != null && !currentUser.getFullName().isBlank()) ? org.apache.taglibs.standard.functions.Functions.escapeXml(currentUser.getFullName()) : org.apache.taglibs.standard.functions.Functions.escapeXml(currentUser.getUsername())) : "-" %>
                                 </span>
-                                <span class="text-muted small">(auto-assigned)</span>
+                                <span class="text-muted small">(auto-assigned to you)</span>
                             </div>
                             <% } %>
                         </div>
@@ -153,64 +134,45 @@
             </div></div>
     </div></div>
 
+<style>
+.status-fixed{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 14px;
+    background:#0d6efd15;
+    border:1px solid #0d6efd40;
+    border-radius:6px;
+    font-weight:600;
+    color:#0d6efd
+}
+#assignList .user-item:hover{
+    background:#f8f9fa
+}
+#assignList .user-item.selected{
+    background:#e7f5ff
+}
+</style>
+
 <script>
-const CTX='${pageContext.request.contextPath}';
-const IS_MGR=<%= isManager %>;
+const CTX = '${pageContext.request.contextPath}';
+const IS_MGR = <%= isManager %>;
 
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-
-function avColor(n){
-    let h=0;for(let i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);
-    return '#'+(((h&0xFFFFFF)+0x404040)&0xFFFFFF).toString(16).padStart(6,'0');
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
 }
 
-function loadUsers(){
-    if(!IS_MGR) return;
-    fetch(CTX+'/api/related-entities?type=user')
-        .then(r=>r.json())
-        .then(users=>{
-            const box=document.getElementById('assignList');
-            if(!users||!users.length){
-                box.innerHTML='<div class="text-muted text-center py-3">No users found.</div>';
-                return;
-            }
-            box.innerHTML=users.map(u=>{
-                const nm=esc(u.name||'?');
-                const em=esc(u.email||'');
-                const col=avColor(nm);
-                const ini=(u.name||'?').charAt(0).toUpperCase();
-                return '<div class="user-item" data-uid="'+u.id+'"'
-                    +' data-name="'+(u.name||'').toLowerCase()+'"'
-                    +' data-email="'+(u.email||'').toLowerCase()+'"'
-                    +' onclick="toggleUser(this)">'
-                    +'<div style="width:32px;height:32px;border-radius:50%;background:'+col+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">'+ini+'</div>'
-                    +'<div>'
-                    +'<div class="fw-semibold" style="font-size:.88rem">'+nm+'</div>'
-                    +'<div class="text-muted" style="font-size:.78rem">'+em+'</div>'
-                    +'</div>'
-                    +'<i class="fa fa-circle text-muted ms-auto"></i>'
-                    +'</div>';
-            }).join('');
-        })
-        .catch(()=>{
-            document.getElementById('assignList').innerHTML=
-                '<div class="text-danger text-center py-3"><i class="fa fa-exclamation-triangle me-1"></i>Failed to load users.</div>';
-        });
-}
-
-function filterUsers(q) {
-    q = (q || '').toLowerCase();
-    document.querySelectorAll('#assignList .user-item').forEach(i => {
-        i.style.display = (i.dataset.name || '').includes(q) || (i.dataset.email || '').includes(q) ? '' : 'none';
-    });
-}
 function toggleUser(el) {
     el.classList.toggle('selected');
     const ic = el.querySelector('i.fa');
-    if (ic)
+    if (ic) {
         ic.className = el.classList.contains('selected') ? 'fa fa-check-circle text-success ms-auto' : 'fa fa-circle text-muted ms-auto';
+    }
     syncHidden();
 }
+
 function syncHidden() {
     const box = document.getElementById('assigneeHidden');
     if (!box) return;
@@ -224,5 +186,16 @@ function syncHidden() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', loadUsers);
+// Search filter
+const searchInput = document.getElementById('assignSearch');
+if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+        const q = (e.target.value || '').toLowerCase();
+        document.querySelectorAll('#assignList .user-item').forEach(i => {
+            const name = i.dataset.name || '';
+            const email = i.dataset.email || '';
+            i.style.display = (name.includes(q) || email.includes(q)) ? '' : 'none';
+        });
+    });
+}
 </script>

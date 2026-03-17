@@ -69,8 +69,8 @@
   <ul class="nav nav-tabs mb-0" id="editTabs">
     <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabInfo">
       <i class="fa fa-edit me-1"></i>Task Info</a></li>
-    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProgress">
-      <i class="fa fa-tasks me-1"></i>Progress / Status</a></li>
+<!--    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProgress">
+      <i class="fa fa-tasks me-1"></i>Progress / Status</a></li>-->
     <% if (isManager) { %>
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabAssign">
       <i class="fa fa-users me-1"></i>Assignees</a></li>
@@ -144,7 +144,7 @@
             <%-- Progress (inline in form so it saves together) – everyone --%>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Progress (%)</label>
-              <input type="number" name="progress" id="inlineProgress" class="form-control"
+              <input type="number" name="progress" id="inlineProgress" readonly="readonly" class="form-control"
                      min="0" max="100" value="<%= prog %>"
                      oninput="syncProgressBar(this.value)">
               <div class="progress progress-big mt-2">

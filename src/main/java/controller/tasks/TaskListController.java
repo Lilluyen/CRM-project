@@ -155,7 +155,6 @@ public class TaskListController extends HttpServlet {
             int s = Integer.parseInt(val);
             for (int a : ALLOWED_SIZES) if (a == s) return s;
         } catch (Exception ignored) {
-            ignored.printStackTrace();
         }
         return DEFAULT_PAGE_SIZE;
     }

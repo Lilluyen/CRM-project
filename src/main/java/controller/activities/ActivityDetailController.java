@@ -35,6 +35,7 @@ public class ActivityDetailController extends HttpServlet {
         }
         if (req.getParameter("id") == null) {
             resp.sendRedirect(req.getContextPath()+"/activities/list");
+            return;
         }
         int id = Integer.parseInt(req.getParameter("id"));
         try (Connection conn = DBContext.getConnection()) {

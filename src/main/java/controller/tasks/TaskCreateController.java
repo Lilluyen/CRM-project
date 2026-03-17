@@ -1,5 +1,6 @@
 package controller.tasks;
 
+import dao.UserDAO;
 import model.Task;
 import model.User;
 import service.NotificationService;
@@ -18,6 +19,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,11 +28,8 @@ import java.util.logging.Logger;
  * GET  /tasks/create  – hiển thị form tạo task mới
  * POST /tasks/create  – lưu task mới, gán assignees, redirect sang list
  *
- * Hỗ trợ tạo task gắn với entity CRM (Customer / Lead / Deal) thông qua
- * hidden params {@code relatedType} và {@code relatedId} (Scenario 1).
- * Khi form được mở từ trang Customer/Lead/Deal, hai giá trị này được truyền
- * vào để {@link TaskService#createTask(Task, String, Integer)} tạo Activity
- * đúng kịch bản.
+ * Manager: load danh sách user từ server-side để chọn gán.
+ * Staff  : tự gán cho chính mình.
  */
 @WebServlet("/tasks/create")
 public class TaskCreateController extends HttpServlet {
@@ -55,9 +54,13 @@ public class TaskCreateController extends HttpServlet {
 
         boolean isManager = isManagerOrAdmin(user);
         req.setAttribute("isManager", isManager);
-        // Users loaded via AJAX from /api/related-entities?type=user
 
-        // Giữ lại relatedType/relatedId để form biết mình đang tạo task cho entity nào
+        // Load danh sách user active cho dropdown assign (manager dùng)
+        if (isManager) {
+            List<User> allUsers = new UserDAO().getActiveUsers();
+            req.setAttribute("allUsers", allUsers);
+        }
+
         req.setAttribute("relatedType", nvl(req.getParameter("relatedType"), ""));
         req.setAttribute("relatedId",   nvl(req.getParameter("relatedId"),   ""));
 
@@ -83,7 +86,7 @@ public class TaskCreateController extends HttpServlet {
         boolean isManager = isManagerOrAdmin(user);
         Task task = buildTask(req, user);
 
-        // ── CRM entity link (Scenario 1: activity gắn với Customer/Lead/Deal) ──
+        // ── CRM entity link ──
         String  relatedType = nvl(req.getParameter("relatedType"), "").trim();
         String  relatedIdRaw = nvl(req.getParameter("relatedId"), "").trim();
         Integer relatedId   = null;
@@ -96,7 +99,6 @@ public class TaskCreateController extends HttpServlet {
         try (Connection conn = DBContext.getConnection()) {
             TaskService svc = new TaskService(conn);
 
-            // FIX: gọi overload có relatedType/relatedId để activity được tạo đúng
             boolean ok = svc.createTask(task, relatedTypeFinal, relatedId);
 
             if (!ok) {
@@ -107,7 +109,9 @@ public class TaskCreateController extends HttpServlet {
                 req.setAttribute("page",        "task-create");
                 req.setAttribute("relatedType", nvl(relatedTypeFinal, ""));
                 req.setAttribute("relatedId",   nvl(relatedIdRaw,     ""));
-                // Users loaded via AJAX
+                if (isManager) {
+                    req.setAttribute("allUsers", new UserDAO().getActiveUsers());
+                }
                 req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
                 return;
             }
@@ -123,13 +127,11 @@ public class TaskCreateController extends HttpServlet {
                             catch (NumberFormatException ignored) {}
                         }
                     }
-                    // Một history-header, nhiều detail; notification cho từng assignee
                     svc.updateAssigneesBulk(task, user.getUserId(), desired);
                 } else {
-                    // Staff: tự gán cho chính mình như một "reminder"
+                    // Staff: tự gán cho chính mình
                     svc.assignTask(task.getTaskId(), user.getUserId(), task, user.getUserId());
 
-                    // Tạo notification nhắc nhở khi đến due date
                     if (task.getDueDate() != null) {
                         new NotificationService(conn).createForUserWithRule(
                                 user.getUserId(),
@@ -146,7 +148,6 @@ public class TaskCreateController extends HttpServlet {
             req.getSession().setAttribute("flashSuccess",
                     "Task \"" + task.getTitle() + "\" đã được tạo.");
 
-            // Nếu tạo task từ entity CRM, redirect về entity đó; ngược lại về task list
             if (relatedTypeFinal != null && relatedId != null) {
                 String entityPath = resolveEntityPath(relatedTypeFinal, relatedId);
                 resp.sendRedirect(req.getContextPath() + entityPath);
@@ -185,10 +186,6 @@ public class TaskCreateController extends HttpServlet {
         return t;
     }
 
-    /**
-     * Trả về đường dẫn redirect phù hợp với loại entity.
-     * Mở rộng switch khi thêm các entity mới (Lead, Deal, Ticket…).
-     */
     private String resolveEntityPath(String relatedType, int relatedId) {
         return switch (relatedType.toLowerCase()) {
             case "customer" -> "/customers/details?id=" + relatedId;

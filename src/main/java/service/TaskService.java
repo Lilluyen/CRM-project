@@ -4,9 +4,11 @@ import dao.TaskDAO;
 import model.Activity;
 import model.Task;
 import model.TaskAssignee;
+import model.TaskComment;
 import model.User;
 
 import java.sql.Connection;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -169,6 +171,9 @@ public class TaskService {
                         task.getTaskId(),
                         relatedType, relatedId,
                         task.getCreatedBy()));
+
+                // INSTANT: Check and notify overdue immediately after creation
+                checkAndNotifyOverdue(task);
             }
             return ok;
         } catch (Exception e) { e.printStackTrace(); return false; }
@@ -235,6 +240,9 @@ public class TaskService {
                 notifyAssignees(old, "Task Updated",
                         "Task \"" + newTask.getTitle() + "\" has been updated.",
                         newTask.getTaskId());
+
+                // INSTANT: Check and notify overdue immediately after update
+                checkAndNotifyOverdue(newTask);
             }
             return ok;
         } catch (Exception e) { e.printStackTrace(); return false; }
@@ -562,8 +570,7 @@ public class TaskService {
         a.setSubject(subject);
         a.setDescription(description);
         a.setActivityDate(LocalDateTime.now());
-        a.setEntityType("task");
-        a.setEntityId(taskId);
+        // Use related_type/related_id - entity_type/entity_id columns don't exist
         a.setRelatedType(relatedType);
         a.setRelatedId(relatedId);
         a.setCreatedBy(actor);
@@ -619,6 +626,44 @@ public class TaskService {
         }
     }
 
+    /**
+     * INSTANT: Check if task is overdue and notify immediately.
+     * Called right after create/update to avoid scheduler delay.
+     * Only notifies if task is actually overdue and not already in final state.
+     */
+    private void checkAndNotifyOverdue(Task task) {
+        if (task == null) return;
+        if (task.getDueDate() == null) return;
+
+        // Only process if task is overdue and not in final state
+        String status = task.getStatus();
+        if (status == null) return;
+        if ("Done".equalsIgnoreCase(status) || "Cancelled".equalsIgnoreCase(status)
+                || "Overdue".equalsIgnoreCase(status)) return;
+
+        // Check if overdue
+        if (task.getDueDate().isBefore(LocalDateTime.now())) {
+            // Mark as overdue in DB
+            boolean marked = taskDAO.markOverdue(task.getTaskId());
+            if (marked) {
+                // Update local task status
+                task.setStatus("Overdue");
+
+                // Create activity
+                activityService.createActivity(buildTaskActivity(
+                        "task_overdue",
+                        "Task overdue: " + task.getTitle(),
+                        "Due date was " + task.getDueDate(),
+                        task.getTaskId(), task.getRelatedType(), task.getRelatedId(), null));
+
+                // Notify assignees immediately
+                notifyAssignees(task, "Task Overdue",
+                        "Task \"" + task.getTitle() + "\" is overdue (due: " + task.getDueDate() + ").",
+                        task.getTaskId());
+            }
+        }
+    }
+
     private void notifyAssignees(Task task, String title, String message, int taskId) {
         if (task == null || task.getAssignees() == null) return;
         for (TaskAssignee ta : task.getAssignees()) {
@@ -638,4 +683,27 @@ public class TaskService {
 
     private String str(Object o) { return o != null ? o.toString() : ""; }
     private String nullSafe(String s) { return s != null ? s : ""; }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCHEDULE
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<Task> getScheduleTasks(int userId, boolean isManager,
+                                       LocalDate startDate, LocalDate endDate) {
+        try {
+            return taskDAO.getScheduleTasks(userId, isManager, startDate, endDate);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    public List<TaskComment> getScheduleSubtasks(List<Integer> taskIds,
+                                                  LocalDate startDate, LocalDate endDate) {
+        try {
+            return taskDAO.getScheduleSubtasks(taskIds, startDate, endDate);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
 }

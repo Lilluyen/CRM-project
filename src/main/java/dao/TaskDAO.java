@@ -2,6 +2,7 @@ package dao;
 
 import model.Task;
 import model.TaskAssignee;
+import model.TaskComment;
 import model.TaskHistory;
 import model.TaskHistoryDetail;
 import model.User;
@@ -660,7 +661,7 @@ public class TaskDAO {
           + "FROM Task_Assignees ta "
           + "JOIN  Users u  ON ta.user_id  = u.user_id "
           + "LEFT JOIN Roles r ON u.role_id = r.role_id "
-          + "WHERE ta.task_id=?";
+          + "WHERE ta.task_id=? AND ta.is_active = 1";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -809,5 +810,181 @@ public class TaskDAO {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 20. SCHEDULE - Get tasks for a specific week with subtasks
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Get tasks and subtasks for a user's schedule within a date range.
+     * For employee: returns their own tasks + tasks they're assigned to
+     * For manager: returns all root tasks of their subordinates
+     *
+     * @param userId current user ID
+     * @param isManager whether user is manager/admin
+     * @param startDate range start
+     * @param endDate range end
+     * @return list of schedule items (tasks and subtasks)
+     */
+    public List<Task> getScheduleTasks(int userId, boolean isManager,
+                                       java.time.LocalDate startDate,
+                                       java.time.LocalDate endDate) {
+        List<Task> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+
+        if (isManager) {
+            // Manager: get all root tasks (no parent) of subordinates
+            // Subordinates = users with role_id != 1 (not admin) and under this manager
+            sql.append("""
+                SELECT DISTINCT t.*,
+                       u.user_id AS u_id, u.full_name, u.email, u.username,
+                       r.role_id, r.role_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.created_by = u.user_id
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE t.task_id IN (
+                    -- Root tasks created by subordinates (not admin, not this user)
+                    SELECT t2.task_id
+                    FROM Tasks t2
+                    JOIN Users sub ON t2.created_by = sub.user_id
+                    WHERE sub.role_id != 1
+                    AND t2.task_id NOT IN (
+                        SELECT task_id FROM Task_Comments WHERE parent_comment_id IS NOT NULL
+                    )
+                )
+                AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
+                AND (
+                    (t.start_date >= ? AND t.start_date < ?)
+                    OR (t.due_date >= ? AND t.due_date < ?)
+                    OR (t.start_date <= ? AND t.due_date >= ?)
+                )
+                ORDER BY t.start_date ASC, t.due_date ASC
+                """);
+        } else {
+            // Employee: get own tasks + assigned tasks
+            sql.append("""
+                SELECT DISTINCT t.*,
+                       u.user_id AS u_id, u.full_name, u.email, u.username,
+                       r.role_id, r.role_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.created_by = u.user_id
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE t.task_id IN (
+                    -- Tasks where user is owner
+                    SELECT task_id FROM Tasks WHERE created_by = ?
+                    UNION
+                    -- Tasks where user is assignee
+                    SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
+                )
+                AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
+                AND (
+                    (t.start_date >= ? AND t.start_date < ?)
+                    OR (t.due_date >= ? AND t.due_date < ?)
+                    OR (t.start_date <= ? AND t.due_date >= ?)
+                )
+                ORDER BY t.start_date ASC, t.due_date ASC
+                """);
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            if (isManager) {
+                ps.setObject(1, startDate);
+                ps.setObject(2, endDate);
+                ps.setObject(3, startDate);
+                ps.setObject(4, endDate);
+                ps.setObject(5, endDate.minusDays(1));
+                ps.setObject(6, startDate);
+            } else {
+                ps.setInt(1, userId);
+                ps.setInt(2, userId);
+                ps.setObject(3, startDate);
+                ps.setObject(4, endDate);
+                ps.setObject(5, startDate);
+                ps.setObject(6, endDate);
+                ps.setObject(7, endDate.minusDays(1));
+                ps.setObject(8, startDate);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Task task = mapRow(rs);
+                    // Load assignees for each task
+                    task.setAssignees(loadAssignees(task.getTaskId()));
+                    list.add(task);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Get subtasks (work items) for specific tasks within a date range.
+     * Uses Task_Comments where assigned_to is set.
+     */
+    public List<TaskComment> getScheduleSubtasks(List<Integer> taskIds,
+                                                  java.time.LocalDate startDate,
+                                                  java.time.LocalDate endDate) {
+        List<TaskComment> list = new ArrayList<>();
+        if (taskIds == null || taskIds.isEmpty()) {
+            return list;
+        }
+
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < taskIds.size(); i++) {
+            placeholders.append(i > 0 ? "," : "").append("?");
+        }
+
+        String sql = String.format("""
+            SELECT tc.*, u.user_id AS a_u_id, u.full_name AS a_full_name,
+                   t.title AS task_title
+            FROM Task_Comments tc
+            LEFT JOIN Users u ON tc.assigned_to = u.user_id
+            LEFT JOIN Tasks t ON tc.task_id = t.task_id
+            WHERE tc.task_id IN (%s)
+            AND tc.assigned_to IS NOT NULL
+            AND tc.is_deleted = 0
+            AND tc.created_at >= ? AND tc.created_at < ?
+            ORDER BY tc.created_at ASC
+            """, placeholders.toString());
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            int idx = 1;
+            for (Integer taskId : taskIds) {
+                ps.setInt(idx++, taskId);
+            }
+            ps.setObject(idx++, startDate);
+            ps.setObject(idx, endDate);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TaskComment tc = new TaskComment();
+                    tc.setCommentId(rs.getInt("comment_id"));
+                    tc.setTaskId(rs.getInt("task_id"));
+                    tc.setContent(rs.getString("content"));
+                    tc.setCompleted(rs.getBoolean("is_completed"));
+
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    if (createdAt != null) {
+                        tc.setCreatedAt(createdAt.toLocalDateTime());
+                    }
+
+                    int aUid = rs.getInt("a_u_id");
+                    if (!rs.wasNull()) {
+                        User assignedUser = new User();
+                        assignedUser.setUserId(aUid);
+                        assignedUser.setFullName(rs.getString("a_full_name"));
+                        tc.setAssignedToUser(assignedUser);
+                    }
+
+                    tc.setTaskTitle(rs.getString("task_title"));
+                    list.add(tc);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

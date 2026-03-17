@@ -197,6 +197,21 @@ public class NotificationRuleService {
         return engine != null ? new NotificationRule(engine) : null;
     }
 
+    /** Direct access to the engine model (used by new controller). */
+    public NotificationRuleEngine getRuleEngineById(int ruleId) throws SQLException {
+        return ruleDAO.findById(ruleId);
+    }
+
+    /** Create rule directly from a fully-populated engine object. */
+    public int createRuleEngine(NotificationRuleEngine engine) throws SQLException {
+        return ruleDAO.insertRule(engine);
+    }
+
+    /** Update rule directly from a fully-populated engine object. */
+    public boolean updateRuleEngine(NotificationRuleEngine engine) throws SQLException {
+        return ruleDAO.updateRule(engine);
+    }
+
     public int createRule(int notificationId, String ruleType,
                           Integer intervalValue, String intervalUnit,
                           LocalDateTime nextRun) throws SQLException {

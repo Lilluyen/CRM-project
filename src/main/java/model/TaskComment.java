@@ -29,6 +29,8 @@ public class TaskComment {
     // ── Transient display fields (populated by DAO JOIN) ─────────────────────
     private String authorName;    // full_name or username of userId
     private String assignedName;  // full_name or username of assignedTo
+    private User assignedToUser;  // User object for assignedTo
+    private String taskTitle;    // Title of the parent task
 
     // ── Getters / Setters ────────────────────────────────────────────────────
 
@@ -70,4 +72,10 @@ public class TaskComment {
 
     public String  getAssignedName()           { return assignedName; }
     public void    setAssignedName(String v)   { this.assignedName = v; }
+
+    public User    getAssignedToUser()         { return assignedToUser; }
+    public void    setAssignedToUser(User v)  { this.assignedToUser = v; }
+
+    public String  getTaskTitle()             { return taskTitle; }
+    public void    setTaskTitle(String v)     { this.taskTitle = v; }
 }

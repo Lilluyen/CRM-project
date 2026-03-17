@@ -1,11 +1,9 @@
 package controller.notifications;
 
-import dto.Pagination;
-import model.Notification;
-import model.NotificationRule;
+import dao.UserDAO;
+import model.NotificationRuleEngine;
 import model.User;
 import service.NotificationRuleService;
-import service.NotificationService;
 import util.DBContext;
 
 import jakarta.servlet.ServletException;
@@ -22,239 +20,116 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * GET  /notifications/rules/manage
- * POST /notifications/rules/manage
- *
- * Manage (create/edit) notification reminder rules.
+ * GET  /notifications/rules/manage       → form tạo mới
+ * GET  /notifications/rules/manage?ruleId=X → form chỉnh sửa
+ * POST /notifications/rules/manage       → lưu rule
  */
 @WebServlet("/notifications/rules/manage")
 public class NotificationRuleManageController extends HttpServlet {
 
     private static final Logger LOG = Logger.getLogger(NotificationRuleManageController.class.getName());
 
-    private static final int DEFAULT_PAGE_SIZE = 10;
-    private static final int[] ALLOWED_SIZES = {5, 10, 15, 20};
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         User user = (User) req.getSession().getAttribute("user");
-        if (user == null) {
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return;
-        }
+        if (user == null) { resp.sendRedirect(req.getContextPath() + "/login"); return; }
 
-        boolean isManager = isManagerOrAdmin(user);
-
-        int notifPage = parsePage(req.getParameter("notifPage"));
-        int notifPageSize = parsePageSize(req.getParameter("notifPageSize"));
-
-        Integer ruleId = null;
-        try {
+        NotificationRuleEngine rule = null;
+        try (Connection conn = DBContext.getConnection()) {
             String ruleIdParam = req.getParameter("ruleId");
             if (ruleIdParam != null && !ruleIdParam.isBlank()) {
-                ruleId = Integer.valueOf(ruleIdParam);
+                NotificationRuleService svc = new NotificationRuleService(conn);
+                rule = svc.getRuleEngineById(Integer.parseInt(ruleIdParam));
             }
-        } catch (Exception ignored) {
-        }
-
-        Integer selectedNotificationId = null;
-        try {
-            String nParam = req.getParameter("notificationId");
-            if (nParam != null && !nParam.isBlank()) {
-                selectedNotificationId = Integer.valueOf(nParam);
-            }
-        } catch (Exception ignored) {
-        }
-
-        try (Connection conn = DBContext.getConnection()) {
-            NotificationRuleService ruleSvc = new NotificationRuleService(conn);
-            NotificationService notifSvc = new NotificationService(conn);
-
-            NotificationRule rule = null;
-            Notification selectedNotification = null;
-
-            if (ruleId != null) {
-                rule = ruleSvc.getRuleById(ruleId);
-                if (rule != null) {
-                    selectedNotificationId = rule.getNotificationId();
-                }
-            }
-
-            if (selectedNotificationId != null) {
-                selectedNotification = notifSvc.getById(selectedNotificationId);
-            }
-
-            // If user is not admin/manager, ensure the user is recipient of the notification (or of the rule base notification)
-            if (!isManager && selectedNotification != null) {
-                if (!notifSvc.isRecipient(selectedNotification.getNotificationId(), user.getUserId())) {
-                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            }
-
-            int totalNotifications = ruleSvc.countNotificationsForUser(user.getUserId(), isManager);
-            Pagination notifPagination = new Pagination(notifPage, notifPageSize, totalNotifications);
-            List<Notification> notifications = ruleSvc.listNotificationsForUser(user.getUserId(), isManager,
-                    notifPagination.getCurrentPage(), notifPagination.getPageSize());
-
-            req.setAttribute("rule", rule);
-            req.setAttribute("selectedNotification", selectedNotification);
-            req.setAttribute("notifications", notifications);
-            req.setAttribute("notifPagination", notifPagination);
-            req.setAttribute("isManager", isManager);
-            req.setAttribute("pageTitle", rule == null ? "Create Rule" : "Edit Rule");
-            req.setAttribute("contentPage", "/view/notifications/rule-form.jsp");
-            req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
+            // Load users for recipient dropdown
+            List<User> allUsers = new UserDAO().getActiveUsers();
+            req.setAttribute("allUsers", allUsers);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Cannot load rule form", ex);
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-    }
 
+        req.setAttribute("rule", rule);
+        req.setAttribute("pageTitle", rule == null ? "Create Alarm Rule" : "Edit Alarm Rule");
+        req.setAttribute("contentPage", "/view/notifications/rule-form.jsp");
+        req.setAttribute("page", "notification-rules");
+        req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
+    }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         User user = (User) req.getSession().getAttribute("user");
-        if (user == null) {
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return;
-        }
-
-        boolean isManager = isManagerOrAdmin(user);
-
-        // Parse inputs
-        Integer ruleId = null;
-        try {
-            String ruleIdParam = req.getParameter("ruleId");
-            if (ruleIdParam != null && !ruleIdParam.isBlank()) ruleId = Integer.valueOf(ruleIdParam);
-        } catch (Exception ignored) {
-        }
-
-        Integer notificationId = null;
-        try {
-            String nId = req.getParameter("notificationId");
-            if (nId != null && !nId.isBlank()) notificationId = Integer.valueOf(nId);
-        } catch (Exception ignored) {
-        }
-
-        String title = req.getParameter("title");
-        String content = req.getParameter("content");
-        String type = req.getParameter("type");
-        String relatedType = req.getParameter("relatedType");
-        Integer relatedId = null;
-        try {
-            String rid = req.getParameter("relatedId");
-            if (rid != null && !rid.isBlank()) relatedId = Integer.valueOf(rid);
-        } catch (Exception ignored) {
-        }
-
-        String ruleType = req.getParameter("ruleType");
-        Integer intervalValue = null;
-        try {
-            String iv = req.getParameter("intervalValue");
-            if (iv != null && !iv.isBlank()) intervalValue = Integer.valueOf(iv);
-        } catch (Exception ignored) {
-        }
-        String intervalUnit = req.getParameter("intervalUnit");
-
-        LocalDateTime nextRun = null;
-        try {
-            String nr = req.getParameter("nextRun");
-            if (nr != null && !nr.isBlank()) {
-                // Expect format yyyy-MM-dd'T'HH:mm
-                nextRun = LocalDateTime.parse(nr);
-            }
-        } catch (Exception ignored) {
-        }
-
-        boolean active = "on".equalsIgnoreCase(req.getParameter("active"));
-
-        if (notificationId == null) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Notification is required");
-            return;
-        }
+        if (user == null) { resp.sendRedirect(req.getContextPath() + "/login"); return; }
 
         try (Connection conn = DBContext.getConnection()) {
-            NotificationRuleService ruleSvc = new NotificationRuleService(conn);
-            NotificationService notifSvc = new NotificationService(conn);
+            NotificationRuleService svc = new NotificationRuleService(conn);
 
-            Notification notification = notifSvc.getById(notificationId);
-            if (notification == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Notification not found");
-                return;
+            // Parse ruleId (null = create new)
+            Integer ruleId = parseIntOrNull(req.getParameter("ruleId"));
+
+            // Build engine from form
+            NotificationRuleEngine engine = ruleId != null ? svc.getRuleEngineById(ruleId) : new NotificationRuleEngine();
+            if (engine == null) engine = new NotificationRuleEngine();
+
+            engine.setRuleName(safe(req.getParameter("ruleName"), "Untitled Rule"));
+            engine.setRuleType(safe(req.getParameter("ruleType"), "schedule"));
+            engine.setDescription(req.getParameter("description"));
+            engine.setTriggerEvent(req.getParameter("triggerEvent"));
+            engine.setEntityType(req.getParameter("entityType"));
+            engine.setConditionField(req.getParameter("conditionField"));
+            engine.setConditionOperator(req.getParameter("conditionOperator"));
+            engine.setConditionValue(parseIntOrNull(req.getParameter("conditionValue")));
+            engine.setConditionUnit(req.getParameter("conditionUnit"));
+            engine.setNotificationTitleTemplate(req.getParameter("notificationTitle"));
+            engine.setNotificationContentTemplate(req.getParameter("notificationContent"));
+            engine.setNotificationType(req.getParameter("notificationType"));
+            engine.setNotificationPriority(safe(req.getParameter("notificationPriority"), "normal"));
+            engine.setRecipientType(req.getParameter("recipientType"));
+            engine.setRecipientUserId(parseIntOrNull(req.getParameter("recipientUserId")));
+            engine.setEscalateAfterMinutes(parseIntOrNull(req.getParameter("escalateAfterMinutes")));
+            engine.setEscalateToUserId(parseIntOrNull(req.getParameter("escalateToUserId")));
+            engine.setActive("on".equalsIgnoreCase(req.getParameter("active"))
+                          || "true".equalsIgnoreCase(req.getParameter("active")));
+
+            // Parse nextRun
+            String nextRunStr = req.getParameter("nextRun");
+            if (nextRunStr != null && !nextRunStr.isBlank()) {
+                engine.setNextRunAt(LocalDateTime.parse(nextRunStr));
+            } else if (!"event_trigger".equalsIgnoreCase(engine.getRuleType())) {
+                // Schedule/condition: default to now so scheduler picks it up immediately
+                engine.setNextRunAt(LocalDateTime.now());
             }
 
-            if (!isManager && !notifSvc.isRecipient(notificationId, user.getUserId())) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-
-            // Save notification changes
-            notification.setTitle(title);
-            notification.setContent(content);
-            notification.setType(type);
-            notification.setRelatedType(relatedType);
-            notification.setRelatedId(relatedId);
-            boolean notifOk = notifSvc.updateNotification(notification);
-
-            if (!notifOk) {
-                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not update notification");
-                return;
-            }
+            engine.setCreatedBy(user.getUserId());
 
             boolean ok;
-            if (ruleId == null) {
-                // create new
-                if (nextRun == null) {
-                    // default to now
-                    nextRun = LocalDateTime.now();
-                }
-                int newRuleId = ruleSvc.createRule(notificationId, ruleType, intervalValue, intervalUnit, nextRun);
-                ok = newRuleId > 0;
+            if (ruleId != null) {
+                ok = svc.updateRuleEngine(engine);
             } else {
-                if (nextRun == null) {
-                    nextRun = LocalDateTime.now();
-                }
-                ok = ruleSvc.updateRule(ruleId, ruleType, intervalValue, intervalUnit, nextRun, active);
+                ok = svc.createRuleEngine(engine) > 0;
             }
 
-            if (!ok) {
-                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not save rule");
-                return;
+            if (ok) {
+                resp.sendRedirect(req.getContextPath() + "/notifications/rules?success=1");
+            } else {
+                req.setAttribute("error", "Save failed");
+                doGet(req, resp);
             }
-
-            resp.sendRedirect(req.getContextPath() + "/notifications/rules?success=1");
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Cannot save reminder rule", ex);
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            LOG.log(Level.SEVERE, "Cannot save rule", ex);
+            req.setAttribute("error", "System error: " + ex.getMessage());
+            doGet(req, resp);
         }
     }
 
-    private int parsePage(String val) {
-        try {
-            int p = Integer.parseInt(val);
-            return p > 0 ? p : 1;
-        } catch (Exception e) {
-            return 1;
-        }
+    private Integer parseIntOrNull(String val) {
+        if (val == null || val.isBlank()) return null;
+        try { return Integer.valueOf(val.trim()); } catch (Exception e) { return null; }
     }
 
-    private int parsePageSize(String val) {
-        try {
-            int s = Integer.parseInt(val);
-            for (int a : ALLOWED_SIZES) if (a == s) return s;
-        } catch (Exception ignored) {
-        }
-        return DEFAULT_PAGE_SIZE;
-    }
-
-    private boolean isManagerOrAdmin(User user) {
-        if (user == null || user.getRole() == null) return false;
-        int rid = user.getRole().getRoleId();
-        String rn = user.getRole().getRoleName();
-        return rid == 1 || rid == 5 || "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);
+    private String safe(String val, String fallback) {
+        return val != null && !val.isBlank() ? val.trim() : fallback;
     }
 }

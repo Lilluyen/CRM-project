@@ -179,15 +179,14 @@ public class TaskCommentApiController extends HttpServlet {
                 activity.setSubject("New comment on task");
                 activity.setActivityType("task_comment");
                 // Link to CRM entity (Customer/Lead) if task has related entity
+                // Also set related_type/related_id to 'task' for task timeline
                 if (task.getRelatedType() != null && task.getRelatedId() != null) {
                     activity.setRelatedType(task.getRelatedType());
                     activity.setRelatedId(task.getRelatedId());
                 } else {
-                    activity.setRelatedType("Task");
+                    activity.setRelatedType("task");
                     activity.setRelatedId(body.taskId);
                 }
-                activity.setEntityType("task");
-                activity.setEntityId(body.taskId);
                 activity.setDescription(truncate(body.content, 200));
                 activity.setCreatedBy(user);
                 activity.setActivityDate(java.time.LocalDateTime.now());
@@ -201,6 +200,9 @@ public class TaskCommentApiController extends HttpServlet {
             // Recompute and return new progress
             int[] prog = dao.countProgress(body.taskId);
             int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / prog[0] * 100) : 0;
+
+            // Cập nhật progress vào database
+            taskSvc.updateProgress(body.taskId, pct, user.getUserId());
 
             JsonObject res = new JsonObject();
             res.addProperty("success",     true);
@@ -283,6 +285,9 @@ public class TaskCommentApiController extends HttpServlet {
             int[] prog = dao.countProgress(existing.getTaskId());
             int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / prog[0] * 100) : 0;
 
+            // Cập nhật progress vào database
+            new TaskService(conn).updateProgress(existing.getTaskId(), pct, user.getUserId());
+
             JsonObject res = new JsonObject();
             res.addProperty("success",     ok);
             res.addProperty("progressPct", pct);
@@ -326,6 +331,9 @@ public class TaskCommentApiController extends HttpServlet {
 
             int[] prog = dao.countProgress(existing.getTaskId());
             int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / prog[0] * 100) : 0;
+
+            // Cập nhật progress vào database
+            new TaskService(conn).updateProgress(existing.getTaskId(), pct, user.getUserId());
 
             JsonObject res = new JsonObject();
             res.addProperty("success",     ok);

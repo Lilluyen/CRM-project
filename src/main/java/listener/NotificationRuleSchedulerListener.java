@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 /**
  * NotificationRuleSchedulerListener – Processes scheduled notification rules.
  *
- * Runs every 5 seconds to check for due notification rules:
+ * Runs every 1 second to check for due notification rules:
  *   - Reminder rules (schedule-based)
  *   - Condition-based rules
  *   - Escalation rules
@@ -40,8 +40,8 @@ public class NotificationRuleSchedulerListener implements ServletContextListener
     private static final Logger LOG = Logger.getLogger(NotificationRuleSchedulerListener.class.getName());
 
     private static final int BATCH_SIZE = 50;
-    private static final long INITIAL_DELAY_SECONDS = 5;
-    private static final long INTERVAL_SECONDS = 5;
+    private static final long INITIAL_DELAY_SECONDS = 1;
+    private static final long INTERVAL_SECONDS = 1;
 
     private ScheduledExecutorService executor;
 

@@ -55,20 +55,26 @@ public class ActivityService {
     // READ – LIST (paged + filtered)
     // ─────────────────────────────────────────────────────────────────────────
     public List<Activity> getActivitiesPaged(String subject, String activityType,
-                                              String relatedType,
+                                              String relatedType, Integer relatedId,
+                                              String description,
+                                              Integer currentUserId, boolean isManager,
                                               String sortField, String sortDir,
                                               int page, int pageSize) {
         try {
             return activityDAO.getActivitiesPaged(
-                    subject, activityType, relatedType, sortField, sortDir, page, pageSize);
+                    subject, activityType, relatedType, relatedId, description,
+                    currentUserId, isManager, sortField, sortDir, page, pageSize);
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
         }
     }
 
-    public int countActivities(String subject, String activityType, String relatedType) {
-        return activityDAO.countActivitiesFiltered(subject, activityType, relatedType);
+    public int countActivities(String subject, String activityType, String relatedType,
+                             Integer relatedId, String description,
+                             Integer currentUserId, boolean isManager) {
+        return activityDAO.countActivitiesFiltered(subject, activityType, relatedType,
+                relatedId, description, currentUserId, isManager);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

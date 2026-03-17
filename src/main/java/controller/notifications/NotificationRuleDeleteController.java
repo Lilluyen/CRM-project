@@ -1,10 +1,7 @@
 package controller.notifications;
 
-import model.Notification;
-import model.NotificationRule;
 import model.User;
 import service.NotificationRuleService;
-import service.NotificationService;
 import util.DBContext;
 
 import jakarta.servlet.ServletException;
@@ -50,25 +47,23 @@ public class NotificationRuleDeleteController extends HttpServlet {
 
         try (Connection conn = DBContext.getConnection()) {
             NotificationRuleService ruleSvc = new NotificationRuleService(conn);
-            NotificationService notifSvc = new NotificationService(conn);
 
-            NotificationRule ruleStub = null;
+            model.NotificationRuleEngine ruleEngine = null;
             try {
-                // Load rule to be deleted
-                ruleStub = ruleSvc.getRuleById(ruleId);
+                ruleEngine = ruleSvc.getRuleEngineById(ruleId);
             } catch (Exception ignored) {
             }
 
-            if (ruleStub == null) {
+            if (ruleEngine == null) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 writeJson(resp, "{\"success\":false,\"message\":\"Rule không tồn tại\"}");
                 return;
             }
 
-            Notification ruleNotification = notifSvc.getById(ruleStub.getNotificationId());
             boolean isManager = isManagerOrAdmin(user);
             if (!isManager) {
-                if (ruleNotification == null || !notifSvc.isRecipient(ruleNotification.getNotificationId(), user.getUserId())) {
+                // Non-managers can only delete rules they created
+                if (ruleEngine.getCreatedBy() == null || ruleEngine.getCreatedBy() != user.getUserId()) {
                     resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     writeJson(resp, "{\"success\":false,\"message\":\"Không có quyền\"}");
                     return;

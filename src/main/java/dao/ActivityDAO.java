@@ -11,14 +11,14 @@ import java.util.List;
 /**
  * ActivityDAO – CRUD + paging for the Activities table.
  *
- * Full schema now reflected (columns previously missing from INSERT/SELECT):
- *   entity_type, entity_id   – which entity triggered the activity (e.g. task, deal)
- *   source_type, source_id   – original system source when auto-created
- *   performed_by             – FK to Users; the actor (may differ from created_by)
- *   metadata                 – arbitrary JSON payload for automation rules
- *   updated_at               – last modification timestamp
+ * Schema columns:
+ *   related_type, related_id   – which entity the activity is linked to (e.g. task, Customer, Lead)
+ *   source_type, source_id     – original system source when auto-created
+ *   performed_by               – FK to Users; the actor (may differ from created_by)
+ *   metadata                   – arbitrary JSON payload for automation rules
+ *   updated_at                 – last modification timestamp
  *
- * New methods added to support task/activity scenarios:
+ * Methods to support task/activity scenarios:
  *   getActivitiesByTask()   – paged timeline for a specific task
  *   countActivitiesByTask() – pair for pagination
  *   getRecentActivities()   – dashboard "recent activities" panel (Scenario 16)
@@ -40,7 +40,6 @@ public class ActivityDAO {
     private static final String BASE_SELECT =
         "SELECT a.activity_id, a.related_type, a.related_id, a.activity_type, "
       + "       a.subject, a.description, a.activity_date, a.created_at, a.updated_at, "
-      + "       a.entity_type, a.entity_id, "
       + "       a.source_type, a.source_id, "
       + "       a.metadata, "
       + "       cb.user_id  AS cb_id,   cb.full_name AS cb_name, "
@@ -62,9 +61,9 @@ public class ActivityDAO {
         String sql =
             "INSERT INTO Activities "
           + "(related_type, related_id, activity_type, subject, description, "
-          + " created_by, activity_date, entity_type, entity_id, "
+          + " created_by, activity_date, "
           + " source_type, source_id, performed_by, metadata) "
-          + "VALUES (?,?,?,?,?, ?,?,?,?, ?,?,?,?)";
+          + "VALUES (?,?,?,?,?, ?,?, ?,?,?,?)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, activity.getRelatedType());
             ps.setObject(2, activity.getRelatedId(), Types.INTEGER);
@@ -73,12 +72,10 @@ public class ActivityDAO {
             ps.setString(5, activity.getDescription());
             ps.setObject(6, activity.getCreatedBy()   != null ? activity.getCreatedBy().getUserId()   : null, Types.INTEGER);
             ps.setObject(7, activity.getActivityDate() != null ? Timestamp.valueOf(activity.getActivityDate()) : null, Types.TIMESTAMP);
-            ps.setString(8, activity.getEntityType());
-            ps.setObject(9, activity.getEntityId(), Types.INTEGER);
-            ps.setString(10, activity.getSourceType());
-            ps.setObject(11, activity.getSourceId(), Types.INTEGER);
-            ps.setObject(12, activity.getPerformedBy() != null ? activity.getPerformedBy().getUserId() : null, Types.INTEGER);
-            ps.setString(13, activity.getMetadata());
+            ps.setString(8, activity.getSourceType());
+            ps.setObject(9, activity.getSourceId(), Types.INTEGER);
+            ps.setObject(10, activity.getPerformedBy() != null ? activity.getPerformedBy().getUserId() : null, Types.INTEGER);
+            ps.setString(11, activity.getMetadata());
 
             int rows = ps.executeUpdate();
             if (rows > 0) {
@@ -100,8 +97,8 @@ public class ActivityDAO {
         String sql =
             "UPDATE Activities SET "
           + "related_type=?, related_id=?, activity_type=?, subject=?, description=?, "
-          + "activity_date=?, entity_type=?, entity_id=?, "
-          + "source_type=?, source_id=?, performed_by=?, metadata=?, updated_at=GETDATE() "
+          + "activity_date=?, source_type=?, source_id=?, performed_by=?, metadata=?, "
+          + "updated_at=GETDATE() "
           + "WHERE activity_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, activity.getRelatedType());
@@ -110,13 +107,11 @@ public class ActivityDAO {
             ps.setString(4, activity.getSubject());
             ps.setString(5, activity.getDescription());
             ps.setObject(6, activity.getActivityDate() != null ? Timestamp.valueOf(activity.getActivityDate()) : null, Types.TIMESTAMP);
-            ps.setString(7, activity.getEntityType());
-            ps.setObject(8, activity.getEntityId(), Types.INTEGER);
-            ps.setString(9, activity.getSourceType());
-            ps.setObject(10, activity.getSourceId(), Types.INTEGER);
-            ps.setObject(11, activity.getPerformedBy() != null ? activity.getPerformedBy().getUserId() : null, Types.INTEGER);
-            ps.setString(12, activity.getMetadata());
-            ps.setInt(13, activity.getActivityId());
+            ps.setString(7, activity.getSourceType());
+            ps.setObject(8, activity.getSourceId(), Types.INTEGER);
+            ps.setObject(9, activity.getPerformedBy() != null ? activity.getPerformedBy().getUserId() : null, Types.INTEGER);
+            ps.setString(10, activity.getMetadata());
+            ps.setInt(11, activity.getActivityId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -146,7 +141,12 @@ public class ActivityDAO {
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
+                if (rs.next()) {
+                    Activity a = mapRow(rs);
+                    resolveRelatedName(a);
+                    resolveSourceName(a);
+                    return a;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -173,14 +173,23 @@ public class ActivityDAO {
     // 6. PAGED + FILTERED LIST
     // ─────────────────────────────────────────────────────────────────────────
     public List<Activity> getActivitiesPaged(String subject, String activityType,
-                                              String relatedType,
+                                              String relatedType, Integer relatedId,
+                                              String description,
+                                              Integer currentUserId, boolean isManager,
                                               String sortField, String sortDir,
                                               int page, int pageSize) {
         List<Activity> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder(BASE_SELECT + "WHERE 1=1 ");
 
-        appendActivityFilters(sql, params, subject, activityType, relatedType);
+        appendActivityFilters(sql, params, subject, activityType, relatedType, relatedId, description);
+
+        // Role-based filtering: non-managers can only see their own activities
+        if (!isManager && currentUserId != null) {
+            sql.append("AND (a.created_by = ? OR a.performed_by = ?) ");
+            params.add(currentUserId);
+            params.add(currentUserId);
+        }
 
         sql.append("ORDER BY ").append(resolveSortColumn(sortField))
            .append(" ").append("ASC".equalsIgnoreCase(sortDir) ? "ASC" : "DESC").append(" ");
@@ -196,13 +205,28 @@ public class ActivityDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // Resolve related names
+        for (Activity a : list) {
+            resolveRelatedName(a);
+        }
+
         return list;
     }
 
-    public int countActivitiesFiltered(String subject, String activityType, String relatedType) {
+    public int countActivitiesFiltered(String subject, String activityType, String relatedType,
+                                       Integer relatedId, String description,
+                                       Integer currentUserId, boolean isManager) {
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Activities a WHERE 1=1 ");
-        appendActivityFilters(sql, params, subject, activityType, relatedType);
+        appendActivityFilters(sql, params, subject, activityType, relatedType, relatedId, description);
+
+        // Role-based filtering
+        if (!isManager && currentUserId != null) {
+            sql.append("AND (a.created_by = ? OR a.performed_by = ?) ");
+            params.add(currentUserId);
+            params.add(currentUserId);
+        }
 
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
@@ -216,14 +240,14 @@ public class ActivityDAO {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 7. TASK TIMELINE – activities linked to a specific task (entity_type='task')
+    // 7. TASK TIMELINE – activities linked to a specific task (related_type='task')
     //    Used on the task detail page alongside Task_History.
     // ─────────────────────────────────────────────────────────────────────────
     public List<Activity> getActivitiesByTask(int taskId, int page, int pageSize) {
         List<Activity> list = new ArrayList<>();
         String sql =
             BASE_SELECT
-          + "WHERE a.entity_type = 'task' AND a.entity_id = ? "
+          + "WHERE a.related_type = 'task' AND a.related_id = ? "
           + "ORDER BY a.activity_date DESC "
           + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -329,7 +353,8 @@ public class ActivityDAO {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void appendActivityFilters(StringBuilder sql, List<Object> params,
-                                       String subject, String activityType, String relatedType) {
+                                       String subject, String activityType, String relatedType,
+                                       Integer relatedId, String description) {
         if (subject != null && !subject.isBlank()) {
             sql.append("AND a.subject LIKE ? ");
             params.add("%" + subject.trim() + "%");
@@ -341,6 +366,71 @@ public class ActivityDAO {
         if (relatedType != null && !relatedType.isBlank()) {
             sql.append("AND a.related_type = ? ");
             params.add(relatedType.trim());
+        }
+        if (relatedId != null && relatedId > 0) {
+            sql.append("AND a.related_id = ? ");
+            params.add(relatedId);
+        }
+        if (description != null && !description.isBlank()) {
+            sql.append("AND a.description LIKE ? ");
+            params.add("%" + description.trim() + "%");
+        }
+    }
+
+    private void resolveRelatedName(Activity a) {
+        if (a.getRelatedType() == null || a.getRelatedId() == null) {
+            return;
+        }
+        String type = a.getRelatedType().toLowerCase();
+        String sql = switch (type) {
+            case "customer" -> "SELECT name FROM Customers WHERE customer_id = ?";
+            case "lead" -> "SELECT full_name FROM Leads WHERE lead_id = ?";
+            case "deal" -> "SELECT deal_name FROM Deals WHERE deal_id = ?";
+            case "task" -> "SELECT title FROM Tasks WHERE task_id = ?";
+            default -> null;
+        };
+        if (sql == null) {
+            a.setRelatedName("N/A");
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, a.getRelatedId());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    a.setRelatedName(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            a.setRelatedName("Error");
+        }
+    }
+
+    private void resolveSourceName(Activity a) {
+        if (a.getSourceType() == null || a.getSourceId() == null) {
+            a.setSourceName(null);
+            return;
+        }
+        String type = a.getSourceType().toLowerCase();
+        String sql = switch (type) {
+            case "customer" -> "SELECT name FROM Customers WHERE customer_id = ?";
+            case "lead" -> "SELECT full_name FROM Leads WHERE lead_id = ?";
+            case "deal" -> "SELECT deal_name FROM Deals WHERE deal_id = ?";
+            case "task" -> "SELECT title FROM Tasks WHERE task_id = ?";
+            default -> null;
+        };
+        if (sql == null) {
+            a.setSourceName("N/A");
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, a.getSourceId());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    a.setSourceName(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            a.setSourceName("Error");
         }
     }
 
@@ -362,8 +452,6 @@ public class ActivityDAO {
         a.setActivityType(rs.getString("activity_type"));
         a.setSubject(rs.getString("subject"));
         a.setDescription(rs.getString("description"));
-        a.setEntityType(rs.getString("entity_type"));
-        a.setEntityId(rs.getInt("entity_id"));
         a.setSourceType(rs.getString("source_type"));
         a.setSourceId(rs.getInt("source_id"));
         a.setMetadata(rs.getString("metadata"));
