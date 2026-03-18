@@ -15,6 +15,7 @@ import model.User;
 import service.CampaignService;
 import service.LeadService;
 import util.EmailCheck;
+import util.LeadActivityUtil;
 import util.PhoneCheck;
 
 @WebServlet(name = "LeadFormController", urlPatterns = {"/marketing/leads/form"})
@@ -105,6 +106,16 @@ public class LeadFormController extends HttpServlet {
             // Pass false to allow manual score/status from form
             int newId = leadService.createLead(lead, false);
             if (newId > 0) {
+                // Log activity
+                User sessionUser = (User) request.getSession().getAttribute("user");
+                LeadActivityUtil.logLeadActivity(
+                        newId,
+                        lead.getFullName(),
+                        "Lead Created - " + lead.getFullName(),
+                        "Lead created with email " + lead.getEmail(),
+                        sessionUser
+                );
+
                 request.getSession().setAttribute("successMessage",
                         "Lead \"" + lead.getFullName() + "\" đã được tạo thành công!");
                 response.sendRedirect(request.getContextPath() + "/marketing/leads");
@@ -133,6 +144,16 @@ public class LeadFormController extends HttpServlet {
 
             // Pass false to allow manual score/status from form
             if (leadService.updateLead(lead, false)) {
+                // Log activity
+                User sessionUser = (User) request.getSession().getAttribute("user");
+                LeadActivityUtil.logLeadActivity(
+                        leadId,
+                        lead.getFullName(),
+                        "Lead Updated - " + lead.getFullName(),
+                        "Lead information updated",
+                        sessionUser
+                );
+
                 request.getSession().setAttribute("successMessage",
                         "Lead \"" + lead.getFullName() + "\" đã được cập nhật thành công!");
                 response.sendRedirect(request.getContextPath() + "/marketing/leads");
