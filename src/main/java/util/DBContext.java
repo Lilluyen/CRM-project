@@ -17,7 +17,7 @@ public final class DBContext {
             DB_URL = getEnv("DB_URL",
                     "jdbc:sqlserver://localhost:1433;databaseName=CRM_System;encrypt=false;trustServerCertificate=true");
             DB_USERNAME = getEnv("DB_USERNAME", "sa");
-            DB_PASSWORD = getEnv("DB_PASSWORD", "123");
+            DB_PASSWORD = getEnv("DB_PASSWORD", "123456");
 
             Class.forName(DB_DRIVER);
         } catch (ClassNotFoundException e) {
