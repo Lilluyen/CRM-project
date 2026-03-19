@@ -247,6 +247,20 @@
             <% session.removeAttribute("flashSuccess"); %>
         </c:if>
 
+        <% if ("Overdue".equalsIgnoreCase(task.getStatus())) { %>
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="fa fa-exclamation-circle me-2" style="font-size:1.2rem"></i>
+            <div>
+                <strong>This task is overdue.</strong>
+                <% if (isManager || (task.getCreatedBy() != null && task.getCreatedBy().getUserId() == currentUid)) { %>
+                    You can still modify work items as a manager/owner.
+                <% } else { %>
+                    Work items are locked. Only the manager or task owner can make changes.
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+
         <div class="row g-3">
             <!-- Task info -->
             <div class="col-lg-8">
@@ -483,89 +497,123 @@
     const CUR_UID =<%= currentUid %>;
     const IS_MGR =<%= isManager %>;
     const TASK_STATUS = '<%= task.getStatus() %>';
+    const TASK_OWNER_ID = <%= task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0 %>;
+
+    // Lock state - will be set after loading work items
+    let IS_OVERDUE = false;
+    let CAN_MODIFY = true;
     let allItems = [];
+
     function loadWorkTree(){
     fetch(CTX + '/api/task-comments?taskId=' + TASK_ID)
             .then(r => r.json()).then(d => {
     allItems = d.items || [];
+    IS_OVERDUE = d.isOverdue || false;
+    CAN_MODIFY = d.canModify !== false; // default true
     renderTree();
     updateProgress(d.progressPct, d.completed, d.total);
+    updateUIForOverdue();
     }).catch(() => {});
+    }
+
+    // Update UI based on overdue status and permissions
+    function updateUIForOverdue() {
+        const addForm = document.querySelector('.card.bg-light');
+        if (addForm) {
+            if (!CAN_MODIFY) {
+                addForm.classList.add('opacity-50');
+                const textarea = addForm.querySelector('textarea');
+                const select = addForm.querySelector('select');
+                const buttons = addForm.querySelectorAll('button');
+                if (textarea) { textarea.disabled = true; textarea.placeholder = 'Task is overdue - no modifications allowed'; }
+                if (select) select.disabled = true;
+                buttons.forEach(b => b.disabled = true);
+            } else if (IS_OVERDUE && CAN_MODIFY) {
+                // Manager/owner can modify - show warning
+                const existingWarning = document.getElementById('overdueWarning');
+                if (!existingWarning && addForm) {
+                    const warn = document.createElement('div');
+                    warn.id = 'overdueWarning';
+                    warn.className = 'alert alert-warning py-2 px-3 mb-2';
+                    warn.innerHTML = '<i class="fa fa-exclamation-triangle me-1"></i>Task is overdue. Only manager or owner can modify.';
+                    addForm.querySelector('.card-body').insertBefore(warn, addForm.querySelector('.card-body').firstChild);
+                }
+            }
+        }
     }
 
     function renderTree(){
     const box = document.getElementById('workTree');
     const cnt = document.getElementById('wiCount');
-    const roots = allItems.filter(i => !i.parentCommentId);
     cnt.textContent = allItems.length;
     if (!allItems.length){
     box.innerHTML = '<p class="text-muted small mb-0"><i class="fa fa-inbox me-1"></i>No work items yet.</p>';
     return;
     }
-    box.innerHTML = roots.map(i => renderItem(i)).join('');
+    // Build tree structure with unlimited nesting levels
+    const rootItems = allItems.filter(i => !i.parentCommentId);
+    box.innerHTML = rootItems.map((item, idx) => renderItem(item, 0, idx)).join('');
     }
 
-    function renderItem(item){
+    // Recursive function to render nested subtasks at any depth
+    function renderItem(item, level, index) {
     const children = allItems.filter(i => i.parentCommentId === item.commentId);
     const done = item.isCompleted;
-    const canChk = IS_MGR || item.userId === CUR_UID || item.assignedTo === CUR_UID;
-    const canDel = IS_MGR || item.userId === CUR_UID;
     const av = avColor(item.authorName || '?');
     const body = esc(item.content || '').replace(/@([\S]+)/g, '<span class="mention-tag">@$1</span>');
     const pill = item.assignedTo ? '<span class="assignee-badge ms-1"><i class="fa fa-user-tag"></i>' + esc(item.assignedName || '') + '</span>' : '';
     const stamp = done && item.completedAt ? '<small class="text-success ms-1"><i class="fa fa-check-circle"></i>' + esc(item.completedAt) + '</small>' : '';
-    const childHtml = children.length ? '<div class="wi-replies">' + children.map(c => renderReply(c)).join('') + '</div>' : '';
-    const checkbox = canChk ? '<input type="checkbox" class="wi-check" ' + (done ? 'checked' : '') + ' onchange="toggleDone(' + item.commentId + ',this.checked)">' : '<div style="width:18px;flex-shrink:0"></div>';
-    const deleteBtn = canDel ? '<button class="btn btn-xs btn-outline-danger" style="padding:2px 7px;font-size:.74rem" onclick="delItem(' + item.commentId + ')"><i class="fa fa-trash"></i></button>' : '';
-    return '<div class="wi-root ' + (done ? 'wi-done' : '') + '">' +
+
+    // Permission checks
+    const canChk = CAN_MODIFY && (IS_MGR || item.userId === CUR_UID || item.assignedTo === CUR_UID);
+    const canDel = CAN_MODIFY && (IS_MGR || item.userId === CUR_UID);
+    const canReply = CAN_MODIFY;
+
+    const checkbox = canChk
+        ? '<input type="checkbox" class="wi-check" ' + (done ? 'checked' : '') + ' onchange="toggleDone(' + item.commentId + ',this.checked)">'
+        : '<div style="width:18px;flex-shrink:0"></div>';
+
+    const deleteBtn = canDel
+        ? '<button class="btn btn-xs btn-outline-danger" style="padding:2px 7px;font-size:.74rem" onclick="delItem(' + item.commentId + ')"><i class="fa fa-trash"></i></button>'
+        : '';
+
+    // Visual indent based on nesting level (each level adds 24px indent)
+    const indentPx = level * 24;
+    const levelIndicator = level > 0 ? '<span class="badge bg-secondary ms-2" style="font-size:0.65rem">L' + level + '</span>' : '';
+
+    // Render children recursively if any exist
+    let childHtml = '';
+    if (children.length > 0) {
+        const childItemsHtml = children.map((child, childIdx) => renderItem(child, level + 1, childIdx)).join('');
+        childHtml = '<div class="wi-replies" style="margin-left:24px;border-left:2px solid #e9ecef;padding-left:8px;">' + childItemsHtml + '</div>';
+    }
+
+    return '<div class="wi-root ' + (done ? 'wi-done' : '') + '" data-comment-id="' + item.commentId + '" data-level="' + level + '">' +
         '<div class="wi-header">' +
         checkbox +
         '<div class="av" style="background:' + av + '">' + (item.authorName || '?').charAt(0).toUpperCase() + '</div>' +
         '<div class="flex-grow-1">' +
         '<div class="d-flex align-items-center flex-wrap gap-1 mb-1">' +
         '<strong style="font-size:.87rem">' + esc(item.authorName || '?') + '</strong>' +
-        '<small class="text-muted">' + esc(item.createdAt) + '</small>' + pill + stamp +
+        '<small class="text-muted">' + esc(item.createdAt) + '</small>' + pill + stamp + levelIndicator +
         '</div>' +
         '<div class="wi-content">' + body + '</div>' +
         '</div>' +
         '<div class="d-flex gap-1 flex-shrink-0">' +
-        '<button class="btn btn-xs btn-outline-secondary" style="padding:2px 7px;font-size:.74rem" onclick="showReply(' + item.commentId + ')" title="Reply"><i class="fa fa-reply"></i></button>' +
+        (canReply ? '<button class="btn btn-xs btn-outline-secondary" style="padding:2px 7px;font-size:.74rem" onclick="showReply(' + item.commentId + ')" title="Add subtask"><i class="fa fa-plus"></i></button>' : '') +
         deleteBtn +
         '</div></div>' +
         childHtml +
         '<div class="wi-replies d-none" id="rb-' + item.commentId + '">' +
         '<div class="d-flex gap-2 mt-1">' +
-        '<input id="ri-' + item.commentId + '" class="form-control form-control-sm flex-grow-1" placeholder="Reply…" onkeydown="if(event.key===\'Enter\'){addReply(' + item.commentId + '); event.preventDefault();}">' +
-        '<button class="btn btn-sm btn-primary" onclick="addReply(' + item.commentId + ')">Send</button>' +
+        '<input id="ri-' + item.commentId + '" class="form-control form-control-sm flex-grow-1" placeholder="Add subtask…" onkeydown="if(event.key===\'Enter\'){addReply(' + item.commentId + '); event.preventDefault();}">' +
+        '<button class="btn btn-sm btn-primary" onclick="addReply(' + item.commentId + ')"><i class="fa fa-plus"></i></button>' +
         '<button class="btn btn-sm btn-outline-secondary" onclick="hideReply(' + item.commentId + ')">✕</button>' +
         '</div></div></div>';
-}
-
-function renderReply(item){
-  const done=item.isCompleted;
-  const canChk=IS_MGR||item.userId===CUR_UID||item.assignedTo===CUR_UID;
-  const canDel=IS_MGR||item.userId===CUR_UID;
-  const body=esc(item.content||'').replace(/@([\S]+)/g,'<span class="mention-tag">@$1</span>');
-  const pill=item.assignedTo ? '<span class="assignee-badge ms-1"><i class="fa fa-user-tag"></i>' + esc(item.assignedName || '') + '</span>' : '';
-  const av = avColor(item.authorName || '?');
-  const checkbox = canChk ? '<input type="checkbox" class="wi-check" ' + (done ? 'checked' : '') + ' onchange="toggleDone(' + item.commentId + ',this.checked)">' : '<div style="width:18px"></div>';
-  const deleteBtn = canDel ? '<button class="btn btn-xs btn-outline-danger ms-auto" style="padding:1px 6px;font-size:.72rem" onclick="delItem(' + item.commentId + ')"><i class="fa fa-trash"></i></button>' : '';
-  return '<div class="wi-reply ' + (done ? 'r-done' : '') + '">' +
-      '<div class="d-flex gap-2 align-items-flex-start">' +
-      checkbox +
-      '<div class="av av-sm" style="background:' + av + '">' + (item.authorName || '?').charAt(0).toUpperCase() + '</div>' +
-      '<div class="flex-grow-1">' +
-      '<div class="d-flex align-items-center gap-1 flex-wrap mb-1">' +
-      '<strong style="font-size:.82rem">' + esc(item.authorName || '?') + '</strong>' +
-      '<small class="text-muted">' + esc(item.createdAt) + '</small>' + pill +
-      '</div>' +
-      '<div class="wi-content">' + body + '</div>' +
-      '</div>' +
-      deleteBtn +
-      '</div></div>';
-}
+    }
 
 function addWorkItem(){
+  if (!CAN_MODIFY) { toast('Task is overdue - modifications not allowed', 'warning'); return; }
   const inp=document.getElementById('wiInput');
   const sel=document.getElementById('assignedToSelect');
   const text=(inp.value||'').trim();if(!text){inp.focus();return;}
@@ -582,6 +630,7 @@ function addWorkItem(){
 function showReply(id){document.getElementById('rb-'+id).classList.remove('d-none');document.getElementById('ri-'+id).focus();}
 function hideReply(id){document.getElementById('rb-'+id).classList.add('d-none');}
 function addReply(parentId){
+  if (!CAN_MODIFY) { toast('Task is overdue - modifications not allowed', 'warning'); return; }
   const inp=document.getElementById('ri-'+parentId);
   const text=(inp.value||'').trim();if(!text)return;
   fetch(CTX+'/api/task-comments',{method:'POST',
@@ -591,12 +640,17 @@ function addReply(parentId){
 }
 
 function toggleDone(id,done){
+  if (!CAN_MODIFY) { toast('Task is overdue - modifications not allowed', 'warning'); return; }
   fetch(CTX+'/api/task-comments?id='+id+'&done='+done,{method:'PUT'})
-    .then(r=>r.json()).then(res=>{loadWorkTree();});
+    .then(r=>r.json()).then(res=>{
+        if (res.success) loadWorkTree();
+        else toast(res.message || 'Failed', 'danger');
+    });
 }
 
 function delItem(id){
-  if(!confirm('Delete this work item?'))return;
+  if (!CAN_MODIFY) { toast('Task is overdue - modifications not allowed', 'warning'); return; }
+  if(!confirm('Delete this work item and all subtasks?'))return;
   fetch(CTX+'/api/task-comments?id='+id,{method:'DELETE'})
     .then(r=>r.json()).then(res=>{if(res.success)loadWorkTree();else toast(res.message||'Failed','danger');});
 }
@@ -628,6 +682,7 @@ function reopenTask(){
 /* @mention */
 let mPos=-1,mIdx=0;
 function handleMention(ta){
+  if (!CAN_MODIFY) return;
   const val=ta.value,pos=ta.selectionStart;
   let at=-1;
   for(let i=pos-1;i>=0;i--){if(val[i]==='@'){at=i;break;}if(val[i]===' '||val[i]==='\n')break;}
