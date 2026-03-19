@@ -1,5 +1,6 @@
 package model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -19,7 +20,7 @@ public class Customer {
     private String loyaltyTier;
     private String interest;
 
-    private int rfmScore;
+    private BigDecimal totalSpent;
     private double returnRate;
     private LocalDateTime lastPurchase;
 
@@ -113,12 +114,28 @@ public class Customer {
         this.loyaltyTier = loyaltyTier;
     }
 
-    public int getRfmScore() {
-        return rfmScore;
+    public String getCustomerType() {
+        return customerType;
     }
 
-    public void setRfmScore(int rfmScore) {
-        this.rfmScore = rfmScore;
+    public void setCustomerType(String customerType) {
+        this.customerType = customerType;
+    }
+
+    public String getInterest() {
+        return interest;
+    }
+
+    public void setInterest(String interest) {
+        this.interest = interest;
+    }
+
+    public BigDecimal getTotalSpent() {
+        return totalSpent;
+    }
+
+    public void setTotalSpent(BigDecimal totalSpent) {
+        this.totalSpent = totalSpent;
     }
 
     public double getReturnRate() {

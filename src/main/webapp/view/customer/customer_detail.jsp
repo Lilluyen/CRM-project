@@ -168,10 +168,10 @@
 
                     <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">
-                            RFM Score
+                            Total Spent
                         </span>
                         <span class="customer-detail__metric-value">
-                            ${customerDetail.rfmScore}
+                            ${customerDetail.totalSpent}
                         </span>
                     </div>
 

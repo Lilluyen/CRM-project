@@ -407,7 +407,7 @@
                         <tr>
 
                             <td class="customer-name">
-                                    ${c.name}
+                                <a href="${pageContext.request.contextPath}/customers/detail?customerId=${c.customerId}"> ${c.name}</a>
                             </td>
 
                             <td> ${c.owner}</td>

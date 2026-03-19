@@ -77,7 +77,6 @@ public class CreateDealController extends HttpServlet {
             deal.setOwnerId(request.getSession().getAttribute("user") != null
                     ? ((model.User) request.getSession().getAttribute("user")).getUserId()
                     : 0);
-
             if (deal.getOwnerId() <= 0) {
                 throw new IllegalArgumentException("Owner không hợp lệ. Vui lòng đăng nhập lại.");
             }
@@ -127,9 +126,11 @@ public class CreateDealController extends HttpServlet {
     }
 
     private Deal extractDealFromRequest(HttpServletRequest request) {
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
         String dealName = request.getParameter("dealName");
-        String customerIdStr = request.getParameter("customerId");
-        String leadIdStr = request.getParameter("leadId");
+        String customerIdStr = "";
+        String leadIdStr = "";
         String expectedValueStr = request.getParameter("expectedValue");
         String actualValueStr = request.getParameter("actualValue");
         String stage = request.getParameter("stage");
@@ -143,8 +144,13 @@ public class CreateDealController extends HttpServlet {
         Deal d = new Deal();
         d.setDealName(dealName.trim());
 
-        int customerId = parseInt(customerIdStr);
-        int leadId = parseInt(leadIdStr);
+        int customerId = parseIntSafe(customerIdStr);
+        int leadId = parseIntSafe(leadIdStr);
+        if (relatedType.equalsIgnoreCase("lead")) {
+            leadId = Integer.parseInt(relatedId);
+        } else {
+            customerId = Integer.parseInt(relatedId);
+        }
         d.setCustomerId(customerId);
         d.setLeadId(leadId);
 
@@ -179,9 +185,19 @@ public class CreateDealController extends HttpServlet {
 
     private Deal extractDealFromRequestSafe(HttpServletRequest request) {
         Deal d = new Deal();
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
+        String customerIdStr = "";
+        String leadIdStr = "";
+        d.setCustomerId(parseIntSafe(customerIdStr));
+        d.setLeadId(parseIntSafe(leadIdStr));
+        if (relatedType.equalsIgnoreCase("lead")) {
+            d.setLeadId(parseIntSafe(relatedId));
+        } else {
+            d.setCustomerId(parseIntSafe(relatedId));
+        }
         d.setDealName(request.getParameter("dealName"));
-        d.setCustomerId(parseIntSafe(request.getParameter("customerId")));
-        d.setLeadId(parseIntSafe(request.getParameter("leadId")));
+
         try {
             d.setExpectedValue(parseBigDecimal(request.getParameter("expectedValue"), BigDecimal.ZERO));
         } catch (Exception ignored) {

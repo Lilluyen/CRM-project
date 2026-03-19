@@ -284,6 +284,11 @@
                                         <i class="fa-solid fa-angles-down"></i>
                                         <span>Downgrade</span>
                                     </div>
+                                    <div class="action-menu-item downgrade-item"
+                                         onclick="downgradeCustomer(${c.customerId})">
+                                        <i class="fa-solid fa-handshake"></i>
+                                        <span>Add Deal</span>
+                                    </div>
                                     <div class="action-menu-divider"></div>
                                     <div class="action-menu-item delete-item" onclick="deleteCustomer(${c.customerId})">
                                         <i class="fa-regular fa-trash-can"></i>

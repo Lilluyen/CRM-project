@@ -392,6 +392,11 @@ function downgradeCustomer(customerId) {
     }
 }
 
+function addDealCustomer(customerId) {
+    const ctx = window.__CTX__ || "";
+    const url = `${ctx}/customers/add?customerId=${encodeURIComponent(customerId)}`;
+}
+
 function deleteCustomer(customerId) {
 
     if (confirm('Are you sure you want to delete this customer?')) {

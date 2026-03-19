@@ -157,7 +157,7 @@ public class CustomerDAO {
                         c.source,
                         c.status,
                         c.loyalty_tier,
-                        c.rfm_score,
+                        c.total_spent,
                         c.return_rate,
                         c.last_purchase,
                         u.full_name AS owner_name
@@ -189,7 +189,7 @@ public class CustomerDAO {
                 dto.setSource(rs.getString("source"));
                 dto.setStatus(rs.getString("status"));
                 dto.setLoyaltyTier(rs.getString("loyalty_tier"));
-                dto.setRfmScore(rs.getInt("rfm_score"));
+                dto.setTotalSpent(rs.getBigDecimal("total_spent"));
                 dto.setReturnRate(rs.getDouble("return_rate"));
                 dto.setLastPurchase(
                         rs.getTimestamp("last_purchase") != null

@@ -75,7 +75,7 @@ public class UpdateDealStageController extends HttpServlet {
             customerDAO.updateLastPurchase(conn, customerId);
 
             // 2. tính lại RFM
-            customerDAO.calculateRFM(conn);
+//            customerDAO.calculateRFM(conn);
 
 //            return;
         }

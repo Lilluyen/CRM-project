@@ -29,3 +29,28 @@ ON Segment_Filters(segment_id);
 ALTER TABLE Customers
 ADD CONSTRAINT chk_loyalty_tier
 CHECK (loyalty_tier IN ('GOLD','SILVER','BRONZE', 'PLATINUM', 'DIAMOND', 'BLACKLIST'));
+
+DECLARE @constraintName NVARCHAR(200);
+
+SELECT @constraintName = dc.name
+FROM sys.default_constraints dc
+JOIN sys.columns c 
+    ON dc.parent_object_id = c.object_id 
+    AND dc.parent_column_id = c.column_id
+WHERE c.name = 'rfm_score'
+AND OBJECT_NAME(dc.parent_object_id) = 'Customers';
+
+IF @constraintName IS NOT NULL
+BEGIN
+    EXEC('ALTER TABLE Customers DROP CONSTRAINT ' + @constraintName);
+END
+
+DROP INDEX IX_Customers_Filter ON Customers;
+
+DROP INDEX IX_Customers_rfm_customer ON Customers;
+
+ALTER TABLE Customers
+ADD total_spent DECIMAL(18,2) DEFAULT 0;
+
+ALTER TABLE Customers
+DROP COLUMN rfm_score;
