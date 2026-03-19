@@ -66,10 +66,19 @@ public class UpdateDealStageController extends HttpServlet {
         // 1. Lấy deal
         Deal deal = dealDAO.getById(dealId);
 
-        // 2. Nếu đã có customer → bỏ qua
-//        if (deal.getCustomerId() > 0) {
+
+        if (deal.getCustomerId() != null && deal.getCustomerId() > 0) {
+
+            int customerId = deal.getCustomerId();
+
+            // 1. update last_purchase
+            customerDAO.updateLastPurchase(conn, customerId);
+
+            // 2. tính lại RFM
+            customerDAO.calculateRFM(conn);
+
 //            return;
-//        }
+        }
 
         // 3. Nếu có lead → convert
         if (deal.getLeadId() > 0) {

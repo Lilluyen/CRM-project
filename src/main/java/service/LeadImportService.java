@@ -138,16 +138,25 @@ public class LeadImportService {
             response.setTotalImported(imported);
 
             // Gắn lead mới vào Campaign_Leads nếu có campaign
-            if (campaignId != null && campaignId > 0) {
-                // importLeads dùng batch → cần lấy lại leads vừa tạo để gắn campaign
-                // Vì importLeads không trả về IDs, ta gắn bằng cách query lại
-                for (Lead lead : validLeads) {
-                    Lead created = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), campaignId);
+            // Đồng thời query lại để lấy danh sách lead đã import (cho activity logging)
+            for (Lead lead : validLeads) {
+                Lead created;
+                if (campaignId != null && campaignId > 0) {
+                    // Query by email + campaign
+                    created = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), campaignId);
                     if (created != null) {
                         if (!campaignLeadDAO.isLeadInCampaign(campaignId, created.getLeadId())) {
                             campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), "NEW");
                         }
                     }
+                } else {
+                    // Query by email only (no campaign)
+                    created = leadDAO.findLeadByEmail(lead.getEmail());
+                }
+
+                // Add to response for activity logging
+                if (created != null) {
+                    response.addImportedLead(created);
                 }
             }
 

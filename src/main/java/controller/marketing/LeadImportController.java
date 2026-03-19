@@ -21,6 +21,7 @@ import model.Lead;
 import model.User;
 import service.LeadImportService;
 import util.ExcelUtil;
+import util.LeadActivityUtil;
 
 @WebServlet(name = "LeadImportController", urlPatterns = {"/marketing/leads/import"})
 @MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 5 * 1024 * 1024)
@@ -137,6 +138,20 @@ public class LeadImportController extends HttpServlet {
                     importResponse.addError(err);
                 }
                 importResponse.setTotalFailed(importResponse.getTotalFailed() + parseErrors.size());
+            }
+
+            // ===== Log Activity for imported leads =====
+            if (importResponse.isSuccess()) {
+                User sessionUser = (User) request.getSession().getAttribute("user");
+                for (Lead imported : importResponse.getImportedLeads()) {
+                    LeadActivityUtil.logLeadActivity(
+                            imported.getLeadId(),
+                            imported.getFullName(),
+                            "Lead Imported - " + imported.getFullName(),
+                            "Lead imported from Excel file",
+                            sessionUser
+                    );
+                }
             }
 
             // ===== Response =====

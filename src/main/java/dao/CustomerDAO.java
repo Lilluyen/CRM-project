@@ -313,8 +313,8 @@ public class CustomerDAO {
 
     public int insertFromLead(Connection conn, Lead lead) throws SQLException {
         String sql = """
-                    INSERT INTO Customers (name, phone, email, source, status, owner_id, created_at, updated_at, interest, [last_purchase])
-                    VALUES (?, ?, ?, ?, 'ACTIVE', ?, GETDATE(), GETDATE(), ?, GETDATE())
+                    INSERT INTO Customers (name, phone, email, source, status, owner_id, created_at, updated_at, interest, [last_purchase] )
+                    VALUES (?, ?, ?, ?, 'ACTIVE', ?, GETDATE(), GETDATE(), ?, GETDATE() )
                 """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -364,5 +364,32 @@ public class CustomerDAO {
 
         }
         return null;
+    }
+
+    public void updateLastPurchase(Connection conn, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Customers
+                    SET last_purchase = (
+                        SELECT MAX(updated_at)
+                        FROM Deals
+                        WHERE customer_id = ?
+                          AND stage = 'Closed Won'
+                    )
+                    WHERE customer_id = ?
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void calculateRFM(Connection conn) throws SQLException {
+        String sql = "{CALL sp_Calculate_RFM}";
+
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            cs.execute();
+        }
     }
 }

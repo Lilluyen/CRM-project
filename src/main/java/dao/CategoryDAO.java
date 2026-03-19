@@ -212,8 +212,15 @@ public class CategoryDAO {
     // ==============================
     public void delete(int id) throws SQLException {
 
-        String sql = "DELETE FROM Categories WHERE category_id = ?";
+        // Xóa foreign key trong Category_Products trước
+        String deleteCategoryProducts = "DELETE FROM Category_Products WHERE category_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(deleteCategoryProducts)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
 
+        // Sau đó mới xóa Category
+        String sql = "DELETE FROM Categories WHERE category_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
