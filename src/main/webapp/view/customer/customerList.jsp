@@ -144,7 +144,7 @@
                     </button>
 
 
-                    <button class="advance-filter btn-filter btn-primary" style="margin-top: -122px"
+                    <button class="advance-filter btn-filter btn-primary" style="margin-top: -122px;transform: translate(50px, -3px);"
                             onclick="openAdvancedFilter()">
                         <i class="fas fa-sliders-h"></i>
                         <span>Advanced Filter</span>

@@ -107,7 +107,7 @@
             <h6><%= task.getTitle() != null ? org.apache.taglibs.standard.functions.Functions.escapeXml(task.getTitle()) : "#" + task.getTaskId() %></h6>
         </div>
         <div class="d-flex gap-2">
-            <a href="<%= ctx %>/tasks/detail?id=<%= task.getTaskId() %>" class="btn btn-outline-primary">
+            <a href="<%= ctx %>/tasks/details?id=<%= task.getTaskId() %>" class="btn btn-outline-primary">
                 <i class="fa fa-edit me-1"></i>Edit Task</a>
             <a href="<%= ctx %>/tasks/list" class="btn btn-outline-secondary">
                 <i class="fa fa-arrow-left me-1"></i>Back to List</a>

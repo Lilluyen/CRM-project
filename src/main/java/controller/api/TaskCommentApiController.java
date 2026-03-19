@@ -71,7 +71,8 @@ public class TaskCommentApiController extends HttpServlet {
         catch (Exception e) { writeJson(resp, 400, fail("Missing taskId")); return; }
 
         try (Connection conn = DBContext.getConnection()) {
-            if (new TaskService(conn).getTaskById(taskId) == null) {
+            model.Task task = new TaskService(conn).getTaskById(taskId);
+            if (task == null) {
                 writeJson(resp, 404, fail("Task not found")); return;
             }
 
@@ -88,11 +89,17 @@ public class TaskCommentApiController extends HttpServlet {
             int completed = prog[1];
             int progressPct = total > 0 ? (int) Math.round((double) completed / total * 100) : 0;
 
+            // Return overdue lock info so frontend can disable UI
+            boolean overdue = isTaskOverdue(task);
+            boolean canModify = !overdue || canModifyOverdueTask(user, task);
+
             JsonObject root = new JsonObject();
             root.addProperty("count",       items.size());
             root.addProperty("total",       total);
             root.addProperty("completed",   completed);
             root.addProperty("progressPct", progressPct);
+            root.addProperty("isOverdue",   overdue);
+            root.addProperty("canModify",   canModify);
             root.add("items", arr);
             writeJson(resp, 200, GSON.toJson(root));
 
@@ -120,6 +127,11 @@ public class TaskCommentApiController extends HttpServlet {
             model.Task task = taskSvc.getTaskById(body.taskId);
             if (task == null) {
                 writeJson(resp, 404, fail("Task not found")); return;
+            }
+
+            // Check if task is overdue - only manager or task owner can modify
+            if (isTaskOverdue(task) && !canModifyOverdueTask(user, task)) {
+                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify.")); return;
             }
 
             TaskComment item = new TaskComment();
@@ -240,6 +252,13 @@ public class TaskCommentApiController extends HttpServlet {
                 writeJson(resp, 404, fail("Work item not found")); return;
             }
 
+            // Check if task is overdue - only manager or task owner can modify
+            TaskService taskSvcPut = new TaskService(conn);
+            model.Task taskPut = taskSvcPut.getTaskById(existing.getTaskId());
+            if (taskPut != null && isTaskOverdue(taskPut) && !canModifyOverdueTask(user, taskPut)) {
+                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify.")); return;
+            }
+
             // Permission: the assigned user OR creator OR manager can complete
             boolean canComplete = existing.getCreatedBy()== user.getUserId()
                     || (existing.getAssignedTo() != null && existing.getAssignedTo() == user.getUserId())
@@ -322,6 +341,13 @@ public class TaskCommentApiController extends HttpServlet {
                 writeJson(resp, 404, fail("Not found")); return;
             }
 
+            // Check if task is overdue - only manager or task owner can modify
+            TaskService taskSvcDel = new TaskService(conn);
+            model.Task taskDel = taskSvcDel.getTaskById(existing.getTaskId());
+            if (taskDel != null && isTaskOverdue(taskDel) && !canModifyOverdueTask(user, taskDel)) {
+                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify.")); return;
+            }
+
             boolean isOwner = existing.getCreatedBy()== user.getUserId();
             if (!isOwner && !isManagerOrAdmin(user)) {
                 writeJson(resp, 403, fail("Forbidden")); return;
@@ -370,6 +396,27 @@ public class TaskCommentApiController extends HttpServlet {
         return rid == 1 || rid == 5
                 || "ADMIN".equalsIgnoreCase(user.getRole().getRoleName())
                 || "MANAGER".equalsIgnoreCase(user.getRole().getRoleName());
+    }
+
+    /**
+     * Check if a task is in overdue status.
+     */
+    private static boolean isTaskOverdue(model.Task task) {
+        if (task == null || task.getStatus() == null) return false;
+        return "OVERDUE".equalsIgnoreCase(task.getStatus());
+    }
+
+    /**
+     * Check if user can modify an overdue task.
+     * Only manager/admin or the task owner can modify.
+     */
+    private static boolean canModifyOverdueTask(User user, model.Task task) {
+        if (user == null || task == null) return false;
+        // Manager or Admin can modify
+        if (isManagerOrAdmin(user)) return true;
+        // Task owner can modify
+        if (task.getCreatedBy() != null && task.getCreatedBy().getUserId() == user.getUserId()) return true;
+        return false;
     }
 
     private static String truncate(String s, int max) {

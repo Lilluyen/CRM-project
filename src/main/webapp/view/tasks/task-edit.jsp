@@ -121,11 +121,17 @@
             <%-- Status – editable for everyone --%>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Status</label>
+              <% if (canEditDuePriority) { %>
               <select name="status" class="form-select">
                 <% for (String s : new String[]{"Pending","In Progress","Done","Overdue","Cancelled"}) { %>
                 <option value="<%= s %>" <%= s.equalsIgnoreCase(task.getStatus()) ? "selected" : "" %>><%= s %></option>
                 <% } %>
               </select>
+              <% } else { %>
+              <input type="text" class="form-control" value="<%= task.getStatus() %>" readonly>
+              <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Locked</small>
+              <% } %>
+              
             </div>
 
             <%-- Due Date – manager only --%>

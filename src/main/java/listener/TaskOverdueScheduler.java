@@ -34,9 +34,9 @@ import java.util.logging.Logger;
  *   BATCH_SIZE            – số task tối đa xử lý mỗi lần chạy (default 500)
  */
 @WebListener
-public class TaskOverdueScheduler implements ServletContextListener {
+public class TaskOverDueScheduler implements ServletContextListener {
 
-    private static final Logger LOG = Logger.getLogger(TaskOverdueScheduler.class.getName());
+    private static final Logger LOG = Logger.getLogger(TaskOverDueScheduler.class.getName());
 
     private static final long INITIAL_DELAY_SECONDS = 1;
     private static final long INTERVAL_SECONDS      = 1;

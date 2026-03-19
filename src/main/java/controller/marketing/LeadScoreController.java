@@ -7,7 +7,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Lead;
+import model.User;
 import service.LeadService;
+import util.LeadActivityUtil;
 
 @WebServlet(name = "LeadScoreController", urlPatterns = {"/marketing/leads/score"})
 public class LeadScoreController extends HttpServlet {
@@ -34,6 +37,18 @@ public class LeadScoreController extends HttpServlet {
             int score = Integer.parseInt(scoreStr);
 
             if (leadService.scoreLead(leadId, score)) {
+                // Log activity
+                User sessionUser = (User) request.getSession().getAttribute("user");
+                Lead lead = leadService.getLeadById(leadId);
+                String leadName = (lead != null) ? lead.getFullName() : "ID " + leadId;
+                LeadActivityUtil.logLeadActivity(
+                        leadId,
+                        leadName,
+                        "Lead Score Updated - " + leadName,
+                        "Score updated to " + score,
+                        sessionUser
+                );
+
                 response.getWriter().write("{\"success\": true, \"message\": \"Cập nhật điểm thành công.\"}");
             } else {
                 response.getWriter().write("{\"success\": false, \"message\": \"Lead không tồn tại.\"}");
