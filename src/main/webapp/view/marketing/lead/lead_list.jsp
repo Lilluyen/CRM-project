@@ -233,6 +233,10 @@
                                                class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            <a href="${pageContext.request.contextPath}/sale/deal/create"
+                                               class="btn btn-sm btn-outline-warning ms-1" title="Tạo Deal">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 </c:forEach>
