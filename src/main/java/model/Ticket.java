@@ -1,9 +1,10 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Ticket {
-     private int ticketId;
+    private int ticketId;
     private int customerId;
     private String subject;
     private String description;
@@ -91,12 +92,26 @@ public class Ticket {
         return createdAt;
     }
 
+    public String getCreatedAtFormatted() {
+        if (createdAt == null) return "";
+        return createdAt.format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+        );
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public String getUpdatedAtFormatted() {
+        if (updatedAt == null) return "";
+        return updatedAt.format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+        );
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {

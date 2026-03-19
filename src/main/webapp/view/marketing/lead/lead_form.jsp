@@ -1,0 +1,282 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+
+<div class="">
+    <div class="container-fluid py-4">
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">
+                    <c:choose>
+                        <c:when test="${lead.leadId > 0}">
+                            <i class="fas fa-edit me-2"></i>Chỉnh sửa Lead
+                        </c:when>
+                        <c:otherwise>
+                            <i class="fas fa-plus-circle me-2"></i>Tạo Lead Mới
+                        </c:otherwise>
+                    </c:choose>
+                </h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="${pageContext.request.contextPath}/marketing/leads">Leads</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <c:choose>
+                                <c:when test="${lead.leadId > 0}">Chỉnh sửa</c:when>
+                                <c:otherwise>Tạo mới</c:otherwise>
+                            </c:choose>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <a href="${pageContext.request.contextPath}/marketing/leads"
+               class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+
+        <!-- Error Alert -->
+        <c:if test="${not empty error}">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                <strong>Lỗi!</strong> ${error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+
+        <!-- Form -->
+        <div class="form-container">
+            <form id="leadForm" method="POST"
+                  action="${pageContext.request.contextPath}/marketing/leads/form"
+                  novalidate>
+                <c:if test="${lead.leadId > 0}">
+                    <input type="hidden" name="leadId" value="${lead.leadId}">
+                </c:if>
+
+                <!-- Section 1: Thông tin cơ bản -->
+                <div class="form-section">
+                    <h5><i class="fas fa-user me-1"></i> Thông tin Lead</h5>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="fullName" class="form-label required">Họ tên</label>
+                                <input type="text" class="form-control" id="fullName" name="fullName"
+                                       value="${lead.fullName}" placeholder="VD: Nguyễn Văn A"
+                                       maxlength="100" required>
+                                <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="email" class="form-label required">Email</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       value="${lead.email}" placeholder="VD: nguyenvana@company.com"
+                                       maxlength="100" required>
+                                <div class="invalid-feedback">Vui lòng nhập email hợp lệ.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="phone" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="phone" name="phone"
+                                       value="${lead.phone}" placeholder="VD: 0901234567"
+                                       maxlength="20">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="interest" class="form-label">Sở thích / Quan tâm</label>
+                                <input type="text" class="form-control" id="interest" name="interest"
+                                       value="${lead.interest}" placeholder="VD: Sản phẩm A, Dịch vụ B"
+                                       maxlength="255">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Nguồn & Campaign -->
+                <div class="form-section">
+                    <h5><i class="fas fa-bullhorn me-1"></i> Nguồn & Campaign</h5>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="source" class="form-label">Nguồn Lead</label>
+                                <select class="form-select" id="source" name="source">
+                                    <option value="">-- Chọn nguồn --</option>
+                                    <option value="Website"      ${lead.source == 'Website'      ? 'selected' : ''}>Website</option>
+                                    <option value="Facebook"     ${lead.source == 'Facebook'     ? 'selected' : ''}>Facebook</option>
+                                    <option value="LinkedIn"     ${lead.source == 'LinkedIn'     ? 'selected' : ''}>LinkedIn</option>
+                                    <option value="Referral"     ${lead.source == 'Referral'     ? 'selected' : ''}>Referral</option>
+                                    <option value="Seminar"      ${lead.source == 'Seminar'      ? 'selected' : ''}>Seminar</option>
+                                    <option value="Email"        ${lead.source == 'Email'        ? 'selected' : ''}>Email Campaign</option>
+                                    <option value="Cold Call"    ${lead.source == 'Cold Call'    ? 'selected' : ''}>Cold Call</option>
+                                    <option value="Import"       ${lead.source == 'Import'       ? 'selected' : ''}>Import File</option>
+                                    <option value="Other"        ${lead.source == 'Other'        ? 'selected' : ''}>Khác</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="campaignId" class="form-label">Campaign</label>
+                                <select class="form-select" id="campaignId" name="campaignId">
+                                    <option value="0">-- Không thuộc campaign --</option>
+                                    <c:forEach var="campaign" items="${campaigns}">
+                                        <option value="${campaign.campaignId}"
+                                            ${lead.campaignId == campaign.campaignId ? 'selected' : ''}>
+                                            ${campaign.name}
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-group">
+                                <label for="assignedTo" class="form-label">Assigned To</label>
+                                <select class="form-select" id="assignedTo" name="assignedTo">
+                                    <option value="0">-- Chưa phân công --</option>
+                                    <c:forEach var="user" items="${users}">
+                                        <option value="${user.userId}"
+                                            ${lead.assignedTo == user.userId ? 'selected' : ''}>
+                                            ${user.fullName} (${user.role.roleName})
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Trạng thái & Điểm (chỉ cho edit mode, read-only) -->
+                <c:if test="${lead.leadId > 0}">
+                    <div class="form-section">
+                        <h5><i class="fas fa-chart-line me-1"></i> Trạng thái & Điểm số</h5>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="field-group">
+                                    <label class="form-label">Trạng thái</label>
+                                    <input type="text" class="form-control" value="${lead.status}" disabled>
+                                    <small class="form-text text-muted">Trạng thái được tự động xác định theo điểm</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="field-group">
+                                    <label class="form-label">Điểm số</label>
+                                    <input type="text" class="form-control" value="${lead.score}" disabled>
+                                    <small class="form-text text-muted">Họ tên +20 | Email +20 | SĐT +20 | Campaign +10</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </c:if>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <a href="${pageContext.request.contextPath}/marketing/leads"
+                       class="btn btn-large btn-cancel">
+                        <i class="fas fa-times-circle me-1"></i> Hủy
+                    </a>
+
+                    <c:choose>
+                        <c:when test="${lead.leadId > 0}">
+                            <button type="submit" class="btn btn-large btn-save">
+                                <i class="fas fa-check-circle me-1"></i> Cập nhật
+                            </button>
+                        </c:when>
+                        <c:otherwise>
+                            <button type="reset" class="btn btn-large btn-delete">
+                                <i class="fas fa-eraser me-1"></i> Làm trống
+                            </button>
+                            <button type="submit" class="btn btn-large btn-save">
+                                <i class="fas fa-plus-circle me-1"></i> Tạo mới
+                            </button>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('leadForm');
+
+        document.addEventListener('DOMContentLoaded', function () {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (validateForm()) {
+                    form.submit();
+                } else {
+                    form.classList.add('was-validated');
+                    scrollToFirstError();
+                }
+            }, false);
+        });
+
+        function validateForm() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!fullName) {
+                showFieldError('fullName', 'Vui lòng nhập họ tên.');
+                return false;
+            }
+            if (!email) {
+                showFieldError('email', 'Vui lòng nhập email.');
+                return false;
+            }
+            // Simple email format check
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showFieldError('email', 'Email không đúng định dạng.');
+                return false;
+            }
+
+            const scoreField = document.getElementById('score');
+            if (scoreField) {
+                const score = parseInt(scoreField.value);
+                if (scoreField.value !== '' && (isNaN(score) || score < 0 || score > 100)) {
+                    showFieldError('score', 'Điểm số phải từ 0 đến 100.');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.classList.add('is-invalid');
+                const feedback = field.parentElement.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.textContent = message;
+                }
+            }
+        }
+
+        function scrollToFirstError() {
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+    </script>
+</div>

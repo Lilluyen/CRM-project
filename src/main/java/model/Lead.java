@@ -8,27 +8,29 @@ public class Lead {
     private String fullName;
     private String email;
     private String phone;
-    private String companyName;
     private String interest;
     private String source;
     private String status;
     private int score;
     private int campaignId;
-    private int assignedTo;
+    private String campaignName; // transient - lấy từ JOIN Campaigns
+    private Integer assignedTo;
+    private String assignedToName; // transient - lấy từ JOIN Users
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean isConverted;
+    private int convertedCustomerId;
 
     public Lead() {
     }
 
-    public Lead(int leadId, String fullName, String email, String phone, String companyName,
-            String interest, String source, String status, int score, int campaignId, int assignedTo,
-            LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Lead(int leadId, String fullName, String email, String phone,
+                String interest, String source, String status, int score, int campaignId, int assignedTo,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.leadId = leadId;
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
-        this.companyName = companyName;
         this.interest = interest;
         this.source = source;
         this.status = status;
@@ -72,14 +74,6 @@ public class Lead {
         this.phone = phone;
     }
 
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
-
     public String getInterest() {
         return interest;
     }
@@ -112,12 +106,28 @@ public class Lead {
         this.campaignId = campaignId;
     }
 
-    public int getAssignedTo() {
+    public String getCampaignName() {
+        return campaignName;
+    }
+
+    public void setCampaignName(String campaignName) {
+        this.campaignName = campaignName;
+    }
+
+    public Integer getAssignedTo() {
         return assignedTo;
     }
 
     public void setAssignedTo(int assignedTo) {
         this.assignedTo = assignedTo;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -144,4 +154,19 @@ public class Lead {
         this.score = score;
     }
 
+    public boolean isConverted() {
+        return isConverted;
+    }
+
+    public void setConverted(boolean converted) {
+        isConverted = converted;
+    }
+
+    public int getConvertedCustomerId() {
+        return convertedCustomerId;
+    }
+
+    public void setConvertedCustomerId(int convertedCustomerId) {
+        this.convertedCustomerId = convertedCustomerId;
+    }
 }

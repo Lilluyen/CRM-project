@@ -12,11 +12,12 @@ public class Customer {
     private LocalDate birthday;
     private String gender;
     private String address;
-    private String socialLink;
-
+    private String source;
     private String customerType;
+
     private String status;
     private String loyaltyTier;
+    private String interest;
 
     private int rfmScore;
     private double returnRate;
@@ -88,20 +89,12 @@ public class Customer {
         this.address = address;
     }
 
-    public String getSocialLink() {
-        return socialLink;
+    public String getSource() {
+        return source;
     }
 
-    public void setSocialLink(String socialLink) {
-        this.socialLink = socialLink;
-    }
-
-    public String getCustomerType() {
-        return customerType;
-    }
-
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public String getStatus() {
@@ -166,5 +159,10 @@ public class Customer {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getLastPurchaseDate() {
+        if (lastPurchase == null) return "";
+        return lastPurchase.toLocalDate().toString();
     }
 }

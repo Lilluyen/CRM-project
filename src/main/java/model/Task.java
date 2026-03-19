@@ -1,123 +1,107 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- *
- * @author Pham Minh Quan
+ * Maps to [dbo].[Tasks] table.
  */
 public class Task {
-    private Integer taskId;
-    private String title;
-    private String description;
-    private String relatedType;
-    private Integer relatedId;
-    private Integer assignedTo;
-    private String priority;
-    private String status;
-    private java.time.LocalDate dueDate;
-    private java.time.LocalDateTime createdAt;
+    private Integer taskId;              // task_id INT IDENTITY PK
+    private String title;                // title NVARCHAR(200) NOT NULL
+    private String description;          // description NVARCHAR(MAX)
+    private String status;               // status VARCHAR(30) NOT NULL, DEFAULT 'Pending'
+    private String priority;             // priority VARCHAR(20) NOT NULL, DEFAULT 'Medium'
+    private LocalDateTime dueDate;       // due_date DATETIME
+    private LocalDateTime startDate;     // start_date DATETIME
+    private LocalDateTime completedAt;   // completed_at DATETIME
+    private LocalDateTime cancelledAt;   // ✅ THÊM MỚI - cancelled_at DATETIME NULL
+    private Integer progress;            // progress INT NOT NULL, DEFAULT 0
+    private User createdBy;              // created_by INT NOT NULL -> Users(user_id)
+    private LocalDateTime createdAt;     // created_at DATETIME NOT NULL
+    private LocalDateTime updatedAt;     // updated_at DATETIME
+    private String relatedType;          // related_type VARCHAR(50)
+    private Integer relatedId;           // related_id INT
 
-    public Task() {
-    }
+    private List<TaskAssignee> assignees;
+    private List<TaskHistory> historys;
 
-    public Task(Integer taskId, String title, String description, String relatedType, Integer relatedId, Integer assignedTo, String priority, String status, LocalDate dueDate, LocalDateTime createdAt) {
+    public Task() {}
+
+    public Task(Integer taskId, String title, String description, String status,
+                String priority, LocalDateTime dueDate, LocalDateTime startDate,
+                LocalDateTime completedAt, LocalDateTime cancelledAt,
+                Integer progress, User createdBy,
+                LocalDateTime createdAt, LocalDateTime updatedAt,
+                String relatedType, Integer relatedId,
+                List<TaskAssignee> assignees, List<TaskHistory> historys) {
         this.taskId = taskId;
         this.title = title;
         this.description = description;
+        this.status = status;
+        this.priority = priority;
+        this.dueDate = dueDate;
+        this.startDate = startDate;
+        this.completedAt = completedAt;
+        this.cancelledAt = cancelledAt;
+        this.progress = progress;
+        this.createdBy = createdBy;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.relatedType = relatedType;
         this.relatedId = relatedId;
-        this.assignedTo = assignedTo;
-        this.priority = priority;
-        this.status = status;
-        this.dueDate = dueDate;
-        this.createdAt = createdAt;
+        this.assignees = assignees;
+        this.historys = historys;
     }
 
-    public Integer getTaskId() {
-        return taskId;
-    }
+    public Integer getTaskId() { return taskId; }
+    public void setTaskId(Integer taskId) { this.taskId = taskId; }
 
-    public void setTaskId(Integer taskId) {
-        this.taskId = taskId;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public String getDescription() {
-        return description;
-    }
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public LocalDateTime getDueDate() { return dueDate; }
+    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
 
-    public String getRelatedType() {
-        return relatedType;
-    }
+    public LocalDateTime getStartDate() { return startDate; }
+    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
 
-    public void setRelatedType(String relatedType) {
-        this.relatedType = relatedType;
-    }
+    public LocalDateTime getCompletedAt() { return completedAt; }
+    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
 
-    public Integer getRelatedId() {
-        return relatedId;
-    }
+    public LocalDateTime getCancelledAt() { return cancelledAt; }
+    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
 
-    public void setRelatedId(Integer relatedId) {
-        this.relatedId = relatedId;
-    }
+    public Integer getProgress() { return progress; }
+    public void setProgress(Integer progress) { this.progress = progress; }
 
-    public Integer getAssignedTo() {
-        return assignedTo;
-    }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
-    public void setAssignedTo(Integer assignedTo) {
-        this.assignedTo = assignedTo;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public String getPriority() {
-        return priority;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setPriority(String priority) {
-        this.priority = priority;
-    }
+    public String getRelatedType() { return relatedType; }
+    public void setRelatedType(String relatedType) { this.relatedType = relatedType; }
 
-    public String getStatus() {
-        return status;
-    }
+    public Integer getRelatedId() { return relatedId; }
+    public void setRelatedId(Integer relatedId) { this.relatedId = relatedId; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public List<TaskAssignee> getAssignees() { return assignees; }
+    public void setAssignees(List<TaskAssignee> assignees) { this.assignees = assignees; }
 
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(LocalDate dueDate) {
-        this.dueDate = dueDate;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
+    public List<TaskHistory> getHistorys() { return historys; }
+    public void setHistorys(List<TaskHistory> historys) { this.historys = historys; }
 }
-

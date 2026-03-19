@@ -1,19 +1,18 @@
 package dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.math.BigDecimal;
-
 
 public class CustomerCreateDTO {
-
     
+    private  int customer_id;
     private String name;
     private String phone;
     private String gender;
     private String email;
     private LocalDate birthday;
-    private String socialLink;
+    private String source;
     private String address;
 
     private BigDecimal height;
@@ -27,8 +26,7 @@ public class CustomerCreateDTO {
 
     private String bodyShape;
 
-    private List<String> styleTags;
-
+    private List<Integer> styleTags;
 
     public String getName() {
         return name;
@@ -44,6 +42,14 @@ public class CustomerCreateDTO {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public int getCustomer_id() {
+        return customer_id;
+    }
+
+    public void setCustomer_id(int customer_id) {
+        this.customer_id = customer_id;
     }
 
     public String getGender() {
@@ -70,12 +76,12 @@ public class CustomerCreateDTO {
         this.birthday = birthday;
     }
 
-    public String getSocialLink() {
-        return socialLink;
+    public String getSource() {
+        return source;
     }
 
-    public void setSocialLink(String socialLink) {
-        this.socialLink = socialLink;
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public String getAddress() {
@@ -150,11 +156,11 @@ public class CustomerCreateDTO {
         this.bodyShape = bodyShape;
     }
 
-    public List<String> getStyleTags() {
+    public List<Integer> getStyleTags() {
         return styleTags;
     }
 
-    public void setStyleTags(List<String> styleTags) {
+    public void setStyleTags(List<Integer> styleTags) {
         this.styleTags = styleTags;
     }
 }

@@ -1,16 +1,58 @@
 package dao;
 
+import model.Role;
+import model.User;
+import util.DBContext;
+
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import model.Role;
-import model.User;
-import util.DBContext;
+public class UserDAO {
 
-public class UserDAO extends DBContext {
+    /*
+     * =========================
+     * MAP RESULTSET → USER
+     * =========================
+     */
+    private User mapUser(ResultSet rs) throws SQLException {
+
+        User user = new User();
+
+        user.setUserId(rs.getInt("user_id"));
+        user.setUsername(rs.getString("username"));
+        user.setPasswordHash(rs.getString("password_hash"));
+        user.setEmail(rs.getString("email"));
+        user.setFullName(rs.getString("full_name"));
+        user.setPhone(rs.getString("phone"));
+        user.setStatus(rs.getString("status"));
+
+        if (rs.getTimestamp("created_at") != null) {
+            user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        }
+
+        if (rs.getTimestamp("updated_at") != null) {
+            user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        }
+
+        if (rs.getTimestamp("last_login_at") != null) {
+            user.setLastLoginAt(rs.getTimestamp("last_login_at").toLocalDateTime());
+        }
+
+        // Map role (1 role duy nhất)
+        if (rs.getInt("role_id") != 0) {
+            Role role = new Role();
+            role.setRoleId(rs.getInt("role_id"));
+            role.setRoleName(rs.getString("role_name"));
+            role.setDescription(rs.getString("description"));
+            user.setRole(role);
+        }
+
+        return user;
+    }
 
     /*
      * =========================
@@ -35,65 +77,24 @@ public class UserDAO extends DBContext {
                         r.role_name,
                         r.description
                     FROM Users u
-                    LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
-                    LEFT JOIN Roles r ON ur.role_id = r.role_id
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
                     WHERE u.user_id = ?
                 """;
 
-        User user = null;
-        List<Role> roles = new ArrayList<>();
-
-        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
 
-            while (rs.next()) {
-
-                if (user == null) {
-                    user = new User();
-                    user.setUserId(rs.getInt("user_id"));
-                    user.setUsername(rs.getString("username"));
-                    user.setPasswordHash(rs.getString("password_hash"));
-                    user.setEmail(rs.getString("email"));
-                    user.setFullName(rs.getString("full_name"));
-                    user.setPhone(rs.getString("phone"));
-                    user.setStatus(rs.getString("status"));
-
-                    user.setCreatedAt(
-                            rs.getTimestamp("created_at") != null
-                                    ? rs.getTimestamp("created_at").toLocalDateTime()
-                                    : null);
-
-                    user.setUpdatedAt(
-                            rs.getTimestamp("updated_at") != null
-                                    ? rs.getTimestamp("updated_at").toLocalDateTime()
-                                    : null);
-
-                    user.setLastLoginAt(
-                            rs.getTimestamp("last_login_at") != null
-                                    ? rs.getTimestamp("last_login_at").toLocalDateTime()
-                                    : null);
-                }
-
-                if (rs.getInt("role_id") != 0) {
-                    Role role = new Role();
-                    role.setRoleId(rs.getInt("role_id"));
-                    role.setRoleName(rs.getString("role_name"));
-                    role.setDescription(rs.getString("description"));
-                    roles.add(role);
-                }
-            }
-
-            if (user != null) {
-                user.setRoles(roles);
+            if (rs.next()) {
+                return mapUser(rs);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return user;
+        return null;
     }
 
     /*
@@ -119,65 +120,24 @@ public class UserDAO extends DBContext {
                         r.role_name,
                         r.description
                     FROM Users u
-                    LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
-                    LEFT JOIN Roles r ON ur.role_id = r.role_id
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
                     WHERE u.username = ?
                 """;
 
-        User user = null;
-        List<Role> roles = new ArrayList<>();
-
-        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
 
-            while (rs.next()) {
-
-                if (user == null) {
-                    user = new User();
-                    user.setUserId(rs.getInt("user_id"));
-                    user.setUsername(rs.getString("username"));
-                    user.setPasswordHash(rs.getString("password_hash"));
-                    user.setEmail(rs.getString("email"));
-                    user.setFullName(rs.getString("full_name"));
-                    user.setPhone(rs.getString("phone"));
-                    user.setStatus(rs.getString("status"));
-
-                    user.setCreatedAt(
-                            rs.getTimestamp("created_at") != null
-                                    ? rs.getTimestamp("created_at").toLocalDateTime()
-                                    : null);
-
-                    user.setUpdatedAt(
-                            rs.getTimestamp("updated_at") != null
-                                    ? rs.getTimestamp("updated_at").toLocalDateTime()
-                                    : null);
-
-                    user.setLastLoginAt(
-                            rs.getTimestamp("last_login_at") != null
-                                    ? rs.getTimestamp("last_login_at").toLocalDateTime()
-                                    : null);
-                }
-
-                if (rs.getInt("role_id") != 0) {
-                    Role role = new Role();
-                    role.setRoleId(rs.getInt("role_id"));
-                    role.setRoleName(rs.getString("role_name"));
-                    role.setDescription(rs.getString("description"));
-                    roles.add(role);
-                }
-            }
-
-            if (user != null) {
-                user.setRoles(roles);
+            if (rs.next()) {
+                return mapUser(rs);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return user;
+        return null;
     }
 
     /*
@@ -203,64 +163,248 @@ public class UserDAO extends DBContext {
                         r.role_name,
                         r.description
                     FROM Users u
-                    LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
-                    LEFT JOIN Roles r ON ur.role_id = r.role_id
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
                     WHERE u.email = ?
                 """;
 
-        User user = null;
-        List<Role> roles = new ArrayList<>();
-
-        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
 
-            while (rs.next()) {
-
-                if (user == null) {
-                    user = new User();
-                    user.setUserId(rs.getInt("user_id"));
-                    user.setUsername(rs.getString("username"));
-                    user.setPasswordHash(rs.getString("password_hash"));
-                    user.setEmail(rs.getString("email"));
-                    user.setFullName(rs.getString("full_name"));
-                    user.setPhone(rs.getString("phone"));
-                    user.setStatus(rs.getString("status"));
-
-                    user.setCreatedAt(
-                            rs.getTimestamp("created_at") != null
-                                    ? rs.getTimestamp("created_at").toLocalDateTime()
-                                    : null);
-
-                    user.setUpdatedAt(
-                            rs.getTimestamp("updated_at") != null
-                                    ? rs.getTimestamp("updated_at").toLocalDateTime()
-                                    : null);
-
-                    user.setLastLoginAt(
-                            rs.getTimestamp("last_login_at") != null
-                                    ? rs.getTimestamp("last_login_at").toLocalDateTime()
-                                    : null);
-                }
-
-                if (rs.getInt("role_id") != 0) {
-                    Role role = new Role();
-                    role.setRoleId(rs.getInt("role_id"));
-                    role.setRoleName(rs.getString("role_name"));
-                    role.setDescription(rs.getString("description"));
-                    roles.add(role);
-                }
-            }
-
-            if (user != null) {
-                user.setRoles(roles);
+            if (rs.next()) {
+                return mapUser(rs);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return user;
+        return null;
+    }
+
+    public boolean updateLastLogin(int userId) {
+
+        String sql = """
+                    UPDATE Users
+                    SET last_login_at = ?
+                    WHERE user_id = ?
+                """;
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setTimestamp(1, new java.sql.Timestamp(System.currentTimeMillis()));
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public List<User> getAllUsers(Connection conn) {
+        String sql = """
+                    SELECT
+                                    u.user_id,
+                                    u.username,
+                                    u.password_hash,
+                                    u.email,
+                                    u.full_name,
+                                    u.phone,
+                                    u.status,
+                                    u.created_at,
+                                    u.updated_at,
+                                    u.last_login_at,
+                                    r.role_id,
+                                    r.role_name,
+                                    r.description
+                                FROM Users u
+                                LEFT JOIN Roles r ON u.role_id = r.role_id
+                                ORDER BY u.full_name
+                """;
+        List<User> users = new ArrayList();
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                users.add(mapUser(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    /**
+     * Lấy danh sách tất cả user đang active (dùng cho dropdown Assigned To).
+     */
+    public List<User> getActiveUsers() {
+        String sql = """
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.status = 'Active'
+                    ORDER BY u.full_name
+                """;
+        List<User> users = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                users.add(mapUser(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    public List<User> getActiveSaleStaffs() {
+        String sql = """
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.status = 'Active'
+                    ORDER BY u.full_name
+                """;
+        List<User> users = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                if (rs.getInt("role_id") == 2) { // role_id = 2 là Sale
+                    users.add(mapUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+
+    public List<User> getActiveStaffsUnderManagerLevel() {
+        String sql = """
+                    SELECT
+                    u.user_id,
+                    u.username,
+                    u.password_hash,
+                    u.email,
+                    u.full_name,
+                    u.phone,
+                    u.status,
+                    u.created_at,
+                    u.updated_at,
+                    u.last_login_at,
+                    r.role_id,
+                    r.role_name,
+                    r.description
+                FROM Users u
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE u.status = 'Active' AND r.role_id IN (2, 3, 4)
+                ORDER BY u.full_name
+                """;
+        List<User> users = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+
+                users.add(mapUser(rs));
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    /*
+     * =========================
+     * FIND USER BY EMAIL
+     * =========================
+     */
+    public User findByEmail(String email) {
+
+        String sql = """
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.email = ?
+                """;
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return mapUser(rs);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean updatePassword(int userId, String passwordHash) {
+
+        String sql = """
+                    UPDATE Users
+                    SET password_hash = ?,
+                        updated_at = ?
+                    WHERE user_id = ?
+                """;
+
+        try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
+
+            ps.setString(1, passwordHash);
+            ps.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+            ps.setInt(3, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

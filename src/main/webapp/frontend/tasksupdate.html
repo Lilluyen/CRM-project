@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+<meta name="description" content="POS - Bootstrap Admin Template">
+<meta name="keywords" content="admin, estimates, bootstrap, business, corporate, creative, invoice, html5, responsive, Projects">
+<meta name="author" content="Dreamguys - Bootstrap Admin Template">
+<meta name="robots" content="noindex, nofollow">
+<title>Dreams Pos admin template</title>
+
+<link rel="shortcut icon" type="image/x-icon" href="/crm/assets/img/favicon.jpg">
+
+<link rel="stylesheet" href="/crm/assets/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/bootstrap-datetimepicker.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/animate.css">
+
+<link rel="stylesheet" href="/crm/assets/plugins/select2/css/select2.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/dataTables.bootstrap4.min.css">
+
+<link rel="stylesheet" href="/crm/assets/plugins/fontawesome/css/fontawesome.min.css">
+<link rel="stylesheet" href="/crm/assets/plugins/fontawesome/css/all.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/style.css">
+</head>
+<body>
+<div id="global-loader">
+<div class="whirly-loader"> </div>
+</div>
+
+<div class="main-wrapper">
+
+<div class="header">
+
+<div class="header-left active">
+<a href="index.html" class="logo">
+<img src="/crm/assets/img/logo.png" alt="">
+</a>
+<a href="index.html" class="logo-small">
+<img src="/crm/assets/img/logo-small.png" alt="">
+</a>
+<a id="toggle_btn" href="javascript:void(0);">
+</a>
+</div>
+
+<a id="mobile_btn" class="mobile_btn" href="#sidebar">
+<span class="bar-icon">
+<span></span>
+<span></span>
+<span></span>
+</span>
+</a>
+
+<ul class="nav user-menu">
+
+<li class="nav-item">
+<div class="top-nav-search">
+<a href="javascript:void(0);" class="responsive-search">
+<i class="fa fa-search"></i>
+</a>
+<form action="#">
+<div class="searchinputs">
+<input type="text" placeholder="Search Here ...">
+<div class="search-addon">
+<span><img src="/crm/assets/img/icons/closes.svg" alt="img"></span>
+</div>
+</div>
+<a class="btn" id="searchdiv"><img src="/crm/assets/img/icons/search.svg" alt="img"></a>
+</form>
+</div>
+</li>
+
+
+<li class="nav-item dropdown">
+<a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
+<img src="/crm/assets/img/icons/notification-bing.svg" alt="img"> <span class="badge rounded-pill">4</span>
+</a>
+<div class="dropdown-menu notifications">
+<div class="topnav-dropdown-header">
+<span class="notification-title">Notifications</span>
+<a href="javascript:void(0)" class="clear-noti"> Clear All </a>
+</div>
+<div class="noti-content">
+<ul class="notification-list">
+<li class="notification-message">
+<a href="activities.html">
+<div class="media d-flex">
+<span class="avatar flex-shrink-0">
+<img alt="" src="/crm/assets/img/profiles/avatar-02.jpg">
+</span>
+<div class="media-body flex-grow-1">
+<p class="noti-details"><span class="noti-title">John Doe</span> added new task <span class="noti-title">Patient appointment booking</span></p>
+<p class="noti-time"><span class="notification-time">4 mins ago</span></p>
+</div>
+</div>
+</a>
+</li>
+</ul>
+</div>
+<div class="topnav-dropdown-footer">
+<a href="activities.html">View all Notifications</a>
+</div>
+</div>
+</li>
+
+<li class="nav-item dropdown has-arrow main-drop">
+<a href="javascript:void(0);" class="dropdown-toggle nav-link userset" data-bs-toggle="dropdown">
+<span class="user-img"><img src="/crm/assets/img/profiles/avator1.jpg" alt="">
+<span class="status online"></span></span>
+</a>
+<div class="dropdown-menu menu-drop-user">
+<div class="profilename">
+<div class="profileset">
+<span class="user-img"><img src="/crm/assets/img/profiles/avator1.jpg" alt="">
+<span class="status online"></span></span>
+<div class="profilesets">
+<h6>John Doe</h6>
+<h5>Admin</h5>
+</div>
+</div>
+<hr class="m-0">
+<a class="dropdown-item" href="profile.html"> <i class="me-2" data-feather="user"></i> My Profile</a>
+<a class="dropdown-item" href="generalsettings.html"><i class="me-2" data-feather="settings"></i>Settings</a>
+<hr class="m-0">
+<a class="dropdown-item logout pb-0" href="signin.html"><img src="/crm/assets/img/icons/log-out.svg" class="me-2" alt="img">Logout</a>
+</div>
+</div>
+</li>
+</ul>
+
+
+<div class="dropdown mobile-user-menu">
+<a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+<div class="dropdown-menu dropdown-menu-right">
+<a class="dropdown-item" href="profile.html">My Profile</a>
+<a class="dropdown-item" href="generalsettings.html">Settings</a>
+<a class="dropdown-item" href="signin.html">Logout</a>
+</div>
+</div>
+
+</div>
+
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-inner slimscroll">
+<div id="sidebar-menu" class="sidebar-menu">
+<ul>
+<li>
+<a href="index.html"><img src="/crm/assets/img/icons/dashboard.svg" alt="img"><span> Dashboard</span> </a>
+</li>
+<li class="submenu">
+<a href="javascript:void(0);"><span> Activities</span> <span class="menu-arrow"></span></a>
+<ul>
+<li><a href="activitieslist.html">Activities List</a></li>
+<li><a href="activitiescreate.html">Create Activity</a></li>
+<li><a href="activitiesupdate.html">Update Activity</a></li>
+<li><a href="activitiesdetails.html">Activitiy Details</a></li>
+</ul>
+</li>
+<li class="submenu">
+<a href="javascript:void(0);"><span> Tasks</span> <span class="menu-arrow"></span></a>
+<ul>
+<li><a href="/crm/tasks/list">Task List</a></li>
+<li><a href="/crm/tasks/create">Create Task</a></li>
+<li><a href="/crm/tasks/update" class="active">Update Task</a></li>
+<li><a href="/crm/tasks/details">Task Details</a></li>
+<li><a href="/crm/tasks/track">Track Task Progress</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>Update Task</h4>
+<h6>Modify task information</h6>
+</div>
+</div>
+
+<form id="updateTaskForm">
+<div class="card">
+<div class="card-body">
+<div class="row" id="formContent">
+<div class="col-12 text-center">
+<p class="text-muted">Loading task data...</p>
+</div>
+</div>
+
+<div class="col-lg-12 mt-3">
+<button type="submit" class="btn btn-submit me-2">Update</button>
+<a href="/crm/tasks/list" class="btn btn-cancel">Cancel</a>
+</div>
+
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+
+
+<script src="/crm/assets/js/jquery-3.6.0.min.js"></script>
+
+<script src="/crm/assets/js/feather.min.js"></script>
+
+<script src="/crm/assets/js/jquery.slimscroll.min.js"></script>
+
+<script src="/crm/assets/js/jquery.dataTables.min.js"></script>
+<script src="/crm/assets/js/dataTables.bootstrap4.min.js"></script>
+
+<script src="/crm/assets/js/bootstrap.bundle.min.js"></script>
+
+<script src="/crm/assets/plugins/select2/js/select2.min.js"></script>
+
+<script src="/crm/assets/js/moment.min.js"></script>
+<script src="/crm/assets/js/bootstrap-datetimepicker.min.js"></script>
+
+<script src="/crm/assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script src="/crm/assets/plugins/sweetalert/sweetalerts.min.js"></script>
+
+<script src="/crm/assets/js/script.js"></script>
+
+<script>
+/**
+ * TASK UPDATE FORM - AJAX SUBMISSION
+ * Load existing task data from API, update via AJAX
+ * REST APIs:
+ * - GET /api/tasks/detail?id=X (load data)
+ * - POST /api/tasks/update (submit changes)
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    const taskId = getTaskIdFromURL();
+    if (!taskId) {
+        showFormError('No task ID provided in URL');
+        return;
+    }
+    
+    loadTaskForEditing(taskId);
+    
+    // Attach form submission handler
+    document.getElementById('updateTaskForm').addEventListener('submit', submitTaskUpdate);
+});
+
+/**
+ * Extract task ID from URL query parameter
+ */
+function getTaskIdFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    return (id && id > 0) ? id : null;
+}
+
+/**
+ * Fetch task data to populate form
+ */
+function loadTaskForEditing(taskId) {
+    console.log('Loading task for editing:', taskId);
+    setLoadingState(true);
+
+    fetch(`/api/tasks/detail?id=${taskId}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(handleHttpResponse)
+    .then(parseJsonResponse)
+    .then(validateApiResponse)
+    .then(response => populateForm(response.data, taskId))
+    .catch(error => {
+        console.error('Error loading task:', error);
+        showFormError(error.message || 'Failed to load task');
+    });
+}
+
+/**
+ * Populate form with task data
+ */
+function populateForm(task, taskId) {
+    const formContent = document.getElementById('formContent');
+    
+    const html = `
+        <!-- Task ID (Hidden) -->
+        <input type="hidden" id="taskId" name="taskId" value="${escapeHtml(task.taskId)}">
+
+        <!-- Title -->
+        <div class="col-lg-6 col-sm-12 col-12">
+            <div class="form-group">
+                <label>Title <span class="text-danger">*</span></label>
+                <input type="text" id="title" name="title" class="form-control" value="${escapeHtml(task.title || '')}" required>
+            </div>
+        </div>
+
+        <!-- Due Date -->
+        <div class="col-lg-6 col-sm-12 col-12">
+            <div class="form-group">
+                <label>Due Date <span class="text-danger">*</span></label>
+                <div class="input-groupicon">
+                    <input type="date" id="dueDate" name="dueDate" class="form-control" value="${formatDateISO(task.dueDate)}" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="col-lg-12 col-sm-12 col-12">
+            <div class="form-group">
+                <label>Description <span class="text-danger">*</span></label>
+                <textarea id="description" name="description" class="form-control" rows="4" required>${escapeHtml(task.description || '')}</textarea>
+            </div>
+        </div>
+
+        <!-- Related Type -->
+        <div class="col-lg-6 col-sm-6 col-12">
+            <div class="form-group">
+                <label>Related Type <span class="text-danger">*</span></label>
+                <select id="relatedType" name="relatedType" class="form-control" required>
+                    <option value="">Choose</option>
+                    <option value="customer" ${task.relatedType === 'customer' ? 'selected' : ''}>Customer</option>
+                    <option value="lead" ${task.relatedType === 'lead' ? 'selected' : ''}>Lead</option>
+                    <option value="deal" ${task.relatedType === 'deal' ? 'selected' : ''}>Deal</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Related ID -->
+        <div class="col-lg-6 col-sm-6 col-12">
+            <div class="form-group">
+                <label>Related ID <span class="text-danger">*</span></label>
+                <input type="number" id="relatedId" name="relatedId" class="form-control" value="${escapeHtml(task.relatedId || '')}" required>
+            </div>
+        </div>
+
+        <!-- Priority -->
+        <div class="col-lg-6 col-sm-6 col-12">
+            <div class="form-group">
+                <label>Priority <span class="text-danger">*</span></label>
+                <select id="priority" name="priority" class="form-control" required>
+                    <option value="">Choose</option>
+                    <option value="LOW" ${task.priority === 'LOW' ? 'selected' : ''}>Low</option>
+                    <option value="MEDIUM" ${task.priority === 'MEDIUM' ? 'selected' : ''}>Medium</option>
+                    <option value="HIGH" ${task.priority === 'HIGH' ? 'selected' : ''}>High</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="col-lg-6 col-sm-6 col-12">
+            <div class="form-group">
+                <label>Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="PENDING" ${task.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+                    <option value="IN_PROGRESS" ${task.status === 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
+                    <option value="COMPLETED" ${task.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
+                </select>
+            </div>
+        </div>
+    `;
+
+    formContent.innerHTML = html;
+    setLoadingState(false);
+}
+
+/**
+ * Handle form submission - update task via AJAX
+ */
+function submitTaskUpdate(event) {
+    event.preventDefault();
+    
+    // Validate form
+    if (!this.checkValidity()) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    const taskId = document.getElementById('taskId').value;
+    
+    // Build form data
+    const formData = new FormData(document.getElementById('updateTaskForm'));
+    const params = new URLSearchParams(formData);
+
+    console.log('Submitting task update for Task ID:', taskId);
+    setLoadingState(true);
+
+    fetch('/api/tasks/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+        },
+        body: params.toString()
+    })
+    .then(handleHttpResponse)
+    .then(parseJsonResponse)
+    .then(validateApiResponse)
+    .then(response => {
+        console.log('Task updated successfully:', response);
+        alert('Task updated successfully');
+        window.location.href = `/crm/tasks/details?id=${taskId}`;
+    })
+    .catch(error => {
+        console.error('Error updating task:', error);
+        setLoadingState(false);
+        alert('Failed to update task: ' + error.message);
+    });
+}
+
+/**
+ * Show error message in form
+ */
+function showFormError(message) {
+    const formContent = document.getElementById('formContent');
+    formContent.innerHTML = `
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> ${escapeHtml(message)}
+            </div>
+        </div>
+    `;
+    setLoadingState(false);
+}
+
+/**
+ * Show/hide loading state
+ */
+function setLoadingState(isLoading) {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.style.display = isLoading ? 'flex' : 'none';
+    }
+}
+
+// =============== UTILITY FUNCTIONS ===============
+
+function formatDateISO(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        return date.toISOString().split('T')[0];
+    } catch {
+        return dateString;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function handleHttpResponse(response) {
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText || 'Unknown error'}`);
+    }
+    return response;
+}
+
+function parseJsonResponse(response) {
+    try {
+        return response.json();
+    } catch (error) {
+        throw new Error('Invalid JSON response from server');
+    }
+}
+
+function validateApiResponse(response) {
+    if (!response || response.success === false) {
+        throw new Error(response.message || 'Server returned error');
+    }
+    return response;
+}
+</script>
+</body>
+</html>

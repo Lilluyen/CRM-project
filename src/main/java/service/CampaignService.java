@@ -37,4 +37,25 @@ public class CampaignService {
     public List<Campaign> getActiveCampaigns() {
         return campaignDAO.getCampaignByStatus("ACTIVE");
     }
+
+    /**
+     * Tìm campaign theo tên và/hoặc status
+     */
+    public List<Campaign> searchCampaigns(String searchName, String status) {
+        return campaignDAO.searchCampaigns(searchName, status);
+    }
+
+    /**
+     * Tìm campaign theo tên và/hoặc status – có phân trang
+     */
+    public List<Campaign> searchCampaigns(String searchName, String status, int page, int pageSize) {
+        return campaignDAO.searchCampaigns(searchName, status, page, pageSize);
+    }
+
+    /**
+     * Đếm tổng campaign theo điều kiện lọc (dùng cho phân trang)
+     */
+    public int countCampaigns(String searchName, String status) {
+        return campaignDAO.countCampaigns(searchName, status);
+    }
 }

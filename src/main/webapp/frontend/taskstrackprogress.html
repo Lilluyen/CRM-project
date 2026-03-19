@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+<meta name="description" content="POS - Bootstrap Admin Template">
+<meta name="keywords" content="admin, estimates, bootstrap, business, corporate, creative, invoice, html5, responsive, Projects">
+<meta name="author" content="Dreamguys - Bootstrap Admin Template">
+<meta name="robots" content="noindex, nofollow">
+<title>Dreams Pos admin template</title>
+
+<link rel="shortcut icon" type="image/x-icon" href="/crm/assets/img/favicon.jpg">
+
+<link rel="stylesheet" href="/crm/assets/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/bootstrap-datetimepicker.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/animate.css">
+
+<link rel="stylesheet" href="/crm/assets/plugins/select2/css/select2.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/dataTables.bootstrap4.min.css">
+
+<link rel="stylesheet" href="/crm/assets/plugins/fontawesome/css/fontawesome.min.css">
+<link rel="stylesheet" href="/crm/assets/plugins/fontawesome/css/all.min.css">
+
+<link rel="stylesheet" href="/crm/assets/css/style.css">
+<style>
+.progress-card {
+	border-left: 4px solid #007bff;
+	margin-bottom: 20px;
+}
+.progress-card.completed {
+	border-left-color: #28a745;
+}
+.progress-card.in-progress {
+	border-left-color: #ffc107;
+}
+.progress-card.pending {
+	border-left-color: #dc3545;
+}
+.progress-chart {
+	display: flex;
+	justify-content: space-around;
+	margin-bottom: 30px;
+}
+.progress-stat {
+	text-align: center;
+	padding: 20px;
+	border-radius: 5px;
+	flex: 1;
+	margin: 0 10px;
+}
+.progress-stat.pending {
+	background-color: #f8d7da;
+	color: #721c24;
+}
+.progress-stat.in-progress {
+	background-color: #fff3cd;
+	color: #856404;
+}
+.progress-stat.completed {
+	background-color: #d4edda;
+	color: #155724;
+}
+.progress-stat h3 {
+	margin: 0;
+	font-size: 28px;
+}
+.progress-stat p {
+	margin: 5px 0 0 0;
+	font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div id="global-loader">
+<div class="whirly-loader"> </div>
+</div>
+
+<div class="main-wrapper">
+
+<div class="header">
+
+<div class="header-left active">
+<a href="index.html" class="logo">
+<img src="/crm/assets/img/logo.png" alt="">
+</a>
+<a href="index.html" class="logo-small">
+<img src="/crm/assets/img/logo-small.png" alt="">
+</a>
+<a id="toggle_btn" href="javascript:void(0);">
+</a>
+</div>
+
+<a id="mobile_btn" class="mobile_btn" href="#sidebar">
+<span class="bar-icon">
+<span></span>
+<span></span>
+<span></span>
+</span>
+</a>
+
+<ul class="nav user-menu">
+
+<li class="nav-item">
+<div class="top-nav-search">
+<a href="javascript:void(0);" class="responsive-search">
+<i class="fa fa-search"></i>
+</a>
+<form action="#">
+<div class="searchinputs">
+<input type="text" placeholder="Search Here ...">
+<div class="search-addon">
+<span><img src="/crm/assets/img/icons/closes.svg" alt="img"></span>
+</div>
+</div>
+<a class="btn" id="searchdiv"><img src="/crm/assets/img/icons/search.svg" alt="img"></a>
+</form>
+</div>
+</li>
+
+
+<li class="nav-item dropdown">
+<a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
+<img src="/crm/assets/img/icons/notification-bing.svg" alt="img"> <span class="badge rounded-pill">4</span>
+</a>
+<div class="dropdown-menu notifications">
+<div class="topnav-dropdown-header">
+<span class="notification-title">Notifications</span>
+<a href="javascript:void(0)" class="clear-noti"> Clear All </a>
+</div>
+<div class="noti-content">
+<ul class="notification-list">
+<li class="notification-message">
+<a href="activities.html">
+<div class="media d-flex">
+<span class="avatar flex-shrink-0">
+<img alt="" src="/crm/assets/img/profiles/avatar-02.jpg">
+</span>
+<div class="media-body flex-grow-1">
+<p class="noti-details"><span class="noti-title">John Doe</span> added new task <span class="noti-title">Patient appointment booking</span></p>
+<p class="noti-time"><span class="notification-time">4 mins ago</span></p>
+</div>
+</div>
+</a>
+</li>
+</ul>
+</div>
+<div class="topnav-dropdown-footer">
+<a href="activities.html">View all Notifications</a>
+</div>
+</div>
+</li>
+
+<li class="nav-item dropdown has-arrow main-drop">
+<a href="javascript:void(0);" class="dropdown-toggle nav-link userset" data-bs-toggle="dropdown">
+<span class="user-img"><img src="/crm/assets/img/profiles/avator1.jpg" alt="">
+<span class="status online"></span></span>
+</a>
+<div class="dropdown-menu menu-drop-user">
+<div class="profilename">
+<div class="profileset">
+<span class="user-img"><img src="/crm/assets/img/profiles/avator1.jpg" alt="">
+<span class="status online"></span></span>
+<div class="profilesets">
+<h6>John Doe</h6>
+<h5>Admin</h5>
+</div>
+</div>
+<hr class="m-0">
+<a class="dropdown-item" href="profile.html"> <i class="me-2" data-feather="user"></i> My Profile</a>
+<a class="dropdown-item" href="generalsettings.html"><i class="me-2" data-feather="settings"></i>Settings</a>
+<hr class="m-0">
+<a class="dropdown-item logout pb-0" href="signin.html"><img src="/crm/assets/img/icons/log-out.svg" class="me-2" alt="img">Logout</a>
+</div>
+</div>
+</li>
+</ul>
+
+
+<div class="dropdown mobile-user-menu">
+<a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+<div class="dropdown-menu dropdown-menu-right">
+<a class="dropdown-item" href="profile.html">My Profile</a>
+<a class="dropdown-item" href="generalsettings.html">Settings</a>
+<a class="dropdown-item" href="signin.html">Logout</a>
+</div>
+</div>
+
+</div>
+
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-inner slimscroll">
+<div id="sidebar-menu" class="sidebar-menu">
+<ul>
+<li>
+<a href="index.html"><img src="/crm/assets/img/icons/dashboard.svg" alt="img"><span> Dashboard</span> </a>
+</li>
+<li class="submenu">
+<a href="javascript:void(0);"><span> Activities</span> <span class="menu-arrow"></span></a>
+<ul>
+<li><a href="activitieslist.html">Activities List</a></li>
+<li><a href="activitiescreate.html">Create Activity</a></li>
+<li><a href="activitiesupdate.html">Update Activity</a></li>
+<li><a href="activitiesdetails.html">Activitiy Details</a></li>
+</ul>
+</li>
+<li class="submenu">
+<a href="javascript:void(0);"><span> Tasks</span> <span class="menu-arrow"></span></a>
+<ul>
+<li><a href="/crm/tasks/list">Task List</a></li>
+<li><a href="/crm/tasks/create">Create Task</a></li>
+<li><a href="/crm/tasks/update">Update Task</a></li>
+<li><a href="/crm/tasks/details">Task Details</a></li>
+<li><a href="/crm/tasks/track" class="active">Track Task Progress</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>Track Task Progress</h4>
+<h6>Monitor and update task status</h6>
+</div>
+</div>
+
+<!-- Progress Summary -->
+<div class="row">
+<div class="col-md-12">
+<div class="progress-chart" id="progressStats">
+<div class="progress-stat pending">
+<h3>0</h3>
+<p>Pending</p>
+</div>
+<div class="progress-stat in-progress">
+<h3>0</h3>
+<p>In Progress</p>
+</div>
+<div class="progress-stat completed">
+<h3>0</h3>
+<p>Completed</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Task Progress Updates -->
+<div class="card">
+<div class="card-header">
+<h5 class="card-title">Update Task Status</h5>
+</div>
+<div class="card-body" id="taskProgressList">
+<div class="col-12 text-center">
+<p class="text-muted">Loading tasks...</p>
+</div>
+</div>
+</div>
+
+<!-- Pagination -->
+<div class="row mt-3">
+<div class="col-md-12">
+<nav aria-label="Page navigation">
+<ul class="pagination justify-content-center">
+<li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+<li class="page-item active"><a class="page-link" href="#">1</a></li>
+<li class="page-item"><a class="page-link" href="#">2</a></li>
+<li class="page-item"><a class="page-link" href="#">Next</a></li>
+</ul>
+</nav>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+
+<script src="/crm/assets/js/jquery-3.6.0.min.js"></script>
+
+<script src="/crm/assets/js/feather.min.js"></script>
+
+<script src="/crm/assets/js/jquery.slimscroll.min.js"></script>
+
+<script src="/crm/assets/js/jquery.dataTables.min.js"></script>
+<script src="/crm/assets/js/dataTables.bootstrap4.min.js"></script>
+
+<script src="/crm/assets/js/bootstrap.bundle.min.js"></script>
+
+<script src="/crm/assets/plugins/select2/js/select2.min.js"></script>
+
+<script src="/crm/assets/js/moment.min.js"></script>
+<script src="/crm/assets/js/bootstrap-datetimepicker.min.js"></script>
+
+<script src="/crm/assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script src="/crm/assets/plugins/sweetalert/sweetalerts.min.js"></script>
+
+<script src="/crm/assets/js/script.js"></script>
+
+<script>
+/**
+ * TASK PROGRESS TRACKING
+ * Load tasks, display them with status indicators, handle status updates
+ * REST APIs:
+ * - GET /api/tasks/list (load all tasks)
+ * - POST /api/tasks/updateStatus (update task status)
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllTasks();
+});
+
+/**
+ * Fetch all tasks for progress tracking
+ */
+function loadAllTasks() {
+    console.log('Loading all tasks for progress tracking...');
+    setLoadingState(true);
+
+    fetch('/api/tasks/list', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(handleHttpResponse)
+    .then(parseJsonResponse)
+    .then(validateApiResponse)
+    .then(response => {
+        const tasks = response.data || [];
+        renderProgressPage(tasks);
+    })
+    .catch(error => {
+        console.error('Error loading tasks:', error);
+        setLoadingState(false);
+        showError(error.message || 'Failed to load tasks');
+    });
+}
+
+/**
+ * Render progress page with stats and task cards
+ */
+function renderProgressPage(tasks) {
+    setLoadingState(false);
+    
+    // Calculate statistics
+    const stats = calculateTaskStats(tasks);
+    updateProgressStats(stats);
+    
+    // Render task progress cards
+    renderTaskProgressCards(tasks);
+}
+
+/**
+ * Calculate task statistics by status
+ */
+function calculateTaskStats(tasks) {
+    const stats = {
+        pending: 0,
+        inProgress: 0,
+        completed: 0
+    };
+
+    tasks.forEach(task => {
+        switch (task.status) {
+            case 'PENDING':
+            case 'TODO':
+                stats.pending++;
+                break;
+            case 'IN_PROGRESS':
+                stats.inProgress++;
+                break;
+            case 'COMPLETED':
+            case 'DONE':
+                stats.completed++;
+                break;
+        }
+    });
+
+    return stats;
+}
+
+/**
+ * Update progress statistics display
+ */
+function updateProgressStats(stats) {
+    const statsHtml = `
+        <div class="progress-stat pending">
+            <h3>${stats.pending}</h3>
+            <p>Pending</p>
+        </div>
+        <div class="progress-stat in-progress">
+            <h3>${stats.inProgress}</h3>
+            <p>In Progress</p>
+        </div>
+        <div class="progress-stat completed">
+            <h3>${stats.completed}</h3>
+            <p>Completed</p>
+        </div>
+    `;
+
+    document.getElementById('progressStats').innerHTML = statsHtml;
+}
+
+/**
+ * Render task cards with status selectors
+ */
+function renderTaskProgressCards(tasks) {
+    const container = document.getElementById('taskProgressList');
+    
+    if (!tasks || tasks.length === 0) {
+        container.innerHTML = '<div class="col-12"><p class="text-center text-muted">No tasks available</p></div>';
+        return;
+    }
+
+    let html = '';
+    tasks.forEach(task => {
+        const cardClass = getProgressCardClass(task.status);
+        const progressPercent = calculateProgress(task);
+        const progressBar = progressPercent > 0 ? `
+            <div class="progress" style="height: 20px; margin-top: 10px;">
+                <div class="progress-bar ${getProgressBarClass(task.status)}" role="progressbar" 
+                     style="width: ${progressPercent}%;" aria-valuenow="${progressPercent}" 
+                     aria-valuemin="0" aria-valuemax="100">${progressPercent}%</div>
+            </div>
+        ` : '';
+
+        html += `
+            <div class="card progress-card ${cardClass}">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6">
+                            <h6>${escapeHtml(task.title)}</h6>
+                            <p class="text-muted mb-0">
+                                <small>Task ID: ${task.taskId} | Due: ${formatDate(task.dueDate)}</small>
+                            </p>
+                            ${progressBar}
+                        </div>
+                        <div class="col-lg-6">
+                            <form class="row g-2" onsubmit="updateTaskStatus(event, ${task.taskId})">
+                                <div class="col-auto">
+                                    <select name="status" class="form-select form-select-sm" required>
+                                        <option value="PENDING" ${task.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+                                        <option value="IN_PROGRESS" ${task.status === 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
+                                        <option value="COMPLETED" ${task.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+/**
+ * Handle status update submission
+ */
+function updateTaskStatus(event, taskId) {
+    event.preventDefault();
+    
+    const status = event.target.querySelector('select[name="status"]').value;
+    
+    console.log(`Updating Task ${taskId} to status: ${status}`);
+    setLoadingState(true);
+
+    const params = new URLSearchParams({
+        taskId: taskId,
+        status: status
+    });
+
+    fetch('/api/tasks/updateStatus', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+        },
+        body: params.toString()
+    })
+    .then(handleHttpResponse)
+    .then(parseJsonResponse)
+    .then(validateApiResponse)
+    .then(response => {
+        console.log('Task status updated:', response);
+        
+        // Update the card class
+        const card = event.target.closest('.progress-card');
+        if (card) {
+            card.classList.remove('pending', 'in-progress', 'completed');
+            card.classList.add(status.toLowerCase().replace('_', '-'));
+        }
+        
+        alert('Task status updated successfully');
+        loadAllTasks(); // Refresh to update statistics
+    })
+    .catch(error => {
+        console.error('Error updating task status:', error);
+        setLoadingState(false);
+        alert('Failed to update task status: ' + error.message);
+    });
+}
+
+/**
+ * Get progress card CSS class based on status
+ */
+function getProgressCardClass(status) {
+    switch (status) {
+        case 'COMPLETED':
+        case 'DONE':
+            return 'completed';
+        case 'IN_PROGRESS':
+            return 'in-progress';
+        case 'PENDING':
+        case 'TODO':
+        default:
+            return 'pending';
+    }
+}
+
+/**
+ * Get progress bar CSS class
+ */
+function getProgressBarClass(status) {
+    switch (status) {
+        case 'COMPLETED':
+        case 'DONE':
+            return 'bg-success';
+        case 'IN_PROGRESS':
+            return 'bg-warning';
+        case 'PENDING':
+        case 'TODO':
+        default:
+            return 'bg-danger';
+    }
+}
+
+/**
+ * Calculate progress percentage based on status
+ */
+function calculateProgress(task) {
+    switch (task.status) {
+        case 'COMPLETED':
+        case 'DONE':
+            return 100;
+        case 'IN_PROGRESS':
+            return task.progress || 50;
+        default:
+            return 0;
+    }
+}
+
+/**
+ * Show error message
+ */
+function showError(message) {
+    document.getElementById('taskProgressList').innerHTML = `
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> ${escapeHtml(message)}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Show/hide loading state
+ */
+function setLoadingState(isLoading) {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.style.display = isLoading ? 'flex' : 'none';
+    }
+}
+
+// =============== UTILITY FUNCTIONS ===============
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        return date.toISOString().split('T')[0];
+    } catch {
+        return dateString;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function handleHttpResponse(response) {
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText || 'Unknown error'}`);
+    }
+    return response;
+}
+
+function parseJsonResponse(response) {
+    try {
+        return response.json();
+    } catch (error) {
+        throw new Error('Invalid JSON response from server');
+    }
+}
+
+function validateApiResponse(response) {
+    if (!response || response.success === false) {
+        throw new Error(response.message || 'Server returned error');
+    }
+    return response;
+}
+</script>
+</body>
+</html>

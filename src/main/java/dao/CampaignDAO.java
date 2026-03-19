@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import model.Campaign;
@@ -15,10 +16,32 @@ import util.DBContext;
 
 public class CampaignDAO {
 
+    /**
+     * Trả về tất cả các biến thể của status để hỗ trợ cả UPPERCASE và
+     * PascalCase trong DB. Ví dụ: "ACTIVE" → ["ACTIVE", "Running"]
+     */
+    private List<String> statusAliases(String status) {
+        if (status == null) {
+            return List.of();
+        }
+        return switch (status.toUpperCase()) {
+            case "ACTIVE" ->
+                Arrays.asList("ACTIVE", "Running");
+            case "PLANNING" ->
+                Arrays.asList("PLANNING", "Planned", "PLANNED");
+            case "PAUSED" ->
+                Arrays.asList("PAUSED", "Paused");
+            case "COMPLETED" ->
+                Arrays.asList("COMPLETED", "Completed");
+            default ->
+                List.of(status);
+        };
+    }
+
     public int insert(Campaign campaign) {
         String sql = "INSERT INTO Campaigns(name, description, budget, start_date, end_date, channel, status, created_by, created_at, updated_at) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, campaign.getName());
             ps.setString(2, campaign.getDescription());
             ps.setBigDecimal(3, campaign.getBudget());
@@ -45,7 +68,7 @@ public class CampaignDAO {
     // Cập nhật thông tin một chiến dịch theo ID
     public boolean updateCampaign(Campaign campaign) {
         String sql = "UPDATE Campaigns SET name=?, description=?, budget=?, start_date=?, end_date=?, channel=?, status=?, updated_at=? WHERE campaign_id=?";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, campaign.getName());
             ps.setString(2, campaign.getDescription());
             ps.setBigDecimal(3, campaign.getBudget());
@@ -65,7 +88,7 @@ public class CampaignDAO {
     // Lấy thông tin chiến dịch theo ID
     public Campaign getCampaignById(int campaignId) {
         String sql = "SELECT * FROM Campaigns WHERE campaign_id = ?";
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -77,11 +100,11 @@ public class CampaignDAO {
         return null;
     }
 
-    // Lấy danh sách tất cả campaign (mới nhất trước)
+    // Lấy danh sách tất cả campaign (cập nhật gần nhất trước)
     public List<Campaign> getAllCampaign() {
-        String sql = "SELECT * FROM Campaigns ORDER BY created_at DESC";
+        String sql = "SELECT * FROM Campaigns ORDER BY updated_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 campaigns.add(mapResultSetToCampaign(rs));
             }
@@ -93,10 +116,14 @@ public class CampaignDAO {
 
     // Lấy danh sách campaign theo trạng thái    
     public List<Campaign> getCampaignByStatus(String status) {
-        String sql = "SELECT * FROM Campaigns WHERE status = ? ORDER BY created_at DESC";
+        List<String> aliases = statusAliases(status);
+        String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+        String sql = "SELECT * FROM Campaigns WHERE status IN (" + placeholders + ") ORDER BY created_at DESC";
         List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = new DBContext().connection; PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < aliases.size(); i++) {
+                ps.setString(i + 1, aliases.get(i));
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 campaigns.add(mapResultSetToCampaign(rs));
@@ -105,6 +132,116 @@ public class CampaignDAO {
             e.printStackTrace();
         }
         return campaigns;
+    }
+
+    // Tìm campaign theo tên và trạng thái (search)
+    public List<Campaign> searchCampaigns(String searchName, String status) {
+        String sql = "SELECT * FROM Campaigns WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        // Thêm điều kiện tên nếu có
+        if (searchName != null && !searchName.trim().isEmpty()) {
+            sql += " AND name LIKE ?";
+            params.add("%" + searchName.trim() + "%");
+        }
+
+        // Thêm điều kiện status nếu có
+        if (status != null && !status.trim().isEmpty()) {
+            List<String> aliases = statusAliases(status);
+            String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+            sql += " AND status IN (" + placeholders + ")";
+            params.addAll(aliases);
+        }
+
+        sql += " ORDER BY updated_at DESC";
+
+        List<Campaign> campaigns = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                campaigns.add(mapResultSetToCampaign(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return campaigns;
+    }
+
+    // ==============================
+    // SEARCH + PAGINATION  (OFFSET / FETCH)
+    // ==============================
+    public List<Campaign> searchCampaigns(String searchName, String status, int page, int pageSize) {
+        String sql = "SELECT * FROM Campaigns WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (searchName != null && !searchName.trim().isEmpty()) {
+            sql += " AND name LIKE ?";
+            params.add("%" + searchName.trim() + "%");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            List<String> aliases = statusAliases(status);
+            String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+            sql += " AND status IN (" + placeholders + ")";
+            params.addAll(aliases);
+        }
+
+        sql += " ORDER BY updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        int offset = (page - 1) * pageSize;
+        params.add(offset);
+        params.add(pageSize);
+
+        List<Campaign> campaigns = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                campaigns.add(mapResultSetToCampaign(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return campaigns;
+    }
+
+    // ==============================
+    // COUNT FOR PAGINATION
+    // ==============================
+    public int countCampaigns(String searchName, String status) {
+        String sql = "SELECT COUNT(*) FROM Campaigns WHERE 1=1";
+        List<Object> params = new ArrayList<>();
+
+        if (searchName != null && !searchName.trim().isEmpty()) {
+            sql += " AND name LIKE ?";
+            params.add("%" + searchName.trim() + "%");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            List<String> aliases = statusAliases(status);
+            String placeholders = String.join(",", aliases.stream().map(s -> "?").toArray(String[]::new));
+            sql += " AND status IN (" + placeholders + ")";
+            params.addAll(aliases);
+        }
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     // Map dữ liệu từ ResultSet sang đối tượng Campaign
@@ -123,4 +260,5 @@ public class CampaignDAO {
                 rs.getTimestamp("updated_at").toLocalDateTime()
         );
     }
+
 }
