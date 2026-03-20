@@ -21,11 +21,6 @@ public class LeadImportService {
     private LeadService leadService = new LeadService();
 
     /**
-     * Import leads với validation và scoring
-     *
-     * @return ImportLeadResponse
-     */
-    /**
      * Overload cũ — gọi version mới với danh sách assign rỗng.
      */
     public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId) {
@@ -44,10 +39,11 @@ public class LeadImportService {
     public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId, List<Integer> assignedToIds) {
         ImportLeadResponse response = new ImportLeadResponse();
         List<Lead> validLeads = new ArrayList<>();
-        int rowNumber = 2; // Excel row (1-based + header)
 
         // ===== VALIDATION PHASE =====
-        for (Lead lead : leads) {
+        for (int i = 0; i < leads.size(); i++) {
+            Lead lead = leads.get(i);
+            int excelRow = i + 2; // Row 1 là header, data bắt đầu từ row 2
             List<String> errors = new ArrayList<>();
 
             // Validate fullName
@@ -67,7 +63,7 @@ public class LeadImportService {
                 }
             }
 
-            // Check duplicate - chỉ khi không có lỗi validation khác
+            // Check duplicate — chỉ khi không có lỗi validation khác
             if (errors.isEmpty()) {
                 if (campaignId != null) {
                     lead.setCampaignId(campaignId);
@@ -81,22 +77,22 @@ public class LeadImportService {
                 }
             }
 
-            rowNumber++;
-
             if (errors.isEmpty()) {
                 validLeads.add(lead);
             } else {
                 // Format: "Row X - Nguyễn Văn A (email@...) : lý do lỗi"
                 String leadInfo = (lead.getFullName() != null ? lead.getFullName() : "N/A")
                         + " (" + (lead.getEmail() != null ? lead.getEmail() : "N/A") + ")";
-                response.addError("Row " + (rowNumber - 1) + " - " + leadInfo + ": " + String.join(", ", errors));
+                response.addError("Row " + excelRow + " - " + leadInfo + ": " + String.join(", ", errors));
             }
         }
 
         response.setTotalFailed(leads.size() - validLeads.size());
 
         // ===== SCORING PHASE =====
-        for (Lead lead : validLeads) {
+        for (int i = 0; i < validLeads.size(); i++) {
+            Lead lead = validLeads.get(i);
+
             int score = LeadScoringUtil.calculateScore(
                     lead.getFullName(),
                     lead.getEmail(),
@@ -106,17 +102,19 @@ public class LeadImportService {
             );
             lead.setScore(score);
             lead.setStatus(LeadScoringUtil.determineStatus(score));
+
             if (source != null) {
                 lead.setSource(source);
             }
+
             // Gắn campaign nếu có chọn
             if (campaignId != null) {
                 lead.setCampaignId(campaignId);
             }
-            // Round-robin assign sale staff
+
+            // Round-robin assign sale staff — dùng index i thay vì indexOf()
             if (assignedToIds != null && !assignedToIds.isEmpty()) {
-                int idx = validLeads.indexOf(lead) % assignedToIds.size();
-                lead.setAssignedTo(assignedToIds.get(idx));
+                lead.setAssignedTo(assignedToIds.get(i % assignedToIds.size()));
             }
         }
 
@@ -164,7 +162,8 @@ public class LeadImportService {
             String campaignInfo = (campaignId != null) ? " vào campaign" : "";
             if (response.getTotalFailed() > 0) {
                 response.setSuccess(true);
-                response.setMessage("Import thành công " + imported + " leads" + campaignInfo + ". " + response.getTotalFailed() + " leads bị lỗi (trùng lặp hoặc dữ liệu không hợp lệ).");
+                response.setMessage("Import thành công " + imported + " leads" + campaignInfo + ". "
+                        + response.getTotalFailed() + " leads bị lỗi (trùng lặp hoặc dữ liệu không hợp lệ).");
             } else {
                 response.setSuccess(true);
                 response.setMessage("Import thành công " + imported + " leads" + campaignInfo + "!");

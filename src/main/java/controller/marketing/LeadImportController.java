@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
-
 import dao.CampaignDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
@@ -21,6 +19,7 @@ import model.Lead;
 import model.User;
 import service.LeadImportService;
 import util.ExcelUtil;
+import util.JsonUtility;
 import util.LeadActivityUtil;
 
 @WebServlet(name = "LeadImportController", urlPatterns = {"/marketing/leads/import"})
@@ -30,7 +29,8 @@ public class LeadImportController extends HttpServlet {
     private LeadImportService importService = new LeadImportService();
     private CampaignDAO campaignDAO = new CampaignDAO();
     private UserDAO userDAO = new UserDAO();
-    private Gson gson = new Gson();
+    // Đã xóa: private Gson gson = new Gson();
+    // Dùng JsonUtility thay thế để xử lý đúng LocalDateTime (Java 17+)
 
     // ===== GET: Show import form (qua layout) =====
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -68,7 +68,7 @@ public class LeadImportController extends HttpServlet {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
                 errorResponse.setMessage("Vui lòng chọn file");
-                response.getWriter().write(gson.toJson(errorResponse));
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -78,7 +78,7 @@ public class LeadImportController extends HttpServlet {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
                 errorResponse.setMessage("Chỉ hỗ trợ file .xlsx");
-                response.getWriter().write(gson.toJson(errorResponse));
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -116,7 +116,7 @@ public class LeadImportController extends HttpServlet {
                 errorResponse.setSuccess(false);
                 errorResponse.setMessage("Vui lòng nhập file khác vì sai định dạng. File phải là .xlsx và không bị corrupt.");
                 errorResponse.addError("Lỗi đọc file: " + e.getMessage());
-                response.getWriter().write(gson.toJson(errorResponse));
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -125,7 +125,7 @@ public class LeadImportController extends HttpServlet {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
                 errorResponse.setMessage("File không có dữ liệu hoặc không đúng định dạng.");
-                response.getWriter().write(gson.toJson(errorResponse));
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -143,26 +143,28 @@ public class LeadImportController extends HttpServlet {
             // ===== Log Activity for imported leads =====
             if (importResponse.isSuccess()) {
                 User sessionUser = (User) request.getSession().getAttribute("user");
-                for (Lead imported : importResponse.getImportedLeads()) {
-                    LeadActivityUtil.logLeadActivity(
-                            imported.getLeadId(),
-                            imported.getFullName(),
-                            "Lead Imported - " + imported.getFullName(),
-                            "Lead imported from Excel file",
-                            sessionUser
-                    );
+                if (sessionUser != null) {
+                    for (Lead imported : importResponse.getImportedLeads()) {
+                        LeadActivityUtil.logLeadActivity(
+                                imported.getLeadId(),
+                                imported.getFullName(),
+                                "Lead Imported - " + imported.getFullName(),
+                                "Lead imported from Excel file",
+                                sessionUser
+                        );
+                    }
                 }
             }
 
             // ===== Response =====
-            response.getWriter().write(gson.toJson(importResponse));
+            response.getWriter().write(JsonUtility.toJson(importResponse));
 
         } catch (Exception e) {
             ImportLeadResponse errorResponse = new ImportLeadResponse();
             errorResponse.setSuccess(false);
             errorResponse.setMessage("Lỗi: " + e.getMessage());
             errorResponse.addError(e.toString());
-            response.getWriter().write(gson.toJson(errorResponse));
+            response.getWriter().write(JsonUtility.toJson(errorResponse));
         }
     }
 }
