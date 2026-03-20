@@ -1,8 +1,12 @@
 package service;
 
+import dao.ConfigSegmentDAO;
 import dao.CustomerSegmentDAO;
+import dao.SegmentDetailDAO;
+import dao.UserDAO;
 import dto.*;
 import model.CustomerSegment;
+import model.User;
 import util.DBContext;
 
 import java.math.BigDecimal;
@@ -12,9 +16,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+
 public class CustomerSegmentService {
 
     private final CustomerSegmentDAO dao = new CustomerSegmentDAO();
+    private final ConfigSegmentDAO configSegmentDAO = new ConfigSegmentDAO();
+    private final SegmentDetailDAO segmentDetailDAO = new SegmentDetailDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     // ── KPI ──────────────────────────────────────────────────────
     public KpiSummaryDTO getKpi(LocalDate monthA, LocalDate monthB) throws Exception {
@@ -133,6 +141,69 @@ public class CustomerSegmentService {
         try (Connection conn = DBContext.getConnection()) {
             boolean isRemoved = dao.removeSegmentation(conn, segmentId);
             return isRemoved;
+        }
+    }
+
+    public List<CustomerSegment> getStaticSegments() throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return dao.getStaticSegments(conn);
+        }
+    }
+
+    public void insertCustomersToSegment(int id, String empty) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+                configSegmentDAO.insertCustomersToSegment(conn, id, empty);
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public boolean isCustomerInSegment(int segmentId, int customerId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return configSegmentDAO.isCustomerInSegment(conn, segmentId, customerId);
+        }
+    }
+
+    public void updateSegmentCount(int id) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            segmentDetailDAO.updateSegmentCount(conn, id);
+        }
+    }
+
+    public void removeCustomer(int customerId, int segmentId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+                dao.removeCustomer(conn, customerId, segmentId);
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public List<User> getActiveStaffsUnderManagerLevel() throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return userDAO.getActiveStaffsUnderManagerLevel();
+        }
+    }
+
+    public void changeOwner(int segmentId, int customerId, int newOner) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+                dao.changeOwner(conn, customerId, segmentId, newOner);
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new RuntimeException(e);
+            }
         }
     }
 }

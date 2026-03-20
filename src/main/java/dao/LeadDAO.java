@@ -1,18 +1,12 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
+import model.Lead;
+import util.DBContext;
+
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import model.Lead;
-import util.DBContext;
 
 public class LeadDAO {
 
@@ -129,7 +123,7 @@ public class LeadDAO {
         return null;
     }
 
-    //Tìm lead theo interest
+    // Tìm lead theo interest
     public List<Lead> findLeadByInterest(String interest) {
         String sql = "SELECT * FROM Leads WHERE interest = ?";
         List<Lead> leads = new ArrayList<>();
@@ -146,8 +140,8 @@ public class LeadDAO {
     }
 
     /**
-     * Tìm lead theo email + campaign_id (kiểm tra trùng trong cùng campaign). 1
-     * người có thể tham gia nhiều campaign → mỗi campaign có Lead record riêng.
+     * Tìm lead theo email + campaign_id (kiểm tra trùng trong cùng campaign).
+     * 1 người có thể tham gia nhiều campaign → mỗi campaign có Lead record riêng.
      */
     public Lead findLeadByEmailAndCampaign(String email, int campaignId) {
         String sql = "SELECT * FROM Leads WHERE email = ? AND campaign_id = ?";
@@ -278,8 +272,7 @@ public class LeadDAO {
         return leads;
     }
 
-    // Lấy danh sách lead theo trạng thái, sắp xếp theo điểm số cao nhất trước, nếu
-    // điểm số bằng nhau thì mới nhất trước
+    // Lấy danh sách lead theo trạng thái
     public List<Lead> getLeadByStatus(String status) {
         String sql = "SELECT * FROM Leads WHERE status = ? ORDER BY score DESC, created_at DESC";
         List<Lead> leads = new ArrayList<>();
@@ -324,7 +317,7 @@ public class LeadDAO {
 
         try {
             conn = DBContext.getConnection();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (Lead lead : leads) {
@@ -342,19 +335,18 @@ public class LeadDAO {
                     }
                     ps.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
                     ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
-
                     ps.addBatch();
                 }
 
                 int[] results = ps.executeBatch();
-                importedCount = results.length;
-
-                conn.commit(); // Commit transaction
+                for (int result : results) {
+                    if (result > 0) importedCount++;
+                }
+                conn.commit();
             } catch (Exception e) {
-                conn.rollback(); // Rollback if error
+                conn.rollback();
                 throw e;
             }
-
         } finally {
             if (conn != null) {
                 conn.setAutoCommit(true);
@@ -397,100 +389,121 @@ public class LeadDAO {
     }
 
     // ==============================
-    // SEARCH + PAGINATION (OFFSET / FETCH)
+    // SEARCH + PAGINATION
     // ==============================
+
+    /**
+     * Subquery gom tất cả campaign name của cùng email thành chuỗi " | ".
+     * Dùng FOR XML PATH thay vì STRING_AGG(DISTINCT) vì SQL Server không hỗ trợ
+     * STRING_AGG(DISTINCT ...).
+     *
+     * Logic: lấy DISTINCT campaign name từ bảng Leads (qua campaign_id)
+     * của tất cả lead row có cùng email với lead hiện tại, nối bằng " | ".
+     */
+    private static final String CAMPAIGN_NAMES_SUBQUERY =
+        "( " +
+        "  SELECT STUFF( " +
+        "    (SELECT DISTINCT ' | ' + c_inner.name " +
+        "     FROM Leads l_inner " +
+        "     LEFT JOIN Campaigns c_inner ON l_inner.campaign_id = c_inner.campaign_id " +
+        "     WHERE l_inner.email = l.email " +
+        "       AND c_inner.name IS NOT NULL " +
+        "     FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)') " +
+        "  , 1, 3, '') " +
+        ") AS campaign_names ";
+
     public List<Lead> searchLeads(String keyword, String status, int campaignId, String interest, int page, int pageSize) {
-    String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
-            + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
-    if (campaignId > 0) {
-        sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
-    }
-    sql += "WHERE 1=1";
-    List<Object> params = new ArrayList<>();
-    if (campaignId > 0) {
-        sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
-        params.add(campaignId);
-        params.add(campaignId);
-    }
-    if (keyword != null && !keyword.trim().isEmpty()) {
-        sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
-        String kw = "%" + keyword.trim() + "%";
-        params.add(kw); params.add(kw); params.add(kw);
-    }
-    if (status != null && !status.trim().isEmpty()) {
-        sql += " AND l.status = ?";
-        params.add(status);
-    }
-    if (interest != null && !interest.trim().isEmpty()) {
-        sql += " AND l.interest LIKE ?";
-        params.add("%" + interest.trim() + "%");
-    }
-    sql += " ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-    int offset = (page - 1) * pageSize;
-    params.add(offset); params.add(pageSize);
 
-    List<Lead> leads = new ArrayList<>();
-    try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-        for (int i = 0; i < params.size(); i++) {
-            ps.setObject(i + 1, params.get(i));
-        }
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            Lead lead = mapResultSetToLead(rs);
-            String campName = rs.getString("campaign_name");
-            if (campName != null) lead.setCampaignName(campName);
-            leads.add(lead);
-        }
-    } catch (Exception e) { e.printStackTrace(); }
-    return leads;
-}
+        // Chọn 1 đại diện per email (MIN lead_id) rồi JOIN lấy chi tiết + campaign_names
+        String sql =
+            "SELECT l.*, " + CAMPAIGN_NAMES_SUBQUERY +
+            "FROM Leads l " +
+            "WHERE l.lead_id IN ( " +
+            "  SELECT MIN(lead_id) FROM Leads GROUP BY email " +
+            ") ";
 
-    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId, String interest) {
-        String sql = "SELECT DISTINCT l.*, c.name AS campaign_name FROM Leads l "
-                + "LEFT JOIN Campaigns c ON l.campaign_id = c.campaign_id ";
-
-        if (campaignId > 0) {
-            sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
-        }
-
-        sql += "WHERE 1=1";
         List<Object> params = new ArrayList<>();
 
+        // Lọc theo campaign: email phải xuất hiện trong Leads với campaign_id đó
         if (campaignId > 0) {
-            sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
-            params.add(campaignId);
+            sql += "AND l.email IN ( " +
+                   "  SELECT email FROM Leads WHERE campaign_id = ? " +
+                   ") ";
             params.add(campaignId);
         }
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
+            sql += "AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?) ";
             String kw = "%" + keyword.trim() + "%";
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
+            params.add(kw); params.add(kw); params.add(kw);
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql += " AND l.status = ?";
+            sql += "AND l.status = ? ";
             params.add(status);
         }
         if (interest != null && !interest.trim().isEmpty()) {
-            sql += " AND l.interest LIKE ?";
+            sql += "AND l.interest LIKE ? ";
             params.add("%" + interest.trim() + "%");
         }
 
-        sql += " ORDER BY l.updated_at DESC";
+        sql += "ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        params.add((page - 1) * pageSize);
+        params.add(pageSize);
 
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Lead lead = mapResultSetToLead(rs);
-                String campName = rs.getString("campaign_name");
-                if (campName != null) {
-                    lead.setCampaignName(campName);
-                }
+                lead.setCampaignNames(rs.getString("campaign_names"));
+                leads.add(lead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return leads;
+    }
+
+    public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId, String interest) {
+
+        String sql =
+            "SELECT l.*, " + CAMPAIGN_NAMES_SUBQUERY +
+            "FROM Leads l " +
+            "WHERE l.lead_id IN ( " +
+            "  SELECT MIN(lead_id) FROM Leads GROUP BY email " +
+            ") ";
+
+        List<Object> params = new ArrayList<>();
+
+        if (campaignId > 0) {
+            sql += "AND l.email IN ( " +
+                   "  SELECT email FROM Leads WHERE campaign_id = ? " +
+                   ") ";
+            params.add(campaignId);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += "AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?) ";
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw); params.add(kw); params.add(kw);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql += "AND l.status = ? ";
+            params.add(status);
+        }
+        if (interest != null && !interest.trim().isEmpty()) {
+            sql += "AND l.interest LIKE ? ";
+            params.add("%" + interest.trim() + "%");
+        }
+
+        sql += "ORDER BY l.updated_at DESC OFFSET 0 ROWS FETCH NEXT 10000 ROWS ONLY";
+
+        List<Lead> leads = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
+                lead.setCampaignNames(rs.getString("campaign_names"));
                 leads.add(lead);
             }
         } catch (Exception e) {
@@ -503,46 +516,39 @@ public class LeadDAO {
     // COUNT FOR PAGINATION
     // ==============================
     public int countLeads(String keyword, String status, int campaignId, String interest) {
-        String sql = "SELECT COUNT(DISTINCT l.lead_id) FROM Leads l ";
+        // Đếm số email unique — mỗi email = 1 lead hiển thị trên UI
+        String sql =
+            "SELECT COUNT(*) FROM ( " +
+            "  SELECT MIN(lead_id) AS lead_id, email, status, interest, full_name, phone " +
+            "  FROM Leads GROUP BY email, status, interest, full_name, phone " +
+            ") AS base WHERE 1=1 ";
 
-        // Nếu lọc theo campaign → LEFT JOIN Campaign_Leads + kiểm tra cả 2 nguồn
-        if (campaignId > 0) {
-            sql += "LEFT JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id ";
-        }
-
-        sql += "WHERE 1=1";
         List<Object> params = new ArrayList<>();
 
         if (campaignId > 0) {
-            sql += " AND (l.campaign_id = ? OR cl.campaign_id = ?)";
-            params.add(campaignId);
+            sql += "AND base.email IN ( " +
+                   "  SELECT email FROM Leads WHERE campaign_id = ? " +
+                   ") ";
             params.add(campaignId);
         }
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql += " AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?)";
+            sql += "AND (base.full_name LIKE ? OR base.email LIKE ? OR base.phone LIKE ?) ";
             String kw = "%" + keyword.trim() + "%";
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
+            params.add(kw); params.add(kw); params.add(kw);
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql += " AND l.status = ?";
+            sql += "AND base.status = ? ";
             params.add(status);
         }
         if (interest != null && !interest.trim().isEmpty()) {
-            sql += " AND l.interest LIKE ?";
+            sql += "AND base.interest LIKE ? ";
             params.add("%" + interest.trim() + "%");
         }
 
-
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
+            if (rs.next()) return rs.getInt(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -564,5 +570,22 @@ public class LeadDAO {
                 rs.getInt("assigned_to"),
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime());
+    }
+
+    public void markConverted(Connection conn, int leadId, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Leads
+                    SET is_converted = 1,
+                        converted_customer_id = ?,
+                        status = 'Converted',
+                        updated_at = GETDATE()
+                    WHERE [lead_id] = ?
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, leadId);
+            ps.executeUpdate();
+        }
     }
 }

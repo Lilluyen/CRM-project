@@ -1,4 +1,4 @@
-package controller.api.tasks;
+package controller.api.entityDropdownList;
 
 import com.google.gson.Gson;
 
@@ -50,19 +50,27 @@ public class RelatedEntitiesServlet extends HttpServlet {
                     case "deal":
                         sql = "SELECT deal_id as id, deal_name as name FROM Deals ORDER BY deal_name";
                         break;
+                    case "task":
+                        sql = "SELECT task_id as id, title as name FROM Tasks ORDER BY title";
+                        break;
                     case "user":
-                        sql = "SELECT user_id as id, full_name as name FROM Users ORDER BY full_name";
+                        sql = "SELECT user_id as id, COALESCE(full_name, username) as name, email FROM Users WHERE status = 'Active' ORDER BY full_name";
                         break;
                     default:
                         sql = "SELECT customer_id as id, name FROM Customers WHERE 1=0"; // empty
                 }
 
                 if (sql != null) {
+                    boolean isUserType = "user".equals(type);
                     try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
                             Map<String, Object> row = new HashMap<>();
                             row.put("id", rs.getInt("id"));
                             row.put("name", rs.getString("name"));
+                            if (isUserType) {
+                                try { row.put("email", rs.getString("email")); }
+                                catch (Exception ignored) {}
+                            }
                             results.add(row);
                         }
                     }

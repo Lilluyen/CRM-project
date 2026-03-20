@@ -14,9 +14,11 @@ public class ImportLeadResponse {
     private int totalFailed;
     private String message;
     private List<String> errors; // Danh sách lỗi chi tiết
+    private List<Lead> importedLeads; // Danh sách lead đã import thành công
 
     public ImportLeadResponse() {
         this.errors = new ArrayList<>();
+        this.importedLeads = new ArrayList<>();
     }
 
     public ImportLeadResponse(boolean success, int totalImported, int totalFailed, String message) {
@@ -25,6 +27,7 @@ public class ImportLeadResponse {
         this.totalFailed = totalFailed;
         this.message = message;
         this.errors = new ArrayList<>();
+        this.importedLeads = new ArrayList<>();
     }
 
     public int getTotalLinked() {
@@ -77,5 +80,17 @@ public class ImportLeadResponse {
 
     public void addError(String error) {
         this.errors.add(error);
+    }
+
+    public List<Lead> getImportedLeads() {
+        return importedLeads;
+    }
+
+    public void setImportedLeads(List<Lead> importedLeads) {
+        this.importedLeads = importedLeads;
+    }
+
+    public void addImportedLead(Lead lead) {
+        this.importedLeads.add(lead);
     }
 }

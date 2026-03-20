@@ -392,6 +392,12 @@ function downgradeCustomer(customerId) {
     }
 }
 
+function addDealCustomer(customerId) {
+    const ctx = window.__CTX__ || "";
+    const url = `${ctx}/sale/deal/create?relatedId=${encodeURIComponent(customerId)}&relatedType=CUSTOMER`;
+    window.location.href = url;
+}
+
 function deleteCustomer(customerId) {
 
     if (confirm('Are you sure you want to delete this customer?')) {
@@ -511,30 +517,89 @@ document.getElementById('customerPreview')?.addEventListener('click', function (
     }
 });
 
+
+// ===== LOAD PAGE =====
+document.addEventListener("DOMContentLoaded", () => {
+
+    const selected = JSON.parse(localStorage.getItem('selected')) || [];
+    const items = document.querySelectorAll(".check-item");
+
+    let checkedCount = 0;
+
+    items.forEach(cb => {
+        if (selected.includes(cb.value)) {
+            cb.checked = true;
+            checkedCount++;
+        } else {
+            cb.checked = false;
+        }
+    });
+
+    const checkAll = document.querySelector(".check-all");
+
+    if (checkAll) {
+        checkAll.checked = checkedCount === items.length;
+        checkAll.indeterminate = checkedCount > 0 && checkedCount < items.length;
+    }
+
+});
+
+
+// ===== HANDLE CHANGE =====
 document.addEventListener("change", function (e) {
 
-    // Khi click checkbox SELECT ALL
+    // ===== CHECK ALL =====
     if (e.target.classList.contains("check-all")) {
 
         const checked = e.target.checked;
 
+        let selectedCustomers = JSON.parse(localStorage.getItem("selected")) || [];
+
         document.querySelectorAll(".check-item").forEach(cb => {
             cb.checked = checked;
+
+            if (checked) {
+                if (!selectedCustomers.includes(cb.value)) {
+                    selectedCustomers.push(cb.value);
+                }
+            } else {
+                selectedCustomers = selectedCustomers.filter(id => id !== cb.value);
+            }
         });
 
+        localStorage.setItem("selected", JSON.stringify(selectedCustomers));
+
+        // 🔥 reset trạng thái gạch ngang
+        e.target.indeterminate = false;
     }
 
-    // Khi click từng checkbox item
+
+    // ===== CHECK ITEM =====
     if (e.target.classList.contains("check-item")) {
 
+        let selectedCustomers = JSON.parse(localStorage.getItem("selected")) || [];
+        const id = e.target.value;
+
+        if (e.target.checked) {
+            if (!selectedCustomers.includes(id)) {
+                selectedCustomers.push(id);
+            }
+        } else {
+            selectedCustomers = selectedCustomers.filter(c => c !== id);
+        }
+
+        localStorage.setItem("selected", JSON.stringify(selectedCustomers));
+
+        // 🔥 update check-all + indeterminate
         const total = document.querySelectorAll(".check-item").length;
         const checked = document.querySelectorAll(".check-item:checked").length;
 
         const checkAll = document.querySelector(".check-all");
+
         if (checkAll) {
             checkAll.checked = total === checked;
+            checkAll.indeterminate = checked > 0 && checked < total;
         }
-
     }
 
 });
@@ -574,7 +639,56 @@ function assignTask() {
     }
 }
 
-function createSegment() {
+const assignBtn = document.getElementById("assign-segment-btn");
+assignBtn.addEventListener("click", () => {
+    const selected = JSON.parse(localStorage.getItem("selected")) || [];
+    console.log(selected)
+    if (selected.length === 0) {
+        alert("Vui lòng chọn ít nhất 1 customer!");
+        return;
+    }
 
+    // nhét vào hidden input (chuỗi: 1,2,3)
+    document.getElementById("customerIdsInput").value = selected.join(",");
+    console.log(document.getElementById("customerIdsInput"))
+    openSegmentModal();
+});
+
+function openSegmentModal() {
+    document.getElementById("segment-modal").style.display = "block";
 }
+
+function closeSegmentModal() {
+    document.getElementById("segment-modal").style.display = "none";
+}
+
+document.querySelectorAll('.segment-card').forEach(card => {
+    card.addEventListener('click', function (e) {
+
+        const radio = this.previousElementSibling; // input radio
+
+        if (radio.checked) {
+            // nếu đã chọn → bỏ chọn
+            radio.checked = false;
+        } else {
+            // nếu chưa → chọn (và bỏ chọn các cái khác)
+            document.querySelectorAll('input[name="segmentId"]').forEach(r => r.checked = false);
+            radio.checked = true;
+        }
+
+        // ngăn label auto check (quan trọng)
+        e.preventDefault();
+    });
+});
+
+document.querySelector("#segment-modal form").addEventListener("submit", function (e) {
+
+    const selectedSegment = document.querySelector('input[name="segmentId"]:checked');
+
+    if (!selectedSegment) {
+        e.preventDefault();
+        alert("Vui lòng chọn segment!");
+        return;
+    }
+});
 

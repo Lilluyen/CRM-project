@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Customer;
+import model.CustomerSegment;
+import service.CustomerSegmentService;
 import service.CustomerService;
 import util.ControllerUltil;
 
@@ -28,7 +30,7 @@ public class CustomerFilterController extends HttpServlet {
     private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
     private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
-
+    private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
     private final CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
@@ -56,11 +58,12 @@ public class CustomerFilterController extends HttpServlet {
             int totalRecords = customerService.countTotalCustomer(returnRate, keyword, loyaltyTiers, source, gender, timeConditions);
             Pagination pagination = new Pagination(page, size, totalRecords);
             List<Customer> customers = customerService.filterAdvanced(keyword, returnRate, loyaltyTiers, source, gender, timeConditions, page, size);
-
+            List<CustomerSegment> customerSegments = customerSegmentService.getStaticSegments();
             request.setAttribute("pagination", pagination);
             request.setAttribute("currentPage", page);
             request.setAttribute("customerList", customers);
             request.setAttribute("totalRecord", totalRecords);
+            request.setAttribute("segments", customerSegments);
             request.setAttribute("keyword", keyword);
             request.setAttribute("loyaltyFilterSelected", loyaltyTiers != null ? loyaltyTiers.get(0) : null);
             request.setAttribute("sourceSelected", source != null ? source.get(0) : null);

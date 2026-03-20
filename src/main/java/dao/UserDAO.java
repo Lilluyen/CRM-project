@@ -1,15 +1,15 @@
 package dao;
 
+import model.Role;
+import model.User;
+import util.DBContext;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import model.Role;
-import model.User;
-import util.DBContext;
 
 public class UserDAO {
 
@@ -62,24 +62,24 @@ public class UserDAO {
     public User getUserById(int userId) {
 
         String sql = """
-            SELECT
-                u.user_id,
-                u.username,
-                u.password_hash,
-                u.email,
-                u.full_name,
-                u.phone,
-                u.status,
-                u.created_at,
-                u.updated_at,
-                u.last_login_at,
-                r.role_id,
-                r.role_name,
-                r.description
-            FROM Users u
-            LEFT JOIN Roles r ON u.role_id = r.role_id
-            WHERE u.user_id = ?
-        """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.user_id = ?
+                """;
 
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
@@ -105,24 +105,24 @@ public class UserDAO {
     public User getUserByUsername(String username) {
 
         String sql = """
-            SELECT
-                u.user_id,
-                u.username,
-                u.password_hash,
-                u.email,
-                u.full_name,
-                u.phone,
-                u.status,
-                u.created_at,
-                u.updated_at,
-                u.last_login_at,
-                r.role_id,
-                r.role_name,
-                r.description
-            FROM Users u
-            LEFT JOIN Roles r ON u.role_id = r.role_id
-            WHERE u.username = ?
-        """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.username = ?
+                """;
 
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
@@ -148,24 +148,24 @@ public class UserDAO {
     public User getUserByEmail(String email) {
 
         String sql = """
-            SELECT
-                u.user_id,
-                u.username,
-                u.password_hash,
-                u.email,
-                u.full_name,
-                u.phone,
-                u.status,
-                u.created_at,
-                u.updated_at,
-                u.last_login_at,
-                r.role_id,
-                r.role_name,
-                r.description
-            FROM Users u
-            LEFT JOIN Roles r ON u.role_id = r.role_id
-            WHERE u.email = ?
-        """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.email = ?
+                """;
 
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
@@ -186,10 +186,10 @@ public class UserDAO {
     public boolean updateLastLogin(int userId) {
 
         String sql = """
-        UPDATE Users
-        SET last_login_at = ?
-        WHERE user_id = ?
-    """;
+                    UPDATE Users
+                    SET last_login_at = ?
+                    WHERE user_id = ?
+                """;
 
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
@@ -207,24 +207,24 @@ public class UserDAO {
 
     public List<User> getAllUsers(Connection conn) {
         String sql = """
-            SELECT
-                            u.user_id,
-                            u.username,
-                            u.password_hash,
-                            u.email,
-                            u.full_name,
-                            u.phone,
-                            u.status,
-                            u.created_at,
-                            u.updated_at,
-                            u.last_login_at,
-                            r.role_id,
-                            r.role_name,
-                            r.description
-                        FROM Users u
-                        LEFT JOIN Roles r ON u.role_id = r.role_id
-                        ORDER BY u.full_name
-        """;
+                    SELECT
+                                    u.user_id,
+                                    u.username,
+                                    u.password_hash,
+                                    u.email,
+                                    u.full_name,
+                                    u.phone,
+                                    u.status,
+                                    u.created_at,
+                                    u.updated_at,
+                                    u.last_login_at,
+                                    r.role_id,
+                                    r.role_name,
+                                    r.description
+                                FROM Users u
+                                LEFT JOIN Roles r ON u.role_id = r.role_id
+                                ORDER BY u.full_name
+                """;
         List<User> users = new ArrayList();
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
@@ -242,25 +242,25 @@ public class UserDAO {
      */
     public List<User> getActiveUsers() {
         String sql = """
-            SELECT
-                u.user_id,
-                u.username,
-                u.password_hash,
-                u.email,
-                u.full_name,
-                u.phone,
-                u.status,
-                u.created_at,
-                u.updated_at,
-                u.last_login_at,
-                r.role_id,
-                r.role_name,
-                r.description
-            FROM Users u
-            LEFT JOIN Roles r ON u.role_id = r.role_id
-            WHERE u.status = 'Active'
-            ORDER BY u.full_name
-        """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.status = 'Active'
+                    ORDER BY u.full_name
+                """;
         List<User> users = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -274,31 +274,66 @@ public class UserDAO {
 
     public List<User> getActiveSaleStaffs() {
         String sql = """
-            SELECT
-                u.user_id,
-                u.username,
-                u.password_hash,
-                u.email,
-                u.full_name,
-                u.phone,
-                u.status,
-                u.created_at,
-                u.updated_at,
-                u.last_login_at,
-                r.role_id,
-                r.role_name,
-                r.description
-            FROM Users u
-            LEFT JOIN Roles r ON u.role_id = r.role_id
-            WHERE u.status = 'Active'
-            ORDER BY u.full_name
-        """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.status = 'Active'
+                    ORDER BY u.full_name
+                """;
         List<User> users = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 if (rs.getInt("role_id") == 2) { // role_id = 2 là Sale
                     users.add(mapUser(rs));
                 }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+
+    public List<User> getActiveStaffsUnderManagerLevel() {
+        String sql = """
+                    SELECT
+                    u.user_id,
+                    u.username,
+                    u.password_hash,
+                    u.email,
+                    u.full_name,
+                    u.phone,
+                    u.status,
+                    u.created_at,
+                    u.updated_at,
+                    u.last_login_at,
+                    r.role_id,
+                    r.role_name,
+                    r.description
+                FROM Users u
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE u.status = 'Active' AND r.role_id IN (2, 3, 4)
+                ORDER BY u.full_name
+                """;
+        List<User> users = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+
+                users.add(mapUser(rs));
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -314,24 +349,24 @@ public class UserDAO {
     public User findByEmail(String email) {
 
         String sql = """
-        SELECT
-            u.user_id,
-            u.username,
-            u.password_hash,
-            u.email,
-            u.full_name,
-            u.phone,
-            u.status,
-            u.created_at,
-            u.updated_at,
-            u.last_login_at,
-            r.role_id,
-            r.role_name,
-            r.description
-        FROM Users u
-        LEFT JOIN Roles r ON u.role_id = r.role_id
-        WHERE u.email = ?
-    """;
+                    SELECT
+                        u.user_id,
+                        u.username,
+                        u.password_hash,
+                        u.email,
+                        u.full_name,
+                        u.phone,
+                        u.status,
+                        u.created_at,
+                        u.updated_at,
+                        u.last_login_at,
+                        r.role_id,
+                        r.role_name,
+                        r.description
+                    FROM Users u
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE u.email = ?
+                """;
 
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 
@@ -352,11 +387,11 @@ public class UserDAO {
     public boolean updatePassword(int userId, String passwordHash) {
 
         String sql = """
-        UPDATE Users
-        SET password_hash = ?,
-            updated_at = ?
-        WHERE user_id = ?
-    """;
+                    UPDATE Users
+                    SET password_hash = ?,
+                        updated_at = ?
+                    WHERE user_id = ?
+                """;
 
         try (PreparedStatement ps = DBContext.getConnection().prepareStatement(sql)) {
 

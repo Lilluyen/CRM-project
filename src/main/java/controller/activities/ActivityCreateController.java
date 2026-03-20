@@ -63,6 +63,7 @@ public class ActivityCreateController extends HttpServlet {
                 req.setAttribute("activity",    activity);
                 req.setAttribute("pageTitle",   "Create Activity");
                 req.setAttribute("contentPage", "/frontend/activities/activity-create.jsp");
+                req.setAttribute("page", "activity-create");
                 req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
                 return;
             }
@@ -84,13 +85,36 @@ public class ActivityCreateController extends HttpServlet {
 
         String relId = req.getParameter("relatedId");
         if (relId != null && !relId.isBlank()) {
-            a.setRelatedId(Integer.parseInt(relId));
+            try {
+                a.setRelatedId(Integer.parseInt(relId));
+            } catch (NumberFormatException ignored) {}
         }
 
         String dt = req.getParameter("activityDate");
         if (dt != null && !dt.isBlank()) {
             a.setActivityDate(LocalDateTime.parse(dt, DT_FMT));
         }
+
+        // Source type and source id
+        String sourceType = req.getParameter("sourceType");
+        String sourceId = req.getParameter("sourceId");
+        if (sourceType != null && !sourceType.isBlank()) {
+            a.setSourceType(sourceType);
+            if (sourceId != null && !sourceId.isBlank()) {
+                try {
+                    a.setSourceId(Integer.parseInt(sourceId));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        // Performed by
+        String performedBy = req.getParameter("performedBy");
+        if (performedBy != null && !performedBy.isBlank()) {
+            User performer = new User();
+            performer.setUserId(Integer.parseInt(performedBy));
+            a.setPerformedBy(performer);
+        }
+
         return a;
     }
 }

@@ -1,11 +1,5 @@
 package controller.sale.product;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
-
 import dao.CategoryDAO;
 import dao.ProductDAO;
 import jakarta.servlet.ServletException;
@@ -16,6 +10,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Category;
 import model.Product;
 import util.DBContext;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 
 @WebServlet("/sale/product/create")
 public class CreateProductController extends HttpServlet {
@@ -34,10 +34,7 @@ public class CreateProductController extends HttpServlet {
             request.setAttribute("contentPage", "sale/product/productForm.jsp");
             request.setAttribute("pageCss", "product_form.css");
             request.setAttribute("page", "product-form");
-            request.getRequestDispatcher("/view/layout.jsp");
-            request.getRequestDispatcher("/view/sale/product/productForm.jsp")
-                    .forward(request, response);
-
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -79,9 +76,7 @@ public class CreateProductController extends HttpServlet {
             request.setAttribute("contentPage", "sale/product/productForm.jsp");
             request.setAttribute("pageCss", "product_form.css");
             request.setAttribute("page", "product-form");
-            request.getRequestDispatcher("/view/layout.jsp");
-            request.getRequestDispatcher("/view/sale/product/productForm.jsp")
-                    .forward(request, response);
+            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
         }
     }
 

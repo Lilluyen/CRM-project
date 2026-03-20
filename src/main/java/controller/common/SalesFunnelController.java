@@ -63,6 +63,7 @@ public class SalesFunnelController extends HttpServlet {
             request.setAttribute("pageCss", "sales_funnel.css");
             request.setAttribute("page", "sales-funnel");
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+            // request.getRequestDispatcher("/view/sale/funnel/salesFunnel.jsp").forward(request, response);
             
 
         } catch (Exception e) {

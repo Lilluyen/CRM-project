@@ -1,11 +1,12 @@
 package dto;
 
+import model.CustomerMeasurement;
+import model.StyleTag;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import model.CustomerMeasurement;
-import model.StyleTag;
 
 public class CustomerDetailDTO {
 
@@ -21,7 +22,7 @@ public class CustomerDetailDTO {
     private String status;
     private String loyaltyTier;
 
-    private int rfmScore;
+    private BigDecimal totalSpent;
     private double returnRate;
     private LocalDateTime lastPurchase;
 
@@ -111,12 +112,12 @@ public class CustomerDetailDTO {
         this.loyaltyTier = loyaltyTier;
     }
 
-    public int getRfmScore() {
-        return rfmScore;
+    public BigDecimal getTotalSpent() {
+        return totalSpent;
     }
 
-    public void setRfmScore(int rfmScore) {
-        this.rfmScore = rfmScore;
+    public void setTotalSpent(BigDecimal totalSpent) {
+        this.totalSpent = totalSpent;
     }
 
     public double getReturnRate() {

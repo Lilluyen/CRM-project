@@ -1,17 +1,6 @@
 package controller.sale.deal;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
-import dao.CustomerLookupDAO;
-import dao.DealDAO;
-import dao.DealProductDAO;
-import dao.LeadLookupDAO;
-import dao.ProductLookupDAO;
+import dao.*;
 import dto.DealItemDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -24,6 +13,13 @@ import model.Lead;
 import model.Product;
 import util.DBContext;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 @WebServlet("/sale/deal/create")
 public class CreateDealController extends HttpServlet {
 
@@ -34,7 +30,7 @@ public class CreateDealController extends HttpServlet {
         request.setAttribute("pageCss", "deal_form.css");
         request.setAttribute("page", "deal-form");
         request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
-        request.getRequestDispatcher("/view/sale/deal/dealForm.jsp").forward(request, response);
+//        request.getRequestDispatcher("/view/sale/deal/dealForm.jsp").forward(request, response);
     }
 
     private void loadLookups(Connection conn, HttpServletRequest request) throws Exception {
@@ -46,10 +42,19 @@ public class CreateDealController extends HttpServlet {
         List<Lead> leads = leadDAO.getAllLeadsBasic();
         List<Product> products = productDAO.getAllActiveProductsBasic();
 
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
+        if ("customer".equalsIgnoreCase(relatedType)) {
+            request.setAttribute("relatedType", relatedType);
+        } else if ("lead".equalsIgnoreCase(relatedType)) {
+            request.setAttribute("relatedType", relatedType);
+        }
+        request.setAttribute("relatedId", relatedId);
         request.setAttribute("customers", customers);
         request.setAttribute("leads", leads);
         request.setAttribute("products", products);
         request.setAttribute("stages", DealDAO.getDefaultStages());
+
     }
 
     @Override
@@ -81,7 +86,6 @@ public class CreateDealController extends HttpServlet {
             deal.setOwnerId(request.getSession().getAttribute("user") != null
                     ? ((model.User) request.getSession().getAttribute("user")).getUserId()
                     : 0);
-
             if (deal.getOwnerId() <= 0) {
                 throw new IllegalArgumentException("Owner không hợp lệ. Vui lòng đăng nhập lại.");
             }
@@ -131,9 +135,11 @@ public class CreateDealController extends HttpServlet {
     }
 
     private Deal extractDealFromRequest(HttpServletRequest request) {
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
         String dealName = request.getParameter("dealName");
-        String customerIdStr = request.getParameter("customerId");
-        String leadIdStr = request.getParameter("leadId");
+        String customerIdStr = "";
+        String leadIdStr = "";
         String expectedValueStr = request.getParameter("expectedValue");
         String actualValueStr = request.getParameter("actualValue");
         String stage = request.getParameter("stage");
@@ -147,8 +153,13 @@ public class CreateDealController extends HttpServlet {
         Deal d = new Deal();
         d.setDealName(dealName.trim());
 
-        int customerId = parseInt(customerIdStr);
-        int leadId = parseInt(leadIdStr);
+        int customerId = parseIntSafe(customerIdStr);
+        int leadId = parseIntSafe(leadIdStr);
+        if (relatedType.equalsIgnoreCase("lead")) {
+            leadId = Integer.parseInt(relatedId);
+        } else {
+            customerId = Integer.parseInt(relatedId);
+        }
         d.setCustomerId(customerId);
         d.setLeadId(leadId);
 
@@ -183,9 +194,19 @@ public class CreateDealController extends HttpServlet {
 
     private Deal extractDealFromRequestSafe(HttpServletRequest request) {
         Deal d = new Deal();
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
+        String customerIdStr = "";
+        String leadIdStr = "";
+        d.setCustomerId(parseIntSafe(customerIdStr));
+        d.setLeadId(parseIntSafe(leadIdStr));
+        if ("lead".equalsIgnoreCase(relatedType)) {
+            d.setLeadId(parseIntSafe(relatedId));
+        } else {
+            d.setCustomerId(parseIntSafe(relatedId));
+        }
         d.setDealName(request.getParameter("dealName"));
-        d.setCustomerId(parseIntSafe(request.getParameter("customerId")));
-        d.setLeadId(parseIntSafe(request.getParameter("leadId")));
+
         try {
             d.setExpectedValue(parseBigDecimal(request.getParameter("expectedValue"), BigDecimal.ZERO));
         } catch (Exception ignored) {

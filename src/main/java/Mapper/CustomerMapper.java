@@ -1,12 +1,12 @@
 package Mapper;
 
-import java.time.LocalDateTime;
-
 import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
 import model.Customer;
 import model.CustomerMeasurement;
 import model.User;
+
+import java.time.LocalDateTime;
 
 public class CustomerMapper {
 
@@ -27,7 +27,7 @@ public class CustomerMapper {
         customer.setCreatedAt(LocalDateTime.now());
         return customer;
     }
-    
+
     public static Customer toCustomerForUpdate(CustomerCreateDTO dto, int userId) {
         Customer customer = new Customer();
         customer.setCustomerId(dto.getCustomer_id());
@@ -76,7 +76,7 @@ public class CustomerMapper {
         dto.setSource(c.getSource());
         dto.setStatus(c.getStatus());
         dto.setLoyaltyTier(c.getLoyaltyTier());
-        dto.setRfmScore(c.getRfmScore());
+        dto.setTotalSpent(c.getTotalSpent());
         dto.setReturnRate(c.getReturnRate());
         dto.setLastPurchase(c.getLastPurchase());
 

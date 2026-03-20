@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.CustomerSegment;
 import model.SegmentConfig;
 import model.SegmentHistory;
+import model.User;
+import service.CustomerSegmentService;
 import service.CustomerService;
 import service.SegmentDetailService;
 
@@ -26,7 +28,7 @@ public class SegmentDetailController extends HttpServlet {
     private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
     private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
-
+    private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
     private final CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
@@ -46,7 +48,9 @@ public class SegmentDetailController extends HttpServlet {
             List<SegmentConfig> filterConfigs = service.getFilters(segmentId);
             List<String> sources = customerService.getSources();
             List<String> ranks = customerService.getRanks();
+            List<User> staffs = customerSegmentService.getActiveStaffsUnderManagerLevel();
 
+            req.setAttribute("staffs", staffs);
             req.setAttribute("sources", sources);
             req.setAttribute("ranks", ranks);
             req.setAttribute("segmentInfo", segmentInfo);

@@ -556,6 +556,36 @@ public class CustomerSegmentDAO {
         }
     }
 
+    public List<CustomerSegment> getStaticSegments(Connection conn) throws SQLException {
+        String sql = """
+                    SELECT
+                        s.segment_id,
+                        s.segment_name,
+                        s.criteria_logic,
+                        s.segment_type,
+                        s.[status]
+                
+                    FROM Customer_Segments s
+                    where segment_type = 'STATIC'
+                """;
+
+        List<CustomerSegment> cs = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                CustomerSegment s = new CustomerSegment();
+                s.setSegmentId(rs.getInt("segment_id"));
+                s.setSegmentName(rs.getString("segment_name"));
+                s.setCriteriaLogic(rs.getString("criteria_logic"));
+                s.setSegmentType(rs.getString("segment_type"));
+                s.setStatus(rs.getString("status"));
+
+                cs.add(s);
+            }
+            return cs;
+        }
+    }
+
     public int countAllSegmentations(Connection conn, String keyword, String segmentType, Integer creator,
                                      Integer updater, LocalDate fromDate, LocalDate toDate) throws SQLException {
         StringBuilder sql = new StringBuilder("""
@@ -787,12 +817,28 @@ public class CustomerSegmentDAO {
     }
 
     public boolean removeSegmentation(Connection conn, int segmentId) throws SQLException {
+        String deleteSegmentFilter = """
+                    delete from [Segment_Filters] where segment_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(deleteSegmentFilter)) {
+            ps.setInt(1, segmentId);
+            ps.executeUpdate();
+        }
+
         String deleteCSM = """
                 DELETE FROM Customer_Segment_Map
                 WHERE segment_id = ?
                 """;
 
         try (PreparedStatement ps = conn.prepareStatement(deleteCSM)) {
+            ps.setInt(1, segmentId);
+            ps.executeUpdate();
+        }
+
+        String deleteSegmentHistory = """
+                delete from [Segment_Update_History] where segment_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(deleteSegmentHistory)) {
             ps.setInt(1, segmentId);
             ps.executeUpdate();
         }
@@ -808,5 +854,35 @@ public class CustomerSegmentDAO {
             return rowAffected > 0;
         }
 
+    }
+
+
+    public void removeCustomer(Connection conn, int customerId, int segmentId) throws SQLException {
+        String deleteCSM = """
+                    delete from Customer_Segment_Map where customer_id = ? and segment_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(deleteCSM)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, segmentId);
+
+            ps.executeUpdate();
+        }
+    }
+
+    public void changeOwner(Connection conn, int customerId, int segmentId, int newOwner) throws SQLException {
+        String sql = """
+                Update Customer_Segment_Map
+                Set assigned_by = ?,
+                	assigned_at = GETDATE()
+                Where segment_id = ? And customer_id = ?
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newOwner);
+            ps.setInt(2, segmentId);
+            ps.setInt(3, customerId);
+
+            ps.executeUpdate();
+        }
     }
 }

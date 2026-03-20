@@ -112,6 +112,19 @@ public class ConfigSegmentDAO {
         return filters;
     }
 
+    public boolean isCustomerInSegment(Connection conn, int segmentId, int customerId) throws SQLException {
+        String sql = "SELECT 1 FROM Customer_Segment_Map WHERE segment_id = ? AND customer_id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, segmentId);
+            ps.setInt(2, customerId);
+
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+
+        }
+    }
+
     //6
     public String buildFilterSQL(List<SegmentConfig> filters) {
 
@@ -189,6 +202,7 @@ public class ConfigSegmentDAO {
                     FROM Users u
                     LEFT JOIN Customer_Segment_Map m
                         ON m.assigned_by = u.user_id
+                    WHERE u.role_id IN (2, 3, 4) AND u.status = 'ACTIVE'
                     GROUP BY u.user_id
                     ORDER BY COUNT(m.customer_id) ASC
                 """;
@@ -230,7 +244,7 @@ public class ConfigSegmentDAO {
         String sql = """
                     SELECT TOP 1 user_id
                     FROM Users
-                    WHERE user_id > ?
+                    WHERE user_id > ? AND role_id IN (2, 3, 4) AND status = 'ACTIVE'
                     ORDER BY user_id
                 """;
 
@@ -248,6 +262,7 @@ public class ConfigSegmentDAO {
         String firstUser = """
                     SELECT TOP 1 user_id
                     FROM Users
+                    WHERE role_id IN (2, 3, 4) AND status = 'ACTIVE'
                     ORDER BY user_id
                 """;
 

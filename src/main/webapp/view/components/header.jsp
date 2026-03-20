@@ -432,6 +432,7 @@
                     const items = data.items || [];
                     lastIds = new Set(items.map(x => x.id));
                     setBadgeCount(data.count);
+                    setHeaderNotification(data.count);
                     render(items);
                     return;
                 }
@@ -439,6 +440,7 @@
                 if (event === 'reset') {
                     lastIds = new Set();
                     setBadgeCount(0);
+                    setHeaderNotification(0);
                     render([]);
                     return;
                 }
