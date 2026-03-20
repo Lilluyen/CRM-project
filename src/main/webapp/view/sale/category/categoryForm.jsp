@@ -31,7 +31,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Category Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" value="${category.categoryName}"
+                    <input type="text" name="categoryName" value="${category.categoryName}"
                            class="form-control" required />
                 </div>
 
