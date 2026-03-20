@@ -74,6 +74,15 @@ public class LeadFormController extends HttpServlet {
             }
         } else {
             // Create mode: hiển thị form trống
+            // Nếu đến từ lead list của một campaign → pre-select campaign đó
+            String presetCampaignIdStr = request.getParameter("campaignId");
+            if (presetCampaignIdStr != null && !presetCampaignIdStr.isBlank()) {
+                try {
+                    int presetCampaignId = Integer.parseInt(presetCampaignIdStr);
+                    request.setAttribute("presetCampaignId", presetCampaignId);
+                } catch (NumberFormatException ignored) {
+                }
+            }
             forwardForm(request, response, "Tạo Lead Mới - CRM");
         }
     }
@@ -118,7 +127,11 @@ public class LeadFormController extends HttpServlet {
 
                 request.getSession().setAttribute("successMessage",
                         "Lead \"" + lead.getFullName() + "\" đã được tạo thành công!");
-                response.sendRedirect(request.getContextPath() + "/marketing/leads");
+                String redirectUrl = request.getContextPath() + "/marketing/leads";
+                if (lead.getCampaignId() > 0) {
+                    redirectUrl += "?campaignId=" + lead.getCampaignId();
+                }
+                response.sendRedirect(redirectUrl);
             } else {
                 throw new Exception("Tạo lead thất bại.");
             }
@@ -156,7 +169,11 @@ public class LeadFormController extends HttpServlet {
 
                 request.getSession().setAttribute("successMessage",
                         "Lead \"" + lead.getFullName() + "\" đã được cập nhật thành công!");
-                response.sendRedirect(request.getContextPath() + "/marketing/leads");
+                String redirectUrl = request.getContextPath() + "/marketing/leads";
+                if (lead.getCampaignId() > 0) {
+                    redirectUrl += "?campaignId=" + lead.getCampaignId();
+                }
+                response.sendRedirect(redirectUrl);
             } else {
                 throw new Exception("Cập nhật lead thất bại.");
             }
