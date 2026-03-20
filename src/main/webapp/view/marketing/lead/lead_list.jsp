@@ -27,7 +27,7 @@
                    class="btn btn-outline-primary">
                     <i class="fas fa-file-import me-1"></i> Import Leads
                 </a>
-                <a href="${pageContext.request.contextPath}/marketing/leads/form"
+                <a href="${pageContext.request.contextPath}/marketing/leads/form${not empty filterCampaignId ? '?campaignId='.concat(filterCampaignId) : ''}"
                    class="btn btn-primary">
                     <i class="fas fa-plus-circle me-1"></i> Tạo Lead Mới
                 </a>
@@ -270,7 +270,7 @@
                                class="btn btn-outline-primary">
                                 <i class="fas fa-file-import me-1"></i> Import Leads
                             </a>
-                            <a href="${pageContext.request.contextPath}/marketing/leads/form"
+                            <a href="${pageContext.request.contextPath}/marketing/leads/form${not empty filterCampaignId ? '?campaignId='.concat(filterCampaignId) : ''}"
                                class="btn btn-primary">
                                 <i class="fas fa-plus me-1"></i> Tạo Lead
                             </a>

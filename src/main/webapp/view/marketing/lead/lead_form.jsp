@@ -129,15 +129,27 @@
                         <div class="col-md-6">
                             <div class="field-group">
                                 <label for="campaignId" class="form-label">Campaign</label>
-                                <select class="form-select" id="campaignId" name="campaignId">
+                                <select class="form-select" id="campaignId" name="campaignId"
+                                        ${not empty presetCampaignId ? 'disabled' : ''}>
                                     <option value="0">-- Không thuộc campaign --</option>
                                     <c:forEach var="campaign" items="${campaigns}">
+                                        <c:set var="isSelected"
+                                               value="${lead.leadId > 0
+                                                        ? lead.campaignId == campaign.campaignId
+                                                        : campaign.campaignId == presetCampaignId}" />
                                         <option value="${campaign.campaignId}"
-                                            ${lead.campaignId == campaign.campaignId ? 'selected' : ''}>
+                                            ${isSelected ? 'selected' : ''}>
                                             ${campaign.name}
                                         </option>
                                     </c:forEach>
                                 </select>
+                                <%-- Khi disabled, trình duyệt không gửi value → dùng hidden field --%>
+                                <c:if test="${not empty presetCampaignId}">
+                                    <input type="hidden" name="campaignId" value="${presetCampaignId}">
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-lock me-1"></i>Campaign được gán tự động từ danh sách lead.
+                                    </small>
+                                </c:if>
                             </div>
                         </div>
                     </div>
