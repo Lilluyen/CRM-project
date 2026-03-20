@@ -126,7 +126,8 @@
                 </div>
 
                 <div class="d-flex gap-2">
-                    <a class="btn btn-warning" href="edit?id=${deal.dealId}">Edit</a>
+                    <a class="btn btn-warning"
+                       href="edit?id=${deal.dealId}">Edit</a>
                     <a class="btn btn-secondary" href="list">Back</a>
                 </div>
 

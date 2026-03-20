@@ -41,7 +41,6 @@ public class EditDealController extends HttpServlet {
         List<Customer> customers = customerDAO.getAllCustomersBasic();
         List<Lead> leads = leadDAO.getAllLeadsBasic();
         List<Product> products = productDAO.getAllActiveProductsBasic();
-
         request.setAttribute("customers", customers);
         request.setAttribute("leads", leads);
         request.setAttribute("products", products);
@@ -57,9 +56,20 @@ public class EditDealController extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
 
             DealDAO dealDAO = new DealDAO(conn);
+
+
             DealProductDAO dealProductDAO = new DealProductDAO(conn);
 
             Deal deal = dealDAO.getById(id);
+
+            // Tự set relatedType/relatedId từ deal, không phụ thuộc URL
+            if (deal.getLeadId() > 0) {
+                request.setAttribute("relatedType", "LEAD");
+                request.setAttribute("relatedId", String.valueOf(deal.getLeadId()));
+            } else if (deal.getCustomerId() > 0) {
+                request.setAttribute("relatedType", "CUSTOMER");
+                request.setAttribute("relatedId", String.valueOf(deal.getCustomerId()));
+            }
             if (deal == null) {
                 response.sendRedirect(request.getContextPath() + "/sale/deal/list");
                 return;
@@ -141,9 +151,11 @@ public class EditDealController extends HttpServlet {
     }
 
     private Deal extractDealFromRequest(HttpServletRequest request) {
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
         String dealName = request.getParameter("dealName");
-        String customerIdStr = request.getParameter("customerId");
-        String leadIdStr = request.getParameter("leadId");
+        String customerIdStr = "";
+        String leadIdStr = "";
         String expectedValueStr = request.getParameter("expectedValue");
         String actualValueStr = request.getParameter("actualValue");
         String stage = request.getParameter("stage");
@@ -157,9 +169,15 @@ public class EditDealController extends HttpServlet {
         Deal d = new Deal();
         d.setDealName(dealName.trim());
 
-        d.setCustomerId(parseIntSafe(customerIdStr));
-        d.setLeadId(parseIntSafe(leadIdStr));
-
+        int customerId = parseIntSafe(customerIdStr);
+        int leadId = parseIntSafe(leadIdStr);
+        if (relatedType.equalsIgnoreCase("lead")) {
+            leadId = Integer.parseInt(relatedId);
+        } else {
+            customerId = Integer.parseInt(relatedId);
+        }
+        d.setCustomerId(customerId);
+        d.setLeadId(leadId);
         d.setExpectedValue(parseBigDecimal(expectedValueStr, BigDecimal.ZERO));
 
         if (actualValueStr != null && !actualValueStr.isBlank()) {
@@ -199,8 +217,17 @@ public class EditDealController extends HttpServlet {
     private Deal extractDealFromRequestSafe(HttpServletRequest request) {
         Deal d = new Deal();
         d.setDealName(request.getParameter("dealName"));
-        d.setCustomerId(parseIntSafe(request.getParameter("customerId")));
-        d.setLeadId(parseIntSafe(request.getParameter("leadId")));
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
+//        String customerIdStr = "";
+//        String leadIdStr = "";
+//        d.setCustomerId(parseIntSafe(customerIdStr));
+//        d.setLeadId(parseIntSafe(leadIdStr));
+        if ("lead".equalsIgnoreCase(relatedType)) {
+            d.setLeadId(parseIntSafe(relatedId));
+        } else {
+            d.setCustomerId(parseIntSafe(relatedId));
+        }
         try {
             d.setExpectedValue(parseBigDecimal(request.getParameter("expectedValue"), BigDecimal.ZERO));
         } catch (Exception ignored) {

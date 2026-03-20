@@ -394,7 +394,8 @@ function downgradeCustomer(customerId) {
 
 function addDealCustomer(customerId) {
     const ctx = window.__CTX__ || "";
-    const url = `${ctx}/customers/add?customerId=${encodeURIComponent(customerId)}`;
+    const url = `${ctx}/sale/deal/create?relatedId=${encodeURIComponent(customerId)}&relatedType=CUSTOMER`;
+    window.location.href = url;
 }
 
 function deleteCustomer(customerId) {

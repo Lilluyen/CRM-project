@@ -42,10 +42,19 @@ public class CreateDealController extends HttpServlet {
         List<Lead> leads = leadDAO.getAllLeadsBasic();
         List<Product> products = productDAO.getAllActiveProductsBasic();
 
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
+        if ("customer".equalsIgnoreCase(relatedType)) {
+            request.setAttribute("relatedType", relatedType);
+        } else if ("lead".equalsIgnoreCase(relatedType)) {
+            request.setAttribute("relatedType", relatedType);
+        }
+        request.setAttribute("relatedId", relatedId);
         request.setAttribute("customers", customers);
         request.setAttribute("leads", leads);
         request.setAttribute("products", products);
         request.setAttribute("stages", DealDAO.getDefaultStages());
+
     }
 
     @Override
@@ -191,7 +200,7 @@ public class CreateDealController extends HttpServlet {
         String leadIdStr = "";
         d.setCustomerId(parseIntSafe(customerIdStr));
         d.setLeadId(parseIntSafe(leadIdStr));
-        if (relatedType.equalsIgnoreCase("lead")) {
+        if ("lead".equalsIgnoreCase(relatedType)) {
             d.setLeadId(parseIntSafe(relatedId));
         } else {
             d.setCustomerId(parseIntSafe(relatedId));

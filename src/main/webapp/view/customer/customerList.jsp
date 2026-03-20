@@ -144,7 +144,8 @@
                     </button>
 
 
-                    <button class="advance-filter btn-filter btn-primary" style="margin-top: -122px;transform: translate(50px, -3px);"
+                    <button class="advance-filter btn-filter btn-primary"
+                            style="margin-top: -122px;transform: translate(50px, -3px);"
                             onclick="openAdvancedFilter()">
                         <i class="fas fa-sliders-h"></i>
                         <span>Advanced Filter</span>
@@ -285,7 +286,7 @@
                                         <span>Downgrade</span>
                                     </div>
                                     <div class="action-menu-item downgrade-item"
-                                         onclick="downgradeCustomer(${c.customerId})">
+                                         onclick="addDealCustomer(${c.customerId})">
                                         <i class="fa-solid fa-handshake"></i>
                                         <span>Add Deal</span>
                                     </div>

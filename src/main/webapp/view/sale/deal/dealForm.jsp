@@ -39,15 +39,41 @@
                     <label class="form-label fw-semibold">Related Type</label>
                     <select name="relatedType" class="form-select" id="relatedType" onchange="loadRelatedEntities()">
                         <option value="">-- None --</option>
-                        <option value="CUSTOMER">Customer</option>
-                        <option value="LEAD">Lead</option>
+                        <option value="CUSTOMER"
+                                <c:if test="${relatedType eq 'CUSTOMER'}">selected</c:if>>Customer
+                        </option>
+                        <option value="LEAD" <c:if test="${relatedType eq 'LEAD'}">selected</c:if>>Lead</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
+
+                    <c:set var="type"
+                           value="${relatedType eq 'CUSTOMER' ? customers : relatedType eq 'LEAD' ? leads : null}"/>
+                    <c:set var="idField"
+                           value="${relatedType eq 'CUSTOMER' ? 'customerId' : relatedType eq 'LEAD' ? 'leadId' : null}"/>
+                    <c:set var="nameField"
+                           value="${relatedType eq 'CUSTOMER' ? 'name' : relatedType eq 'LEAD' ? 'fullName' : null}"/>
+
                     <label class="form-label fw-semibold">Related Name</label>
-                    <select name="relatedId" class="form-select" id="relatedId" disabled>
+
+                    <select name="relatedId" class="form-select" id="relatedId"
+                            <c:if test="${empty relatedType}">disabled</c:if>>
+
                         <option value="">Select type first</option>
+
+                        <c:forEach items="${type}" var="t">
+
+                            <c:set var="currentId" value="${t[idField]}"/>
+                            <c:set var="currentName" value="${t[nameField]}"/>
+
+                            <option value="${currentId}"
+                                    <c:if test="${currentId == relatedId}">selected</c:if>>
+                                    ${currentName}
+                            </option>
+
+                        </c:forEach>
+
                     </select>
                 </div>
 
