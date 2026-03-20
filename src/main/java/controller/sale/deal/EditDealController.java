@@ -16,6 +16,7 @@ import util.DBContext;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,7 +113,9 @@ public class EditDealController extends HttpServlet {
             if (!dealDAO.updateDeal(deal)) {
                 throw new RuntimeException("Cập nhật deal thất bại.");
             }
-
+            if ("Closed Won".equalsIgnoreCase(deal.getStage())) {
+                handleClosedWon(dealId, conn);
+            }
             List<DealItemDTO> items = extractItemsFromRequest(request);
             dealProductDAO.replaceDealItems(dealId, items);
 
@@ -325,5 +328,60 @@ public class EditDealController extends HttpServlet {
             return defaultValue;
         }
         return new BigDecimal(s.trim());
+    }
+
+    private void handleClosedWon(int dealId, Connection conn) throws SQLException {
+
+        DealDAO dealDAO = new DealDAO(conn);
+        LeadDAO leadDAO = new LeadDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+
+        // 1. Lấy deal
+        Deal deal = dealDAO.getById(dealId);
+
+
+        if (deal.getCustomerId() != null && deal.getCustomerId() > 0) {
+
+            int customerId = deal.getCustomerId();
+
+            // 1. update last_purchase
+            customerDAO.updateLastPurchase(conn, customerId);
+
+            // 2. tính lại RFM
+//            customerDAO.calculateRFM(conn);
+
+//            return;
+        }
+
+        // 3. Nếu có lead → convert
+        if (deal.getLeadId() > 0) {
+
+            Lead lead = leadDAO.getLeadById(deal.getLeadId());
+
+            // ❌ tránh convert lại
+            if (lead.isConverted()) {
+                // chỉ cần gắn lại customer vào deal
+                dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
+                return;
+            }
+
+            // 4. Check duplicate customer (theo phone/email)
+            Customer existing = customerDAO.findByPhoneOrEmail(conn, lead.getPhone(), lead.getEmail());
+
+            int customerId;
+
+            if (existing != null) {
+                customerId = existing.getCustomerId();
+            } else {
+                // 5. Tạo customer mới
+                customerId = customerDAO.insertFromLead(conn, lead);
+            }
+
+            // 6. Update lead
+            leadDAO.markConverted(conn, lead.getLeadId(), customerId);
+
+            // 7. Update deal
+            dealDAO.updateCustomerForDeal(dealId, customerId);
+        }
     }
 }
