@@ -410,14 +410,17 @@ public class LeadDAO {
      * Logic: lấy DISTINCT campaign name từ bảng Leads (qua campaign_id) của tất
      * cả lead row có cùng email với lead hiện tại, nối bằng " | ".
      */
+    // FIX: đọc campaign names từ Campaign_Leads thay vì Leads.campaign_id
+    // Campaign_Leads lưu quan hệ nhiều-nhiều đúng; Leads.campaign_id chỉ lưu 1 campaign
     private static final String CAMPAIGN_NAMES_SUBQUERY
             = "( "
             + "  SELECT STUFF( "
             + "    (SELECT DISTINCT ' | ' + c_inner.name "
-            + "     FROM Leads l_inner "
-            + "     LEFT JOIN Campaigns c_inner ON l_inner.campaign_id = c_inner.campaign_id "
-            + "     WHERE l_inner.email = l.email "
-            + "       AND c_inner.name IS NOT NULL "
+            + "     FROM Campaign_Leads cl_inner "
+            + "     INNER JOIN Campaigns c_inner ON cl_inner.campaign_id = c_inner.campaign_id "
+            + "     WHERE cl_inner.lead_id IN ( "
+            + "       SELECT lead_id FROM Leads WHERE email = l.email "
+            + "     ) "
             + "     FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)') "
             + "  , 1, 3, '') "
             + ") AS campaign_names ";
