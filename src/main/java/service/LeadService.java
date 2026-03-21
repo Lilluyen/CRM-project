@@ -1,9 +1,12 @@
 package service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import dao.CampaignLeadDAO;
 import dao.LeadDAO;
+import model.Campaign;
 import model.Lead;
 import util.LeadScoringUtil;
 
@@ -15,16 +18,10 @@ public class LeadService {
     // ==============================
     // SEARCH + PAGINATION
     // ==============================
-    /**
-     * Tìm kiếm leads theo keyword + status, có phân trang
-     */
-    public List<Lead> searchLeads(String keyword, String status, int campaignId,String interest, int page, int pageSize) {
+    public List<Lead> searchLeads(String keyword, String status, int campaignId, String interest, int page, int pageSize) {
         return leadDAO.searchLeads(keyword, status, campaignId, interest, page, pageSize);
     }
 
-    /**
-     * Đếm tổng leads theo điều kiện lọc (dùng cho phân trang)
-     */
     public int countLeads(String keyword, String status, int campaignId, String interest) {
         return leadDAO.countLeads(keyword, status, campaignId, interest);
     }
@@ -36,9 +33,9 @@ public class LeadService {
     // ==============================
     // CRUD
     // ==============================
+
     /**
      * Tạo mới Lead (validate + set defaults)
-     * @param autoScore true để tự động tính điểm, false để giữ nguyên giá trị từ form
      */
     public int createLead(Lead lead, boolean autoScore) {
         if (lead.getFullName() == null || lead.getFullName().trim().isEmpty()) {
@@ -49,7 +46,6 @@ public class LeadService {
         }
         validateLeadUniqueness(lead);
 
-        // Auto-calculate score nếu được yêu cầu, hoặc nếu chưa có score
         if (autoScore || lead.getScore() <= 0) {
             int score = LeadScoringUtil.calculateScore(
                     lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId(), lead.getInterest());
@@ -58,25 +54,19 @@ public class LeadService {
         }
 
         int newId = leadDAO.createLead(lead);
-
-        // Nếu có campaign → thêm vào Campaign_Leads
         if (newId > 0 && lead.getCampaignId() > 0) {
-            campaignLeadDAO.assignLeadToCampaign(
-                    lead.getCampaignId(), newId, "NEW");
+            campaignLeadDAO.assignLeadToCampaign(lead.getCampaignId(), newId, "NEW");
         }
         return newId;
     }
 
-    /**
-     * Tạo mới Lead với auto-score mặc định (backward compatible)
-     */
     public int createLead(Lead lead) {
         return createLead(lead, true);
     }
 
     /**
-     * Cập nhật Lead
-     * @param autoScore true để tự động tính điểm, false để giữ nguyên giá trị từ form
+     * Cập nhật thông tin Lead.
+     * Nếu form không gửi campaignId (= 0), restore từ DB để validate đúng phạm vi.
      */
     public boolean updateLead(Lead lead, boolean autoScore) {
         if (lead.getLeadId() <= 0) {
@@ -88,15 +78,21 @@ public class LeadService {
         if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
         }
+
+        // Restore campaignId gốc từ DB nếu form không gửi lên
+        if (lead.getCampaignId() <= 0) {
+            Lead existing = leadDAO.getLeadById(lead.getLeadId());
+            if (existing != null && existing.getCampaignId() > 0) {
+                lead.setCampaignId(existing.getCampaignId());
+            }
+        }
+
         validateLeadUniqueness(lead, lead.getLeadId());
 
-        // Auto re-score nếu được yêu cầu hoặc nếu chưa có score
         if (autoScore || lead.getScore() <= 0) {
             int newScore = LeadScoringUtil.calculateScore(
                     lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId(), lead.getInterest());
             lead.setScore(newScore);
-
-            // Chỉ tự động cập nhật status nếu không phải DEAL_CREATED
             if (!"DEAL_CREATED".equals(lead.getStatus())) {
                 lead.setStatus(LeadScoringUtil.determineStatus(newScore));
             }
@@ -105,19 +101,57 @@ public class LeadService {
         return leadDAO.updateLead(lead);
     }
 
-    /**
-     * Cập nhật Lead với auto-score mặc định (backward compatible)
-     */
     public boolean updateLead(Lead lead) {
         return updateLead(lead, true);
+    }
+
+    /**
+     * Cập nhật campaign membership của Lead theo danh sách checkbox từ form.
+     * - Có trong newCampaignIds nhưng chưa có trong DB  → thêm vào Campaign_Leads
+     * - Đang có trong DB nhưng không có trong newCampaignIds → xóa khỏi Campaign_Leads
+     * - Cập nhật lead.campaignId = campaign đầu tiên còn lại (hoặc 0 nếu bỏ hết)
+     *
+     * @param leadId         ID của lead
+     * @param newCampaignIds Danh sách campaignId được tích trên form (có thể rỗng)
+     */
+    public void updateLeadCampaigns(int leadId, List<Integer> newCampaignIds) {
+        if (newCampaignIds == null) {
+            newCampaignIds = new ArrayList<>();
+        }
+
+        // Campaign đang có trong Campaign_Leads
+        List<Campaign> currentCampaigns = campaignLeadDAO.getCampaignsByLeadId(leadId);
+        List<Integer> currentIds = currentCampaigns.stream()
+                .map(Campaign::getCampaignId)
+                .collect(Collectors.toList());
+
+        // Thêm campaign mới được tích
+        for (int campaignId : newCampaignIds) {
+            if (!currentIds.contains(campaignId)) {
+                campaignLeadDAO.assignLeadToCampaign(campaignId, leadId, "NEW");
+            }
+        }
+
+        // Xóa campaign bị bỏ tích
+        for (int campaignId : currentIds) {
+            if (!newCampaignIds.contains(campaignId)) {
+                campaignLeadDAO.removeLeadFromCampaign(campaignId, leadId);
+            }
+        }
+
+        // Đồng bộ lead.campaignId trong bảng Leads
+        int primaryCampaignId = newCampaignIds.isEmpty() ? 0 : newCampaignIds.get(0);
+        Lead lead = leadDAO.getLeadById(leadId);
+        if (lead != null) {
+            lead.setCampaignId(primaryCampaignId);
+            leadDAO.updateLead(lead);
+        }
     }
 
     // ==============================
     // EXISTING METHODS
     // ==============================
-    /**
-     * Import danh sách Leads (tự động check duplicate)
-     */
+
     public int importLeads(List<Lead> leads) {
         int importedCount = 0;
         for (Lead lead : leads) {
@@ -126,8 +160,6 @@ public class LeadService {
             } catch (IllegalArgumentException ex) {
                 continue;
             }
-
-            // Tạo Lead mới (mỗi campaign có record riêng)
             int score = LeadScoringUtil.calculateScore(
                     lead.getFullName(), lead.getEmail(), lead.getPhone(), lead.getCampaignId(), lead.getInterest());
             lead.setScore(score);
@@ -135,8 +167,7 @@ public class LeadService {
             int newId = leadDAO.createLead(lead);
             if (newId > 0) {
                 if (lead.getCampaignId() > 0) {
-                    campaignLeadDAO.assignLeadToCampaign(
-                            lead.getCampaignId(), newId, "NEW");
+                    campaignLeadDAO.assignLeadToCampaign(lead.getCampaignId(), newId, "NEW");
                 }
                 importedCount++;
             }
@@ -144,9 +175,6 @@ public class LeadService {
         return importedCount;
     }
 
-    /**
-     * Kiểm tra Lead trùng lặp
-     */
     public boolean checkDuplicate(String email) {
         return leadDAO.findLeadByEmail(email) != null;
     }
@@ -176,7 +204,6 @@ public class LeadService {
                 throw new IllegalArgumentException(
                         "Email \"" + lead.getEmail() + "\" đã tồn tại trong campaign này.");
             }
-
             if (!phone.isEmpty()) {
                 Lead dupPhone = hasExcludeId
                         ? leadDAO.findLeadByPhoneAndCampaignExcludeLeadId(phone, lead.getCampaignId(), excludedLeadId)
@@ -208,35 +235,28 @@ public class LeadService {
         }
     }
 
-    /**
-     * Chấm điểm Lead + auto-qualify nếu score >= 70
-     */
     public boolean scoreLead(int leadId, int score) {
         if (score < 0 || score > 100) {
             throw new IllegalArgumentException("Score must be between 0-100");
         }
         Lead lead = leadDAO.getLeadById(leadId);
-        if (lead == null) {
-            return false;
-        }
+        if (lead == null) return false;
         lead.setScore(score);
-        // Auto-status theo score mới (giữ DEAL_CREATED nếu sale đã tạo)
         if (!"DEAL_CREATED".equals(lead.getStatus())) {
             lead.setStatus(LeadScoringUtil.determineStatus(score));
         }
         return leadDAO.updateLead(lead);
     }
 
-    /**
-     * Cập nhật trạng thái Lead
-     */
     public boolean updateLeadStatus(int leadId, String status) {
         Lead lead = leadDAO.getLeadById(leadId);
-        if (lead == null) {
-            return false;
-        }
+        if (lead == null) return false;
         lead.setStatus(status);
         return leadDAO.updateLead(lead);
+    }
+
+    public List<Campaign> getCampaignsByLeadId(int leadId) {
+        return campaignLeadDAO.getCampaignsByLeadId(leadId);
     }
 
     public Lead getLeadById(int leadId) {
