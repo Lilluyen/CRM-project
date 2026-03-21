@@ -1,6 +1,9 @@
 package controller.manager;
 
-import dao.*;
+import dao.CustomerDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -19,14 +22,12 @@ public class CustomerDetailController extends HttpServlet {
     CustomerDAO customerDAO = new CustomerDAO();
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
             customerSegmentDAO);
 
     @Override

@@ -1,6 +1,9 @@
 package controller.manager;
 
-import dao.*;
+import dao.CustomerDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.Pagination;
 import dto.TimeCondition;
 import jakarta.servlet.ServletException;
@@ -28,14 +31,12 @@ public class CustomerFilterController extends HttpServlet {
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
     private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
     private final CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
             customerSegmentDAO);
 
     @Override
@@ -55,9 +56,9 @@ public class CustomerFilterController extends HttpServlet {
             String gender = trimToNull(request.getParameter("gender"));
             List<TimeCondition> timeConditions = getTimeConditionDatas(request);
 
-            int totalRecords = customerService.countTotalCustomer(returnRate, keyword, loyaltyTiers, source, gender, timeConditions);
+            int totalRecords = customerService.countTotalCustomer(keyword, loyaltyTiers, source, gender, timeConditions);
             Pagination pagination = new Pagination(page, size, totalRecords);
-            List<Customer> customers = customerService.filterAdvanced(keyword, returnRate, loyaltyTiers, source, gender, timeConditions, page, size);
+            List<Customer> customers = customerService.filterAdvanced(keyword, loyaltyTiers, source, gender, timeConditions, page, size);
             List<CustomerSegment> customerSegments = customerSegmentService.getStaticSegments();
             request.setAttribute("pagination", pagination);
             request.setAttribute("currentPage", page);

@@ -175,14 +175,6 @@
                         </span>
                     </div>
 
-                    <div class="customer-detail__metric">
-                        <span class="customer-detail__metric-label">
-                            Return Rate
-                        </span>
-                        <span class="customer-detail__metric-value">
-                            ${customerDetail.returnRate}%
-                        </span>
-                    </div>
 
                     <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">
@@ -196,55 +188,6 @@
                 </div>
             </div>
 
-
-            <div class="customer-detail__card">
-                <h3 class="customer-detail__card-title">
-                    Latest Body Measurement
-                </h3>
-
-                <c:if test="${customerDetail.latestMeasurement != null}">
-                    <div class="customer-detail__measurements">
-
-                        <div class="customer-detail__measurement">
-                            <span>Height</span>
-                            <strong>${customerDetail.latestMeasurement.height} cm</strong>
-                        </div>
-
-                        <div class="customer-detail__measurement">
-                            <span>Weight</span>
-                            <strong>${customerDetail.latestMeasurement.weight} kg</strong>
-                        </div>
-
-                        <div class="customer-detail__measurement">
-                            <span>Bust</span>
-                            <strong>${customerDetail.latestMeasurement.bust} cm</strong>
-                        </div>
-
-                        <div class="customer-detail__measurement">
-                            <span>Waist</span>
-                            <strong>${customerDetail.latestMeasurement.waist} cm</strong>
-                        </div>
-
-                        <div class="customer-detail__measurement">
-                            <span>Hips</span>
-                            <strong>${customerDetail.latestMeasurement.hips} cm</strong>
-                        </div>
-
-                        <div class="customer-detail__measurement">
-                            <span>Shoulder</span>
-                            <strong>${customerDetail.latestMeasurement.shoulder} cm</strong>
-                        </div>
-
-                    </div>
-                </c:if>
-
-                <c:if test="${customerDetail.latestMeasurement == null}">
-                    <div class="customer-detail__empty">
-                        No measurement data available
-                    </div>
-                </c:if>
-
-            </div>
 
         </div>
 

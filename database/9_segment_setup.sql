@@ -54,3 +54,8 @@ ADD total_spent DECIMAL(18,2) DEFAULT 0;
 
 ALTER TABLE Customers
 DROP COLUMN rfm_score;
+
+DROP TABLE [dbo].[Customer_Measurements];
+
+Alter table Customers
+Add Constraint uq_customer_email UNIQUE (email)

@@ -1,6 +1,9 @@
 package controller.sale;
 
-import dao.*;
+import dao.CustomerDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
@@ -31,14 +34,12 @@ public class CreateCustomerController extends HttpServlet {
     CustomerDAO customerDAO = new CustomerDAO();
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
             customerSegmentDAO);
 
     @Override
@@ -91,14 +92,6 @@ public class CreateCustomerController extends HttpServlet {
             String source = trim(req.getParameter("source"));
             String address = trim(req.getParameter("address"));
 
-            String heightRaw = trim(req.getParameter("height"));
-            String weightRaw = trim(req.getParameter("weight"));
-            String preferredSize = req.getParameter("preferred_size");
-            String bustRaw = trim(req.getParameter("bust"));
-            String waistRaw = trim(req.getParameter("waist"));
-            String hipsRaw = trim(req.getParameter("hips"));
-            String shoulderRaw = trim(req.getParameter("shoulder"));
-            String bodyShape = req.getParameter("bodyShape");
 
             String[] tagParams = req.getParameterValues("styleTags");
 
@@ -116,7 +109,7 @@ public class CreateCustomerController extends HttpServlet {
             if (phone == null || phone.isBlank()) {
                 fieldErrors.put("phone", "Phone number is required.");
             } else if (!PhoneCheck.isValidPhone(phone)) {
-                fieldErrors.put("phone", "Phone must be 9–15 digits.");
+                fieldErrors.put("phone", "Phone is invalid.");
             }
 
             // Validate email (optional but must be valid if given)
@@ -144,21 +137,11 @@ public class CreateCustomerController extends HttpServlet {
                 }
             }
 
-            // Validate measurements (optional, but must be positive numbers if given)
-            BigDecimal height = parseDecimalValidated(heightRaw, "height", fieldErrors);
-            BigDecimal weight = parseDecimalValidated(weightRaw, "weight", fieldErrors);
-            BigDecimal bust = parseDecimalValidated(bustRaw, "bust", fieldErrors);
-            BigDecimal waist = parseDecimalValidated(waistRaw, "waist", fieldErrors);
-            BigDecimal hips = parseDecimalValidated(hipsRaw, "hips", fieldErrors);
-            BigDecimal shoulder = parseDecimalValidated(shoulderRaw, "shoulder", fieldErrors);
 
             // ── If validation failed → forward back with errors + old values ──
             if (!fieldErrors.isEmpty()) {
                 reloadFormOnError(req, fieldErrors,
-                        name, phone, email, gender, birthdayRaw, source, address,
-                        heightRaw, weightRaw, preferredSize,
-                        bustRaw, waistRaw, hipsRaw, shoulderRaw, bodyShape,
-                        tagParams);
+                        name, phone, email, gender, birthdayRaw, source, address, tagParams);
                 req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
                 return;
             }
@@ -180,14 +163,6 @@ public class CreateCustomerController extends HttpServlet {
             dto.setBirthday(birthday);
             dto.setSource(source);
             dto.setAddress(address);
-            dto.setHeight(height);
-            dto.setWeight(weight);
-            dto.setPreferredSize(preferredSize);
-            dto.setBust(bust);
-            dto.setWaist(waist);
-            dto.setHips(hips);
-            dto.setShoulder(shoulder);
-            dto.setBodyShape(bodyShape);
             dto.setStyleTags(styleTags);
 
             // ── Call service ─────────────────────────────────────────────
@@ -205,14 +180,6 @@ public class CreateCustomerController extends HttpServlet {
                     trim(req.getParameter("birthday")),
                     trim(req.getParameter("source")),
                     trim(req.getParameter("address")),
-                    trim(req.getParameter("height")),
-                    trim(req.getParameter("weight")),
-                    req.getParameter("preferred_size"),
-                    trim(req.getParameter("bust")),
-                    trim(req.getParameter("waist")),
-                    trim(req.getParameter("hips")),
-                    trim(req.getParameter("shoulder")),
-                    req.getParameter("bodyShape"),
                     req.getParameterValues("styleTags"));
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
 
@@ -227,14 +194,6 @@ public class CreateCustomerController extends HttpServlet {
                     trim(req.getParameter("birthday")),
                     trim(req.getParameter("source")),
                     trim(req.getParameter("address")),
-                    trim(req.getParameter("height")),
-                    trim(req.getParameter("weight")),
-                    req.getParameter("preferred_size"),
-                    trim(req.getParameter("bust")),
-                    trim(req.getParameter("waist")),
-                    trim(req.getParameter("hips")),
-                    trim(req.getParameter("shoulder")),
-                    req.getParameter("bodyShape"),
                     req.getParameterValues("styleTags"));
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
 
@@ -249,10 +208,7 @@ public class CreateCustomerController extends HttpServlet {
                                    Map<String, String> fieldErrors,
                                    String name, String phone, String email,
                                    String gender, String birthday,
-                                   String source, String address,
-                                   String height, String weight, String preferredSize,
-                                   String bust, String waist, String hips, String shoulder,
-                                   String bodyShape, String[] selectedTags)
+                                   String source, String address, String[] selectedTags)
             throws ServletException {
         try {
             // Errors
@@ -266,14 +222,6 @@ public class CreateCustomerController extends HttpServlet {
             req.setAttribute("oldBirthday", birthday);
             req.setAttribute("oldSource", source);
             req.setAttribute("oldAddress", address);
-            req.setAttribute("oldHeight", height);
-            req.setAttribute("oldWeight", weight);
-            req.setAttribute("oldPreferredSize", preferredSize);
-            req.setAttribute("oldBust", bust);
-            req.setAttribute("oldWaist", waist);
-            req.setAttribute("oldHips", hips);
-            req.setAttribute("oldShoulder", shoulder);
-            req.setAttribute("oldBodyShape", bodyShape);
 
             // Selected tag IDs as a Set for easy lookup in JSP
             Set<String> selectedTagSet = new HashSet<>();
@@ -298,7 +246,7 @@ public class CreateCustomerController extends HttpServlet {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     private String trim(String value) {
-        return value != null ? value.trim() : null;
+        return value.trim().isEmpty() ? null : value.trim();
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,

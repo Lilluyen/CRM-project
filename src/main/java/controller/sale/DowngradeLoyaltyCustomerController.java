@@ -1,18 +1,17 @@
 package controller.sale;
 
+import dao.CustomerDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
 import service.CustomerService;
+
+import java.io.IOException;
 
 @WebServlet(urlPatterns = "/customers/downgrade")
 public class DowngradeLoyaltyCustomerController extends HttpServlet {
@@ -37,14 +36,12 @@ public class DowngradeLoyaltyCustomerController extends HttpServlet {
             CustomerDAO customerDAO = new CustomerDAO();
             CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
             CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-            CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
             CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
             CustomerService customerService = new CustomerService(
                     customerDAO,
                     customerStyleDAO,
                     customerQueryDAO,
-                    customerMeasurementDAO,
                     customerSegmentDAO);
 
             boolean success = customerService.downgradeToLoyaltyCustomer(customerId);

@@ -1,5 +1,19 @@
 package service;
 
+import dao.CustomerDAO;
+import dao.CustomerMeasurementDAO;
+import dao.CustomerStyleDAO;
+import dto.CustomerCreateDTO;
+import exception.DuplicateEmailException;
+import exception.DuplicatePhoneException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+import util.DBContext;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -7,28 +21,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import dao.CustomerDAO;
-import dao.CustomerMeasurementDAO;
-import dao.CustomerStyleDAO;
-import dto.CustomerCreateDTO;
-import exception.DuplicateEmailException;
-import exception.DuplicatePhoneException;
-import util.DBContext;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerServiceTest {
@@ -110,9 +104,6 @@ class CustomerServiceTest {
 
             verify(customerStyleDAO)
                     .insertCustomerStyles(conn, 10, dto.getStyleTags());
-
-            verify(customerMeasurementDAO)
-                    .insertCustomerMeasurement(any(), eq(conn));
 
             verify(conn).commit();
         }
@@ -207,10 +198,6 @@ class CustomerServiceTest {
             when(customerDAO.existsByEmail(any(), eq(conn))).thenReturn(false);
             when(customerDAO.insertCustomer(any(), eq(conn))).thenReturn(10);
 
-            doThrow(new RuntimeException("mapping error"))
-                    .when(customerMeasurementDAO)
-                    .insertCustomerMeasurement(any(), eq(conn));
-
             assertThrows(SQLException.class,
                     () -> customerService.createCustomer(dto, 1));
 
@@ -282,8 +269,6 @@ class CustomerServiceTest {
             customerService.updateCustomer(dto, 1);
 
             verify(customerDAO).updateBasicInfo(any(), eq(conn));
-            verify(customerMeasurementDAO)
-                    .insertCustomerMeasurement(any(), eq(conn));
 
             verify(conn).commit();
         }
@@ -311,28 +296,25 @@ class CustomerServiceTest {
 
             verify(customerDAO).updateBasicInfo(any(), eq(conn));
 
-            verify(customerMeasurementDAO)
-                    .insertCustomerMeasurement(any(), eq(conn));
-
             verify(conn).commit();
         }
     }
-    
+
     @Test
-    void testCuaCo() throws Exception{
+    void testCuaCo() throws Exception {
         CustomerCreateDTO dto = new CustomerCreateDTO();
         dto.setPhone("345");
-        try(MockedStatic<DBContext> db = mockStatic(DBContext.class)){
+        try (MockedStatic<DBContext> db = mockStatic(DBContext.class)) {
 //            
             db.when(DBContext::getConnection).thenReturn(conn);
-                    
-             when(customerDAO.existsByPhone(dto.getPhone(), conn)).thenReturn(true);
-             assertThrows(DuplicatePhoneException.class, () -> 
-                     customerService.createCustomer(dto, 0)
-             );
-             
-             verify(conn).rollback();
-        
+
+            when(customerDAO.existsByPhone(dto.getPhone(), conn)).thenReturn(true);
+            assertThrows(DuplicatePhoneException.class, () ->
+                    customerService.createCustomer(dto, 0)
+            );
+
+            verify(conn).rollback();
+
         }
     }
 }

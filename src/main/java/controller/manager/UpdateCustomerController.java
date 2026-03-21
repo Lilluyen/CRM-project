@@ -1,6 +1,9 @@
 package controller.manager;
 
-import dao.*;
+import dao.CustomerDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
@@ -10,6 +13,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.CustomerService;
+import util.PhoneCheck;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -23,14 +27,14 @@ public class UpdateCustomerController extends HttpServlet {
     CustomerDAO customerDAO = new CustomerDAO();
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
+
             customerSegmentDAO);
 
     @Override
@@ -81,15 +85,6 @@ public class UpdateCustomerController extends HttpServlet {
             String address = trim(request.getParameter("address"));
             String source = trim(request.getParameter("source"));
 
-            String heightRaw = trim(request.getParameter("height"));
-            String weightRaw = trim(request.getParameter("weight"));
-            String preferredSize = request.getParameter("preferred_size");
-            String bustRaw = trim(request.getParameter("bust"));
-            String waistRaw = trim(request.getParameter("waist"));
-            String hipsRaw = trim(request.getParameter("hips"));
-            String shoulderRaw = trim(request.getParameter("shoulder"));
-            String bodyShape = request.getParameter("bodyShape");
-
             String[] tagIdsRaw = request.getParameterValues("tagIds");
 
             // ── Field-level error map ────────────────────────────────────
@@ -105,14 +100,12 @@ public class UpdateCustomerController extends HttpServlet {
             // Phone
             if (phone == null || phone.isBlank()) {
                 fieldErrors.put("phone", "Phone number is required.");
-            } else if (!phone.matches("^[0-9]{9,15}$")) {
-                fieldErrors.put("phone", "Phone must be 9–15 digits.");
+            } else if (!PhoneCheck.isValidPhone(phone)) {
+                fieldErrors.put("phone", "Phone is invalid.");
             }
 
             // Email
-            if (email == null || email.isBlank()) {
-                fieldErrors.put("email", "Email is required.");
-            } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            if (email != null && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 fieldErrors.put("email", "Invalid email format.");
             }
 
@@ -140,13 +133,6 @@ public class UpdateCustomerController extends HttpServlet {
                 }
             }
 
-            // Measurements (optional, positive only)
-            BigDecimal height = parseDecimalValidated(heightRaw, "height", fieldErrors);
-            BigDecimal weight = parseDecimalValidated(weightRaw, "weight", fieldErrors);
-            BigDecimal bust = parseDecimalValidated(bustRaw, "bust", fieldErrors);
-            BigDecimal waist = parseDecimalValidated(waistRaw, "waist", fieldErrors);
-            BigDecimal hips = parseDecimalValidated(hipsRaw, "hips", fieldErrors);
-            BigDecimal shoulder = parseDecimalValidated(shoulderRaw, "shoulder", fieldErrors);
 
             // ── If errors → reload form ──────────────────────────────────
             if (!fieldErrors.isEmpty()) {
@@ -158,14 +144,6 @@ public class UpdateCustomerController extends HttpServlet {
                 request.setAttribute("oldBirthday", birthdayRaw);
                 request.setAttribute("oldSource", source);
                 request.setAttribute("oldAddress", address);
-                request.setAttribute("oldHeight", heightRaw);
-                request.setAttribute("oldWeight", weightRaw);
-                request.setAttribute("oldPreferredSize", preferredSize);
-                request.setAttribute("oldBust", bustRaw);
-                request.setAttribute("oldWaist", waistRaw);
-                request.setAttribute("oldHips", hipsRaw);
-                request.setAttribute("oldShoulder", shoulderRaw);
-                request.setAttribute("oldBodyShape", bodyShape);
 
                 Set<String> selectedTagSet = new HashSet<>();
                 if (tagIdsRaw != null) Collections.addAll(selectedTagSet, tagIdsRaw);
@@ -192,14 +170,6 @@ public class UpdateCustomerController extends HttpServlet {
             dto.setAddress(address);
             dto.setSource(source);
             dto.setStyleTags(tagIds);
-            dto.setHeight(height);
-            dto.setWeight(weight);
-            dto.setPreferredSize(preferredSize);
-            dto.setBust(bust);
-            dto.setWaist(waist);
-            dto.setHips(hips);
-            dto.setShoulder(shoulder);
-            dto.setBodyShape(bodyShape);
 
             customerService.updateCustomer(dto, customerId);
             response.sendRedirect(
@@ -249,7 +219,8 @@ public class UpdateCustomerController extends HttpServlet {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     private String trim(String value) {
-        return value != null ? value.trim() : null;
+        return !value.trim().isEmpty() ? value.trim() : null;
+
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,

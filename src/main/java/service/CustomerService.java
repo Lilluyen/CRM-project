@@ -1,14 +1,16 @@
 package service;
 
-import dao.*;
+import Mapper.CustomerMapper;
+import dao.CustomerDAO;
+import dao.CustomerQueryDAO;
+import dao.CustomerSegmentDAO;
+import dao.CustomerStyleDAO;
 import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
 import dto.TimeCondition;
 import exception.DuplicateEmailException;
 import exception.DuplicatePhoneException;
-import Mapper.CustomerMapper;
 import model.Customer;
-import model.CustomerMeasurement;
 import model.StyleTag;
 import util.DBContext;
 
@@ -22,7 +24,6 @@ import java.util.Set;
 public class CustomerService {
 
     private final CustomerDAO customerDAO;
-    private final CustomerMeasurementDAO customerMeasurementDAO;
     private final CustomerStyleDAO customerStyleDAO;
     private final CustomerQueryDAO customerQueryDAO;
     private final CustomerSegmentDAO customerSegmentDAO;
@@ -30,12 +31,10 @@ public class CustomerService {
     public CustomerService(CustomerDAO customerDAO,
                            CustomerStyleDAO customerStyleDAO,
                            CustomerQueryDAO customerQueryDAO,
-                           CustomerMeasurementDAO customerMeasurementDAO,
                            CustomerSegmentDAO customerSegmentDAO) {
         this.customerDAO = customerDAO;
         this.customerStyleDAO = customerStyleDAO;
         this.customerQueryDAO = customerQueryDAO;
-        this.customerMeasurementDAO = customerMeasurementDAO;
         this.customerSegmentDAO = customerSegmentDAO;
     }
 
@@ -58,8 +57,6 @@ public class CustomerService {
                     customerStyleDAO.insertCustomerStyles(
                             conn, newCustomerId, dto.getStyleTags());
                 }
-                customerMeasurementDAO
-                        .insertCustomerMeasurement(CustomerMapper.toCustomerMeasurement(dto, newCustomerId), conn);
 
                 conn.commit();
                 return newCustomerId;
@@ -81,41 +78,23 @@ public class CustomerService {
         try (Connection conn = DBContext.getConnection()) {
             try {
                 conn.setAutoCommit(false);
-
-                // ============================
-                // 1. CHECK DUPLICATE (exclude chính nó)
-                // ============================
                 if (customerDAO.existsByPhoneExcludeId(
                         dto.getPhone(), customerId, conn)) {
                     throw new DuplicatePhoneException("Phone already exists");
                 }
-
                 if (customerDAO.existsByEmailExcludeId(
                         dto.getEmail(), customerId, conn)) {
                     throw new DuplicateEmailException("Email already exists");
                 }
-
-                // ============================
-                // 2. UPDATE CUSTOMER INFO
-                // ============================
                 customerDAO.updateBasicInfo(
                         CustomerMapper.toCustomerForUpdate(dto, customerId),
                         conn);
 
-                // ============================
-                // 3. UPDATE STYLE SMART (KHÔNG XÓA HẾT)
-                // ============================
                 updateCustomerStylesSmart(
                         customerId,
                         dto.getStyleTags(),
                         conn);
 
-                // ============================
-                // 4. INSERT NEW MEASUREMENT VERSION
-                // ============================
-                customerMeasurementDAO.insertCustomerMeasurement(
-                        CustomerMapper.toCustomerMeasurement(dto, customerId),
-                        conn);
 
                 conn.commit();
 
@@ -129,25 +108,21 @@ public class CustomerService {
     public List<Customer> getCustomerList(int page, int size) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
-            List<Customer> customerList = customerQueryDAO.getCustomerList(conn, page, size);
-            return customerList;
+            return customerQueryDAO.getCustomerList(conn, page, size);
 
         }
     }
 
-    public int countTotalCustomer(String raturnRate
-            , String keyword, List<String> loyaltyTier, List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
+    public int countTotalCustomer(String keyword, List<String> loyaltyTier, List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
-            int totalCustomer = customerQueryDAO.countTotalCustomers(conn, raturnRate, keyword, loyaltyTier, source, gender, timeConditions);
-            return totalCustomer;
+            return customerQueryDAO.countTotalCustomers(conn, keyword, loyaltyTier, source, gender, timeConditions);
         }
     }
 
     public List<StyleTag> getListStyleTags() throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
 
-            List<StyleTag> styleTagList = customerStyleDAO.getAllStyleTags(conn);
-            return styleTagList;
+            return customerStyleDAO.getAllStyleTags(conn);
 
         }
     }
@@ -183,32 +158,13 @@ public class CustomerService {
             if (customer == null) {
                 return null;
             }
-
-            CustomerMeasurement latestMeasurement = customerMeasurementDAO.getLatestMeasurement(conn, customerId);
-
             List<StyleTag> styleTags = customerStyleDAO.getStyleTags(conn, customerId);
 
-            // CustomerDetailDTO dto = CustomerMapper.toDTO(customer);
-            customer.setLatestMeasurement(latestMeasurement);
             customer.setStyleTags(styleTags);
 
             return customer;
         }
     }
-
-    // public List<StyleTag> getListStyleTagsByCustomerId(int customerId) throws
-    // SQLException {
-    // try (Connection conn = DBContext.getConnection()) {
-    //
-    // List<StyleTag> styleTagList = customerStyleDAO.getAllStyleTags(conn);
-    //
-    // return styleTagList;
-    //
-    // } catch (Exception ex) {
-    // throw new SQLException("Error fetching style tags for customer: " +
-    // ex.getMessage(), ex);
-    // }
-    // }
 
     public void addStyleTagsToCustomer(int customerId, List<Integer> styleTagIds) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -260,12 +216,11 @@ public class CustomerService {
         }
     }
 
-    public List<Customer> filterAdvanced(String keyword,
-                                         String returnRate, List<String> loyaltyTier,
+    public List<Customer> filterAdvanced(String keyword, List<String> loyaltyTier,
                                          List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size
     ) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
-            return customerQueryDAO.filterAdvanced(conn, keyword, returnRate, loyaltyTier, source, gender, timeConditions, page, size);
+            return customerQueryDAO.filterAdvanced(conn, keyword, loyaltyTier, source, gender, timeConditions, page, size);
         }
     }
 
@@ -273,9 +228,9 @@ public class CustomerService {
         try (Connection conn = DBContext.getConnection()) {
             try {
                 conn.setAutoCommit(false);
-                boolean isUpggrade = customerSegmentDAO.upgradeToLoyaltyCustomer(conn, customerId);
+                boolean isUpgrade = customerSegmentDAO.upgradeToLoyaltyCustomer(conn, customerId);
                 conn.commit();
-                return isUpggrade;
+                return isUpgrade;
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
