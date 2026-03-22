@@ -130,13 +130,13 @@
                             <div class="field-group">
                                 <label class="form-label">Campaign</label>
 
-                                <c:choose>
+                                
 
                                     <%-- ========================================================
                                          EDIT MODE: checkbox dropdown
                                          Không dùng fn:contains — dùng nested c:forEach để check
                                          ======================================================== --%>
-                                    <c:when test="${lead.leadId > 0}">
+                                    
 
                                         <%-- Đếm số campaign đang tham gia --%>
                                         <c:set var="joinedCount" value="0" />
@@ -200,26 +200,26 @@
                                                                         <c:set var="isTicked" value="true" />
                                                                     </c:if>
                                                                 </c:forEach>
-
-                                                                <label class="camp-item d-flex align-items-center
-                                                                              gap-2 px-2 py-2 rounded mb-1"
-                                                                       for="ck_${camp.campaignId}"
-                                                                       style="cursor:pointer; user-select:none;
-                                                                              background:${isTicked ? 'rgba(13,110,253,.08)' : 'transparent'}">
+                                                                <c:if test="${camp.status == 'ACTIVE'}">
+                                                                    <label class="camp-item d-flex align-items-center
+                                                                                  gap-2 px-2 py-2 rounded mb-1"
+                                                                           for="ck_${camp.campaignId}"
+                                                                           style="cursor:pointer; user-select:none;
+                                                                                  background:${isTicked ? 'rgba(13,110,253,.08)' : 'transparent'}">
                                                                     <input type="checkbox"
                                                                            class="form-check-input camp-cb flex-shrink-0"
                                                                            name="selectedCampaigns"
                                                                            value="${camp.campaignId}"
                                                                            id="ck_${camp.campaignId}"
                                                                            onchange="onCampCb(this)"
-                                                                        <c:if test="${isTicked}">checked</c:if>>
+                                                                        <c:if test="${isTicked}">checked</c:if> >
                                                                     <span class="flex-grow-1">${camp.name}</span>
                                                                     <c:if test="${isTicked}">
                                                                         <span class="badge bg-primary"
                                                                               style="font-size:.65rem;">Đang tham gia</span>
                                                                     </c:if>
                                                                 </label>
-
+                                                                </c:if>
                                                             </c:forEach>
                                                         </c:when>
                                                         <c:otherwise>
@@ -234,36 +234,14 @@
                                             Tích để thêm, bỏ tích để rời campaign.
                                         </small>
 
-                                    </c:when>
+                                    
 
                                     <%-- ========================================================
                                          CREATE MODE: giữ nguyên select như file gốc
                                          ======================================================== --%>
-                                    <c:otherwise>
-                                        <select class="form-select" id="campaignId" name="campaignId"
-                                                ${not empty presetCampaignId ? 'disabled' : ''}>
-                                            <option value="0">-- Không thuộc campaign --</option>
-                                            <c:forEach var="campaign" items="${campaigns}">
-                                                <c:set var="isSelected"
-                                                       value="${lead.leadId > 0
-                                                                ? lead.campaignId == campaign.campaignId
-                                                                : campaign.campaignId == presetCampaignId}" />
-                                                <option value="${campaign.campaignId}"
-                                                    ${isSelected ? 'selected' : ''}>
-                                                    ${campaign.name}
-                                                </option>
-                                            </c:forEach>
-                                        </select>
-                                        <%-- Khi disabled, trình duyệt không gửi value → dùng hidden field --%>
-                                        <c:if test="${not empty presetCampaignId}">
-                                            <input type="hidden" name="campaignId" value="${presetCampaignId}">
-                                            <small class="form-text text-muted">
-                                                <i class="fas fa-lock me-1"></i>Campaign được gán tự động từ danh sách lead.
-                                            </small>
-                                        </c:if>
-                                    </c:otherwise>
+                                    
 
-                                </c:choose>
+                                
                             </div>
                         </div>
                     </div>

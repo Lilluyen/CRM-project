@@ -115,9 +115,15 @@ public class LeadFormController extends HttpServlet {
     private void handleCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            Lead lead = extractLeadFromRequest(request);
+            Lead lead = extractLeadFromRequestForUpdate(request);
+            List<Integer> selectedCampaignIds = parseSelectedCampaigns(request);
 
+            // set tạm campaign đầu tiên để validate đúng scope
+            if (!selectedCampaignIds.isEmpty()) {
+                lead.setCampaignId(selectedCampaignIds.get(0));
+            }
             int newId = leadService.createLead(lead, false);
+            leadService.updateLeadCampaigns(newId, selectedCampaignIds);
             if (newId > 0) {
                 User sessionUser = (User) request.getSession().getAttribute("user");
                 LeadActivityUtil.logLeadActivity(

@@ -134,8 +134,8 @@ public class CampaignLeadDAO {
     }
 
     /**
-     * Lấy danh sách Campaigns mà lead tham gia theo leadId đơn lẻ.
-     * Dùng khi lead chỉ có 1 record trong bảng Leads.
+     * Lấy danh sách Campaigns mà lead tham gia theo leadId đơn lẻ. Dùng khi
+     * lead chỉ có 1 record trong bảng Leads.
      */
     public List<Campaign> getCampaignsByLeadId(int leadId) {
         String sql = "SELECT c.campaign_id, c.name, c.status, c.channel, "
@@ -160,15 +160,14 @@ public class CampaignLeadDAO {
     /**
      * FIX: Lấy TẤT CẢ campaigns của một người dựa trên EMAIL.
      *
-     * Lý do cần method này:
-     * - Bảng Leads có thể có nhiều row cùng email (mỗi campaign tạo 1 row riêng,
-     *   hoặc dùng MIN(lead_id) khi hiển thị list).
-     * - searchLeads() chỉ trả về MIN(lead_id) per email → leadId đó chỉ thuộc
-     *   1 campaign trong Campaign_Leads.
-     * - Để hiện đủ campaigns trên trang detail, cần JOIN qua tất cả lead_id
-     *   có cùng email, không chỉ 1 leadId.
+     * Lý do cần method này: - Bảng Leads có thể có nhiều row cùng email (mỗi
+     * campaign tạo 1 row riêng, hoặc dùng MIN(lead_id) khi hiển thị list). -
+     * searchLeads() chỉ trả về MIN(lead_id) per email → leadId đó chỉ thuộc 1
+     * campaign trong Campaign_Leads. - Để hiện đủ campaigns trên trang detail,
+     * cần JOIN qua tất cả lead_id có cùng email, không chỉ 1 leadId.
      *
-     * SQL: lấy DISTINCT campaigns từ tất cả lead_id có email = email của leadId này.
+     * SQL: lấy DISTINCT campaigns từ tất cả lead_id có email = email của leadId
+     * này.
      */
     public List<Campaign> getCampaignsByLeadEmail(int leadId) {
         String sql = "SELECT DISTINCT c.campaign_id, c.name, c.status, c.channel, "
