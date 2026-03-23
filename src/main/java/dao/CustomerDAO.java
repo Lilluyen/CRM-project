@@ -383,11 +383,24 @@ public class CustomerDAO {
         }
     }
 
-    public void calculateRFM(Connection conn) throws SQLException {
-        String sql = "{CALL sp_Calculate_RFM}";
 
-        try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.execute();
+    public void updatePrimaryPhone(Connection conn, int customerId, String phone)
+            throws SQLException {
+        String sql = "UPDATE Customers SET phone = ? WHERE customer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updatePrimaryEmail(Connection conn, int customerId, String email)
+            throws SQLException {
+        String sql = "UPDATE Customers SET email = ? WHERE customer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
         }
     }
 }

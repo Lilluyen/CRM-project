@@ -1,0 +1,213 @@
+@import url("merge_request_preview.css");
+
+.mr__status {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.mr__status--pending {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.mr__status--merged {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.mr__status--rejected {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.mr__back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding: 7px 14px;
+    border: 1.5px solid var(--mr-border, #E5E7EB);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--mr-muted, #6B7280);
+    font-size: .82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all .15s;
+}
+
+.mr__back-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+}
+
+.mr__back-btn:hover {
+    border-color: var(--mr-primary, #E87020);
+    color: var(--mr-primary, #E87020);
+}
+
+.mr__reason-box {
+    margin: 16px 28px 0;
+    padding: 12px 16px;
+    background: #FFFBEB;
+    border: 1px solid #FCD34D;
+    border-radius: 8px;
+}
+
+.mr__reason-box-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #92400E;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+}
+
+.mr__reason-box-label svg {
+    width: 13px;
+    height: 13px;
+    stroke: #D97706;
+}
+
+.mr__reason-box-text {
+    margin: 0;
+    font-size: .875rem;
+    color: #78350F;
+    line-height: 1.5;
+}
+
+.mr__field-row--readonly .mr__cell {
+    font-size: .875rem;
+    color: #111827;
+}
+
+.mr__cell--chosen {
+    font-weight: 600;
+}
+
+.mr__cell--source.mr__cell--chosen {
+    background: #FEF0E6;
+}
+
+.mr__cell--target.mr__cell--chosen {
+    background: #D1FAE5;
+}
+
+.mr__chosen-badge {
+    font-size: .65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    background: var(--mr-primary, #E87020);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.mr__cell--target .mr__chosen-badge {
+    margin-right: 6px;
+}
+
+.mr__cell--source .mr__chosen-badge {
+    margin-left: 6px;
+}
+
+.mr__reject-reason {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 16px 28px 0;
+    padding: 12px 16px;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 8px;
+    font-size: .875rem;
+    color: #991B1B;
+    line-height: 1.5;
+}
+
+.mr__reject-reason svg {
+    width: 16px;
+    height: 16px;
+    stroke: #DC2626;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.mr__actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 20px 28px 28px;
+    border-top: 1px solid #E5E7EB;
+    margin-top: 20px;
+    background: #FDFAF8;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.mr__reject-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 240px;
+}
+
+.mr__reject-input {
+    width: 100%;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: .85rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color .15s;
+}
+
+.mr__reject-input:focus {
+    outline: none;
+    border-color: #DC2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+}
+
+.mr__btn--reject {
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1.5px solid #FECACA;
+}
+
+.mr__btn--reject svg {
+    stroke: #DC2626;
+}
+
+.mr__btn--reject:hover {
+    background: #FEE2E2;
+    border-color: #DC2626;
+}
+
+.mr__btn--approve {
+    background: #059669;
+    color: #fff;
+}
+
+.mr__btn--approve svg {
+    stroke: #fff;
+}
+
+.mr__btn--approve:hover {
+    background: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, .35);
+}

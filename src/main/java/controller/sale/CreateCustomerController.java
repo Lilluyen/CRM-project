@@ -1,18 +1,15 @@
 package controller.sale;
 
-import dao.CustomerDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
+import dto.ConflictResult;
 import dto.CustomerCreateDTO;
-import exception.DuplicateEmailException;
-import exception.DuplicatePhoneException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.ContactValidationResult;
 import model.StyleTag;
 import model.User;
 import service.CustomerService;
@@ -27,6 +24,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
 public class CreateCustomerController extends HttpServlet {
@@ -35,12 +33,14 @@ public class CreateCustomerController extends HttpServlet {
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
-
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -91,7 +91,6 @@ public class CreateCustomerController extends HttpServlet {
             String birthdayRaw = trim(req.getParameter("birthday"));
             String source = trim(req.getParameter("source"));
             String address = trim(req.getParameter("address"));
-
 
             String[] tagParams = req.getParameterValues("styleTags");
 
@@ -166,37 +165,60 @@ public class CreateCustomerController extends HttpServlet {
             dto.setStyleTags(styleTags);
 
             // ── Call service ─────────────────────────────────────────────
-            customerService.createCustomer(dto, user.getUserId());
-            resp.sendRedirect(req.getContextPath() + "/customers?status=success");
 
-        } catch (DuplicatePhoneException e) {
-            Map<String, String> fieldErrors = new LinkedHashMap<>();
-            fieldErrors.put("phone", "This phone number is already registered.");
-            reloadFormOnError(req, fieldErrors,
-                    trim(req.getParameter("name")),
-                    trim(req.getParameter("phone")),
-                    trim(req.getParameter("email")),
-                    trim(req.getParameter("gender")),
-                    trim(req.getParameter("birthday")),
-                    trim(req.getParameter("source")),
-                    trim(req.getParameter("address")),
-                    req.getParameterValues("styleTags"));
-            req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
+            ConflictResult conflict = customerService.checkDuplicate(dto);
+            if (conflict != null) {
+                conflict.setSource("create");
+                // Lưu vào session, redirect sang trang resolve
+                req.getSession().setAttribute("pendingConflict", conflict);
+                resp.sendRedirect(req.getContextPath() + "/customers/resolve-conflict");
+                return;
+            }
 
-        } catch (DuplicateEmailException e) {
-            Map<String, String> fieldErrors = new LinkedHashMap<>();
-            fieldErrors.put("email", "This email is already registered.");
-            reloadFormOnError(req, fieldErrors,
-                    trim(req.getParameter("name")),
-                    trim(req.getParameter("phone")),
-                    trim(req.getParameter("email")),
-                    trim(req.getParameter("gender")),
-                    trim(req.getParameter("birthday")),
-                    trim(req.getParameter("source")),
-                    trim(req.getParameter("address")),
-                    req.getParameterValues("styleTags"));
-            req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
+            // Không có conflict → tạo bình thường
+            int newId = customerService.createCustomer(dto, user.getUserId());
 
+            // Lưu extra contacts nếu có
+            String[] extraValues = req.getParameterValues("extraContactValue");
+            String[] extraTypes = req.getParameterValues("extraContactType");
+
+            if (extraValues != null && extraTypes != null) {
+                List<ContactValidationResult> issues =
+                        customerService.saveExtraContacts(newId, extraTypes, extraValues);
+
+                List<ContactValidationResult> contactConflicts = issues.stream()
+                        .filter(ContactValidationResult::isConflictOther)
+                        .collect(Collectors.toList());
+
+                if (!contactConflicts.isEmpty()) {
+                    req.getSession().setAttribute("contactConflictWarning", contactConflicts);
+                    resp.sendRedirect(req.getContextPath()
+                            + "/customers/edit?customerId=" + newId
+                            + "&status=contact-conflict");
+                    return;
+                }
+
+                List<ContactValidationResult> formatOrSelfIssues = issues.stream()
+                        .filter(r -> r.getStatus() == ContactValidationResult.Status.INVALID_FORMAT
+                                || r.getStatus() == ContactValidationResult.Status.DUPLICATE_SELF)
+                        .collect(Collectors.toList());
+
+                if (!formatOrSelfIssues.isEmpty()) {
+                    req.getSession().setAttribute("contactWarnings", formatOrSelfIssues);
+                    resp.sendRedirect(req.getContextPath()
+                            + "/customers/edit?customerId=" + newId
+                            + "&status=contact-warning");
+                    return;
+                }
+            }
+
+// Tất cả OK — chỉ có 1 sendRedirect duy nhất ở đây
+            resp.sendRedirect(req.getContextPath()
+                    + "/customers/detail?customerId=" + newId);
+
+        } catch (SQLException e) {
+            log("DB error", e);
+            resp.sendRedirect(req.getContextPath() + "/customers?status=failed");
         } catch (Exception e) {
             log("Create customer error", e);
             resp.sendRedirect(req.getContextPath() + "/customers?status=failed");
@@ -246,6 +268,7 @@ public class CreateCustomerController extends HttpServlet {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     private String trim(String value) {
+        if (value == null) return null;
         return value.trim().isEmpty() ? null : value.trim();
     }
 

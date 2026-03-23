@@ -1,17 +1,16 @@
 package controller.manager;
 
-import dao.CustomerDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.CustomerMergeRequest;
 import model.StyleTag;
 import service.CustomerService;
+import service.MergeRequestService;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,12 +22,19 @@ public class CustomerDetailController extends HttpServlet {
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
-
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
+    private final MergeRequestDAO mergeRequestDAO = new MergeRequestDAO();
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
+
+    private final MergeRequestService mergeRequestService = new MergeRequestService(
+            mergeRequestDAO, customerDAO, customerStyleDAO,
+            contactDAO, noteDAO, customerQueryDAO);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -57,6 +63,11 @@ public class CustomerDetailController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/customers");
                 return;
             }
+
+            // Trong CustomerDetailController.doGet() — thêm 2 dòng:
+            List<CustomerMergeRequest> mergeRequests =
+                    mergeRequestService.getByCustomerId(customerId);
+            request.setAttribute("mergeRequests", mergeRequests);
 
             // 🔥 Set data cho view
             request.setAttribute("customerDetail", customerDetail);

@@ -1,6 +1,7 @@
 package dao;
 
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
+import dto.CustomerSearchResultDTO;
 import dto.TimeCondition;
 import model.Customer;
 
@@ -232,6 +233,22 @@ public class CustomerQueryDAO {
             stm.executeUpdate();
         }
 
+        String deleteCustomerNotes = """
+                Delete From customer_note Where customer_id = ?
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(deleteCustomerNotes)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        String deleteCustomerContacts = """
+                Delete From [customer_contact] Where customer_id = ?
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(deleteCustomerContacts)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
     }
 
     private SQLServerDataTable toStringTVP(List<String> list) throws SQLException {
@@ -372,5 +389,44 @@ public class CustomerQueryDAO {
                 return customerList;
             }
         }
+    }
+
+    public List<CustomerSearchResultDTO> searchForMerge(Connection conn,
+                                                        String keyword,
+                                                        int excludeId,
+                                                        int limit) throws SQLException {
+        String sql = """
+                SELECT TOP (?) customer_id, name, phone, email
+                FROM customers
+                WHERE customer_id != ?
+                  AND (
+                      name  LIKE ?
+                   OR phone LIKE ?
+                   OR email LIKE ?
+                  )
+                ORDER BY name ASC
+                """;
+        List<CustomerSearchResultDTO> results = new ArrayList<>();
+        String pattern = "%" + keyword + "%";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, excludeId);
+            ps.setString(3, pattern);
+            ps.setString(4, pattern);
+            ps.setString(5, pattern);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new CustomerSearchResultDTO(
+                            rs.getInt("customer_id"),
+                            rs.getString("name"),
+                            rs.getString("phone"),
+                            rs.getString("email")
+                    ));
+                }
+            }
+        }
+        return results;
     }
 }

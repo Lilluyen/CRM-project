@@ -1,25 +1,24 @@
 package controller.manager;
 
-import dao.CustomerDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
+import dto.ConflictResult;
 import dto.CustomerCreateDTO;
-import exception.DuplicateEmailException;
-import exception.DuplicatePhoneException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.ContactValidationResult;
 import service.CustomerService;
 import util.PhoneCheck;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
 public class UpdateCustomerController extends HttpServlet {
@@ -30,12 +29,14 @@ public class UpdateCustomerController extends HttpServlet {
 
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -105,7 +106,7 @@ public class UpdateCustomerController extends HttpServlet {
             }
 
             // Email
-            if (email != null && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            if (email != null && !email.isBlank() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 fieldErrors.put("email", "Invalid email format.");
             }
 
@@ -161,7 +162,7 @@ public class UpdateCustomerController extends HttpServlet {
             }
 
             CustomerCreateDTO dto = new CustomerCreateDTO();
-            dto.setCustomer_id(customerId);
+            dto.setCustomerId(customerId);
             dto.setName(name);
             dto.setPhone(phone);
             dto.setEmail(email);
@@ -171,22 +172,59 @@ public class UpdateCustomerController extends HttpServlet {
             dto.setSource(source);
             dto.setStyleTags(tagIds);
 
+            ConflictResult conflict = customerService.checkDuplicate(dto, customerId);
+            if (conflict != null) {
+                conflict.setSource("update");
+                conflict.setIncomingId(customerId);
+                request.getSession().setAttribute("pendingConflict", conflict);
+                response.sendRedirect(request.getContextPath() + "/customers/resolve-conflict");
+                return;
+            }
+
+// Chỉ gọi 1 lần
             customerService.updateCustomer(dto, customerId);
-            response.sendRedirect(
-                    request.getContextPath() + "/customers/detail?customerId=" + customerId);
 
-        } catch (DuplicateEmailException e) {
-            Map<String, String> fieldErrors = new LinkedHashMap<>();
-            fieldErrors.put("email", "This email is already registered.");
-            reloadFormData(request, customerId, fieldErrors, null);
-            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+// Validate và lưu extra contacts
+            String[] extraValues = request.getParameterValues("extraContactValue");
+            String[] extraTypes = request.getParameterValues("extraContactType");
 
-        } catch (DuplicatePhoneException e) {
-            Map<String, String> fieldErrors = new LinkedHashMap<>();
-            fieldErrors.put("phone", "This phone number is already registered.");
-            reloadFormData(request, customerId, fieldErrors, null);
-            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+            if (extraValues != null && extraTypes != null) {
+                List<ContactValidationResult> issues =
+                        customerService.saveExtraContacts(customerId, extraTypes, extraValues);
 
+                List<ContactValidationResult> contactConflicts = issues.stream()
+                        .filter(ContactValidationResult::isConflictOther)
+                        .collect(Collectors.toList());
+
+                if (!contactConflicts.isEmpty()) {
+                    request.getSession().setAttribute("contactConflictWarning", contactConflicts);
+                    response.sendRedirect(request.getContextPath()
+                            + "/customers/edit?customerId=" + customerId
+                            + "&status=contact-conflict");
+                    return;
+                }
+
+                List<ContactValidationResult> formatOrSelfIssues = issues.stream()
+                        .filter(r -> r.getStatus() == ContactValidationResult.Status.INVALID_FORMAT
+                                || r.getStatus() == ContactValidationResult.Status.DUPLICATE_SELF)
+                        .collect(Collectors.toList());
+
+                if (!formatOrSelfIssues.isEmpty()) {
+                    request.getSession().setAttribute("contactWarnings", formatOrSelfIssues);
+                    response.sendRedirect(request.getContextPath()
+                            + "/customers/edit?customerId=" + customerId
+                            + "&status=contact-warning");
+                    return;
+                }
+            }
+
+// Tất cả OK — chỉ có 1 sendRedirect duy nhất ở đây
+            response.sendRedirect(request.getContextPath()
+                    + "/customers/detail?customerId=" + customerId);
+
+        } catch (SQLException e) {
+            log("DB error", e);
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
         } catch (Exception e) {
             log("Update customer error", e);
             response.sendRedirect(request.getContextPath() + "/customers?status=failed");
@@ -219,8 +257,8 @@ public class UpdateCustomerController extends HttpServlet {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     private String trim(String value) {
-        return !value.trim().isEmpty() ? value.trim() : null;
-
+        if (value == null) return null;
+        return value.trim().isEmpty() ? null : value.trim();
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,

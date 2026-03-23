@@ -1,9 +1,6 @@
 package controller.manager;
 
-import dao.CustomerDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import dto.CustomerDetailDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -86,11 +83,14 @@ public class CustomerJourneyController extends HttpServlet {
                 CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
                 CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
+                CustomerContactDAO contactDAO = new CustomerContactDAO();
+                CustomerNoteDAO noteDAO = new CustomerNoteDAO();
                 CustomerService customerService = new CustomerService(
                         customerDAO,
                         customerStyleDAO,
                         customerQueryDAO,
-                        customerSegmentDAO);
+                        customerSegmentDAO,
+                        contactDAO, noteDAO);
                 CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
                 if (customerDetail == null) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Customer not found");

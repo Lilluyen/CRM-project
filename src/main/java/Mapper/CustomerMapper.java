@@ -29,7 +29,7 @@ public class CustomerMapper {
 
     public static Customer toCustomerForUpdate(CustomerCreateDTO dto, int userId) {
         Customer customer = new Customer();
-        customer.setCustomerId(dto.getCustomer_id());
+        customer.setCustomerId(dto.getCustomerId());
         customer.setName(dto.getName());
         customer.setPhone(dto.getPhone());
         customer.setBirthday(dto.getBirthday());

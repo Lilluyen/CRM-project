@@ -1,9 +1,6 @@
 package controller.sale;
 
-import dao.CustomerDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -24,12 +21,14 @@ public class AddTagController extends HttpServlet {
 
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doGet(HttpServletRequest request,

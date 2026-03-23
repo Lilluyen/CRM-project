@@ -1,9 +1,6 @@
 package controller.manager;
 
-import dao.CustomerDAO;
-import dao.CustomerQueryDAO;
-import dao.CustomerSegmentDAO;
-import dao.CustomerStyleDAO;
+import dao.*;
 import dto.Pagination;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,11 +26,14 @@ public class CustomerListController extends HttpServlet {
     private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
     private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
     private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
-    private final CustomerService customerService = new CustomerService(
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
+    CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {

@@ -44,7 +44,7 @@
                 <!-- ══ COL 1: PERSONAL INFO ══ -->
                 <div class="cf__col cf__col--1">
                     <div class="cf__col-header">
-                        <div class="cf__col-icon cf__col-icon--blue">
+                        <div class="cf__col-icon cf__col-icon--orange">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
@@ -213,7 +213,54 @@
                     </div>
                 </div>
 
-               
+                <!-- ══ COL 2: CONTACT ══ -->
+                <div class="cf__col cf__col--2">
+                    <div class="cf__col-header">
+                        <div class="cf__col-icon cf__col-icon--amber">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81 19.79 19.79 0 012 2.18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.37 7.69a16 16 0 006 6l.88-.88a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                            </svg>
+                        </div>
+                        <span class="cf__col-title">Additional Contacts</span>
+                    </div>
+
+                    <p class="cf__tag-hint">Add extra phone numbers or emails for this customer.</p>
+
+                    <div class="cf__fields" id="contactList">
+                        <%-- Dynamic rows injected by JS --%>
+                    </div>
+
+                    <div class="cf__contact-actions">
+                        <button type="button" class="cf__contact-add-btn" onclick="addContact('PHONE')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Phone
+                        </button>
+                        <button type="button" class="cf__contact-add-btn" onclick="addContact('EMAIL')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Email
+                        </button>
+                    </div>
+
+                    <div class="cf__contact-note">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        These contacts are saved as secondary — they won't be used for duplicate checking.
+                    </div>
+                </div>
+
                 <!-- ══ COL 3: STYLE TAGS ══ -->
                 <div class="cf__col cf__col--3">
                     <div class="cf__col-header">
@@ -247,16 +294,16 @@
             <div class="cf__footer">
                 <button type="button" class="cf__btn cf__btn--secondary"
                         onclick="window.location.href='${pageContext.request.contextPath}/customers'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
                     Cancel
                 </button>
                 <button type="submit" class="cf__btn cf__btn--primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/>
                         <polyline points="17 21 17 13 7 13 7 21"/>
                         <polyline points="7 3 7 8 15 8"/>
@@ -271,6 +318,40 @@
 
 <script>
     (function () {
+        var contactIndex = 0;
+
+        window.addContact = function (type) {
+            var list = document.getElementById('contactList');
+            var row = document.createElement('div');
+            row.className = 'cf__field cf__contact-row';
+            row.dataset.index = contactIndex;
+
+            var icon = type === 'PHONE'
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81 19.79 19.79 0 012 2.18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.37 7.69a16 16 0 006 6l.88-.88a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+
+            var placeholder = type === 'PHONE' ? 'Ex: 0987654321' : 'Ex: example@gmail.com';
+            var inputType = type === 'PHONE' ? 'tel' : 'email';
+
+            row.innerHTML =
+                '<label class="cf__label">' + icon + ' ' + (type === 'PHONE' ? 'Phone' : 'Email') + '</label>' +
+                '<div class="cf__contact-input-wrap">' +
+                '  <input class="cf__input" type="' + inputType + '" name="extraContactValue" placeholder="' + placeholder + '">' +
+                '  <input type="hidden" name="extraContactType" value="' + type + '">' +
+                '  <button type="button" class="cf__contact-remove" onclick="removeContact(this)">' +
+                '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                '  </button>' +
+                '</div>';
+
+            list.appendChild(row);
+            contactIndex++;
+            row.querySelector('input[type=' + inputType + ']').focus();
+        };
+
+        window.removeContact = function (btn) {
+            btn.closest('.cf__contact-row').remove();
+        };
+
         /* Auto-scroll to first error field */
         var first = document.querySelector('.cf__field--error');
         if (first) {
@@ -278,6 +359,7 @@
             var input = first.querySelector('input, select');
             if (input) input.focus({preventScroll: true});
         }
+
         /* Auto-dismiss error banner after 6s */
         var banner = document.getElementById('cfErrorBanner');
         if (banner) {
