@@ -697,13 +697,10 @@ public class LeadDAO {
         return result;
     }
 
-
     public Map<String, Lead> findLeadsByEmailMap() {
         String sql = "SELECT * FROM Leads WHERE email IS NOT NULL";
         Map<String, Lead> map = new java.util.HashMap<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Lead lead = mapResultSetToLead(rs);
                 map.put(lead.getEmail().toLowerCase(), lead);
@@ -717,9 +714,7 @@ public class LeadDAO {
     public Map<String, Lead> findLeadsByPhoneMap() {
         String sql = "SELECT * FROM Leads WHERE phone IS NOT NULL AND phone <> ''";
         Map<String, Lead> map = new java.util.HashMap<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Lead lead = mapResultSetToLead(rs);
                 if (lead.getPhone() != null && !lead.getPhone().isEmpty()) {

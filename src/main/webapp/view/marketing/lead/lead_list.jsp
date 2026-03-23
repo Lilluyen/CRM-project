@@ -87,10 +87,9 @@
                         <label class="form-label">Trạng thái</label>
                         <select class="form-select" name="status">
                             <option value="">-- Tất cả trạng thái --</option>
-                            <option value="NEW_LEAD"     ${filterStatus == 'NEW_LEAD'     ? 'selected' : ''}>New Lead</option>
-                            <option value="CONTACTED"    ${filterStatus == 'CONTACTED'    ? 'selected' : ''}>Contacted</option>
+                            <option value="NEW"     ${filterStatus == 'NEW'     ? 'selected' : ''}>New Lead</option>
+                            <option value="NURTURING"    ${filterStatus == 'NURTURING'    ? 'selected' : ''}>Nurturing</option>
                             <option value="QUALIFIED"    ${filterStatus == 'QUALIFIED'    ? 'selected' : ''}>Qualified</option>
-                            <option value="DEAL_CREATED" ${filterStatus == 'DEAL_CREATED' ? 'selected' : ''}>Deal Created</option>
                             <option value="LOST"         ${filterStatus == 'LOST'         ? 'selected' : ''}>Lost</option>
                         </select>
                     </div>
@@ -197,8 +196,8 @@
                                             <c:when test="${lead.status == 'Qualified' || lead.status == 'QUALIFIED'}">
                                                 <span class="badge-status badge-qualified">Qualified</span>
                                             </c:when>
-                                            <c:when test="${lead.status == 'Contacted' || lead.status == 'CONTACTED'}">
-                                                <span class="badge-status badge-contacted">Contacted</span>
+                                            <c:when test="${lead.status == 'Nurturing' || lead.status == 'NURTURING'}">
+                                                <span class="badge-status badge-contacted">Nurturing</span>
                                             </c:when>
                                             <c:when test="${lead.status == 'Converted' || lead.status == 'CONVERTED'}">
                                                 <span class="badge-status badge-deal">Converted</span>
@@ -232,7 +231,7 @@
                                         </c:choose>
                                     </td>
 
-                                    <td class="text-center">
+                                    <td>
                                         <a href="${pageContext.request.contextPath}/marketing/leads/detail?id=${lead.leadId}"
                                            class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
@@ -241,10 +240,12 @@
                                            class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${lead.leadId}&relatedType=LEAD"
-                                           class="btn btn-sm btn-outline-warning ms-1" title="Tạo Deal">
-                                            <i class="fas fa-plus"></i>
-                                        </a>
+                                        <c:if test="${lead.status == 'Qualified' || lead.status == 'QUALIFIED'}">
+                                            <a href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${lead.leadId}&relatedType=LEAD"
+                                               class="btn btn-sm btn-outline-warning ms-1" title="Tạo Deal">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                        </c:if>
                                     </td>
                                 </tr>
                             </c:forEach>
