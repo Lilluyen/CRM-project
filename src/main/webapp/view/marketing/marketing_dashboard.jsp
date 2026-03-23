@@ -30,21 +30,21 @@
                 <div class="stat-card stat-info">
                     <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
                     <div class="stat-number">${newLeads}</div>
-                    <div class="stat-label">New</div>
+                    <div class="stat-label">New Leads</div>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="stat-card stat-warning">
                     <div class="stat-icon"><i class="fas fa-phone"></i></div>
                     <div class="stat-number">${contactedLeads}</div>
-                    <div class="stat-label">Contacted</div>
+                    <div class="stat-label">Nurturing Leads</div>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="stat-card stat-success">
                     <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                     <div class="stat-number">${qualifiedLeads}</div>
-                    <div class="stat-label">Qualified</div>
+                    <div class="stat-label">Qualified Leads</div>
                 </div>
             </div>
             <div class="col-md-2">
@@ -113,19 +113,19 @@
                     <div class="funnel-step step-new">
                         <div class="funnel-pct">Stage 1</div>
                         <div class="funnel-number">${newLeads}</div>
-                        <div class="funnel-label">New Lead</div>
+                        <div class="funnel-label">New Leads</div>
                     </div>
                     <div class="funnel-connector"><i class="fas fa-chevron-right"></i></div>
                     <div class="funnel-step step-contacted">
                         <div class="funnel-pct">Stage 2</div>
                         <div class="funnel-number">${contactedLeads}</div>
-                        <div class="funnel-label">Contacted</div>
+                        <div class="funnel-label">Nurturing Leads</div>
                     </div>
                     <div class="funnel-connector"><i class="fas fa-chevron-right"></i></div>
                     <div class="funnel-step step-qualified">
                         <div class="funnel-pct">Stage 3</div>
                         <div class="funnel-number">${qualifiedLeads}</div>
-                        <div class="funnel-label">Qualified</div>
+                        <div class="funnel-label">Qualified Leads</div>
                     </div>
                     <div class="funnel-connector"><i class="fas fa-chevron-right"></i></div>
                     <div class="funnel-step step-deal">
