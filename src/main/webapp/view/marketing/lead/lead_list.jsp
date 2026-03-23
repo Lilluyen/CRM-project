@@ -27,10 +27,11 @@
                    class="btn btn-outline-primary">
                     <i class="fas fa-file-import me-1"></i> Import Leads
                 </a>
-                <a href="${pageContext.request.contextPath}/marketing/leads/form${not empty filterCampaignId ? '?campaignId='.concat(filterCampaignId) : ''}"
-                   class="btn btn-primary">
-                    <i class="fas fa-plus-circle me-1"></i> Tạo Lead Mới
-                </a>
+                <c:if test="${campaign.status=='ACTIVE'}">
+                    <a href="${pageContext.request.contextPath}/marketing/leads/form?campaignId=${filterCampaignId}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i> Tạo Lead Mới
+                    </a>
+                </c:if>
             </div>
         </div>
 
@@ -236,10 +237,12 @@
                                            class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="${pageContext.request.contextPath}/marketing/leads/form?id=${lead.leadId}"
-                                           class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                                        <c:if test="${empty filterCampaignId}">
+                                            <a href="${pageContext.request.contextPath}/marketing/leads/form?id=${lead.leadId}"
+                                               class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </c:if>
                                         <c:if test="${lead.status == 'Qualified' || lead.status == 'QUALIFIED'}">
                                             <a href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${lead.leadId}&relatedType=LEAD"
                                                class="btn btn-sm btn-outline-warning ms-1" title="Tạo Deal">

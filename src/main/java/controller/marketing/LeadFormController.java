@@ -80,11 +80,15 @@ public class LeadFormController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/marketing/leads");
             }
         } else {
-            // Create mode
+            // Create mode — set empty Lead để JSP check lead.leadId == 0 đúng
+            request.setAttribute("lead", new Lead());
             String presetCampaignIdStr = request.getParameter("campaignId");
             if (presetCampaignIdStr != null && !presetCampaignIdStr.isBlank()) {
                 try {
-                    request.setAttribute("presetCampaignId", Integer.parseInt(presetCampaignIdStr));
+                    int presetCampaignId = Integer.parseInt(presetCampaignIdStr);
+                    Campaign presetCampaign = campaignService.getCampaignById(presetCampaignId);
+                    request.setAttribute("lockedCampaignId", presetCampaignIdStr);
+                    request.setAttribute("lockedCampaignName", presetCampaign != null ? presetCampaign.getName() : "");
                 } catch (NumberFormatException ignored) {
                 }
             }
@@ -108,10 +112,10 @@ public class LeadFormController extends HttpServlet {
             handleCreate(request, response);
         }
     }
-
     // ======================================================================
     // Create lead — giữ nguyên logic cũ
     // ======================================================================
+
     private void handleCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -136,8 +140,11 @@ public class LeadFormController extends HttpServlet {
                         "Lead \"" + lead.getFullName() + "\" đã được tạo thành công!");
 
                 String redirectUrl = request.getContextPath() + "/marketing/leads";
-                if (lead.getCampaignId() > 0) {
-                    redirectUrl += "?campaignId=" + lead.getCampaignId();
+                // Chỉ redirect về campaign khi tạo từ trong campaign (có campaignId trên URL)
+                // Tạo thường → luôn về danh sách toàn bộ lead
+                String originCampaignId = request.getParameter("campaignId");
+                if (originCampaignId != null && !originCampaignId.isBlank()) {
+                    redirectUrl += "?campaignId=" + originCampaignId;
                 }
                 response.sendRedirect(redirectUrl);
             } else {
@@ -182,9 +189,12 @@ public class LeadFormController extends HttpServlet {
             request.getSession().setAttribute("successMessage",
                     "Lead \"" + lead.getFullName() + "\" đã được cập nhật thành công!");
 
-            // Redirect về ĐẦU danh sách lead (page=1, không filter)
-            // updated_at vừa được cập nhật → lead tự lên đầu (ORDER BY updated_at DESC)
-            response.sendRedirect(request.getContextPath() + "/marketing/leads");
+            String returnCampaignId = request.getParameter("returnCampaignId");
+            if (returnCampaignId != null && !returnCampaignId.isBlank()) {
+                response.sendRedirect(request.getContextPath() + "/marketing/leads?campaignId=" + returnCampaignId);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/marketing/leads");
+            }
 
         } catch (Exception e) {
             Lead lead = extractLeadFromRequestSafe(request);
