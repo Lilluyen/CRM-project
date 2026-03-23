@@ -80,11 +80,15 @@ public class LeadFormController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/marketing/leads");
             }
         } else {
-            // Create mode
+            // Create mode — set empty Lead để JSP check lead.leadId == 0 đúng
+            request.setAttribute("lead", new Lead());
             String presetCampaignIdStr = request.getParameter("campaignId");
             if (presetCampaignIdStr != null && !presetCampaignIdStr.isBlank()) {
                 try {
-                    request.setAttribute("presetCampaignId", Integer.parseInt(presetCampaignIdStr));
+                    int presetCampaignId = Integer.parseInt(presetCampaignIdStr);
+                    Campaign presetCampaign = campaignService.getCampaignById(presetCampaignId);
+                    request.setAttribute("lockedCampaignId", presetCampaignIdStr);
+                    request.setAttribute("lockedCampaignName", presetCampaign != null ? presetCampaign.getName() : "");
                 } catch (NumberFormatException ignored) {
                 }
             }
@@ -108,16 +112,22 @@ public class LeadFormController extends HttpServlet {
             handleCreate(request, response);
         }
     }
-
     // ======================================================================
     // Create lead — giữ nguyên logic cũ
     // ======================================================================
+
     private void handleCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            Lead lead = extractLeadFromRequest(request);
+            Lead lead = extractLeadFromRequestForUpdate(request);
+            List<Integer> selectedCampaignIds = parseSelectedCampaigns(request);
 
+            // set tạm campaign đầu tiên để validate đúng scope
+            if (!selectedCampaignIds.isEmpty()) {
+                lead.setCampaignId(selectedCampaignIds.get(0));
+            }
             int newId = leadService.createLead(lead, false);
+            leadService.updateLeadCampaigns(newId, selectedCampaignIds);
             if (newId > 0) {
                 User sessionUser = (User) request.getSession().getAttribute("user");
                 LeadActivityUtil.logLeadActivity(
@@ -130,8 +140,11 @@ public class LeadFormController extends HttpServlet {
                         "Lead \"" + lead.getFullName() + "\" đã được tạo thành công!");
 
                 String redirectUrl = request.getContextPath() + "/marketing/leads";
-                if (lead.getCampaignId() > 0) {
-                    redirectUrl += "?campaignId=" + lead.getCampaignId();
+                // Chỉ redirect về campaign khi tạo từ trong campaign (có campaignId trên URL)
+                // Tạo thường → luôn về danh sách toàn bộ lead
+                String originCampaignId = request.getParameter("campaignId");
+                if (originCampaignId != null && !originCampaignId.isBlank()) {
+                    redirectUrl += "?campaignId=" + originCampaignId;
                 }
                 response.sendRedirect(redirectUrl);
             } else {
@@ -176,9 +189,12 @@ public class LeadFormController extends HttpServlet {
             request.getSession().setAttribute("successMessage",
                     "Lead \"" + lead.getFullName() + "\" đã được cập nhật thành công!");
 
-            // Redirect về ĐẦU danh sách lead (page=1, không filter)
-            // updated_at vừa được cập nhật → lead tự lên đầu (ORDER BY updated_at DESC)
-            response.sendRedirect(request.getContextPath() + "/marketing/leads");
+            String returnCampaignId = request.getParameter("returnCampaignId");
+            if (returnCampaignId != null && !returnCampaignId.isBlank()) {
+                response.sendRedirect(request.getContextPath() + "/marketing/leads?campaignId=" + returnCampaignId);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/marketing/leads");
+            }
 
         } catch (Exception e) {
             Lead lead = extractLeadFromRequestSafe(request);
@@ -217,24 +233,28 @@ public class LeadFormController extends HttpServlet {
     // Helper: extract Lead fields — dùng khi TẠO MỚI (có đọc campaignId)
     // ======================================================================
     private Lead extractLeadFromRequest(HttpServletRequest request) {
-        String fullName     = request.getParameter("fullName");
-        String email        = request.getParameter("email");
-        String phone        = request.getParameter("phone");
-        String interest     = request.getParameter("interest");
-        String source       = request.getParameter("source");
-        String status       = request.getParameter("status");
-        String scoreStr     = request.getParameter("score");
+        String fullName = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String interest = request.getParameter("interest");
+        String source = request.getParameter("source");
+        String status = request.getParameter("status");
+        String scoreStr = request.getParameter("score");
         String campaignIdStr = request.getParameter("campaignId");
         String assignedToStr = request.getParameter("assignedTo");
 
-        if (fullName == null || fullName.trim().isEmpty())
+        if (fullName == null || fullName.trim().isEmpty()) {
             throw new IllegalArgumentException("Họ tên không được để trống.");
-        if (email == null || email.trim().isEmpty())
+        }
+        if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
-        if (!EmailCheck.isValidEmail(email.trim()))
+        }
+        if (!EmailCheck.isValidEmail(email.trim())) {
             throw new IllegalArgumentException("Email không hợp lệ.");
-        if (phone != null && !phone.trim().isEmpty() && !PhoneCheck.isValidPhone(phone.trim()))
+        }
+        if (phone != null && !phone.trim().isEmpty() && !PhoneCheck.isValidPhone(phone.trim())) {
             throw new IllegalArgumentException("Số điện thoại phải gồm đúng 10 chữ số.");
+        }
 
         Lead lead = new Lead();
         lead.setFullName(fullName.trim());
@@ -244,14 +264,23 @@ public class LeadFormController extends HttpServlet {
         lead.setSource(source != null ? source.trim() : "");
         lead.setStatus(status != null && !status.trim().isEmpty() ? status.trim() : "NEW_LEAD");
 
-        try { lead.setScore(scoreStr != null && !scoreStr.isEmpty() ? Integer.parseInt(scoreStr) : 0); }
-        catch (NumberFormatException e) { lead.setScore(0); }
+        try {
+            lead.setScore(scoreStr != null && !scoreStr.isEmpty() ? Integer.parseInt(scoreStr) : 0);
+        } catch (NumberFormatException e) {
+            lead.setScore(0);
+        }
 
-        try { lead.setCampaignId(campaignIdStr != null && !campaignIdStr.isEmpty() ? Integer.parseInt(campaignIdStr) : 0); }
-        catch (NumberFormatException e) { lead.setCampaignId(0); }
+        try {
+            lead.setCampaignId(campaignIdStr != null && !campaignIdStr.isEmpty() ? Integer.parseInt(campaignIdStr) : 0);
+        } catch (NumberFormatException e) {
+            lead.setCampaignId(0);
+        }
 
-        try { lead.setAssignedTo(assignedToStr != null && !assignedToStr.isEmpty() ? Integer.parseInt(assignedToStr) : 0); }
-        catch (NumberFormatException e) { lead.setAssignedTo(0); }
+        try {
+            lead.setAssignedTo(assignedToStr != null && !assignedToStr.isEmpty() ? Integer.parseInt(assignedToStr) : 0);
+        } catch (NumberFormatException e) {
+            lead.setAssignedTo(0);
+        }
 
         return lead;
     }
@@ -261,23 +290,27 @@ public class LeadFormController extends HttpServlet {
     // campaign xử lý riêng qua checkbox selectedCampaigns
     // ======================================================================
     private Lead extractLeadFromRequestForUpdate(HttpServletRequest request) {
-        String fullName     = request.getParameter("fullName");
-        String email        = request.getParameter("email");
-        String phone        = request.getParameter("phone");
-        String interest     = request.getParameter("interest");
-        String source       = request.getParameter("source");
-        String status       = request.getParameter("status");
-        String scoreStr     = request.getParameter("score");
+        String fullName = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String interest = request.getParameter("interest");
+        String source = request.getParameter("source");
+        String status = request.getParameter("status");
+        String scoreStr = request.getParameter("score");
         String assignedToStr = request.getParameter("assignedTo");
 
-        if (fullName == null || fullName.trim().isEmpty())
+        if (fullName == null || fullName.trim().isEmpty()) {
             throw new IllegalArgumentException("Họ tên không được để trống.");
-        if (email == null || email.trim().isEmpty())
+        }
+        if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống.");
-        if (!EmailCheck.isValidEmail(email.trim()))
+        }
+        if (!EmailCheck.isValidEmail(email.trim())) {
             throw new IllegalArgumentException("Email không hợp lệ.");
-        if (phone != null && !phone.trim().isEmpty() && !PhoneCheck.isValidPhone(phone.trim()))
+        }
+        if (phone != null && !phone.trim().isEmpty() && !PhoneCheck.isValidPhone(phone.trim())) {
             throw new IllegalArgumentException("Số điện thoại phải gồm đúng 10 chữ số.");
+        }
 
         Lead lead = new Lead();
         lead.setFullName(fullName.trim());
@@ -287,13 +320,19 @@ public class LeadFormController extends HttpServlet {
         lead.setSource(source != null ? source.trim() : "");
         lead.setStatus(status != null && !status.trim().isEmpty() ? status.trim() : "NEW_LEAD");
 
-        try { lead.setScore(scoreStr != null && !scoreStr.isEmpty() ? Integer.parseInt(scoreStr) : 0); }
-        catch (NumberFormatException e) { lead.setScore(0); }
+        try {
+            lead.setScore(scoreStr != null && !scoreStr.isEmpty() ? Integer.parseInt(scoreStr) : 0);
+        } catch (NumberFormatException e) {
+            lead.setScore(0);
+        }
 
         lead.setCampaignId(0); // LeadService.updateLead() tự restore từ DB
 
-        try { lead.setAssignedTo(assignedToStr != null && !assignedToStr.isEmpty() ? Integer.parseInt(assignedToStr) : 0); }
-        catch (NumberFormatException e) { lead.setAssignedTo(0); }
+        try {
+            lead.setAssignedTo(assignedToStr != null && !assignedToStr.isEmpty() ? Integer.parseInt(assignedToStr) : 0);
+        } catch (NumberFormatException e) {
+            lead.setAssignedTo(0);
+        }
 
         return lead;
     }

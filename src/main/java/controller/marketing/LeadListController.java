@@ -81,6 +81,7 @@ public class LeadListController extends HttpServlet {
         if (campaignId > 0) {
             Campaign campaign = campaignService.getCampaignById(campaignId);
             request.setAttribute("filterCampaign", campaign);
+            request.setAttribute("campaign", campaign);
             request.setAttribute("filterCampaignId", campaignId);
         }
 

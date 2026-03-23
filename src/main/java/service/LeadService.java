@@ -54,9 +54,9 @@ public class LeadService {
         }
 
         int newId = leadDAO.createLead(lead);
-        if (newId > 0 && lead.getCampaignId() > 0) {
-            campaignLeadDAO.assignLeadToCampaign(lead.getCampaignId(), newId, "NEW");
-        }
+//        if (newId > 0 && lead.getCampaignId() > 0) {
+//            campaignLeadDAO.assignLeadToCampaign(lead.getCampaignId(), newId, "NEW");
+//        }
         return newId;
     }
 
