@@ -88,6 +88,7 @@
 
                                 <form method="post" action="${pageContext.request.contextPath}/sale/deal/stage" style="display:inline-block;">
                                     <input type="hidden" name="id" value="${d.dealId}" />
+                                    <input type="hidden" name="actualValue" value="${d.actualValue}" />
                                     <select name="stage" class="form-select form-select-sm" style="width:auto; display:inline-block;">
                                         <c:forEach var="s" items="${stages}">
                                             <option value="${s}" <c:if test="${d.stage == s}">selected</c:if>>${s}</option>

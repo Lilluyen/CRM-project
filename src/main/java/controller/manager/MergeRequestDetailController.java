@@ -77,7 +77,7 @@ public class MergeRequestDetailController extends HttpServlet {
             req.setAttribute("pageTitle", "Merge Request #" + requestId + " | Clothes CRM");
             req.setAttribute("contentPage", "customer/merge_request_detail.jsp");
             req.setAttribute("pageCss", "merge_request_detail.css");
-            req.setAttribute("page", "customer-merge");
+            req.setAttribute("page", "merge-customers");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
 
         } catch (Exception e) {

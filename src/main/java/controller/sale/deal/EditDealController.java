@@ -348,17 +348,16 @@ public class EditDealController extends HttpServlet {
             customerDAO.updateLastPurchase(conn, customerId);
 
             // 2. tính lại RFM
-//            customerDAO.calculateRFM(conn);
+           customerDAO.updateTotalSpent(conn, customerId);
+           customerDAO.updateLoyaltyTier(conn, customerId);
 
-//            return;
         }
 
-        // 3. Nếu có lead → convert
+        // 3. Nếu có lead → convert và tính lại total_spent và loyalty_tier
         if (deal.getLeadId() > 0) {
-
             Lead lead = leadDAO.getLeadById(deal.getLeadId());
 
-            // ❌ tránh convert lại
+            // tránh convert lại
             if (lead.isConverted()) {
                 // chỉ cần gắn lại customer vào deal
                 dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
@@ -382,6 +381,11 @@ public class EditDealController extends HttpServlet {
 
             // 7. Update deal
             dealDAO.updateCustomerForDeal(dealId, customerId);
+
+            // 8. tính lại total_spent
+            customerDAO.updateTotalSpent(conn, customerId);
+            // 9. tính lại loyalty_tier
+            customerDAO.updateLoyaltyTier(conn, customerId);
         }
     }
 }

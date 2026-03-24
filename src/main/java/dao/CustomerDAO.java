@@ -403,4 +403,45 @@ public class CustomerDAO {
             ps.executeUpdate();
         }
     }
+
+    public void updateTotalSpent(Connection conn, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Customers
+                    SET total_spent = (
+                        SELECT ISNULL(SUM(actual_value), 0)
+                        FROM Deals
+                        WHERE customer_id = ?
+                        AND stage = 'Closed Won'
+                    )
+                    WHERE customer_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateLoyaltyTier(Connection conn, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Customers
+                    SET loyalty_tier = (
+                        Case
+                            WHEN total_spent >= 100000000 THEN 'DIAMOND'
+                            WHEN total_spent >= 5000000 THEN 'PLATINUM'
+                            WHEN total_spent >= 1000000 THEN 'GOLD'
+                            WHEN total_spent >= 500000 THEN 'SILVER'
+                            WHEN total_spent >= 100000 THEN 'BRONZE'
+                            WHEN total_spent >= 0 THEN 'BRONZE'
+                            ELSE 'BLACKLIST'
+                        END
+                    ),
+                    updated_at = GETDATE()
+                    WHERE customer_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.executeUpdate();
+        }
+    }
 }

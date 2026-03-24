@@ -201,7 +201,7 @@
                         <li>
                             <a
                                     class="${page eq 'merge-customers' ? 'active' : ''}"
-                                    href="${pageContext.request.contextPath}/customers/merge"
+                                    href="${pageContext.request.contextPath}/customers/merge-request/list"
                             >
                                 Merge Customers
                             </a>

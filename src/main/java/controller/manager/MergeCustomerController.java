@@ -51,7 +51,7 @@ public class MergeCustomerController extends HttpServlet {
         req.setAttribute("pageTitle", "Resolve Conflict | Clothes CRM");
         req.setAttribute("contentPage", "customer/resolve_conflict.jsp");
         req.setAttribute("pageCss", "customer-add.css");
-        req.setAttribute("page", "customer-add");
+        req.setAttribute("page", "merge-customers");
         req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
     }
 
