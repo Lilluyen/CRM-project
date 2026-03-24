@@ -24,15 +24,16 @@ public class CustomerListController extends HttpServlet {
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
     private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
-    private final CustomerService customerService = new CustomerService(
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
+    CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
@@ -57,7 +58,7 @@ public class CustomerListController extends HttpServlet {
             if (page < 1) {
                 page = 1;
             }
-            int totalRecords = customerService.countTotalCustomer(null, null, null, null, null, null);
+            int totalRecords = customerService.countTotalCustomer(null, null, null, null, null);
             List<Customer> customers;
             Pagination pagination = new Pagination(page, size, totalRecords);
             customers = customerService.getCustomerList(page, size);

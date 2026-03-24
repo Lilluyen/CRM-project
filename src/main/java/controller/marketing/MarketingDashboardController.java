@@ -27,8 +27,8 @@ public class MarketingDashboardController extends HttpServlet {
 
         // Tổng quan Leads (toàn hệ thống, không filter theo interest)
         int totalLeads = leadService.countLeads(null, null, 0, null);
-        int newLeads = leadService.countLeads(null, "NEW_LEAD", 0, null);
-        int contactedLeads = leadService.countLeads(null, "CONTACTED", 0, null);
+        int newLeads = leadService.countLeads(null, "NEW", 0, null);
+        int contactedLeads = leadService.countLeads(null, "NURTURING", 0, null);
         int qualifiedLeads = leadService.countLeads(null, "QUALIFIED", 0, null);
         int dealCreatedLeads = leadService.countLeads(null, "DEAL_CREATED", 0, null);
         int lostLeads = leadService.countLeads(null, "LOST", 0, null);

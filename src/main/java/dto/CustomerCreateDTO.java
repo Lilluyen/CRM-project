@@ -1,12 +1,11 @@
 package dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 public class CustomerCreateDTO {
-    
-    private  int customer_id;
+
+    private Integer customerId;
     private String name;
     private String phone;
     private String gender;
@@ -15,16 +14,6 @@ public class CustomerCreateDTO {
     private String source;
     private String address;
 
-    private BigDecimal height;
-    private BigDecimal weight;
-    private String preferredSize;
-
-    private BigDecimal bust;
-    private BigDecimal waist;
-    private BigDecimal hips;
-    private BigDecimal shoulder;
-
-    private String bodyShape;
 
     private List<Integer> styleTags;
 
@@ -44,12 +33,12 @@ public class CustomerCreateDTO {
         this.phone = phone;
     }
 
-    public int getCustomer_id() {
-        return customer_id;
+    public Integer getCustomerId() {
+        return customerId;
     }
 
-    public void setCustomer_id(int customer_id) {
-        this.customer_id = customer_id;
+    public void setCustomerId(int customer_id) {
+        this.customerId = customer_id;
     }
 
     public String getGender() {
@@ -90,70 +79,6 @@ public class CustomerCreateDTO {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public BigDecimal getHeight() {
-        return height;
-    }
-
-    public void setHeight(BigDecimal height) {
-        this.height = height;
-    }
-
-    public BigDecimal getWeight() {
-        return weight;
-    }
-
-    public void setWeight(BigDecimal weight) {
-        this.weight = weight;
-    }
-
-    public String getPreferredSize() {
-        return preferredSize;
-    }
-
-    public void setPreferredSize(String preferredSize) {
-        this.preferredSize = preferredSize;
-    }
-
-    public BigDecimal getBust() {
-        return bust;
-    }
-
-    public void setBust(BigDecimal bust) {
-        this.bust = bust;
-    }
-
-    public BigDecimal getWaist() {
-        return waist;
-    }
-
-    public void setWaist(BigDecimal waist) {
-        this.waist = waist;
-    }
-
-    public BigDecimal getHips() {
-        return hips;
-    }
-
-    public void setHips(BigDecimal hips) {
-        this.hips = hips;
-    }
-
-    public BigDecimal getShoulder() {
-        return shoulder;
-    }
-
-    public void setShoulder(BigDecimal shoulder) {
-        this.shoulder = shoulder;
-    }
-
-    public String getBodyShape() {
-        return bodyShape;
-    }
-
-    public void setBodyShape(String bodyShape) {
-        this.bodyShape = bodyShape;
     }
 
     public List<Integer> getStyleTags() {
