@@ -198,6 +198,14 @@
                                 Customer Segments
                             </a>
                         </li>
+                        <li>
+                            <a
+                                    class="${page eq 'merge-customers' ? 'active' : ''}"
+                                    href="${pageContext.request.contextPath}/customers/merge"
+                            >
+                                Merge Customers
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
