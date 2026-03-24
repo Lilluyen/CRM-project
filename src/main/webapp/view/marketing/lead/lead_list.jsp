@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <div class="">
     <div class="container-fluid py-4">
@@ -26,10 +27,11 @@
                    class="btn btn-outline-primary">
                     <i class="fas fa-file-import me-1"></i> Import Leads
                 </a>
-                <a href="${pageContext.request.contextPath}/marketing/leads/form"
-                   class="btn btn-primary">
-                    <i class="fas fa-plus-circle me-1"></i> Tạo Lead Mới
-                </a>
+                <c:if test="${campaign.status=='ACTIVE'}">
+                    <a href="${pageContext.request.contextPath}/marketing/leads/form?campaignId=${filterCampaignId}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i> Tạo Lead Mới
+                    </a>
+                </c:if>
             </div>
         </div>
 
@@ -86,17 +88,10 @@
                         <label class="form-label">Trạng thái</label>
                         <select class="form-select" name="status">
                             <option value="">-- Tất cả trạng thái --</option>
-                            <option value="NEW_LEAD"     ${filterStatus == 'NEW_LEAD'     ? 'selected' : ''}>New Lead
-                            </option>
-                            <option value="CONTACTED"    ${filterStatus == 'CONTACTED'    ? 'selected' : ''}>Contacted
-                            </option>
-                            <option value="QUALIFIED"    ${filterStatus == 'QUALIFIED'    ? 'selected' : ''}>Qualified
-                            </option>
-                            <option value="DEAL_CREATED" ${filterStatus == 'DEAL_CREATED' ? 'selected' : ''}>Deal
-                                Created
-                            </option>
-                            <option value="LOST"         ${filterStatus == 'LOST'         ? 'selected' : ''}>Lost
-                            </option>
+                            <option value="NEW"     ${filterStatus == 'NEW'     ? 'selected' : ''}>New Lead</option>
+                            <option value="NURTURING"    ${filterStatus == 'NURTURING'    ? 'selected' : ''}>Nurturing</option>
+                            <option value="QUALIFIED"    ${filterStatus == 'QUALIFIED'    ? 'selected' : ''}>Qualified</option>
+                            <option value="LOST"         ${filterStatus == 'LOST'         ? 'selected' : ''}>Lost</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -155,7 +150,7 @@
                                 <th>Điểm số</th>
                                 <th>Interest</th>
                                 <th>Trạng thái</th>
-                                <th>Campaign</th>
+                                <th>Campaigns</th><%-- ĐÃ ĐỔI: "Campaign" → "Campaigns" --%>
                                 <th class="text-center">Hành động</th>
                             </tr>
                             </thead>
@@ -202,8 +197,8 @@
                                             <c:when test="${lead.status == 'Qualified' || lead.status == 'QUALIFIED'}">
                                                 <span class="badge-status badge-qualified">Qualified</span>
                                             </c:when>
-                                            <c:when test="${lead.status == 'Contacted' || lead.status == 'CONTACTED'}">
-                                                <span class="badge-status badge-contacted">Contacted</span>
+                                            <c:when test="${lead.status == 'Nurturing' || lead.status == 'NURTURING'}">
+                                                <span class="badge-status badge-contacted">Nurturing</span>
                                             </c:when>
                                             <c:when test="${lead.status == 'Converted' || lead.status == 'CONVERTED'}">
                                                 <span class="badge-status badge-deal">Converted</span>
@@ -217,13 +212,19 @@
                                         </c:choose>
                                     </td>
 
+                                    <%-- CỘT CAMPAIGNS: hiển thị badge dọc, mỗi campaign 1 dòng --%>
                                     <td>
                                         <c:choose>
-                                            <c:when test="${not empty lead.campaignName}">
-                                                <a href="${pageContext.request.contextPath}/marketing/campaign/detail?id=${lead.campaignId}"
-                                                   class="text-decoration-none">
-                                                    <i class="fas fa-bullhorn me-1"></i>${lead.campaignName}
-                                                </a>
+                                            <c:when test="${not empty lead.campaignNames}">
+                                                <div class="d-flex flex-column gap-1">
+                                                    <c:forEach var="campName"
+                                                               items="${fn:split(lead.campaignNames, '|')}">
+                                                        <span class="badge bg-info text-dark"
+                                                              style="font-size: 0.75rem; white-space: nowrap; display: block;">
+                                                            <i class="fas fa-bullhorn me-1"></i>${fn:trim(campName)}
+                                                        </span>
+                                                    </c:forEach>
+                                                </div>
                                             </c:when>
                                             <c:otherwise>
                                                 <span class="text-muted">-</span>
@@ -231,19 +232,23 @@
                                         </c:choose>
                                     </td>
 
-                                    <td class="text-center">
+                                    <td>
                                         <a href="${pageContext.request.contextPath}/marketing/leads/detail?id=${lead.leadId}"
                                            class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="${pageContext.request.contextPath}/marketing/leads/form?id=${lead.leadId}"
-                                           class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${lead.leadId}&relatedType=LEAD"
-                                           class="btn btn-sm btn-outline-warning ms-1" title="Tạo Deal">
-                                            <i class="fas fa-plus"></i>
-                                        </a>
+                                        <c:if test="${empty filterCampaignId}">
+                                            <a href="${pageContext.request.contextPath}/marketing/leads/form?id=${lead.leadId}"
+                                               class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </c:if>
+                                        <c:if test="${lead.status == 'Qualified' || lead.status == 'QUALIFIED'}">
+                                            <a href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${lead.leadId}&relatedType=LEAD"
+                                               class="btn btn-sm btn-outline-warning ms-1" title="Tạo Deal">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                        </c:if>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -251,7 +256,7 @@
                         </table>
                     </div>
 
-                        <%-- Pagination (reusable component) --%>
+                    <%-- Pagination (reusable component) --%>
                     <jsp:include page="/view/components/pagination.jsp"/>
                 </div>
 
@@ -263,14 +268,13 @@
                     <div class="card-body empty-state">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Không có lead nào</h5>
-                        <p class="text-muted">Hệ thống chưa có lead nào. Bạn có thể tạo mới hoặc import từ file
-                            Excel.</p>
+                        <p class="text-muted">Hệ thống chưa có lead nào. Bạn có thể tạo mới hoặc import từ file Excel.</p>
                         <div class="d-flex justify-content-center gap-2">
                             <a href="${pageContext.request.contextPath}/marketing/leads/import"
                                class="btn btn-outline-primary">
                                 <i class="fas fa-file-import me-1"></i> Import Leads
                             </a>
-                            <a href="${pageContext.request.contextPath}/marketing/leads/form"
+                            <a href="${pageContext.request.contextPath}/marketing/leads/form${not empty filterCampaignId ? '?campaignId='.concat(filterCampaignId) : ''}"
                                class="btn btn-primary">
                                 <i class="fas fa-plus me-1"></i> Tạo Lead
                             </a>

@@ -1,25 +1,39 @@
+// ===== MODAL =====
+
 function openCreateModal() {
-    document.getElementById("createModal").style.display = "flex";
+    document.getElementById('createModal').classList.add('show');
+    // Reset lỗi cũ mỗi lần mở
+    clearModalErrors();
 }
 
 function closeCreateModal() {
-    document.getElementById("createModal").style.display = "none";
+    document.getElementById('createModal').classList.remove('show');
+    clearModalErrors();
 }
 
-document.querySelector(".seg-search input").addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
+// Đóng modal khi click ra ngoài backdrop
+document.getElementById('createModal')?.addEventListener('click', function (e) {
+    if (e.target === this) closeCreateModal();
+});
+
+
+// ===== FILTER =====
+
+// Enter trên ô search cũng trigger filter
+document.getElementById('searchInput')?.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
         filterSegment();
     }
 });
 
 function filterSegment() {
-    const segType = document.querySelector('.segment_type').value;
-    const creator = document.querySelector('.created_by').value;
-    const updater = document.querySelector('.updated_by').value;
-    const fromDate = document.querySelector('.from-date').value;
-    const toDate = document.querySelector('.to-date').value;
-    const keyword = document.querySelector('.seg-search input').value;
+    const segType = document.querySelector('.segment_type')?.value || '';
+    const creator = document.querySelector('.created_by')?.value || '';
+    const updater = document.querySelector('.updated_by')?.value || '';
+    const fromDate = document.querySelector('.from-date')?.value || '';
+    const toDate = document.querySelector('.to-date')?.value || '';
+    const keyword = document.getElementById('searchInput')?.value || '';
 
     const params = new URLSearchParams();
     if (segType) params.append('segment_type', segType);
@@ -27,146 +41,142 @@ function filterSegment() {
     if (updater) params.append('updated_by', updater);
     if (fromDate) params.append('from_date', fromDate);
     if (toDate) params.append('to_date', toDate);
-    if (keyword) params.append('keyword', keyword)
+    if (keyword) params.append('keyword', keyword);
 
-    const ctx = window.__CTX__ || "";
-    const url = `${ctx}/customers/segments/filter?${params.toString()}`;
-
-    console.log(url)
-    window.location.href = url;
+    const ctx = window.__CTX__ || '';
+    window.location.href = `${ctx}/customers/segments/filter?${params.toString()}`;
 }
 
-document.querySelector('.btn-submit').addEventListener('click', function (e) {
-    const name = document.querySelector('input[name="segment_name"]').value;
-    const logic = document.querySelector('textarea[name="criteria_logic"]').value;
-    const method = document.querySelector('input[name="type"]:checked').value;
-    const error = document.querySelector('.modal-body p');
 
-    console.log(name, error);
+// ===== FORM VALIDATION =====
+
+document.querySelector('.btn.btn-primary[type="submit"]')?.addEventListener('click', function (e) {
+    const name = document.querySelector('input[name="segment_name"]')?.value || '';
+    const logic = document.querySelector('textarea[name="criteria_logic"]')?.value || '';
+    const method = document.querySelector('input[name="type"]:checked')?.value;
+
+    // Xoá lỗi cũ trước khi validate lại
+    clearModalErrors();
+
+    let hasError = false;
+
     if (name.trim().length === 0) {
-        e.preventDefault();
-        if (!error) {
-            const error = document.createElement('p');
-            error.style = "color: red;" +
-                " margin-top: 10px;";
-            error.innerText = 'Segmentation name is required';
-            document.querySelector('.modal-body').appendChild(error);
-        }
+        showModalError('Segmentation name is required.');
+        hasError = true;
+    } else if (name.length > 50) {
+        showModalError('Segmentation name must not exceed 50 characters.');
+        hasError = true;
     }
 
-    if (name.length > 255) {
-        e.preventDefault();
-        if (!error) {
-            const error = document.createElement('p');
-            error.style = "color: red;" +
-                " margin-top: 10px;";
-            error.innerText = 'Segmentation name is too long';
-            document.querySelector('.modal-body').appendChild(error);
-        }
+    if (!hasError && logic.length > 500) {
+        showModalError('Description must not exceed 500 characters.');
+        hasError = true;
     }
 
-    if (logic.length > 1000) {
-        e.preventDefault();
-        if (!error) {
-            const error = document.createElement('p');
-            error.style = "color: red;" +
-                " margin-top: 10px;";
-            error.innerText = 'Description is too long';
-            document.querySelector('.modal-body').appendChild(error);
-        }
+    if (!hasError && method !== 'STATIC' && method !== 'DYNAMIC') {
+        showModalError('Please select a valid segment type (Static or Dynamic).');
+        hasError = true;
     }
 
-    if (method !== 'STATIC' && method !== 'DYNAMIC') {
-        e.preventDefault();
-        if (!error) {
-            const error = document.createElement('p');
-            error.style = "color: red;" +
-                " margin-top: 10px;";
-            error.innerText = 'Type of segmentation must be equal static or dynamic';
-            document.querySelector('.modal-body').appendChild(error);
-        }
+    if (hasError) e.preventDefault();
+});
+
+function showModalError(message) {
+    // Chèn thông báo lỗi vào cuối modal-body, tránh duplicate
+    const body = document.querySelector('#createModal .modal-body');
+    if (!body) return;
+
+    let errEl = body.querySelector('.modal-error-msg');
+    if (!errEl) {
+        errEl = document.createElement('div');
+        errEl.className = 'modal-error-msg';
+        errEl.style.cssText = [
+            'margin-top: 12px',
+            'padding: 10px 14px',
+            'background: #fee2e2',
+            'border: 1px solid rgba(239,68,68,.25)',
+            'border-radius: 8px',
+            'color: #dc2626',
+            'font-size: 0.8125rem',
+            'font-weight: 500',
+            'display: flex',
+            'align-items: center',
+            'gap: 8px',
+        ].join(';');
+        body.appendChild(errEl);
     }
-})
+    errEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+}
+
+function clearModalErrors() {
+    document.querySelector('#createModal .modal-error-msg')?.remove();
+}
+
+
+// ===== DELETE SEGMENT =====
 
 function removeSegment(segmentId) {
-    const confirmDelete = confirm("Do you mant to delete this segmentation ?");
-    if (confirmDelete) {
-        console.log(confirmDelete);
-        const ctx = window.__CTX__ || '';
-        const url = `${ctx}/customers/remove-segmentation?segment_id=${encodeURIComponent(segmentId)}`
-        window.location.href = url;
-    }
+    if (!confirm('Bạn có chắc muốn xóa segment này không?')) return;
+    const ctx = window.__CTX__ || '';
+    window.location.href = `${ctx}/customers/remove-segmentation?segment_id=${encodeURIComponent(segmentId)}`;
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+
+// ===== INIT =====
+
+document.addEventListener('DOMContentLoaded', function () {
     const pageStatus = window.__PAGE_STATUS__;
+    if (!pageStatus) return;
 
-    if (pageStatus) {
-        let toastType = 'info';
-        if (pageStatus.toLowerCase().includes('success') || pageStatus.toLowerCase().includes('successfully') || pageStatus.toLowerCase().includes('created')) {
-            toastType = 'success';
-        } else if (pageStatus.toLowerCase().includes('error') || pageStatus.toLowerCase().includes('fail')) {
-            toastType = 'error';
-        } else if (pageStatus.toLowerCase().includes('warning')) {
-            toastType = 'warning';
-        }
-        showToast(pageStatus, toastType);
+    let toastType = 'info';
+    const s = pageStatus.toLowerCase();
+    if (s.includes('success') || s.includes('successfully') || s.includes('created')) {
+        toastType = 'success';
+    } else if (s.includes('error') || s.includes('fail')) {
+        toastType = 'error';
+    } else if (s.includes('warning')) {
+        toastType = 'warning';
     }
-})
+    showToast(pageStatus, toastType);
+});
 
-// ===== TOAST NOTIFICATIONS =====
+
+// ===== TOAST =====
+
 function showToast(message, type = 'success', duration = 3000) {
     const toast = document.getElementById('toast');
     const toastIcon = document.getElementById('toastIcon');
     const toastMessage = document.getElementById('toastMessage');
     const toastBar = document.getElementById('toastBar');
+    if (!toast) return;
 
-    if (!toast)
-        return;
-
-    // Set icon based on type
     const icons = {
-        success: '<i class="fas fa-check-circle" style="color: #10b981; font-size: 20px;"></i>',
-        error: '<i class="fas fa-exclamation-circle" style="color: #ef4444; font-size: 20px;"></i>',
-        info: '<i class="fas fa-info-circle" style="color: #3b82f6; font-size: 20px;"></i>',
-        warning: '<i class="fas fa-warning" style="color: #f59e0b; font-size: 20px;"></i>'
+        success: '<i class="fas fa-check-circle"      style="color:#10b981;font-size:20px;"></i>',
+        error: '<i class="fas fa-exclamation-circle" style="color:#ef4444;font-size:20px;"></i>',
+        info: '<i class="fas fa-info-circle"        style="color:#3b82f6;font-size:20px;"></i>',
+        warning: '<i class="fas fa-warning"            style="color:#f59e0b;font-size:20px;"></i>',
     };
-
-    // Set bar color based on type
     const barColors = {
-        success: '#10b981',
-        error: '#ef4444',
-        info: '#3b82f6',
-        warning: '#f59e0b'
+        success: '#10b981', error: '#ef4444', info: '#3b82f6', warning: '#f59e0b',
     };
 
     toastIcon.innerHTML = icons[type] || icons.info;
-    toastMessage.textContent = `${message}`;
-    toastMessage.style = "text-align: center;"
-
-    // Set bar color
+    toastMessage.textContent = message;
     toastBar.style.background = barColors[type] || barColors.info;
 
-    // Reset animation
     toast.classList.remove('show', 'hide');
     toastBar.style.animation = 'none';
 
-    // Show toast
     toast.classList.add('show');
-
-    // Trigger animation
     setTimeout(() => {
         toastBar.style.animation = `slideOut ${duration}ms ease-out forwards`;
     }, 10);
-
-    // Hide after duration
     setTimeout(() => {
         toast.classList.remove('show');
         toast.classList.add('hide');
     }, duration);
 }
 
-// Toast close button
 document.getElementById('toastCloseBtn')?.addEventListener('click', function () {
     const toast = document.getElementById('toast');
     toast.classList.remove('show');

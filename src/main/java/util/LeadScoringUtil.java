@@ -42,17 +42,17 @@ public class LeadScoringUtil {
     }
 
     /**
-     * Xác định trạng thái Lead tự động dựa trên score < 10: LOST < 20: NEW_LEAD
-     * < 70:  CONTACTED
+     * Xác định trạng thái Lead tự động dựa trên score < 20: LOST < 40: NEW_LEAD
+     * < 70:  NURTURING
      * >= 70: QUALIFIED
      */
     public static String determineStatus(int score) {
-        if (score < 10) {
+        if (score < 20) {
             return "LOST";
-        } else if (score < 20) {
+        } else if (score < 40) {
             return "NEW_LEAD";
         } else if (score < 70) {
-            return "CONTACTED";
+            return "NURTURING";
         } else {
             return "QUALIFIED";
         }

@@ -1,0 +1,147 @@
+@import url("merge_request_preview.css");
+
+.mr__success-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 28px 0;
+    padding: 10px 14px;
+    background: #D1FAE5;
+    border: 1px solid #6EE7B7;
+    border-radius: 6px;
+    color: #065F46;
+    font-size: .875rem;
+    font-weight: 500;
+}
+
+.mr__success-banner svg {
+    width: 16px;
+    height: 16px;
+    stroke: #059669;
+    flex-shrink: 0;
+}
+
+.mr__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 60px 28px;
+    color: #9CA3AF;
+    text-align: center;
+}
+
+.mr__empty svg {
+    width: 40px;
+    height: 40px;
+    stroke: #D1D5DB;
+}
+
+.mr__empty p {
+    margin: 0;
+    font-size: .9rem;
+}
+
+.mr__list {
+    padding: 16px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mr__list-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    background: #FFFFFF;
+    text-decoration: none;
+    transition: all .15s;
+    cursor: pointer;
+}
+
+.mr__list-item:hover {
+    border-color: var(--mr-primary, #E87020);
+    box-shadow: 0 2px 8px rgba(232, 112, 32, .12);
+    transform: translateY(-1px);
+}
+
+.mr__list-item-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.mr__list-customers {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.mr__list-customer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .875rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.mr__list-id {
+    font-size: .75rem;
+    color: #9CA3AF;
+    font-weight: 400;
+}
+
+.mr__list-arrow {
+    width: 16px;
+    height: 16px;
+    stroke: #D1D5DB;
+    flex-shrink: 0;
+}
+
+.mr__list-reason {
+    font-size: .8rem;
+    color: #6B7280;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mr__list-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.mr__list-date {
+    font-size: .75rem;
+    color: #9CA3AF;
+}
+
+.mr__list-chevron {
+    width: 16px;
+    height: 16px;
+    stroke: #D1D5DB;
+}
+
+@media (max-width: 600px) {
+    .mr__list {
+        padding: 12px 16px 20px;
+    }
+
+    .mr__list-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mr__list-item-meta {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
