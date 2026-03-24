@@ -1,12 +1,21 @@
 package dao;
 
-import model.Lead;
-import util.DBContext;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import model.Lead;
+import util.DBContext;
 
 public class LeadDAO {
 
@@ -139,10 +148,6 @@ public class LeadDAO {
         return leads;
     }
 
-    /**
-     * Tìm lead theo email + campaign_id (kiểm tra trùng trong cùng campaign).
-     * 1 người có thể tham gia nhiều campaign → mỗi campaign có Lead record riêng.
-     */
     public Lead findLeadByEmailAndCampaign(String email, int campaignId) {
         String sql = "SELECT * FROM Leads WHERE email = ? AND campaign_id = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -158,9 +163,6 @@ public class LeadDAO {
         return null;
     }
 
-    /**
-     * Tìm lead theo phone + campaign_id (kiểm tra trùng trong cùng campaign).
-     */
     public Lead findLeadByPhoneAndCampaign(String phone, int campaignId) {
         String sql = "SELECT * FROM Leads WHERE phone = ? AND campaign_id = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -176,7 +178,6 @@ public class LeadDAO {
         return null;
     }
 
-    // Tìm lead theo email và loại trừ lead hiện tại (phục vụ update)
     public Lead findLeadByEmailExcludeLeadId(String email, int excludedLeadId) {
         String sql = "SELECT * FROM Leads WHERE email = ? AND lead_id <> ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -192,7 +193,6 @@ public class LeadDAO {
         return null;
     }
 
-    // Tìm lead theo phone và loại trừ lead hiện tại (phục vụ update)
     public Lead findLeadByPhoneExcludeLeadId(String phone, int excludedLeadId) {
         String sql = "SELECT * FROM Leads WHERE phone = ? AND lead_id <> ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -208,7 +208,6 @@ public class LeadDAO {
         return null;
     }
 
-    // Tìm lead theo email + campaign và loại trừ lead hiện tại (phục vụ update)
     public Lead findLeadByEmailAndCampaignExcludeLeadId(String email, int campaignId, int excludedLeadId) {
         String sql = "SELECT * FROM Leads WHERE email = ? AND campaign_id = ? AND lead_id <> ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -225,7 +224,6 @@ public class LeadDAO {
         return null;
     }
 
-    // Tìm lead theo phone + campaign và loại trừ lead hiện tại (phục vụ update)
     public Lead findLeadByPhoneAndCampaignExcludeLeadId(String phone, int campaignId, int excludedLeadId) {
         String sql = "SELECT * FROM Leads WHERE phone = ? AND campaign_id = ? AND lead_id <> ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -242,7 +240,6 @@ public class LeadDAO {
         return null;
     }
 
-    // Lấy toàn bộ danh sách lead (mới nhất trước)
     public List<Lead> getAllLeads() {
         String sql = "SELECT * FROM Leads ORDER BY updated_at DESC";
         List<Lead> leads = new ArrayList<>();
@@ -256,7 +253,6 @@ public class LeadDAO {
         return leads;
     }
 
-    // Lấy danh sách lead theo chiến dịch, sắp xếp mới nhất trước
     public List<Lead> getLeadByCampaignId(int campaignId) {
         String sql = "SELECT * FROM Leads WHERE campaign_id = ? ORDER BY updated_at DESC";
         List<Lead> leads = new ArrayList<>();
@@ -272,7 +268,6 @@ public class LeadDAO {
         return leads;
     }
 
-    // Lấy danh sách lead theo trạng thái
     public List<Lead> getLeadByStatus(String status) {
         String sql = "SELECT * FROM Leads WHERE status = ? ORDER BY score DESC, created_at DESC";
         List<Lead> leads = new ArrayList<>();
@@ -303,11 +298,6 @@ public class LeadDAO {
         return false;
     }
 
-    /**
-     * Import batch leads (dùng transaction)
-     *
-     * @return số leads được import thành công
-     */
     public int importLeads(List<Lead> leads) throws Exception {
         String sql = "INSERT INTO Leads(full_name, email, phone, interest, source, status, score, campaign_id, created_at, updated_at, is_converted) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
@@ -323,7 +313,13 @@ public class LeadDAO {
                 for (Lead lead : leads) {
                     ps.setString(1, lead.getFullName());
                     ps.setString(2, lead.getEmail());
-                    ps.setString(3, lead.getPhone());
+                    // Set NULL thay vì empty string để tránh vi phạm UNIQUE constraint
+                    String phoneVal = lead.getPhone();
+                    if (phoneVal == null || phoneVal.trim().isEmpty()) {
+                        ps.setNull(3, java.sql.Types.VARCHAR);
+                    } else {
+                        ps.setString(3, phoneVal.trim());
+                    }
                     ps.setString(4, lead.getInterest());
                     ps.setString(5, lead.getSource());
                     ps.setString(6, lead.getStatus());
@@ -340,7 +336,9 @@ public class LeadDAO {
 
                 int[] results = ps.executeBatch();
                 for (int result : results) {
-                    if (result > 0) importedCount++;
+                    if (result > 0) {
+                        importedCount++;
+                    }
                 }
                 conn.commit();
             } catch (Exception e) {
@@ -357,7 +355,6 @@ public class LeadDAO {
         return importedCount;
     }
 
-    // Đếm tổng số lead theo campaign_id
     public int countLeadsByCampaignId(int campaignId) {
         String sql = "SELECT COUNT(*) as cnt FROM Leads WHERE campaign_id = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -372,7 +369,6 @@ public class LeadDAO {
         return 0;
     }
 
-    // Đếm số lead theo campaign_id và status
     public int countLeadsByCampaignAndStatus(int campaignId, String status) {
         String sql = "SELECT COUNT(*) as cnt FROM Leads WHERE campaign_id = ? AND status = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -391,50 +387,46 @@ public class LeadDAO {
     // ==============================
     // SEARCH + PAGINATION
     // ==============================
-
-    /**
-     * Subquery gom tất cả campaign name của cùng email thành chuỗi " | ".
-     * Dùng FOR XML PATH thay vì STRING_AGG(DISTINCT) vì SQL Server không hỗ trợ
-     * STRING_AGG(DISTINCT ...).
-     *
-     * Logic: lấy DISTINCT campaign name từ bảng Leads (qua campaign_id)
-     * của tất cả lead row có cùng email với lead hiện tại, nối bằng " | ".
-     */
-    private static final String CAMPAIGN_NAMES_SUBQUERY =
-        "( " +
-        "  SELECT STUFF( " +
-        "    (SELECT DISTINCT ' | ' + c_inner.name " +
-        "     FROM Leads l_inner " +
-        "     LEFT JOIN Campaigns c_inner ON l_inner.campaign_id = c_inner.campaign_id " +
-        "     WHERE l_inner.email = l.email " +
-        "       AND c_inner.name IS NOT NULL " +
-        "     FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)') " +
-        "  , 1, 3, '') " +
-        ") AS campaign_names ";
+    // FIX: đọc campaign names từ Campaign_Leads thay vì Leads.campaign_id
+    private static final String CAMPAIGN_NAMES_SUBQUERY
+            = "( "
+            + "  SELECT STUFF( "
+            + "    (SELECT DISTINCT ' | ' + c_inner.name "
+            + "     FROM Campaign_Leads cl_inner "
+            + "     INNER JOIN Campaigns c_inner ON cl_inner.campaign_id = c_inner.campaign_id "
+            + "     WHERE cl_inner.lead_id IN ( "
+            + "       SELECT lead_id FROM Leads WHERE email = l.email "
+            + "     ) "
+            + "     FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)') "
+            + "  , 1, 3, '') "
+            + ") AS campaign_names ";
 
     public List<Lead> searchLeads(String keyword, String status, int campaignId, String interest, int page, int pageSize) {
 
-        // Chọn 1 đại diện per email (MIN lead_id) rồi JOIN lấy chi tiết + campaign_names
-        String sql =
-            "SELECT l.*, " + CAMPAIGN_NAMES_SUBQUERY +
-            "FROM Leads l " +
-            "WHERE l.lead_id IN ( " +
-            "  SELECT MIN(lead_id) FROM Leads GROUP BY email " +
-            ") ";
+        String sql
+                = "SELECT l.*, " + CAMPAIGN_NAMES_SUBQUERY
+                + "FROM Leads l "
+                + "WHERE l.lead_id IN ( "
+                + "  SELECT MIN(lead_id) FROM Leads GROUP BY email "
+                + ") ";
 
         List<Object> params = new ArrayList<>();
 
-        // Lọc theo campaign: email phải xuất hiện trong Leads với campaign_id đó
+        // Lọc theo Campaign_Leads — nhất quán với countLeads()
         if (campaignId > 0) {
-            sql += "AND l.email IN ( " +
-                   "  SELECT email FROM Leads WHERE campaign_id = ? " +
-                   ") ";
+            sql += "AND l.email IN ( "
+                    + "  SELECT l2.email FROM Leads l2 "
+                    + "  INNER JOIN Campaign_Leads cl ON cl.lead_id = l2.lead_id "
+                    + "  WHERE cl.campaign_id = ? "
+                    + ") ";
             params.add(campaignId);
         }
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql += "AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?) ";
             String kw = "%" + keyword.trim() + "%";
-            params.add(kw); params.add(kw); params.add(kw);
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
         }
         if (status != null && !status.trim().isEmpty()) {
             sql += "AND l.status = ? ";
@@ -451,7 +443,9 @@ public class LeadDAO {
 
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Lead lead = mapResultSetToLead(rs);
@@ -466,25 +460,30 @@ public class LeadDAO {
 
     public List<Lead> searchLeadsForExport(String keyword, String status, int campaignId, String interest) {
 
-        String sql =
-            "SELECT l.*, " + CAMPAIGN_NAMES_SUBQUERY +
-            "FROM Leads l " +
-            "WHERE l.lead_id IN ( " +
-            "  SELECT MIN(lead_id) FROM Leads GROUP BY email " +
-            ") ";
+        String sql
+                = "SELECT l.*, " + CAMPAIGN_NAMES_SUBQUERY
+                + "FROM Leads l "
+                + "WHERE l.lead_id IN ( "
+                + "  SELECT MIN(lead_id) FROM Leads GROUP BY email "
+                + ") ";
 
         List<Object> params = new ArrayList<>();
 
+        // Lọc theo Campaign_Leads — nhất quán với countLeads()
         if (campaignId > 0) {
-            sql += "AND l.email IN ( " +
-                   "  SELECT email FROM Leads WHERE campaign_id = ? " +
-                   ") ";
+            sql += "AND l.email IN ( "
+                    + "  SELECT l2.email FROM Leads l2 "
+                    + "  INNER JOIN Campaign_Leads cl ON cl.lead_id = l2.lead_id "
+                    + "  WHERE cl.campaign_id = ? "
+                    + ") ";
             params.add(campaignId);
         }
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql += "AND (l.full_name LIKE ? OR l.email LIKE ? OR l.phone LIKE ?) ";
             String kw = "%" + keyword.trim() + "%";
-            params.add(kw); params.add(kw); params.add(kw);
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
         }
         if (status != null && !status.trim().isEmpty()) {
             sql += "AND l.status = ? ";
@@ -499,7 +498,9 @@ public class LeadDAO {
 
         List<Lead> leads = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Lead lead = mapResultSetToLead(rs);
@@ -516,39 +517,55 @@ public class LeadDAO {
     // COUNT FOR PAGINATION
     // ==============================
     public int countLeads(String keyword, String status, int campaignId, String interest) {
-        // Đếm số email unique — mỗi email = 1 lead hiển thị trên UI
-        String sql =
-            "SELECT COUNT(*) FROM ( " +
-            "  SELECT MIN(lead_id) AS lead_id, email, status, interest, full_name, phone " +
-            "  FROM Leads GROUP BY email, status, interest, full_name, phone " +
-            ") AS base WHERE 1=1 ";
+        // FIX: GROUP BY email only — mỗi email = 1 người = 1 dòng trên UI
+        // Lý do GROUP BY cũ (email, status, interest, full_name, phone) bị sai:
+        // cùng 1 email có nhiều row Leads với status/interest/phone khác nhau
+        // → GROUP BY tạo ra nhiều nhóm → COUNT ra 4 thay vì 2.
+        // GROUP BY email only → đúng 1 nhóm per người.
+        String sql
+                = "SELECT COUNT(*) FROM ( "
+                + "  SELECT MIN(lead_id) AS lead_id "
+                + "  FROM Leads "
+                + "  WHERE 1=1 ";
 
         List<Object> params = new ArrayList<>();
 
+        // Lọc theo Campaign_Leads — nhất quán với searchLeads()
         if (campaignId > 0) {
-            sql += "AND base.email IN ( " +
-                   "  SELECT email FROM Leads WHERE campaign_id = ? " +
-                   ") ";
+            sql += "AND email IN ( "
+                    + "  SELECT l2.email FROM Leads l2 "
+                    + "  INNER JOIN Campaign_Leads cl ON cl.lead_id = l2.lead_id "
+                    + "  WHERE cl.campaign_id = ? "
+                    + ") ";
             params.add(campaignId);
         }
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql += "AND (base.full_name LIKE ? OR base.email LIKE ? OR base.phone LIKE ?) ";
+            sql += "AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ";
             String kw = "%" + keyword.trim() + "%";
-            params.add(kw); params.add(kw); params.add(kw);
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql += "AND base.status = ? ";
+            sql += "AND status = ? ";
             params.add(status);
         }
         if (interest != null && !interest.trim().isEmpty()) {
-            sql += "AND base.interest LIKE ? ";
+            sql += "AND interest LIKE ? ";
             params.add("%" + interest.trim() + "%");
         }
 
+        sql += "  GROUP BY email "
+                + ") AS base ";
+
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -570,6 +587,144 @@ public class LeadDAO {
                 rs.getInt("assigned_to"),
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime());
+    }
+
+    // ==============================
+    // BULK LOOKUP — dùng cho import performance
+    // ==============================
+    public Set<String> getExistingEmailsByCampaign(int campaignId) {
+        String sql = "SELECT email FROM Leads WHERE campaign_id = ? AND email IS NOT NULL";
+        Set<String> emails = new HashSet<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                emails.add(rs.getString("email").toLowerCase());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return emails;
+    }
+
+    public Set<String> getExistingPhonesByCampaign(int campaignId) {
+        String sql = "SELECT phone FROM Leads WHERE campaign_id = ? AND phone IS NOT NULL AND phone <> ''";
+        Set<String> phones = new HashSet<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                phones.add(rs.getString("phone").trim());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return phones;
+    }
+
+    public Set<String> getAllExistingEmails() {
+        String sql = "SELECT email FROM Leads WHERE email IS NOT NULL";
+        Set<String> emails = new HashSet<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                emails.add(rs.getString("email").toLowerCase());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return emails;
+    }
+
+    public Set<String> getAllExistingPhones() {
+        String sql = "SELECT phone FROM Leads WHERE phone IS NOT NULL AND phone <> ''";
+        Set<String> phones = new HashSet<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                phones.add(rs.getString("phone").trim());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return phones;
+    }
+
+    public Map<String, Lead> findLeadsByEmailsAndCampaign(List<String> emails, int campaignId) {
+        Map<String, Lead> result = new java.util.HashMap<>();
+        if (emails == null || emails.isEmpty()) {
+            return result;
+        }
+
+        String placeholders = String.join(",", java.util.Collections.nCopies(emails.size(), "?"));
+        String sql = "SELECT * FROM Leads WHERE campaign_id = ? AND email IN (" + placeholders + ")";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            for (int i = 0; i < emails.size(); i++) {
+                ps.setString(i + 2, emails.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
+                result.put(lead.getEmail().toLowerCase(), lead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public Map<String, Lead> findLeadsByEmails(List<String> emails) {
+        Map<String, Lead> result = new java.util.HashMap<>();
+        if (emails == null || emails.isEmpty()) {
+            return result;
+        }
+
+        String placeholders = String.join(",", java.util.Collections.nCopies(emails.size(), "?"));
+        String sql = "SELECT * FROM Leads WHERE email IN (" + placeholders + ")";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < emails.size(); i++) {
+                ps.setString(i + 1, emails.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
+                result.put(lead.getEmail().toLowerCase(), lead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public Map<String, Lead> findLeadsByEmailMap() {
+        String sql = "SELECT * FROM Leads WHERE email IS NOT NULL";
+        Map<String, Lead> map = new java.util.HashMap<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
+                map.put(lead.getEmail().toLowerCase(), lead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    public Map<String, Lead> findLeadsByPhoneMap() {
+        String sql = "SELECT * FROM Leads WHERE phone IS NOT NULL AND phone <> ''";
+        Map<String, Lead> map = new java.util.HashMap<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Lead lead = mapResultSetToLead(rs);
+                if (lead.getPhone() != null && !lead.getPhone().isEmpty()) {
+                    map.put(lead.getPhone().trim(), lead);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
     }
 
     public void markConverted(Connection conn, int leadId, int customerId) throws SQLException {

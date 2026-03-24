@@ -63,19 +63,20 @@ prefix="c" %>
                   <option value="Facebook">Facebook</option>
                   <option value="Website">Website</option>
                   <option value="Referral">Referral</option>
-                  <option value="Import">Import File</option>
                 </select>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Campaign (Optional)</label>
-                <select class="form-select" id="campaignId" name="campaignId">
-                  <option value="">-- Không gắn Campaign --</option>
+                <label class="form-label required">Campaign</label>
+                <select class="form-select" id="campaignId" name="campaignId" required>
+                  <option value="" disabled selected hidden>-- Hãy chọn campaign --</option>
                   <c:forEach var="campaign" items="${campaigns}">
-                    <option value="${campaign.campaignId}">
-                      ${campaign.name} (${campaign.status})
-                    </option>
+                    <c:if test="${not empty campaign.status && campaign.status == 'ACTIVE'}">
+                      <option value="${campaign.campaignId}">
+                        ${campaign.name} (${campaign.status})
+                      </option>
+                    </c:if>
                   </c:forEach>
                 </select>
               </div>

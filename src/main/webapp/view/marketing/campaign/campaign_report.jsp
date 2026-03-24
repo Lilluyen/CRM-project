@@ -88,7 +88,7 @@
       <div class="rpt-kpi-icon"><i class="fas fa-users"></i></div>
       <div class="rpt-kpi-body">
         <div class="rpt-kpi-value">${reportKpi.totalLeads}</div>
-        <div class="rpt-kpi-label">Total Leads</div>
+        <div class="rpt-kpi-label">Total Engagements</div>
       </div>
     </div>
 

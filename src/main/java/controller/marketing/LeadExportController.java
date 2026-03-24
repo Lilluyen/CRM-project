@@ -5,12 +5,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import model.Lead;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -21,6 +15,13 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import model.Lead;
 import service.LeadService;
 
 @WebServlet(name = "LeadExportController", urlPatterns = {"/marketing/leads/export"})
@@ -58,7 +59,7 @@ public class LeadExportController extends HttpServlet {
             Row header = sheet.createRow(0);
             String[] headers = {
                 "Mã Lead", "Họ tên", "Email", "Điện thoại", "Điểm số", "Trạng thái",
-                "Quan tâm", "Campaign", "Nguồn", "Ngày tạo", "Ngày cập nhật"
+                "Quan tâm", "Campaigns", "Nguồn", "Ngày tạo", "Ngày cập nhật"
             };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = header.createCell(i);
@@ -79,7 +80,7 @@ public class LeadExportController extends HttpServlet {
                 row.createCell(4).setCellValue(lead.getScore());
                 row.createCell(5).setCellValue(text(lead.getStatus()));
                 row.createCell(6).setCellValue(text(lead.getInterest()));
-                row.createCell(7).setCellValue(text(lead.getCampaignName()));
+                row.createCell(7).setCellValue(text(lead.getCampaignNames())); // FIX: getCampaignName() → getCampaignNames()
                 row.createCell(8).setCellValue(text(lead.getSource()));
                 row.createCell(9).setCellValue(lead.getCreatedAt() != null
                         ? lead.getCreatedAt().format(DATE_TIME_FORMAT) : "");

@@ -32,7 +32,7 @@
                     </ol>
                 </nav>
             </div>
-            <a href="${pageContext.request.contextPath}/marketing/leads"
+            <a href="${pageContext.request.contextPath}/marketing/leads${not empty lockedCampaignId ? '?campaignId='.concat(lockedCampaignId) : (not empty param.campaignId ? '?campaignId='.concat(param.campaignId) : '')}"
                class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Quay lại
             </a>
@@ -128,16 +128,180 @@
 
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="campaignId" class="form-label">Campaign</label>
-                                <select class="form-select" id="campaignId" name="campaignId">
-                                    <option value="0">-- Không thuộc campaign --</option>
-                                    <c:forEach var="campaign" items="${campaigns}">
-                                        <option value="${campaign.campaignId}"
-                                            ${lead.campaignId == campaign.campaignId ? 'selected' : ''}>
-                                            ${campaign.name}
-                                        </option>
-                                    </c:forEach>
-                                </select>
+                                <label class="form-label">Campaign</label>
+
+                                <c:choose>
+
+                                    <%-- CASE 1: CREATE MODE từ campaign → lock, không cho chọn --%>
+                                    <c:when test="${lead.leadId == 0 and not empty lockedCampaignId}">
+                                        <input type="hidden" name="campaignId" value="${lockedCampaignId}"/>
+                                        <input type="hidden" name="selectedCampaigns" value="${lockedCampaignId}"/>
+                                        <input type="text" class="form-control bg-light"
+                                               value="${lockedCampaignName}" readonly/>
+                                        <small class="form-text text-muted mt-1 d-block">
+                                            <i class="fas fa-lock me-1"></i>
+                                            Lead sẽ được gắn vào campaign này.
+                                        </small>
+                                    </c:when>
+
+                                    <%-- CASE 2: EDIT MODE → checkbox dropdown (giữ nguyên logic cũ) --%>
+                                    <c:when test="${lead.leadId > 0}">
+                                        <c:if test="${not empty param.campaignId}">
+                                            <input type="hidden" name="returnCampaignId" value="${param.campaignId}"/>
+                                        </c:if>
+
+                                        <c:set var="joinedCount" value="0" />
+                                        <c:forEach var="jc" items="${leadCampaigns}">
+                                            <c:set var="joinedCount" value="${joinedCount + 1}" />
+                                        </c:forEach>
+
+                                        <div class="camp-wrap" style="position:relative;">
+                                            <button type="button" id="campBtn"
+                                                    class="form-select text-start d-flex justify-content-between align-items-center"
+                                                    style="cursor:pointer;"
+                                                    onclick="toggleCampPanel(event)">
+                                                <span id="campBtnText">
+                                                    <c:choose>
+                                                        <c:when test="${joinedCount > 0}">
+                                                            Đã chọn <strong>${joinedCount}</strong> campaign
+                                                        </c:when>
+                                                        <c:otherwise>-- Chưa chọn campaign --</c:otherwise>
+                                                    </c:choose>
+                                                </span>
+                                                <i class="fas fa-chevron-down" id="campChevron"
+                                                   style="transition:transform .2s; flex-shrink:0;"></i>
+                                            </button>
+
+                                            <div id="campPanel"
+                                                 style="display:none; position:absolute; z-index:1050;
+                                                        width:100%; top:calc(100% + 4px); left:0;
+                                                        background:#fff; border:1px solid #dee2e6;
+                                                        border-radius:6px;
+                                                        box-shadow:0 4px 16px rgba(0,0,0,.12);
+                                                        max-height:260px; overflow-y:auto;">
+                                                <div class="d-flex justify-content-between align-items-center
+                                                            px-3 py-2 border-bottom bg-light"
+                                                     style="position:sticky; top:0; z-index:1;">
+                                                    <span class="small fw-semibold text-muted">Danh sách Campaign</span>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-primary py-0 px-2"
+                                                                onclick="selectAllCamps()">Chọn tất cả</button>
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                                onclick="deselectAllCamps()">Bỏ tất cả</button>
+                                                    </div>
+                                                </div>
+                                                <div class="p-2">
+                                                    <c:choose>
+                                                        <c:when test="${not empty campaigns}">
+                                                            <c:forEach var="camp" items="${campaigns}">
+                                                                <c:set var="isTicked" value="false" />
+                                                                <c:forEach var="joined" items="${leadCampaigns}">
+                                                                    <c:if test="${joined.campaignId == camp.campaignId}">
+                                                                        <c:set var="isTicked" value="true" />
+                                                                    </c:if>
+                                                                </c:forEach>
+                                                                <c:if test="${camp.status == 'ACTIVE'}">
+                                                                    <label class="camp-item d-flex align-items-center
+                                                                                  gap-2 px-2 py-2 rounded mb-1"
+                                                                           for="ck_${camp.campaignId}"
+                                                                           style="cursor:pointer; user-select:none;
+                                                                                  background:${isTicked ? 'rgba(13,110,253,.08)' : 'transparent'}">
+                                                                        <input type="checkbox"
+                                                                               class="form-check-input camp-cb flex-shrink-0"
+                                                                               name="selectedCampaigns"
+                                                                               value="${camp.campaignId}"
+                                                                               id="ck_${camp.campaignId}"
+                                                                               onchange="onCampCb(this)"
+                                                                            <c:if test="${isTicked}">checked</c:if> >
+                                                                        <span class="flex-grow-1">${camp.name}</span>
+                                                                        <c:if test="${isTicked}">
+                                                                            <span class="badge bg-primary"
+                                                                                  style="font-size:.65rem;">Đang tham gia</span>
+                                                                        </c:if>
+                                                                    </label>
+                                                                </c:if>
+                                                            </c:forEach>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <p class="text-muted small px-2 mb-0">Chưa có campaign nào.</p>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted mt-1 d-block">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Tích để thêm, bỏ tích để rời campaign.
+                                        </small>
+                                    </c:when>
+
+                                    <%-- CASE 3: CREATE MODE thông thường → checkbox dropdown --%>
+                                    <c:otherwise>
+                                        <div class="camp-wrap" style="position:relative;">
+                                            <button type="button" id="campBtn"
+                                                    class="form-select text-start d-flex justify-content-between align-items-center"
+                                                    style="cursor:pointer;"
+                                                    onclick="toggleCampPanel(event)">
+                                                <span id="campBtnText">-- Chưa chọn campaign --</span>
+                                                <i class="fas fa-chevron-down" id="campChevron"
+                                                   style="transition:transform .2s; flex-shrink:0;"></i>
+                                            </button>
+                                            <div id="campPanel"
+                                                 style="display:none; position:absolute; z-index:1050;
+                                                        width:100%; top:calc(100% + 4px); left:0;
+                                                        background:#fff; border:1px solid #dee2e6;
+                                                        border-radius:6px;
+                                                        box-shadow:0 4px 16px rgba(0,0,0,.12);
+                                                        max-height:260px; overflow-y:auto;">
+                                                <div class="d-flex justify-content-between align-items-center
+                                                            px-3 py-2 border-bottom bg-light"
+                                                     style="position:sticky; top:0; z-index:1;">
+                                                    <span class="small fw-semibold text-muted">Danh sách Campaign</span>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-primary py-0 px-2"
+                                                                onclick="selectAllCamps()">Chọn tất cả</button>
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                                onclick="deselectAllCamps()">Bỏ tất cả</button>
+                                                    </div>
+                                                </div>
+                                                <div class="p-2">
+                                                    <c:choose>
+                                                        <c:when test="${not empty campaigns}">
+                                                            <c:forEach var="camp" items="${campaigns}">
+                                                                <c:if test="${camp.status == 'ACTIVE'}">
+                                                                    <label class="camp-item d-flex align-items-center
+                                                                                  gap-2 px-2 py-2 rounded mb-1"
+                                                                           for="ck_${camp.campaignId}"
+                                                                           style="cursor:pointer; user-select:none; background:transparent;">
+                                                                        <input type="checkbox"
+                                                                               class="form-check-input camp-cb flex-shrink-0"
+                                                                               name="selectedCampaigns"
+                                                                               value="${camp.campaignId}"
+                                                                               id="ck_${camp.campaignId}"
+                                                                               onchange="onCampCb(this)">
+                                                                        <span class="flex-grow-1">${camp.name}</span>
+                                                                    </label>
+                                                                </c:if>
+                                                            </c:forEach>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <p class="text-muted small px-2 mb-0">Chưa có campaign nào.</p>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted mt-1 d-block">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Tích để thêm vào campaign. Chỉ hiển thị campaign đang ACTIVE.
+                                        </small>
+                                    </c:otherwise>
+
+                                </c:choose>
                             </div>
                         </div>
                     </div>
@@ -187,7 +351,7 @@
 
                 <!-- Actions -->
                 <div class="form-actions">
-                    <a href="${pageContext.request.contextPath}/marketing/leads"
+                    <a href="${pageContext.request.contextPath}/marketing/leads${not empty lockedCampaignId ? '?campaignId='.concat(lockedCampaignId) : (not empty param.campaignId ? '?campaignId='.concat(param.campaignId) : '')}"
                        class="btn btn-large btn-cancel">
                         <i class="fas fa-times-circle me-1"></i> Hủy
                     </a>
@@ -277,6 +441,64 @@
                 firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstError.focus();
             }
+        }
+
+        /* ================================================================
+           Campaign checkbox dropdown — chỉ chạy ở edit mode
+           ================================================================ */
+        function toggleCampPanel(e) {
+            e.stopPropagation();
+            var panel   = document.getElementById('campPanel');
+            var chevron = document.getElementById('campChevron');
+            if (!panel) return;
+            var isOpen = panel.style.display !== 'none';
+            panel.style.display     = isOpen ? 'none' : 'block';
+            chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+
+        /* Đóng panel khi click ra ngoài */
+        document.addEventListener('click', function (e) {
+            var wrap = document.querySelector('.camp-wrap');
+            if (!wrap || wrap.contains(e.target)) return;
+            var panel   = document.getElementById('campPanel');
+            var chevron = document.getElementById('campChevron');
+            if (panel)   panel.style.display     = 'none';
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        });
+
+        function onCampCb(cb) {
+            var item = cb.closest('.camp-item');
+            if (item) {
+                item.style.background = cb.checked ? 'rgba(13,110,253,.08)' : 'transparent';
+            }
+            refreshCampBtn();
+        }
+
+        function selectAllCamps() {
+            document.querySelectorAll('.camp-cb').forEach(function (cb) {
+                cb.checked = true;
+                var item = cb.closest('.camp-item');
+                if (item) item.style.background = 'rgba(13,110,253,.08)';
+            });
+            refreshCampBtn();
+        }
+
+        function deselectAllCamps() {
+            document.querySelectorAll('.camp-cb').forEach(function (cb) {
+                cb.checked = false;
+                var item = cb.closest('.camp-item');
+                if (item) item.style.background = 'transparent';
+            });
+            refreshCampBtn();
+        }
+
+        function refreshCampBtn() {
+            var txt = document.getElementById('campBtnText');
+            if (!txt) return;
+            var count = document.querySelectorAll('.camp-cb:checked').length;
+            txt.innerHTML = count > 0
+                ? 'Đã chọn <strong>' + count + '</strong> campaign'
+                : '-- Chưa chọn campaign --';
         }
     </script>
 </div>
