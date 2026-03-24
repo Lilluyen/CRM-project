@@ -500,8 +500,14 @@
         f2.name = 'customerId';
         f2.value = customerId;
 
+         var f3 = document.createElement('input');
+        f3.type = 'hidden';
+        f3.name = 'primaryValue';
+        f3.value = value;
+
         form.appendChild(f1);
         form.appendChild(f2);
+        form.appendChild(f3);
         document.body.appendChild(form);
         form.submit();
     };
@@ -523,8 +529,14 @@
         f2.name = 'customerId';
         f2.value = customerId;
 
+        var f3 = document.createElement('input');
+        f3.type = 'hidden';
+        f3.name = 'primaryValue';
+        f3.value = value;
+
         form.appendChild(f1);
         form.appendChild(f2);
+        form.appendChild(f3);
         document.body.appendChild(form);
         form.submit();
     };

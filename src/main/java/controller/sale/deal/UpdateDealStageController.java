@@ -11,7 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Customer;
 import model.Deal;
 import model.Lead;
+import model.User;
 import util.DBContext;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -39,11 +41,29 @@ public class UpdateDealStageController extends HttpServlet {
             }
 
             DealDAO dao = new DealDAO(conn);
+            Deal beforeUpdate = dao.getById(dealId);
             dao.updateDealStage(dealId, stage, probability, actualValue);
 
             //xử lý Closed Won
             if ("Closed Won".equalsIgnoreCase(stage)) {
-                handleClosedWon(dealId, conn);
+                handleClosedWon(dealId, conn, (User) request.getSession().getAttribute("user"));
+            }
+
+            if (beforeUpdate != null) {
+                Deal afterUpdate = dao.getById(dealId);
+                Integer customerId = afterUpdate != null ? afterUpdate.getCustomerId() : beforeUpdate.getCustomerId();
+                if (customerId != null && customerId > 0) {
+                    String oldStage = beforeUpdate.getStage() == null ? "(none)" : beforeUpdate.getStage();
+                    String newStage = stage == null ? "(none)" : stage;
+                    if (!oldStage.equalsIgnoreCase(newStage)) {
+                        CustomerActivityUtil.logCustomerActivity(
+                                customerId,
+                                "UPDATE",
+                                "Deal stage updated",
+                                "Updated deal #" + dealId + " stage: " + oldStage + " -> " + newStage + ".",
+                                (User) request.getSession().getAttribute("user"));
+                    }
+                }
             }
             conn.commit();
             String redirect = request.getHeader("Referer");
@@ -57,7 +77,7 @@ public class UpdateDealStageController extends HttpServlet {
         }
     }
 
-    private void handleClosedWon(int dealId, Connection conn) throws SQLException {
+    private void handleClosedWon(int dealId, Connection conn, User currentUser) throws SQLException {
 
         DealDAO dealDAO = new DealDAO(conn);
         LeadDAO leadDAO = new LeadDAO();
@@ -115,6 +135,12 @@ public class UpdateDealStageController extends HttpServlet {
             customerDAO.updateTotalSpent(conn, customerId);
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
+            CustomerActivityUtil.logCustomerActivity(
+                    customerId,
+                    "UPDATE",
+                    "Lead converted",
+                    "Converted lead #" + lead.getLeadId() + " to customer via deal #" + dealId + ".",
+                    currentUser);
         }
     }
 }

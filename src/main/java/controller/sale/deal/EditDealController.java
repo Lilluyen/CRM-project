@@ -12,6 +12,8 @@ import model.Deal;
 import model.Lead;
 import model.Product;
 import util.DBContext;
+import util.CustomerActivityUtil;
+import model.User;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -62,6 +64,10 @@ public class EditDealController extends HttpServlet {
             DealProductDAO dealProductDAO = new DealProductDAO(conn);
 
             Deal deal = dealDAO.getById(id);
+            if (deal == null) {
+                response.sendRedirect(request.getContextPath() + "/sale/deal/list");
+                return;
+            }
 
             // Tự set relatedType/relatedId từ deal, không phụ thuộc URL
             if (deal.getLeadId() > 0) {
@@ -70,10 +76,6 @@ public class EditDealController extends HttpServlet {
             } else if (deal.getCustomerId() > 0) {
                 request.setAttribute("relatedType", "CUSTOMER");
                 request.setAttribute("relatedId", String.valueOf(deal.getCustomerId()));
-            }
-            if (deal == null) {
-                response.sendRedirect(request.getContextPath() + "/sale/deal/list");
-                return;
             }
 
             List<DealItemDTO> items = dealProductDAO.getDealItems(id);
@@ -109,12 +111,30 @@ public class EditDealController extends HttpServlet {
 
             DealDAO dealDAO = new DealDAO(conn);
             DealProductDAO dealProductDAO = new DealProductDAO(conn);
+            Deal beforeUpdate = dealDAO.getById(dealId);
 
             if (!dealDAO.updateDeal(deal)) {
                 throw new RuntimeException("Cập nhật deal thất bại.");
             }
             if ("Closed Won".equalsIgnoreCase(deal.getStage())) {
-                handleClosedWon(dealId, conn);
+                handleClosedWon(dealId, conn, (User) request.getSession().getAttribute("user"));
+            }
+
+            if (beforeUpdate != null) {
+                Deal afterUpdate = dealDAO.getById(dealId);
+                Integer customerId = afterUpdate != null ? afterUpdate.getCustomerId() : deal.getCustomerId();
+                if (customerId != null && customerId > 0) {
+                    String oldStage = beforeUpdate.getStage() == null ? "(none)" : beforeUpdate.getStage();
+                    String newStage = deal.getStage() == null ? "(none)" : deal.getStage();
+                    if (!oldStage.equalsIgnoreCase(newStage)) {
+                        CustomerActivityUtil.logCustomerActivity(
+                                customerId,
+                                "UPDATE",
+                                "Deal stage updated",
+                                "Updated deal #" + dealId + " stage: " + oldStage + " -> " + newStage + ".",
+                                (User) request.getSession().getAttribute("user"));
+                    }
+                }
             }
             List<DealItemDTO> items = extractItemsFromRequest(request);
             dealProductDAO.replaceDealItems(dealId, items);
@@ -330,7 +350,7 @@ public class EditDealController extends HttpServlet {
         return new BigDecimal(s.trim());
     }
 
-    private void handleClosedWon(int dealId, Connection conn) throws SQLException {
+    private void handleClosedWon(int dealId, Connection conn, User currentUser) throws SQLException {
 
         DealDAO dealDAO = new DealDAO(conn);
         LeadDAO leadDAO = new LeadDAO();
@@ -386,6 +406,12 @@ public class EditDealController extends HttpServlet {
             customerDAO.updateTotalSpent(conn, customerId);
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
+            CustomerActivityUtil.logCustomerActivity(
+                    customerId,
+                    "UPDATE",
+                    "Lead converted",
+                    "Converted lead #" + lead.getLeadId() + " to customer via deal #" + dealId + ".",
+                    currentUser);
         }
     }
 }
