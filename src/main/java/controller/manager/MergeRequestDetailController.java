@@ -12,6 +12,7 @@ import model.CustomerMergeRequest;
 import model.User;
 import service.CustomerService;
 import service.MergeRequestService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class MergeRequestDetailController extends HttpServlet {
             req.setAttribute("pageTitle", "Merge Request #" + requestId + " | Clothes CRM");
             req.setAttribute("contentPage", "customer/merge_request_detail.jsp");
             req.setAttribute("pageCss", "merge_request_detail.css");
-            req.setAttribute("page", "customer-merge");
+            req.setAttribute("page", "merge-customers");
             req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
 
         } catch (Exception e) {
@@ -116,9 +117,30 @@ public class MergeRequestDetailController extends HttpServlet {
 
         try {
             req.setCharacterEncoding("UTF-8");
+            CustomerMergeRequest mergeReq = mergeRequestService.getById(requestId);
+            if (mergeReq == null) {
+                resp.sendRedirect(req.getContextPath()
+                        + "/customers/merge-request/list?status=not-found");
+                return;
+            }
 
             if ("approve".equals(action)) {
                 mergeRequestService.approve(requestId, user.getUserId());
+                String approveDesc = "Approved merge request #" + requestId
+                        + " (source #" + mergeReq.getSourceId()
+                        + " -> target #" + mergeReq.getTargetId() + ").";
+                CustomerActivityUtil.logCustomerActivity(
+                        mergeReq.getTargetId(),
+                        "UPDATE",
+                        "Merge request approved",
+                        approveDesc,
+                        user);
+                CustomerActivityUtil.logCustomerActivity(
+                        mergeReq.getSourceId(),
+                        "UPDATE",
+                        "Merge request approved",
+                        approveDesc,
+                        user);
                 resp.sendRedirect(req.getContextPath()
                         + "/customers/merge-request/list?status=approved");
 
@@ -130,6 +152,22 @@ public class MergeRequestDetailController extends HttpServlet {
                     return;
                 }
                 mergeRequestService.reject(requestId, user.getUserId(), rejectReason.trim());
+                String rejectDesc = "Rejected merge request #" + requestId
+                        + " (source #" + mergeReq.getSourceId()
+                        + " -> target #" + mergeReq.getTargetId()
+                        + "). Reason: " + rejectReason.trim();
+                CustomerActivityUtil.logCustomerActivity(
+                        mergeReq.getTargetId(),
+                        "UPDATE",
+                        "Merge request rejected",
+                        rejectDesc,
+                        user);
+                CustomerActivityUtil.logCustomerActivity(
+                        mergeReq.getSourceId(),
+                        "UPDATE",
+                        "Merge request rejected",
+                        rejectDesc,
+                        user);
                 resp.sendRedirect(req.getContextPath()
                         + "/customers/merge-request/list?status=rejected");
 

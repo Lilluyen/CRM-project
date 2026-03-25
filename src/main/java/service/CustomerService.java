@@ -245,16 +245,15 @@ public class CustomerService {
 
     }
 
-    public void updateCustomer(CustomerCreateDTO dto, int customerId)
+    public int updateCustomer(CustomerCreateDTO dto, int customerId)
             throws Exception {
 
         try (Connection conn = DBContext.getConnection()) {
             try {
                 conn.setAutoCommit(false);
-                customerDAO.updateBasicInfo(
+                int row = customerDAO.updateBasicInfo(
                         CustomerMapper.toCustomerForUpdate(dto, customerId),
                         conn);
-
                 updateCustomerStylesSmart(
                         customerId,
                         dto.getStyleTags(),
@@ -286,6 +285,7 @@ public class CustomerService {
                 }
                 conn.commit();
 
+                return row;
             } catch (Exception e) {
                 conn.rollback();
                 throw e;

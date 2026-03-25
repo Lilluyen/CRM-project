@@ -6,7 +6,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.User;
 import service.CustomerService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 
@@ -46,6 +48,13 @@ public class DowngradeLoyaltyCustomerController extends HttpServlet {
 
             boolean success = customerService.downgradeToLoyaltyCustomer(customerId);
             if (success) {
+                User user = (User) req.getSession().getAttribute("user");
+                CustomerActivityUtil.logCustomerActivity(
+                        customerId,
+                        "UPDATE",
+                        "Loyalty downgraded",
+                        "Downgraded customer loyalty tier.",
+                        user);
                 resp.sendRedirect(req.getContextPath() + "/customers?status=success");
                 return;
             } else {

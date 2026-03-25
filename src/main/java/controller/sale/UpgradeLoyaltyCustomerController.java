@@ -6,7 +6,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.User;
 import service.CustomerService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -48,6 +50,13 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
 
             boolean success = customerService.upgradeToLoyaltyCustomer(customerId);
             if (success) {
+                User user = (User) request.getSession().getAttribute("user");
+                CustomerActivityUtil.logCustomerActivity(
+                        customerId,
+                        "UPDATE",
+                        "Loyalty upgraded",
+                        "Upgraded customer loyalty tier.",
+                        user);
                 response.sendRedirect(request.getContextPath() + "/customers?status=success");
             } else {
                 response.sendRedirect(request.getContextPath() + "/customers?status=failed");

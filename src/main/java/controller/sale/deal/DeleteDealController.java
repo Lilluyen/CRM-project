@@ -10,7 +10,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Deal;
+import model.User;
 import util.DBContext;
+import util.CustomerActivityUtil;
 
 @WebServlet("/sale/deal/delete")
 public class DeleteDealController extends HttpServlet {
@@ -25,9 +28,19 @@ public class DeleteDealController extends HttpServlet {
 
             DealProductDAO dealProductDAO = new DealProductDAO(conn);
             DealDAO dealDAO = new DealDAO(conn);
+            Deal deal = dealDAO.getById(id);
 
             dealProductDAO.deleteDealItems(id);
             dealDAO.deleteDeal(id);
+            if (deal != null && deal.getCustomerId() != null && deal.getCustomerId() > 0) {
+                User user = (User) request.getSession().getAttribute("user");
+                CustomerActivityUtil.logCustomerActivity(
+                        deal.getCustomerId(),
+                        "UPDATE",
+                        "Deal deleted",
+                        "Deleted deal #" + id + " (" + deal.getDealName() + ").",
+                        user);
+            }
 
             response.sendRedirect(request.getContextPath() + "/sale/deal/list");
 

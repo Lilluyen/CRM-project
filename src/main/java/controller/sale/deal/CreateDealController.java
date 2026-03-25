@@ -11,7 +11,9 @@ import model.Customer;
 import model.Deal;
 import model.Lead;
 import model.Product;
+import model.User;
 import util.DBContext;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -101,6 +103,15 @@ public class CreateDealController extends HttpServlet {
             }
 
             dealProductDAO.replaceDealItems(newId, items);
+            if (deal.getCustomerId() > 0) {
+                User createdBy = (User) request.getSession().getAttribute("user");
+                CustomerActivityUtil.logCustomerActivity(
+                        deal.getCustomerId(),
+                        "UPDATE",
+                        "Deal created",
+                        "Created deal #" + newId + " (" + deal.getDealName() + ").",
+                        createdBy);
+            }
 
             conn.commit();
             response.sendRedirect(request.getContextPath() + "/sale/deal/detail?id=" + newId);

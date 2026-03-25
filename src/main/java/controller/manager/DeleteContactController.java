@@ -8,10 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import service.CustomerService;
-
+import util.CustomerActivityUtil;
+import model.User;
 import java.io.IOException;
 
-@WebServlet(name = "DeleteContactController", urlPatterns = {"/customers/contacts/delete"})
+@WebServlet(name = "DeleteContactController", urlPatterns = { "/customers/contacts/delete" })
 public class DeleteContactController extends HttpServlet {
 
     private final CustomerDAO customerDAO = new CustomerDAO();
@@ -37,6 +38,7 @@ public class DeleteContactController extends HttpServlet {
 
         String contactIdRaw = req.getParameter("contactId");
         String customerIdRaw = req.getParameter("customerId");
+        String contactValue = req.getParameter("primaryValue");
 
         int contactId, customerId;
         try {
@@ -51,6 +53,9 @@ public class DeleteContactController extends HttpServlet {
             boolean deleted = customerService.deleteContact(contactId, customerId);
 
             if (deleted) {
+                CustomerActivityUtil.logCustomerActivity(customerId, "UPDATE", "Customer updated",
+                        "Deleted contact: " + contactValue,
+                        (User) session.getAttribute("user"));
                 resp.sendRedirect(req.getContextPath()
                         + "/customers/edit?customerId=" + customerId
                         + "&status=contact-deleted");
