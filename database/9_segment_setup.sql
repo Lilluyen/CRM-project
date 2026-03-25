@@ -109,11 +109,10 @@ CREATE TABLE customer_merge_request (
     created_at DATETIME2 DEFAULT GETDATE(),
     reviewed_at DATETIME2,
 
-        CONSTRAINT FK_cmr_source FOREIGN KEY (source_id)
+   CONSTRAINT FK_cmr_source FOREIGN KEY (source_id)
         REFERENCES Customers(customer_id)
         ON DELETE CASCADE,
 
     CONSTRAINT FK_cmr_target FOREIGN KEY (target_id)
         REFERENCES Customers(customer_id)
 );
-
