@@ -1,8 +1,5 @@
 package controller.auth;
 
-import java.io.IOException;
-import java.util.Optional;
-
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,6 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Role;
 import model.User;
+
+import java.io.IOException;
+import java.util.Optional;
 
 @WebServlet(name = "LoginController", urlPatterns = {"/login"})
 public class LoginController extends HttpServlet {
@@ -68,6 +68,9 @@ public class LoginController extends HttpServlet {
 
             case "MARKETING":
                 return "/marketing/dashboard";
+
+            case "MANAGER":
+                return "/manager/dashboard";
 
             case "CS":
                 return "/cs/dashboard";

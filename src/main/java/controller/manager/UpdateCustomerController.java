@@ -16,11 +16,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
+import util.ControllerUltil;
+import util.CustomerActivityUtil;
+import model.User;
+import java.time.format.DateTimeFormatter;
 
-@WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
+@WebServlet(name = "UpdateCustomerController", urlPatterns = { "/customers/edit" })
 public class UpdateCustomerController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -96,6 +99,9 @@ public class UpdateCustomerController extends HttpServlet {
                 fieldErrors.put("name", "Full name is required.");
             } else if (name.length() > 100) {
                 fieldErrors.put("name", "Name must not exceed 100 characters.");
+            } else if (!name.matches(
+                    "^[a-zA-Z\\s\\-'àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđa-z]+$")) {
+                fieldErrors.put("name", "Name must only contain letters, numbers, spaces, hyphens, and apostrophes.");
             }
 
             // Phone
@@ -121,19 +127,16 @@ public class UpdateCustomerController extends HttpServlet {
 
             // Birthday
             LocalDate birthday = null;
-            if (birthdayRaw == null || birthdayRaw.isBlank()) {
-                fieldErrors.put("birthday", "Date of birth is required.");
-            } else {
+            if (birthdayRaw != null && !birthdayRaw.isBlank()) {
                 try {
-                    birthday = LocalDate.parse(birthdayRaw);
-                    if (birthday.isAfter(LocalDate.now())) {
+                    birthday = ControllerUltil.parseDate(birthdayRaw);
+                    if (birthday != null && birthday.isAfter(LocalDate.now())) {
                         fieldErrors.put("birthday", "Birthday must be in the past.");
                     }
-                } catch (DateTimeParseException e) {
+                } catch (Exception e) {
                     fieldErrors.put("birthday", "Invalid date format.");
                 }
             }
-
 
             // ── If errors → reload form ──────────────────────────────────
             if (!fieldErrors.isEmpty()) {
@@ -147,7 +150,8 @@ public class UpdateCustomerController extends HttpServlet {
                 request.setAttribute("oldAddress", address);
 
                 Set<String> selectedTagSet = new HashSet<>();
-                if (tagIdsRaw != null) Collections.addAll(selectedTagSet, tagIdsRaw);
+                if (tagIdsRaw != null)
+                    Collections.addAll(selectedTagSet, tagIdsRaw);
                 request.setAttribute("selectedTags", selectedTagSet);
 
                 reloadFormData(request, customerId, fieldErrors, null);
@@ -158,7 +162,8 @@ public class UpdateCustomerController extends HttpServlet {
             // ── Build DTO ────────────────────────────────────────────────
             List<Integer> tagIds = new ArrayList<>();
             if (tagIdsRaw != null) {
-                for (String id : tagIdsRaw) tagIds.add(Integer.parseInt(id));
+                for (String id : tagIdsRaw)
+                    tagIds.add(Integer.parseInt(id));
             }
 
             CustomerCreateDTO dto = new CustomerCreateDTO();
@@ -181,16 +186,31 @@ public class UpdateCustomerController extends HttpServlet {
                 return;
             }
 
-// Chỉ gọi 1 lần
-            customerService.updateCustomer(dto, customerId);
+            // Chỉ gọi 1 lần
+            int row = customerService.updateCustomer(dto, customerId);
+            String description = (phone != null && !phone.isBlank() ? "Updated customer with phone: " + phone
+                    : (null + ", ")) +
+                    (email != null && !email.isBlank() ? ", with email: " + email : (null)) +
+                    (gender != null && !gender.isBlank() ? ", with gender: " + gender : (null)) +
+                    (birthday != null && birthday.isBefore(LocalDate.now())
+                            ? ", with birthday: " + birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                            : null)
+                    +
+                    (source != null && !source.isBlank() ? ", from: " + source : (null)) +
+                    (address != null && !address.isBlank() ? ", address: " + address : (null));
+            if (row > 0) {
+                CustomerActivityUtil.logCustomerActivity(customerId, "UPDATE", "Customer updated",
+                        description + ".",
+                        (User) request.getSession().getAttribute("user"));
+            }
 
-// Validate và lưu extra contacts
+            // Validate và lưu extra contacts
             String[] extraValues = request.getParameterValues("extraContactValue");
             String[] extraTypes = request.getParameterValues("extraContactType");
 
             if (extraValues != null && extraTypes != null) {
-                List<ContactValidationResult> issues =
-                        customerService.saveExtraContacts(customerId, extraTypes, extraValues);
+                List<ContactValidationResult> issues = customerService.saveExtraContacts(customerId, extraTypes,
+                        extraValues);
 
                 List<ContactValidationResult> contactConflicts = issues.stream()
                         .filter(ContactValidationResult::isConflictOther)
@@ -218,7 +238,7 @@ public class UpdateCustomerController extends HttpServlet {
                 }
             }
 
-// Tất cả OK — chỉ có 1 sendRedirect duy nhất ở đây
+            // Tất cả OK — chỉ có 1 sendRedirect duy nhất ở đây
             response.sendRedirect(request.getContextPath()
                     + "/customers/detail?customerId=" + customerId);
 
@@ -233,7 +253,7 @@ public class UpdateCustomerController extends HttpServlet {
 
     // ── Reload form: always fetch fresh customer data from DB ─────────────
     private void reloadFormData(HttpServletRequest request, int customerId,
-                                Map<String, String> fieldErrors, String globalMessage)
+            Map<String, String> fieldErrors, String globalMessage)
             throws ServletException {
         try {
             request.setAttribute("customerDetail",
@@ -257,13 +277,15 @@ public class UpdateCustomerController extends HttpServlet {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     private String trim(String value) {
-        if (value == null) return null;
+        if (value == null)
+            return null;
         return value.trim().isEmpty() ? null : value.trim();
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,
-                                             Map<String, String> errors) {
-        if (value == null || value.isBlank()) return null;
+            Map<String, String> errors) {
+        if (value == null || value.isBlank())
+            return null;
         try {
             BigDecimal bd = new BigDecimal(value);
             if (bd.compareTo(BigDecimal.ZERO) < 0) {

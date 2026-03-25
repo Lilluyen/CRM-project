@@ -56,7 +56,7 @@ public class CustomerDetailController extends HttpServlet {
                 return;
             }
 
-            // 🔥 GỌI SERVICE
+            // GỌI SERVICE
             CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
             List<StyleTag> styleTags = customerService.getListStyleTags();
             if (customerDetail == null) {

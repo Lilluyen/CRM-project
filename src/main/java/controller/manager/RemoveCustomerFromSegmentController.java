@@ -5,7 +5,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.User;
 import service.CustomerSegmentService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -27,6 +29,13 @@ public class RemoveCustomerFromSegmentController extends HttpServlet {
             int segmentId = Integer.parseInt(req.getParameter("segment_id"));
             service.removeCustomer(customerId, segmentId);
             service.updateSegmentCount(segmentId);
+            User user = (User) req.getSession().getAttribute("user");
+            CustomerActivityUtil.logCustomerActivity(
+                    customerId,
+                    "UPDATE",
+                    "Segment removed",
+                    "Removed customer from segment #" + segmentId + ".",
+                    user);
             resp.sendRedirect(req.getContextPath() + "/customers/segments?created=success");
         } catch (NumberFormatException e) {
             resp.sendRedirect(req.getContextPath() + "/customers/segments?created=failed");

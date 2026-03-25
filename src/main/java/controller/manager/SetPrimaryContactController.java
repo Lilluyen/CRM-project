@@ -8,11 +8,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import service.CustomerService;
+import util.*;
 
 import java.io.IOException;
+import model.User;
 
-@WebServlet(name = "SetPrimaryContactController",
-        urlPatterns = {"/customers/contacts/set-primary"})
+@WebServlet(name = "SetPrimaryContactController", urlPatterns = { "/customers/contacts/set-primary" })
 public class SetPrimaryContactController extends HttpServlet {
 
     private final CustomerDAO customerDAO = new CustomerDAO();
@@ -38,6 +39,7 @@ public class SetPrimaryContactController extends HttpServlet {
 
         String contactIdRaw = req.getParameter("contactId");
         String customerIdRaw = req.getParameter("customerId");
+        String primaryValue = req.getParameter("primaryValue");
 
         int contactId, customerId;
         try {
@@ -50,6 +52,9 @@ public class SetPrimaryContactController extends HttpServlet {
 
         try {
             customerService.setPrimaryContact(contactId, customerId);
+            CustomerActivityUtil.logCustomerActivity(customerId, "UPDATE", "Customer updated",
+                    "Set " + primaryValue + " to primary contact.",
+                    (User) session.getAttribute("user"));
             resp.sendRedirect(req.getContextPath()
                     + "/customers/edit?customerId=" + customerId
                     + "&status=primary-updated");

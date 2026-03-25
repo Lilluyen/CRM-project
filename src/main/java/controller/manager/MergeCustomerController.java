@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
 import service.CustomerService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 
@@ -51,7 +52,7 @@ public class MergeCustomerController extends HttpServlet {
         req.setAttribute("pageTitle", "Resolve Conflict | Clothes CRM");
         req.setAttribute("contentPage", "customer/resolve_conflict.jsp");
         req.setAttribute("pageCss", "customer-add.css");
-        req.setAttribute("page", "customer-add");
+        req.setAttribute("page", "merge-customers");
         req.getRequestDispatcher("/view/layout.jsp").forward(req, resp);
     }
 
@@ -100,6 +101,12 @@ public class MergeCustomerController extends HttpServlet {
             if ("merge".equals(action)) {
                 // ── Merge: gộp dữ liệu, lưu contact phụ ─────────────────
                 customerService.mergeCustomer(existingId, incoming, user.getUserId(), conflict.getSource());
+                CustomerActivityUtil.logCustomerActivity(
+                        existingId,
+                        "UPDATE",
+                        "Customer merged",
+                        "Merged data from duplicate customer record into customer #" + existingId + ".",
+                        user);
 
                 // Cleanup session
                 session.removeAttribute("pendingConflict");

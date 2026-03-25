@@ -31,7 +31,7 @@ public class CustomerDAO {
             stmt.setString(3, customer.getEmail());
 
             stmt.setDate(4,
-                    java.sql.Date.valueOf(customer.getBirthday()) != null
+                    customer.getBirthday() != null
                             ? java.sql.Date.valueOf(customer.getBirthday())
                             : null);
             stmt.setString(5, customer.getGender() != null ? customer.getGender() : null);
@@ -200,7 +200,7 @@ public class CustomerDAO {
         }
     }
 
-    public void updateBasicInfo(Customer customer, Connection conn)
+    public int updateBasicInfo(Customer customer, Connection conn)
             throws SQLException {
 
         System.out.println("Customer ID = " + customer.getCustomerId());
@@ -225,19 +225,20 @@ public class CustomerDAO {
             ps.setString(3, customer.getEmail());
 
             if (customer.getBirthday() != null) {
-                ps.setDate(4, java.sql.Date.valueOf(customer.getBirthday()));
+                ps.setDate(4, customer.getBirthday() != null ? java.sql.Date.valueOf(customer.getBirthday()) : null);
             } else {
                 ps.setNull(4, java.sql.Types.DATE);
             }
 
-            ps.setNString(5, customer.getGender());
-            ps.setNString(6, customer.getAddress());
-            ps.setNString(7, customer.getSource());
+            ps.setNString(5, customer.getGender() != null ? customer.getGender() : null);
+            ps.setNString(6, customer.getAddress() != null ? customer.getAddress() : null);
+            ps.setNString(7, customer.getSource() != null ? customer.getSource() : null);
 
             ps.setInt(8, customer.getCustomerId());
 
             int row = ps.executeUpdate();
             System.out.println("Row: " + row);
+            return row;
         }
     }
 
@@ -281,7 +282,7 @@ public class CustomerDAO {
         String sql = """
                     SELECT DISTINCT source
                     FROM Customers
-                
+
                 """;
         List<String> sources = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -297,7 +298,7 @@ public class CustomerDAO {
         String sql = """
                     SELECT DISTINCT loyalty_tier
                                   FROM Customers
-                
+
                 """;
         List<String> ranks = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -383,7 +384,6 @@ public class CustomerDAO {
         }
     }
 
-
     public void updatePrimaryPhone(Connection conn, int customerId, String phone)
             throws SQLException {
         String sql = "UPDATE Customers SET phone = ? WHERE customer_id = ?";
@@ -400,6 +400,47 @@ public class CustomerDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateTotalSpent(Connection conn, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Customers
+                    SET total_spent = (
+                        SELECT ISNULL(SUM(actual_value), 0)
+                        FROM Deals
+                        WHERE customer_id = ?
+                        AND stage = 'Closed Won'
+                    )
+                    WHERE customer_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateLoyaltyTier(Connection conn, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Customers
+                    SET loyalty_tier = (
+                        Case
+                            WHEN total_spent >= 100000000 THEN 'DIAMOND'
+                            WHEN total_spent >= 5000000 THEN 'PLATINUM'
+                            WHEN total_spent >= 1000000 THEN 'GOLD'
+                            WHEN total_spent >= 500000 THEN 'SILVER'
+                            WHEN total_spent >= 100000 THEN 'BRONZE'
+                            WHEN total_spent >= 0 THEN 'BRONZE'
+                            ELSE 'BLACKLIST'
+                        END
+                    ),
+                    updated_at = GETDATE()
+                    WHERE customer_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
             ps.executeUpdate();
         }
     }

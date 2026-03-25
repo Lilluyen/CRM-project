@@ -14,6 +14,7 @@ import model.StyleTag;
 import model.User;
 import service.CustomerService;
 import util.ControllerUltil;
+import util.CustomerActivityUtil;
 import util.EmailCheck;
 import util.NameCheck;
 import util.PhoneCheck;
@@ -22,11 +23,11 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
+@WebServlet(name = "CreateCustomerController", urlPatterns = { "/customers/add-customer" })
 public class CreateCustomerController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -94,7 +95,7 @@ public class CreateCustomerController extends HttpServlet {
 
             String[] tagParams = req.getParameterValues("styleTags");
 
-            // ── Field-level error map  key = field name ──────────────────
+            // ── Field-level error map key = field name ──────────────────
             Map<String, String> fieldErrors = new LinkedHashMap<>();
 
             // Validate name
@@ -102,6 +103,9 @@ public class CreateCustomerController extends HttpServlet {
                 fieldErrors.put("name", "Full name is required.");
             } else if (!NameCheck.isValidName(name)) {
                 fieldErrors.put("name", "Name contains invalid characters.");
+            } else if (!name.matches(
+                    "^[a-zA-Z\\s\\-'àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđa-z]+$")) {
+                fieldErrors.put("name", "Name must only contain letters, spaces, hyphens, and apostrophes.");
             }
 
             // Validate phone
@@ -123,19 +127,16 @@ public class CreateCustomerController extends HttpServlet {
 
             // Validate birthday
             LocalDate birthday = null;
-            if (birthdayRaw == null || birthdayRaw.isBlank()) {
-                fieldErrors.put("birthday", "Date of birth is required.");
-            } else {
+            if (birthdayRaw != null && !birthdayRaw.isBlank()) {
                 try {
                     birthday = ControllerUltil.parseDate(birthdayRaw);
-                    if (birthday.isAfter(LocalDate.now())) {
+                    if (birthday != null && birthday.isAfter(LocalDate.now())) {
                         fieldErrors.put("birthday", "Birthday must be in the past.");
                     }
-                } catch (DateTimeParseException e) {
+                } catch (Exception e) {
                     fieldErrors.put("birthday", "Invalid date format.");
                 }
             }
-
 
             // ── If validation failed → forward back with errors + old values ──
             if (!fieldErrors.isEmpty()) {
@@ -177,14 +178,29 @@ public class CreateCustomerController extends HttpServlet {
 
             // Không có conflict → tạo bình thường
             int newId = customerService.createCustomer(dto, user.getUserId());
+            if (newId != 0) {
+                String description = (phone != null && !phone.isBlank() ? "Created customer with phone: " + phone
+                        : (null + ", ")) +
+                        (email != null && !email.isBlank() ? ", with email: " + email : (null)) +
+                        (gender != null && !gender.isBlank() ? ", with gender: " + gender : (null)) +
+                        (birthday != null && birthday.isBefore(LocalDate.now())
+                                ? ", with birthday: " + birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                : null)
+                        +
+
+                        (source != null && !source.isBlank() ? ", from: " + source : (null)) +
+                        (address != null && !address.isBlank() ? ", address: " + address : (null));
+                CustomerActivityUtil.logCustomerActivity(newId, "CREATE", "Customer created", description + ".",
+                        user);
+            }
 
             // Lưu extra contacts nếu có
             String[] extraValues = req.getParameterValues("extraContactValue");
             String[] extraTypes = req.getParameterValues("extraContactType");
 
             if (extraValues != null && extraTypes != null) {
-                List<ContactValidationResult> issues =
-                        customerService.saveExtraContacts(newId, extraTypes, extraValues);
+                List<ContactValidationResult> issues = customerService.saveExtraContacts(newId, extraTypes,
+                        extraValues);
 
                 List<ContactValidationResult> contactConflicts = issues.stream()
                         .filter(ContactValidationResult::isConflictOther)
@@ -212,7 +228,7 @@ public class CreateCustomerController extends HttpServlet {
                 }
             }
 
-// Tất cả OK — chỉ có 1 sendRedirect duy nhất ở đây
+            // Tất cả OK — chỉ có 1 sendRedirect duy nhất ở đây
             resp.sendRedirect(req.getContextPath()
                     + "/customers/detail?customerId=" + newId);
 
@@ -227,10 +243,10 @@ public class CreateCustomerController extends HttpServlet {
 
     // ── Reload form with errors + previously typed values ────────────────
     private void reloadFormOnError(HttpServletRequest req,
-                                   Map<String, String> fieldErrors,
-                                   String name, String phone, String email,
-                                   String gender, String birthday,
-                                   String source, String address, String[] selectedTags)
+            Map<String, String> fieldErrors,
+            String name, String phone, String email,
+            String gender, String birthday,
+            String source, String address, String[] selectedTags)
             throws ServletException {
         try {
             // Errors
@@ -268,13 +284,15 @@ public class CreateCustomerController extends HttpServlet {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     private String trim(String value) {
-        if (value == null) return null;
+        if (value == null)
+            return null;
         return value.trim().isEmpty() ? null : value.trim();
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,
-                                             Map<String, String> errors) {
-        if (value == null || value.isBlank()) return null;
+            Map<String, String> errors) {
+        if (value == null || value.isBlank())
+            return null;
         try {
             BigDecimal bd = new BigDecimal(value);
             if (bd.compareTo(BigDecimal.ZERO) < 0) {

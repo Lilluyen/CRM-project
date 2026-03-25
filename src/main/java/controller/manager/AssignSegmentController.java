@@ -5,7 +5,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.User;
 import service.CustomerSegmentService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 
@@ -35,6 +37,7 @@ public class AssignSegmentController extends HttpServlet {
             String[] ids = customerIdsStr.split(",");
 
             int successCount = 0;
+            User user = (User) req.getSession().getAttribute("user");
 
             for (String id : ids) {
                 int customerId = Integer.parseInt(id);
@@ -44,6 +47,12 @@ public class AssignSegmentController extends HttpServlet {
 
                 if (!exists) {
                     segmentService.insertCustomersToSegment(segmentId, " customer_id = " + customerId);
+                    CustomerActivityUtil.logCustomerActivity(
+                            customerId,
+                            "UPDATE",
+                            "Segment assigned",
+                            "Added customer to segment #" + segmentId + ".",
+                            user);
                     successCount++;
                 }
             }
