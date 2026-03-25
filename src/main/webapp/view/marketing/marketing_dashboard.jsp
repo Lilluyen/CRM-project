@@ -240,8 +240,8 @@
                                                             <c:when test="${lead.status == 'NEW_LEAD'}">
                                                                 <span class="lead-badge new">New</span>
                                                             </c:when>
-                                                            <c:when test="${lead.status == 'CONTACTED'}">
-                                                                <span class="lead-badge contacted">Contacted</span>
+                                                            <c:when test="${lead.status == 'Nurturing' || lead.status == 'NURTURING'}">
+                                                                <span class="lead-badge contacted">Nurturing</span>
                                                             </c:when>
                                                             <c:when test="${lead.status == 'QUALIFIED'}">
                                                                 <span class="lead-badge qualified">Qualified</span>
