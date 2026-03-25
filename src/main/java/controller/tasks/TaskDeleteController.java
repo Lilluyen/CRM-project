@@ -1,6 +1,9 @@
 package controller.tasks;
 
+import model.Task;
+import model.TaskAssignee;
 import model.User;
+import service.TaskEmailService;
 import service.TaskService;
 import util.DBContext;
 
@@ -14,6 +17,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,13 +26,18 @@ import java.util.logging.Logger;
  * POST /tasks/delete
  * Xóa task và toàn bộ dữ liệu liên quan (AJAX JSON).
  * Quyền:
- *  - ADMIN/MANAGER (role_id=1 hoặc 5): xóa được mọi task
- *  - Non-management: chỉ xóa được task do chính mình tạo VÀ người tạo không phải role 1/5
+ * - ADMIN/MANAGER (role_id=1 hoặc 5): xóa được mọi task
+ * - Non-management: chỉ xóa được task do chính mình tạo VÀ người tạo không phải
+ * role 1/5
  *
  * Request params:
- *   id (int) – task_id cần xóa
+ * id (int) – task_id cần xóa
  *
  * Response JSON: {"success": true} | {"success": false, "message": "..."}
+ *
+ * Email notification (async):
+ * Sau khi xóa thành công, gửi email cho người tạo và tất cả assignees.
+ * Task object được fetch TRƯỚC khi xóa để giữ thông tin cần thiết cho email.
  */
 @WebServlet("/tasks/delete")
 public class TaskDeleteController extends HttpServlet {
@@ -57,9 +67,11 @@ public class TaskDeleteController extends HttpServlet {
         try (Connection conn = DBContext.getConnection()) {
             TaskService svc = new TaskService(conn);
 
-            // Privileged: always allow
+            // ── Fetch task TRƯỚC KHI XÓA để lấy thông tin gửi email ──
+            // (Bắt buộc phải làm trước khi delete vì sau khi xóa không còn dữ liệu)
+            Task task = svc.getTaskById(taskId);
+
             if (!isManagerOrAdmin(user)) {
-                model.Task task = svc.getTaskById(taskId);
                 if (task == null) {
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     writeJson(resp, "{\"success\":false,\"message\":\"Task không tồn tại\"}");
@@ -76,7 +88,7 @@ public class TaskDeleteController extends HttpServlet {
                     return;
                 }
 
-                // Only creator can delete (safer)
+                // Only creator can delete
                 int creatorId = task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0;
                 if (creatorId != user.getUserId()) {
                     resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -85,10 +97,30 @@ public class TaskDeleteController extends HttpServlet {
                 }
             }
 
+            // ── Nếu task vẫn null (manager path) thì fetch lại ──
+            if (task == null) {
+                task = svc.getTaskById(taskId);
+            }
+
+            // Thu thập recipients để gửi email SAU KHI xóa thành công
+            // (snapshot trước khi dữ liệu bị xóa)
+            final Task taskSnapshot = task;
+            final List<User> recipients = buildDeleteRecipients(task, user);
+
             boolean ok = svc.deleteTask(taskId);
-            writeJson(resp, ok
-                    ? "{\"success\":true}"
-                    : "{\"success\":false,\"message\":\"Xóa task thất bại\"}");
+
+            if (ok) {
+                // ── EMAIL: thông báo task đã bị xóa (async, fire-and-forget) ──
+                // Dùng TaskEmailService trực tiếp vì không cần DB connection
+                if (taskSnapshot != null && !recipients.isEmpty()) {
+                    // Truyền thêm `user` (người xóa) để email hiển thị đúng "Updated by"
+                    new TaskEmailService().notifyTaskDeleted(taskSnapshot, user, recipients);
+                }
+                writeJson(resp, "{\"success\":true}");
+            } else {
+                writeJson(resp, "{\"success\":false,\"message\":\"Xóa task thất bại\"}");
+            }
+
         } catch (SQLException ex) {
             LOG.log(Level.SEVERE, null, ex);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -96,8 +128,46 @@ public class TaskDeleteController extends HttpServlet {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Xây dựng danh sách người nhận email khi task bị xóa.
+     * Bao gồm: người tạo task + tất cả assignees, loại trừ người đang thực hiện
+     * xóa.
+     */
+    private List<User> buildDeleteRecipients(Task task, User deletedBy) {
+        List<User> recipients = new ArrayList<>();
+        if (task == null)
+            return recipients;
+
+        // Người tạo task (nếu không phải người đang xóa)
+        if (task.getCreatedBy() != null
+                && task.getCreatedBy().getUserId() != deletedBy.getUserId()) {
+            recipients.add(task.getCreatedBy());
+        }
+
+        // Tất cả assignees (loại trừ người xóa và đã có trong danh sách)
+        if (task.getAssignees() != null) {
+            for (TaskAssignee ta : task.getAssignees()) {
+                if (ta.getUser() == null)
+                    continue;
+                int uid = ta.getUser().getUserId();
+                if (uid == deletedBy.getUserId())
+                    continue;
+                if (task.getCreatedBy() != null && uid == task.getCreatedBy().getUserId())
+                    continue;
+                recipients.add(ta.getUser());
+            }
+        }
+
+        return recipients;
+    }
+
     private boolean isManagerOrAdmin(User user) {
-        if (user == null || user.getRole() == null) return false;
+        if (user == null || user.getRole() == null)
+            return false;
         int rid = user.getRole().getRoleId();
         String rn = user.getRole().getRoleName();
         return rid == 1 || rid == 5 || "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);

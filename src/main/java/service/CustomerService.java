@@ -1,6 +1,6 @@
 package service;
 
-import Mapper.CustomerMapper;
+import mapper.CustomerMapper;
 import dao.*;
 import dto.*;
 import model.*;
@@ -23,11 +23,11 @@ public class CustomerService {
     private final CustomerNoteDAO noteDAO;
 
     public CustomerService(CustomerDAO customerDAO,
-                           CustomerStyleDAO customerStyleDAO,
-                           CustomerQueryDAO customerQueryDAO,
-                           CustomerSegmentDAO customerSegmentDAO,
-                           CustomerContactDAO contactDAO,
-                           CustomerNoteDAO noteDAO) {
+            CustomerStyleDAO customerStyleDAO,
+            CustomerQueryDAO customerQueryDAO,
+            CustomerSegmentDAO customerSegmentDAO,
+            CustomerContactDAO contactDAO,
+            CustomerNoteDAO noteDAO) {
         this.customerDAO = customerDAO;
         this.customerStyleDAO = customerStyleDAO;
         this.customerQueryDAO = customerQueryDAO;
@@ -91,14 +91,12 @@ public class CustomerService {
                 if (incoming.getEmail() != null && !incoming.getEmail().isBlank()
                         && !incoming.getEmail().equalsIgnoreCase(existing.getEmail())) {
                     contactDAO.insertCustomerContact(conn, new CustomerContact(
-                            existingId, false, "EMAIL", incoming.getEmail()
-                    ));
+                            existingId, false, "EMAIL", incoming.getEmail()));
                 }
                 if (incoming.getPhone() != null
                         && !incoming.getPhone().equals(existing.getPhone())) {
                     contactDAO.insertCustomerContact(conn, new CustomerContact(
-                            existingId, false, "PHONE", incoming.getPhone()
-                    ));
+                            existingId, false, "PHONE", incoming.getPhone()));
                 }
 
                 // 2. Merge profile — chỉ fill field nào existing đang null/blank
@@ -109,7 +107,8 @@ public class CustomerService {
                 // Union tags: lấy tags hiện có của existing + tags của incoming
                 List<Integer> existingTags = customerStyleDAO.getTagIdsByCustomerId(conn, existingId);
                 Set<Integer> unionTags = new HashSet<>(existingTags);
-                if (incoming.getStyleTags() != null) unionTags.addAll(incoming.getStyleTags());
+                if (incoming.getStyleTags() != null)
+                    unionTags.addAll(incoming.getStyleTags());
                 updateCustomerStylesSmart(existingId, new ArrayList<>(unionTags), conn);
 
                 // 4. Nếu là UPDATE → bản ghi incoming đã tồn tại trong DB → xóa đi
@@ -127,12 +126,11 @@ public class CustomerService {
                         existingId,
                         "Merged"
                                 + ("update".equals(source)
-                                ? " và xóa customer #" + incoming.getCustomerId()
-                                : " data từ bản ghi mới")
+                                        ? " và xóa customer #" + incoming.getCustomerId()
+                                        : " data từ bản ghi mới")
                                 + " — phone=" + incoming.getPhone()
                                 + ", email=" + incoming.getEmail(),
-                        userId
-                ));
+                        userId));
 
                 conn.commit();
 
@@ -191,7 +189,7 @@ public class CustomerService {
     }
 
     public void ignoreAndUpdate(CustomerCreateDTO dto, int customerId,
-                                int conflictWithId, String reason, int userId)
+            int conflictWithId, String reason, int userId)
             throws Exception {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
@@ -204,7 +202,6 @@ public class CustomerService {
                 String noteText = "Bỏ qua merge với customer #" + conflictWithId
                         + ". Lý do: " + (reason != null ? reason : "không cung cấp");
                 noteDAO.insertCustomerNote(conn, new CustomerNote(customerId, noteText, userId));
-
 
                 conn.commit();
             } catch (Exception e) {
@@ -304,7 +301,8 @@ public class CustomerService {
         }
     }
 
-    public int countTotalCustomer(String keyword, List<String> loyaltyTier, List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
+    public int countTotalCustomer(String keyword, List<String> loyaltyTier, List<String> source, String gender,
+            List<TimeCondition> timeConditions) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return customerQueryDAO.countTotalCustomers(conn, keyword, loyaltyTier, source, gender, timeConditions);
         }
@@ -409,10 +407,11 @@ public class CustomerService {
     }
 
     public List<Customer> filterAdvanced(String keyword, List<String> loyaltyTier,
-                                         List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size
-    ) throws SQLException {
+            List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size)
+            throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
-            return customerQueryDAO.filterAdvanced(conn, keyword, loyaltyTier, source, gender, timeConditions, page, size);
+            return customerQueryDAO.filterAdvanced(conn, keyword, loyaltyTier, source, gender, timeConditions, page,
+                    size);
         }
     }
 
@@ -457,10 +456,11 @@ public class CustomerService {
     }
 
     public List<ContactValidationResult> saveExtraContacts(int customerId,
-                                                           String[] types,
-                                                           String[] values)
+            String[] types,
+            String[] values)
             throws Exception {
-        if (types == null || values == null) return Collections.emptyList();
+        if (types == null || values == null)
+            return Collections.emptyList();
 
         List<ContactValidationResult> issues = new ArrayList<>();
 
@@ -473,16 +473,20 @@ public class CustomerService {
                 List<CustomerContact> existingContacts = contactDAO.getByCustomerId(conn, customerId);
                 Set<String> selfValues = new HashSet<>();
                 existingContacts.forEach(c -> selfValues.add(c.getValue().toLowerCase()));
-//                if (customer.getPhone() != null) selfValues.add(customer.getPhone().toLowerCase());
-//                if (customer.getEmail() != null) selfValues.add(customer.getEmail().toLowerCase());
+                // if (customer.getPhone() != null)
+                // selfValues.add(customer.getPhone().toLowerCase());
+                // if (customer.getEmail() != null)
+                // selfValues.add(customer.getEmail().toLowerCase());
 
                 int len = Math.min(types.length, values.length);
                 for (int i = 0; i < len; i++) {
                     String type = types[i];
                     String value = values[i];
 
-                    if (value == null || value.isBlank()) continue;
-                    if (!"PHONE".equals(type) && !"EMAIL".equals(type)) continue;
+                    if (value == null || value.isBlank())
+                        continue;
+                    if (!"PHONE".equals(type) && !"EMAIL".equals(type))
+                        continue;
 
                     String valueTrimmed = value.trim();
                     String valueLower = valueTrimmed.toLowerCase();
@@ -559,7 +563,8 @@ public class CustomerService {
             try {
                 // 1. Lấy contact được chọn làm primary
                 CustomerContact newPrimary = contactDAO.findById(conn, contactId, customerId);
-                if (newPrimary == null) throw new IllegalArgumentException("Contact not found");
+                if (newPrimary == null)
+                    throw new IllegalArgumentException("Contact not found");
 
                 String type = newPrimary.getType(); // "PHONE" hoặc "EMAIL"
 
@@ -602,8 +607,8 @@ public class CustomerService {
     }
 
     public List<CustomerSearchResultDTO> searchForMerge(String keyword,
-                                                        int excludeId,
-                                                        int limit) throws Exception {
+            int excludeId,
+            int limit) throws Exception {
         try (Connection conn = DBContext.getConnection()) {
             return customerQueryDAO.searchForMerge(conn, keyword, excludeId, limit);
         }

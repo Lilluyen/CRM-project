@@ -1,6 +1,7 @@
 package service;
 
 import dao.TaskDAO;
+import dao.UserDAO;
 import model.Activity;
 import model.Task;
 import model.TaskAssignee;
@@ -15,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * TaskService – business logic layer for Tasks.
@@ -23,7 +25,8 @@ import java.util.Set;
  * • Role-based visibility (ADMIN/MANAGER see all; others see own tasks)
  * • CRUD with change-logging via Task_History / Task_History_Detail
  * • Activity creation for every task lifecycle event (Scenarios 1–10)
- * • Notifications via NotificationService
+ * • In-app Notifications via NotificationService
+ * • Email Notifications via TaskEmailService (async, fire-and-forget)
  * • Scheduler support: markOverdueTasks() (Scenario 9)
  *
  * Activity mapping (scenario → activity_type):
@@ -43,11 +46,14 @@ public class TaskService {
     private final TaskDAO taskDAO;
     private final ActivityService activityService;
     private final NotificationService notificationService;
+    /** Email notification service – tất cả gửi async, không block. */
+    private final TaskEmailService taskEmailService;
 
     public TaskService(Connection connection) {
         this.taskDAO = new TaskDAO(connection);
         this.activityService = new ActivityService(connection);
         this.notificationService = new NotificationService(connection);
+        this.taskEmailService = new TaskEmailService();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -197,6 +203,9 @@ public class TaskService {
                         relatedType, relatedId,
                         task.getCreatedBy()));
 
+                // ── EMAIL: xác nhận tạo task cho người tạo ──
+                taskEmailService.notifyTaskCreated(task, task.getCreatedBy());
+
                 // INSTANT: Check and notify overdue immediately after creation
                 checkAndNotifyOverdue(task);
             }
@@ -252,7 +261,6 @@ public class TaskService {
                 }
 
                 // Activity – derive the activity_type from the status transition
-                // Pass relatedType/relatedId from old task so activity appears in CRM timeline
                 String activityType = resolveStatusActivityType(
                         old != null ? old.getStatus() : null, newTask.getStatus());
                 User actor = changedByUserId > 0 ? userWithId(changedByUserId) : null;
@@ -265,10 +273,27 @@ public class TaskService {
                         newTask.getTaskId(),
                         relatedType, relatedId, actor));
 
-                // Notify all current assignees
+                List<User> assigneeUsers = assigneesAsUsers(old);
+
+                // In-app: notify all current assignees
                 notifyAssignees(old, "Task Updated",
                         "Task \"" + newTask.getTitle() + "\" has been updated.",
                         newTask.getTaskId());
+
+                // ── EMAIL: status change hoặc update tổng quát ──
+                // Fetch full User để email hiển thị đúng tên "Updated by"
+                User actorFull = changedByUserId > 0 ? fetchUserById(changedByUserId) : null;
+                String oldStatus = old != null ? old.getStatus() : null;
+                String newStatus = newTask.getStatus();
+                if (!Objects.equals(oldStatus, newStatus)) {
+                    taskEmailService.notifyStatusChanged(
+                            newTask, oldStatus, newStatus, actorFull, assigneeUsers);
+                } else {
+                    taskEmailService.notifyTaskUpdated(
+                            newTask, actorFull,
+                            "Task details have been updated.",
+                            assigneeUsers);
+                }
 
                 // INSTANT: Check and notify overdue immediately after update
                 checkAndNotifyOverdue(newTask);
@@ -309,11 +334,19 @@ public class TaskService {
                 activityService.createActivity(buildTaskActivity(
                         activityType, subject, null, taskId, relType, relId, actor));
 
-                // Notify assignees
+                List<User> assigneeUsers = assigneesAsUsers(task);
+
+                // In-app notification
                 notifyAssignees(task, "Task Status Updated",
                         "Task " + (task != null ? "\"" + task.getTitle() + "\" " : "") +
                                 "status changed to: " + newStatus,
                         taskId);
+
+                // ── EMAIL: thông báo status thay đổi ──
+                // actor đã được tạo ở trên với userWithId(); fetch full để email có tên đúng
+                User actorFullStatus = changedByUserId > 0 ? fetchUserById(changedByUserId) : null;
+                taskEmailService.notifyStatusChanged(
+                        task, oldStatus, newStatus, actorFullStatus, assigneeUsers);
             }
             return ok;
         } catch (Exception e) {
@@ -344,8 +377,7 @@ public class TaskService {
                             old.getStatus() != null ? old.getStatus() : "", autoStatus);
                 }
 
-                // Activity: task_progress_update (Scenario 4) – include related for CRM
-                // timeline
+                // Activity: task_progress_update (Scenario 4)
                 User actor = changedByUserId > 0 ? userWithId(changedByUserId) : null;
                 String title = old != null && old.getTitle() != null ? old.getTitle() : "";
                 String relType = old != null ? old.getRelatedType() : null;
@@ -355,10 +387,18 @@ public class TaskService {
                         "Task progress updated to " + progress + "%: " + title,
                         null, taskId, relType, relId, actor));
 
-                // Notify assignees
+                List<User> assigneeUsers = assigneesAsUsers(old);
+
+                // In-app notification
                 notifyAssignees(old, "Task Progress Updated",
                         "Task \"" + title + "\" progress is now " + progress + "%.",
                         taskId);
+
+                // ── EMAIL: tiến độ cập nhật ──
+                User actorFullProg = changedByUserId > 0 ? fetchUserById(changedByUserId) : null;
+                taskEmailService.notifyProgressUpdated(
+                        old != null ? old : taskWithId(taskId, title),
+                        progress, actorFullProg, assigneeUsers);
 
                 // If progress drives to 100 → also fire task_completed activity
                 if (progress >= 100 && (old == null || !"Done".equalsIgnoreCase(old.getStatus()))) {
@@ -392,7 +432,7 @@ public class TaskService {
                 if (hid > 0)
                     taskDAO.insertTaskHistoryDetail(hid, "assignee_added", "", String.valueOf(userId));
 
-                // Activity: task_assigned (Scenario 2) – include related for CRM timeline
+                // Activity: task_assigned (Scenario 2)
                 User actor = changedByUserId > 0 ? userWithId(changedByUserId) : null;
                 String title = task != null ? task.getTitle() : "";
                 String relType = task != null ? task.getRelatedType() : null;
@@ -403,13 +443,19 @@ public class TaskService {
                         "Assigned to user #" + userId,
                         taskId, relType, relId, actor));
 
-                // Notification to assignee
+                // In-app notification to assignee
                 if (task != null) {
                     notificationService.createForUser(userId,
                             "New Task Assigned",
                             "Task \"" + title + "\" has been assigned to you. Priority: " + task.getPriority(),
                             "TASK", "Task", taskId);
                 }
+
+                // ── EMAIL: thông báo được giao task ──
+                // fetchUserById để email có tên "Assigned by" đầy đủ
+                User assigneeUser = fetchUserById(userId);
+                User assignedByUser = changedByUserId > 0 ? fetchUserById(changedByUserId) : null;
+                taskEmailService.notifyTaskAssigned(task, assigneeUser, assignedByUser, false);
             }
             return ok;
         } catch (Exception e) {
@@ -434,12 +480,18 @@ public class TaskService {
                 if (hid > 0)
                     taskDAO.insertTaskHistoryDetail(hid, "assignee_removed", String.valueOf(userId), "");
 
+                // In-app notification
                 if (task != null) {
                     notificationService.createForUser(userId,
                             "Task Assignment Cancelled",
                             "You have been unassigned from task \"" + task.getTitle() + "\".",
                             "TASK", "Task", taskId);
                 }
+
+                // ── EMAIL: thông báo bị gỡ khỏi task ──
+                User removedUser = fetchUserById(userId);
+                User removedByUser = changedByUserId > 0 ? fetchUserById(changedByUserId) : null;
+                taskEmailService.notifyTaskUnassigned(task, removedUser, removedByUser);
             }
             return ok;
         } catch (Exception e) {
@@ -482,24 +534,40 @@ public class TaskService {
         if (toAdd.isEmpty() && toRemove.isEmpty())
             return true;
 
+        boolean isReassign = !current.isEmpty();
         boolean ok = true;
+        // Fetch người thực hiện bulk-assign một lần duy nhất – dùng cho email "Assigned
+        // by"
+        User changedByUser = changedByUserId > 0 ? fetchUserById(changedByUserId) : null;
+
         for (int uid : toRemove) {
             if (taskDAO.removeAssignee(task.getTaskId(), uid)) {
+                // In-app notification
                 notificationService.createForUser(uid,
                         "Task Assignment Cancelled",
                         "You have been unassigned from task \"" + nullSafe(task.getTitle()) + "\".",
                         "TASK", "Task", task.getTaskId());
+
+                // ── EMAIL: bị gỡ khỏi task ──
+                User removedUserBulk = fetchUserById(uid);
+                taskEmailService.notifyTaskUnassigned(task, removedUserBulk, changedByUser);
             } else {
                 ok = false;
             }
         }
+
         for (int uid : toAdd) {
             if (taskDAO.addAssignee(task.getTaskId(), uid, changedByUserId)) {
+                // In-app notification
                 notificationService.createForUser(uid,
-                        !current.isEmpty() ? "Task Reassigned" : "New Task Assigned",
+                        isReassign ? "Task Reassigned" : "New Task Assigned",
                         "Task \"" + nullSafe(task.getTitle()) + "\" has been assigned to you. Priority: "
                                 + task.getPriority(),
                         "TASK", "Task", task.getTaskId());
+
+                // ── EMAIL: được giao / reassign task ──
+                User addedUserBulk = fetchUserById(uid);
+                taskEmailService.notifyTaskAssigned(task, addedUserBulk, changedByUser, isReassign);
             } else {
                 ok = false;
             }
@@ -516,7 +584,7 @@ public class TaskService {
 
         // Activity: task_reassigned if there were previous assignees, otherwise
         // task_assigned
-        String activityType = !current.isEmpty() ? "task_reassigned" : "task_assigned";
+        String activityType = isReassign ? "task_reassigned" : "task_assigned";
         User actor = changedByUserId > 0 ? userWithId(changedByUserId) : null;
         activityService.createActivity(buildTaskActivity(
                 activityType,
@@ -545,18 +613,23 @@ public class TaskService {
                 if (ok) {
                     count++;
 
-                    // Activity: task_overdue (Scenario 9) – include related for CRM timeline
+                    // Activity: task_overdue (Scenario 9)
                     activityService.createActivity(buildTaskActivity(
                             "task_overdue",
                             "Task overdue: " + nullSafe(task.getTitle()),
                             "Due date was " + str(task.getDueDate()),
                             task.getTaskId(), task.getRelatedType(), task.getRelatedId(), null));
 
-                    // Notify assignees
+                    List<User> assigneeUsers = assigneesAsUsers(task);
+
+                    // In-app notification
                     notifyAssignees(task, "Task Overdue",
                             "Task \"" + nullSafe(task.getTitle()) + "\" is overdue (due: " + str(task.getDueDate())
                                     + ").",
                             task.getTaskId());
+
+                    // ── EMAIL: cảnh báo overdue ──
+                    taskEmailService.notifyTaskOverdue(task, assigneeUsers);
                 }
             }
         } catch (Exception e) {
@@ -634,12 +707,20 @@ public class TaskService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // EMAIL SERVICE ACCESSOR – cho phép controller dùng trực tiếp khi cần
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Trả về TaskEmailService để controller có thể gọi trực tiếp nếu cần. */
+    public TaskEmailService getEmailService() {
+        return taskEmailService;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // PRIVATE HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * Build a minimal Activity for a task event.
-     * entity_type is always "task"; entity_id is taskId.
      */
     private Activity buildTaskActivity(String activityType,
             String subject,
@@ -653,7 +734,6 @@ public class TaskService {
         a.setSubject(subject);
         a.setDescription(description);
         a.setActivityDate(LocalDateTime.now());
-        // Use related_type/related_id - entity_type/entity_id columns don't exist
         a.setRelatedType(relatedType);
         a.setRelatedId(relatedId);
         a.setCreatedBy(actor);
@@ -663,7 +743,6 @@ public class TaskService {
 
     /**
      * Maps a status transition to the appropriate activity_type.
-     * Falls back to "task_updated" for generic edits with no clear status change.
      */
     private String resolveStatusActivityType(String oldStatus, String newStatus) {
         if (newStatus == null)
@@ -671,9 +750,7 @@ public class TaskService {
         return switch (newStatus.trim()) {
             case "In Progress" -> "task_started";
             case "Done" -> "task_completed";
-            case "Reopened",
-                    "Pending" ->
-                "task_reopened";
+            case "Reopened", "Pending" -> "task_reopened";
             case "Cancelled" -> "task_cancelled";
             case "Overdue" -> "task_overdue";
             default -> "task_updated";
@@ -715,15 +792,11 @@ public class TaskService {
     /**
      * INSTANT: Check if task is overdue and notify immediately.
      * Called right after create/update to avoid scheduler delay.
-     * Only notifies if task is actually overdue and not already in final state.
      */
     private void checkAndNotifyOverdue(Task task) {
-        if (task == null)
-            return;
-        if (task.getDueDate() == null)
+        if (task == null || task.getDueDate() == null)
             return;
 
-        // Only process if task is overdue and not in final state
         String status = task.getStatus();
         if (status == null)
             return;
@@ -731,25 +804,26 @@ public class TaskService {
                 || "Overdue".equalsIgnoreCase(status))
             return;
 
-        // Check if overdue
         if (task.getDueDate().isBefore(LocalDateTime.now())) {
-            // Mark as overdue in DB
             boolean marked = taskDAO.markOverdue(task.getTaskId());
             if (marked) {
-                // Update local task status
                 task.setStatus("Overdue");
 
-                // Create activity
                 activityService.createActivity(buildTaskActivity(
                         "task_overdue",
                         "Task overdue: " + task.getTitle(),
                         "Due date was " + task.getDueDate(),
                         task.getTaskId(), task.getRelatedType(), task.getRelatedId(), null));
 
-                // Notify assignees immediately
+                List<User> assigneeUsers = assigneesAsUsers(task);
+
+                // In-app
                 notifyAssignees(task, "Task Overdue",
                         "Task \"" + task.getTitle() + "\" is overdue (due: " + task.getDueDate() + ").",
                         task.getTaskId());
+
+                // ── EMAIL: overdue alert ──
+                taskEmailService.notifyTaskOverdue(task, assigneeUsers);
             }
         }
     }
@@ -766,12 +840,49 @@ public class TaskService {
     }
 
     /**
+     * Chuyển danh sách TaskAssignee → danh sách User (lọc null).
+     * Dùng để truyền vào TaskEmailService.
+     */
+    private List<User> assigneesAsUsers(Task task) {
+        if (task == null || task.getAssignees() == null)
+            return Collections.emptyList();
+        return task.getAssignees().stream()
+                .map(TaskAssignee::getUser)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy User theo userId qua UserDAO.
+     * Trả về null nếu không tìm thấy hoặc lỗi – TaskEmailService xử lý null an
+     * toàn.
+     */
+    private User fetchUserById(int userId) {
+        try {
+            return new UserDAO().getUserById(userId);
+        } catch (Exception e) {
+            // Không ảnh hưởng luồng chính nếu lookup thất bại
+            return null;
+        }
+    }
+
+    /**
      * Lightweight User shell used when we only have an ID (avoids a DB round-trip).
      */
     private User userWithId(int userId) {
         User u = new User();
         u.setUserId(userId);
         return u;
+    }
+
+    /**
+     * Tạo Task tạm với taskId và title – dùng khi không có task object đầy đủ.
+     */
+    private Task taskWithId(int taskId, String title) {
+        Task t = new Task();
+        t.setTaskId(taskId);
+        t.setTitle(title);
+        return t;
     }
 
     private String str(Object o) {

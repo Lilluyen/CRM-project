@@ -15,6 +15,7 @@ import model.TaskComment;
 import model.User;
 import service.ActivityService;
 import service.NotificationService;
+import service.TaskEmailService;
 import service.TaskService;
 import util.DBContext;
 
@@ -23,6 +24,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,30 +32,34 @@ import java.util.logging.Logger;
 /**
  * REST API for Task Work Items (Task_Comments).
  *
- * GET    /api/task-comments?taskId={id}        → list work items
- * POST   /api/task-comments                     → add work item (JSON)
- * PATCH  /api/task-comments?id={id}&done=true  → toggle complete
- * DELETE /api/task-comments?id={id}            → soft-delete
+ * GET /api/task-comments?taskId={id} → list work items
+ * POST /api/task-comments → add work item (JSON)
+ * PATCH /api/task-comments?id={id}&done=true → toggle complete
+ * DELETE /api/task-comments?id={id} → soft-delete
  *
  * POST body:
  * {
- *   "taskId"          : 10,
- *   "content"         : "Check with client",
- *   "assignedTo"      : 7,          // user_id being tagged (optional)
- *   "parentCommentId" : null        // optional – reply to a work item
+ * "taskId" : 10,
+ * "content" : "Check with client",
+ * "assignedTo" : 7, // user_id being tagged (optional)
+ * "parentCommentId" : null // optional – reply to a work item
  * }
+ *
+ * Email notifications (async, fire-and-forget):
+ * POST → email tagged user + task owner + assignees (excluding commenter)
+ * PUT → email task owner + assignees when work item is completed
  */
 @WebServlet("/api/task-comments")
 public class TaskCommentApiController extends HttpServlet {
 
-    private static final Logger LOG  = Logger.getLogger(TaskCommentApiController.class.getName());
-    private static final Gson   GSON = new GsonBuilder().serializeNulls().create();
+    private static final Logger LOG = Logger.getLogger(TaskCommentApiController.class.getName());
+    private static final Gson GSON = new GsonBuilder().serializeNulls().create();
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("HH:mm dd/MM/yy");
 
     static class WorkItemCreateReq {
         Integer taskId;
-        String  content;
-        Integer assignedTo;       // tagged supporter
+        String content;
+        Integer assignedTo; // tagged supporter
         Integer parentCommentId;
     }
 
@@ -64,16 +70,24 @@ public class TaskCommentApiController extends HttpServlet {
             throws ServletException, IOException {
 
         User user = sessionUser(req);
-        if (user == null) { writeJson(resp, 401, fail("Unauthorized")); return; }
+        if (user == null) {
+            writeJson(resp, 401, fail("Unauthorized"));
+            return;
+        }
 
         int taskId;
-        try { taskId = Integer.parseInt(req.getParameter("taskId")); }
-        catch (Exception e) { writeJson(resp, 400, fail("Missing taskId")); return; }
+        try {
+            taskId = Integer.parseInt(req.getParameter("taskId"));
+        } catch (Exception e) {
+            writeJson(resp, 400, fail("Missing taskId"));
+            return;
+        }
 
         try (Connection conn = DBContext.getConnection()) {
             model.Task task = new TaskService(conn).getTaskById(taskId);
             if (task == null) {
-                writeJson(resp, 404, fail("Task not found")); return;
+                writeJson(resp, 404, fail("Task not found"));
+                return;
             }
 
             List<TaskComment> items = new TaskCommentDAO(conn).findByTaskId(taskId);
@@ -85,7 +99,7 @@ public class TaskCommentApiController extends HttpServlet {
 
             // Also return computed progress
             int[] prog = new TaskCommentDAO(conn).countProgress(taskId);
-            int total     = prog[0];
+            int total = prog[0];
             int completed = prog[1];
             int progressPct = total > 0 ? (int) Math.round((double) completed / total * 100) : 0;
 
@@ -94,12 +108,12 @@ public class TaskCommentApiController extends HttpServlet {
             boolean canModify = !overdue || canModifyOverdueTask(user, task);
 
             JsonObject root = new JsonObject();
-            root.addProperty("count",       items.size());
-            root.addProperty("total",       total);
-            root.addProperty("completed",   completed);
+            root.addProperty("count", items.size());
+            root.addProperty("total", total);
+            root.addProperty("completed", completed);
             root.addProperty("progressPct", progressPct);
-            root.addProperty("isOverdue",   overdue);
-            root.addProperty("canModify",   canModify);
+            root.addProperty("isOverdue", overdue);
+            root.addProperty("canModify", canModify);
             root.add("items", arr);
             writeJson(resp, 200, GSON.toJson(root));
 
@@ -116,22 +130,33 @@ public class TaskCommentApiController extends HttpServlet {
             throws ServletException, IOException {
 
         User user = sessionUser(req);
-        if (user == null) { writeJson(resp, 401, fail("Unauthorized")); return; }
+        if (user == null) {
+            writeJson(resp, 401, fail("Unauthorized"));
+            return;
+        }
 
         WorkItemCreateReq body = readJson(req, WorkItemCreateReq.class);
-        if (body == null || body.taskId == null) { writeJson(resp, 400, fail("Missing taskId")); return; }
-        if (body.content == null || body.content.isBlank()) { writeJson(resp, 400, fail("Content required")); return; }
+        if (body == null || body.taskId == null) {
+            writeJson(resp, 400, fail("Missing taskId"));
+            return;
+        }
+        if (body.content == null || body.content.isBlank()) {
+            writeJson(resp, 400, fail("Content required"));
+            return;
+        }
 
         try (Connection conn = DBContext.getConnection()) {
             TaskService taskSvc = new TaskService(conn);
             model.Task task = taskSvc.getTaskById(body.taskId);
             if (task == null) {
-                writeJson(resp, 404, fail("Task not found")); return;
+                writeJson(resp, 404, fail("Task not found"));
+                return;
             }
 
             // Check if task is overdue - only manager or task owner can modify
             if (isTaskOverdue(task) && !canModifyOverdueTask(user, task)) {
-                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify.")); return;
+                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify."));
+                return;
             }
 
             TaskComment item = new TaskComment();
@@ -144,11 +169,17 @@ public class TaskCommentApiController extends HttpServlet {
             TaskCommentDAO dao = new TaskCommentDAO(conn);
             boolean ok = dao.insert(item);
             if (!ok || item.getCommentId() == null) {
-                writeJson(resp, 500, fail("Insert failed")); return;
+                writeJson(resp, 500, fail("Insert failed"));
+                return;
             }
 
             NotificationService notifSvc = new NotificationService(conn);
+            TaskEmailService emailSvc = taskSvc.getEmailService();
             String from = user.getFullName() != null ? user.getFullName() : user.getUsername();
+
+            // ── Tập hợp recipients để gửi email (loại trừ commenter) ──
+            // Dùng List<User> để có thể truyền cho emailSvc
+            List<User> emailRecipients = new ArrayList<>();
 
             // Notify the tagged/assigned user
             if (body.assignedTo != null && body.assignedTo != user.getUserId()) {
@@ -156,8 +187,11 @@ public class TaskCommentApiController extends HttpServlet {
                         body.assignedTo,
                         "You were tagged in a task",
                         from + " tagged you: " + truncate(body.content, 80),
-                        "TASK", "Task", body.taskId
-                );
+                        "TASK", "Task", body.taskId);
+                // Lấy User đầy đủ (cần email) từ task assignees hoặc task owner
+                User taggedUser = findUserInTask(task, body.assignedTo);
+                if (taggedUser != null)
+                    emailRecipients.add(taggedUser);
             }
 
             // Notify task owner (if not the commenter)
@@ -166,32 +200,49 @@ public class TaskCommentApiController extends HttpServlet {
                         task.getCreatedBy().getUserId(),
                         "New work item on your task",
                         from + " added a work item on \"" + truncate(task.getTitle(), 60) + "\"",
-                        "TASK", "Task", body.taskId
-                );
+                        "TASK", "Task", body.taskId);
+                // Thêm task owner vào email recipients (nếu chưa có)
+                if (task.getCreatedBy() != null
+                        && !containsUser(emailRecipients, task.getCreatedBy().getUserId())) {
+                    emailRecipients.add(task.getCreatedBy());
+                }
             }
 
             // Notify task assignees (except commenter and already-notified tagged user)
             if (task.getAssignees() != null) {
                 for (model.TaskAssignee ta : task.getAssignees()) {
-                    if (ta.getUser() == null) continue;
+                    if (ta.getUser() == null)
+                        continue;
                     int uid = ta.getUser().getUserId();
-                    if (uid == user.getUserId()) continue;
-                    if (body.assignedTo != null && uid == body.assignedTo) continue;
-                    if (task.getCreatedBy() != null && uid == task.getCreatedBy().getUserId()) continue;
+                    if (uid == user.getUserId())
+                        continue;
+                    if (body.assignedTo != null && uid == body.assignedTo)
+                        continue;
+                    if (task.getCreatedBy() != null && uid == task.getCreatedBy().getUserId())
+                        continue;
+
                     notifSvc.createForUser(uid,
                             "New work item on task",
                             from + " added a work item on \"" + truncate(task.getTitle(), 60) + "\"",
                             "TASK", "Task", body.taskId);
+
+                    // Thêm vào email recipients
+                    if (!containsUser(emailRecipients, uid)) {
+                        emailRecipients.add(ta.getUser());
+                    }
                 }
             }
 
-            // Log activity for task comment (Scenario 6) – link to CRM entity timeline
+            // ── EMAIL: gửi thông báo work item mới (async) ──
+            if (!emailRecipients.isEmpty()) {
+                emailSvc.notifySubtaskCreated(task, item, user, emailRecipients);
+            }
+
+            // Log activity for task comment (Scenario 6)
             try {
                 Activity activity = new Activity();
                 activity.setSubject("New comment on task");
                 activity.setActivityType("task_comment");
-                // Link to CRM entity (Customer/Lead) if task has related entity
-                // Also set related_type/related_id to 'task' for task timeline
                 if (task.getRelatedType() != null && task.getRelatedId() != null) {
                     activity.setRelatedType(task.getRelatedType());
                     activity.setRelatedId(task.getRelatedId());
@@ -204,7 +255,6 @@ public class TaskCommentApiController extends HttpServlet {
                 activity.setActivityDate(java.time.LocalDateTime.now());
                 new ActivityService(conn).createActivity(activity);
             } catch (Exception e) {
-                // Log failure should not fail the whole request
                 Logger.getLogger(TaskCommentApiController.class.getName())
                         .log(Level.WARNING, "Failed to log activity for task comment", e);
             }
@@ -217,8 +267,8 @@ public class TaskCommentApiController extends HttpServlet {
             taskSvc.updateProgress(body.taskId, pct, user.getUserId());
 
             JsonObject res = new JsonObject();
-            res.addProperty("success",     true);
-            res.addProperty("commentId",   item.getCommentId());
+            res.addProperty("success", true);
+            res.addProperty("commentId", item.getCommentId());
             res.addProperty("progressPct", pct);
             writeJson(resp, 200, GSON.toJson(res));
 
@@ -228,43 +278,55 @@ public class TaskCommentApiController extends HttpServlet {
         }
     }
 
-    // ── PATCH – toggle complete ───────────────────────────────────────────────
+    // ── PUT – toggle complete ─────────────────────────────────────────────────
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         User user = sessionUser(req);
-        if (user == null) { writeJson(resp, 401, fail("Unauthorized")); return; }
+        if (user == null) {
+            writeJson(resp, 401, fail("Unauthorized"));
+            return;
+        }
 
         int commentId;
-        try { commentId = Integer.parseInt(req.getParameter("id")); }
-        catch (Exception e) { writeJson(resp, 400, fail("Missing id")); return; }
+        try {
+            commentId = Integer.parseInt(req.getParameter("id"));
+        } catch (Exception e) {
+            writeJson(resp, 400, fail("Missing id"));
+            return;
+        }
 
         String doneStr = req.getParameter("done");
-        boolean done   = "true".equalsIgnoreCase(doneStr) || "1".equals(doneStr);
+        boolean done = "true".equalsIgnoreCase(doneStr) || "1".equals(doneStr);
 
         try (Connection conn = DBContext.getConnection()) {
             TaskCommentDAO dao = new TaskCommentDAO(conn);
             TaskComment existing = dao.findById(commentId);
 
             if (existing == null || existing.isDeleted()) {
-                writeJson(resp, 404, fail("Work item not found")); return;
+                writeJson(resp, 404, fail("Work item not found"));
+                return;
             }
 
             // Check if task is overdue - only manager or task owner can modify
             TaskService taskSvcPut = new TaskService(conn);
             model.Task taskPut = taskSvcPut.getTaskById(existing.getTaskId());
             if (taskPut != null && isTaskOverdue(taskPut) && !canModifyOverdueTask(user, taskPut)) {
-                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify.")); return;
+                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify."));
+                return;
             }
 
             // Permission: the assigned user OR creator OR manager can complete
-            boolean canComplete = existing.getCreatedBy()== user.getUserId()
+            boolean canComplete = existing.getCreatedBy() == user.getUserId()
                     || (existing.getAssignedTo() != null && existing.getAssignedTo() == user.getUserId())
                     || isManagerOrAdmin(user);
 
-            if (!canComplete) { writeJson(resp, 403, fail("Forbidden")); return; }
+            if (!canComplete) {
+                writeJson(resp, 403, fail("Forbidden"));
+                return;
+            }
 
             boolean ok = dao.setCompleted(commentId, done);
 
@@ -274,8 +336,12 @@ public class TaskCommentApiController extends HttpServlet {
                 model.Task task = taskSvc.getTaskById(existing.getTaskId());
                 if (task != null) {
                     NotificationService notifSvc = new NotificationService(conn);
+                    TaskEmailService emailSvc = taskSvc.getEmailService();
                     String from = user.getFullName() != null ? user.getFullName() : user.getUsername();
                     String action = "completed a work item on";
+
+                    // ── Tập hợp recipients cho email ──
+                    List<User> emailRecipients = new ArrayList<>();
 
                     // Notify task owner
                     if (task.getCreatedBy() != null && task.getCreatedBy().getUserId() != user.getUserId()) {
@@ -283,19 +349,35 @@ public class TaskCommentApiController extends HttpServlet {
                                 "Work item completed",
                                 from + " " + action + " \"" + truncate(task.getTitle(), 50) + "\"",
                                 "TASK", "Task", existing.getTaskId());
+
+                        emailRecipients.add(task.getCreatedBy());
                     }
+
                     // Notify task assignees
                     if (task.getAssignees() != null) {
                         for (model.TaskAssignee ta : task.getAssignees()) {
-                            if (ta.getUser() == null) continue;
+                            if (ta.getUser() == null)
+                                continue;
                             int uid = ta.getUser().getUserId();
-                            if (uid == user.getUserId()) continue;
-                            if (task.getCreatedBy() != null && uid == task.getCreatedBy().getUserId()) continue;
+                            if (uid == user.getUserId())
+                                continue;
+                            if (task.getCreatedBy() != null && uid == task.getCreatedBy().getUserId())
+                                continue;
+
                             notifSvc.createForUser(uid,
                                     "Work item completed",
                                     from + " " + action + " \"" + truncate(task.getTitle(), 50) + "\"",
                                     "TASK", "Task", existing.getTaskId());
+
+                            if (!containsUser(emailRecipients, uid)) {
+                                emailRecipients.add(ta.getUser());
+                            }
                         }
+                    }
+
+                    // ── EMAIL: thông báo work item hoàn thành (async) ──
+                    if (!emailRecipients.isEmpty()) {
+                        emailSvc.notifySubtaskCompleted(task, existing, user, emailRecipients);
                     }
                 }
             }
@@ -308,10 +390,10 @@ public class TaskCommentApiController extends HttpServlet {
             new TaskService(conn).updateProgress(existing.getTaskId(), pct, user.getUserId());
 
             JsonObject res = new JsonObject();
-            res.addProperty("success",     ok);
+            res.addProperty("success", ok);
             res.addProperty("progressPct", pct);
-            res.addProperty("total",       prog[0]);
-            res.addProperty("completed",   prog[1]);
+            res.addProperty("total", prog[0]);
+            res.addProperty("completed", prog[1]);
             writeJson(resp, ok ? 200 : 500, GSON.toJson(res));
 
         } catch (SQLException ex) {
@@ -327,30 +409,40 @@ public class TaskCommentApiController extends HttpServlet {
             throws ServletException, IOException {
 
         User user = sessionUser(req);
-        if (user == null) { writeJson(resp, 401, fail("Unauthorized")); return; }
+        if (user == null) {
+            writeJson(resp, 401, fail("Unauthorized"));
+            return;
+        }
 
         int commentId;
-        try { commentId = Integer.parseInt(req.getParameter("id")); }
-        catch (Exception e) { writeJson(resp, 400, fail("Missing id")); return; }
+        try {
+            commentId = Integer.parseInt(req.getParameter("id"));
+        } catch (Exception e) {
+            writeJson(resp, 400, fail("Missing id"));
+            return;
+        }
 
         try (Connection conn = DBContext.getConnection()) {
             TaskCommentDAO dao = new TaskCommentDAO(conn);
             TaskComment existing = dao.findById(commentId);
 
             if (existing == null || existing.isDeleted()) {
-                writeJson(resp, 404, fail("Not found")); return;
+                writeJson(resp, 404, fail("Not found"));
+                return;
             }
 
             // Check if task is overdue - only manager or task owner can modify
             TaskService taskSvcDel = new TaskService(conn);
             model.Task taskDel = taskSvcDel.getTaskById(existing.getTaskId());
             if (taskDel != null && isTaskOverdue(taskDel) && !canModifyOverdueTask(user, taskDel)) {
-                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify.")); return;
+                writeJson(resp, 403, fail("Task is overdue. Only manager or task owner can modify."));
+                return;
             }
 
-            boolean isOwner = existing.getCreatedBy()== user.getUserId();
+            boolean isOwner = existing.getCreatedBy() == user.getUserId();
             if (!isOwner && !isManagerOrAdmin(user)) {
-                writeJson(resp, 403, fail("Forbidden")); return;
+                writeJson(resp, 403, fail("Forbidden"));
+                return;
             }
 
             boolean ok = dao.softDelete(commentId);
@@ -362,7 +454,7 @@ public class TaskCommentApiController extends HttpServlet {
             new TaskService(conn).updateProgress(existing.getTaskId(), pct, user.getUserId());
 
             JsonObject res = new JsonObject();
-            res.addProperty("success",     ok);
+            res.addProperty("success", ok);
             res.addProperty("progressPct", pct);
             writeJson(resp, ok ? 200 : 500, GSON.toJson(res));
 
@@ -376,51 +468,77 @@ public class TaskCommentApiController extends HttpServlet {
 
     private static JsonObject toJson(TaskComment c) {
         JsonObject o = new JsonObject();
-        o.addProperty("commentId",       c.getCommentId());
-        o.addProperty("taskId",          c.getTaskId());
-        o.addProperty("userId",          c.getCreatedBy());
-        o.addProperty("authorName",      c.getAuthorName());
-        o.addProperty("content",         c.getContent());
-        o.addProperty("assignedTo",      c.getAssignedTo());
-        o.addProperty("assignedName",    c.getAssignedName());
-        o.addProperty("isCompleted",     c.isCompleted());
-        o.addProperty("completedAt",     c.getCompletedAt() != null ? c.getCompletedAt().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yy")) : null);
+        o.addProperty("commentId", c.getCommentId());
+        o.addProperty("taskId", c.getTaskId());
+        o.addProperty("userId", c.getCreatedBy());
+        o.addProperty("authorName", c.getAuthorName());
+        o.addProperty("content", c.getContent());
+        o.addProperty("assignedTo", c.getAssignedTo());
+        o.addProperty("assignedName", c.getAssignedName());
+        o.addProperty("isCompleted", c.isCompleted());
+        o.addProperty("completedAt", c.getCompletedAt() != null
+                ? c.getCompletedAt().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yy"))
+                : null);
         o.addProperty("parentCommentId", c.getParentCommentId());
-        o.addProperty("createdAt",       c.getCreatedAt()   != null ? c.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yy"))   : "");
+        o.addProperty("createdAt", c.getCreatedAt() != null
+                ? c.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yy"))
+                : "");
         return o;
     }
 
+    /**
+     * Tìm User object từ task (owner hoặc assignees) theo userId.
+     * Dùng để lấy User có email cho email notification.
+     */
+    private static User findUserInTask(model.Task task, int userId) {
+        if (task == null)
+            return null;
+        if (task.getCreatedBy() != null && task.getCreatedBy().getUserId() == userId) {
+            return task.getCreatedBy();
+        }
+        if (task.getAssignees() != null) {
+            for (model.TaskAssignee ta : task.getAssignees()) {
+                if (ta.getUser() != null && ta.getUser().getUserId() == userId) {
+                    return ta.getUser();
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Kiểm tra xem userId đã có trong danh sách chưa. */
+    private static boolean containsUser(List<User> users, int userId) {
+        return users.stream().anyMatch(u -> u.getUserId() == userId);
+    }
+
     private static boolean isManagerOrAdmin(User user) {
-        if (user == null || user.getRole() == null) return false;
+        if (user == null || user.getRole() == null)
+            return false;
         int rid = user.getRole().getRoleId();
         return rid == 1 || rid == 5
                 || "ADMIN".equalsIgnoreCase(user.getRole().getRoleName())
                 || "MANAGER".equalsIgnoreCase(user.getRole().getRoleName());
     }
 
-    /**
-     * Check if a task is in overdue status.
-     */
     private static boolean isTaskOverdue(model.Task task) {
-        if (task == null || task.getStatus() == null) return false;
+        if (task == null || task.getStatus() == null)
+            return false;
         return "OVERDUE".equalsIgnoreCase(task.getStatus());
     }
 
-    /**
-     * Check if user can modify an overdue task.
-     * Only manager/admin or the task owner can modify.
-     */
     private static boolean canModifyOverdueTask(User user, model.Task task) {
-        if (user == null || task == null) return false;
-        // Manager or Admin can modify
-        if (isManagerOrAdmin(user)) return true;
-        // Task owner can modify
-        if (task.getCreatedBy() != null && task.getCreatedBy().getUserId() == user.getUserId()) return true;
+        if (user == null || task == null)
+            return false;
+        if (isManagerOrAdmin(user))
+            return true;
+        if (task.getCreatedBy() != null && task.getCreatedBy().getUserId() == user.getUserId())
+            return true;
         return false;
     }
 
     private static String truncate(String s, int max) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         return s.length() <= max ? s : s.substring(0, max) + "…";
     }
 
@@ -429,7 +547,11 @@ public class TaskCommentApiController extends HttpServlet {
     }
 
     private static <T> T readJson(HttpServletRequest req, Class<T> cls) {
-        try { return GSON.fromJson(req.getReader(), cls); } catch (Exception e) { return null; }
+        try {
+            return GSON.fromJson(req.getReader(), cls);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static String fail(String msg) {
@@ -442,6 +564,8 @@ public class TaskCommentApiController extends HttpServlet {
     private static void writeJson(HttpServletResponse resp, int status, String json) throws IOException {
         resp.setStatus(status);
         resp.setContentType("application/json;charset=UTF-8");
-        try (PrintWriter w = resp.getWriter()) { w.write(json); }
+        try (PrintWriter w = resp.getWriter()) {
+            w.write(json);
+        }
     }
 }
