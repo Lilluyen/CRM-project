@@ -613,4 +613,20 @@ public class CustomerService {
             return customerQueryDAO.searchForMerge(conn, keyword, excludeId, limit);
         }
     }
+
+    public int countDealByCusId(int id) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            DealDAO dealDAO = new DealDAO(conn);
+            int count = dealDAO.countDealByCusId(id);
+            return count;
+        }
+    }
+
+    public List<Deal> getListDealsByCusId(int id) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            DealDAO dealDAO = new DealDAO(conn);
+            return dealDAO.getListDealsByCusId(id);
+
+        }
+    }
 }
