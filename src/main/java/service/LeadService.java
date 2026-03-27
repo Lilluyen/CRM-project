@@ -39,10 +39,10 @@ public class LeadService {
      */
     public int createLead(Lead lead, boolean autoScore) {
         if (lead.getFullName() == null || lead.getFullName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Họ tên không được để trống.");
+            throw new IllegalArgumentException("Full name is required.");
         }
         if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email không được để trống.");
+            throw new IllegalArgumentException("Email is required.");
         }
         validateLeadUniqueness(lead);
 
@@ -70,13 +70,13 @@ public class LeadService {
      */
     public boolean updateLead(Lead lead, boolean autoScore) {
         if (lead.getLeadId() <= 0) {
-            throw new IllegalArgumentException("Lead ID không hợp lệ.");
+            throw new IllegalArgumentException("Invalid Lead ID.");
         }
         if (lead.getFullName() == null || lead.getFullName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Họ tên không được để trống.");
+            throw new IllegalArgumentException("Full name is required.");
         }
         if (lead.getEmail() == null || lead.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email không được để trống.");
+            throw new IllegalArgumentException("Email is required.");
         }
 
         // Restore campaignId gốc từ DB nếu form không gửi lên

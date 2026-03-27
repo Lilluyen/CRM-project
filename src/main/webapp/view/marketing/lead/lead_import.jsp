@@ -25,21 +25,21 @@ prefix="c" %>
         href="${pageContext.request.contextPath}/marketing/leads"
         class="btn btn-outline-secondary"
       >
-        <i class="fas fa-arrow-left me-1"></i> Quay lại
+        <i class="fas fa-arrow-left me-1"></i> Back to Leads
       </a>
     </div>
 
     <!-- Upload Card -->
     <div class="import-card mb-4">
       <h5 class="mb-4">
-        <i class="fas fa-file-excel me-2"></i> Tải file Excel
+        <i class="fas fa-file-excel me-2"></i> Upload Excel File
       </h5>
 
       <!-- Upload Zone -->
       <div class="upload-zone" id="uploadZone">
         <i class="fas fa-cloud-upload-alt"></i>
-        <h6>Kéo thả file hoặc click để chọn</h6>
-        <p class="text-muted small">Hỗ trợ file .xlsx | Tối đa 5MB</p>
+        <h6>Drag & drop file or click to select</h6>
+        <p class="text-muted small">Supports .xlsx files | Max 5MB</p>
         <input
           type="file"
           id="fileInput"
@@ -51,14 +51,14 @@ prefix="c" %>
       <!-- Form -->
       <form id="importForm" class="mt-4">
         <div class="form-section">
-          <h6><i class="fas fa-cog me-2"></i> Cấu hình Import</h6>
+          <h6><i class="fas fa-cog me-2"></i> Import Configuration</h6>
 
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label required">Nguồn Lead</label>
+                <label class="form-label required">Lead Source</label>
                 <select class="form-select" id="source" name="source" required>
-                  <option value="">-- Chọn nguồn --</option>
+                  <option value="">-- Select Source --</option>
                   <option value="Seminar">Seminar</option>
                   <option value="Facebook">Facebook</option>
                   <option value="Website">Website</option>
@@ -70,7 +70,7 @@ prefix="c" %>
               <div class="mb-3">
                 <label class="form-label required">Campaign</label>
                 <select class="form-select" id="campaignId" name="campaignId" required>
-                  <option value="" disabled selected hidden>-- Hãy chọn campaign --</option>
+                  <option value="" disabled selected hidden>-- Please select a campaign --</option>
                   <c:forEach var="campaign" items="${campaigns}">
                     <c:if test="${not empty campaign.status && campaign.status == 'ACTIVE'}">
                       <option value="${campaign.campaignId}">
@@ -93,10 +93,10 @@ prefix="c" %>
                     <div class="form-check">
                       <input class="form-check-input" type="checkbox" id="selectAllSale" />
                       <label class="form-check-label fw-bold" for="selectAllSale">
-                        Chọn tất cả
+                        Select All
                       </label>
                     </div>
-                    <input type="text" class="form-control form-control-sm assign-search" id="searchSale" placeholder="Tìm kiếm sale..." />
+                    <input type="text" class="form-control form-control-sm assign-search" id="searchSale" placeholder="Search sale..." />
                   </div>
                   <div class="assign-to-list" id="saleList">
                     <c:forEach var="staff" items="${saleStaffs}">
@@ -109,7 +109,7 @@ prefix="c" %>
                       </div>
                     </c:forEach>
                     <c:if test="${empty saleStaffs}">
-                      <p class="text-muted small mb-0">Không có sale staff nào.</p>
+                      <p class="text-muted small mb-0">No sale staff available.</p>
                     </c:if>
                   </div>
                 </div>
@@ -126,11 +126,11 @@ prefix="c" %>
             <div class="stats-grid">
               <div class="stat-item">
                 <div class="stat-number" id="importedCount">0</div>
-                <div class="stat-label">Import thành công</div>
+                <div class="stat-label">Import Successful</div>
               </div>
               <div class="stat-item">
                 <div class="stat-number" id="failedCount">0</div>
-                <div class="stat-label">Import thất bại</div>
+                <div class="stat-label">Import Failed</div>
               </div>
             </div>
 
@@ -148,7 +148,7 @@ prefix="c" %>
             href="${pageContext.request.contextPath}/marketing/leads"
             class="btn btn-secondary ms-2"
           >
-            <i class="fas fa-arrow-left me-1"></i> Quay lại
+            <i class="fas fa-arrow-left me-1"></i> Back to List
           </a>
         </div>
       </form>
@@ -156,17 +156,17 @@ prefix="c" %>
 
     <!-- Template Info Card -->
     <div class="import-card">
-      <h5><i class="fas fa-info-circle me-2"></i> Hướng dẫn Format File</h5>
-      <p>File Excel phải có các cột sau (theo thứ tự):</p>
+      <h5><i class="fas fa-info-circle me-2"></i> Import File Format Guide</h5>
+      <p>The Excel file must have the following columns (in order):</p>
       <div class="table-responsive">
         <table class="table table-sm table-bordered">
           <thead class="table-light">
             <tr>
               <th>STT</th>
-              <th>Tên cột</th>
-              <th>Kiểu dữ liệu</th>
-              <th>Bắt buộc</th>
-              <th>Ví dụ</th>
+              <th>Column Name</th>
+              <th>Data Type</th>
+              <th>Required</th>
+              <th>Example</th>
             </tr>
           </thead>
           <tbody>
@@ -174,28 +174,28 @@ prefix="c" %>
               <td>1</td>
               <td>fullName</td>
               <td>Text</td>
-              <td><span class="badge bg-danger">Có</span></td>
-              <td>Nguyễn Văn A</td>
+              <td><span class="badge bg-danger">Yes</span></td>
+              <td>John Doe</td>
             </tr>
             <tr>
               <td>2</td>
               <td>email</td>
               <td>Email</td>
-              <td><span class="badge bg-danger">Có</span></td>
-              <td>nguyenvana@company.com</td>
+              <td><span class="badge bg-danger">Yes</span></td>
+              <td>john.doe@company.com</td>
             </tr>
             <tr>
               <td>3</td>
               <td>phone</td>
-              <td>Text (9-15 số)</td>
-              <td><span class="badge bg-success">Không</span></td>
+              <td>Text (9-15 numbers)</td>
+              <td><span class="badge bg-success">No</span></td>
               <td>0901234567</td>
             </tr>
             <tr>
               <td>4</td>
               <td>source</td>
               <td>Text</td>
-              <td><span class="badge bg-success">Không</span></td>
+              <td><span class="badge bg-success">No</span></td>
               <td>EVENT</td>
             </tr>
           </tbody>
@@ -204,16 +204,16 @@ prefix="c" %>
 
       <div class="alert alert-info mt-3">
         <i class="fas fa-lightbulb me-1"></i>
-        <strong>Lưu ý:</strong> Mỗi lead sẽ được tự động chấm điểm (0-100) dựa
-        trên:
+        <strong>Notes:</strong> Each lead will be automatically scored (0-100) based
+        on:
         <ul class="mb-0 mt-2">
-          <li>Email công ty: +20, Email cá nhân: +20</li>
-          <li>Số điện thoại hợp lệ: +20</li>
+          <li>Company Email: +20, Personal Email: +20</li>
+          <li>Valid Phone Number: +20</li>
           <li>
             Source (Event: +30, Referral: +25, Website: +15, Social: +10, Other:
             +5)
           </li>
-          <li>Phân loại: Hot (≥70), Warm (40-69), Cold (&lt;40)</li>
+          <li>Classification: Hot (≥70), Warm (40-69), Cold (&lt;40)</li>
         </ul>
       </div>
     </div>
@@ -265,7 +265,7 @@ prefix="c" %>
     e.preventDefault();
 
     if (!fileInput.files.length) {
-      alert("Vui lòng chọn file");
+      alert("Please select a file to import.");
       return;
     }
 
@@ -285,7 +285,7 @@ prefix="c" %>
 
     submitBtn.disabled = true;
     submitBtn.innerHTML =
-      '<span class="spinner-border spinner-border-sm me-2"></span>Đang import...';
+      '<span class="spinner-border spinner-border-sm me-2"></span>Importing...';
 
     try {
       const response = await fetch(
@@ -299,7 +299,7 @@ prefix="c" %>
       const result = await response.json();
       showResult(result);
     } catch (error) {
-      alert("Lỗi: " + error.message);
+      alert("Error: " + error.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Import';
@@ -317,11 +317,11 @@ prefix="c" %>
 
     if (result.success) {
       resultTitle.innerHTML =
-        '<i class="fas fa-check-circle" style="color: #28a745;"></i> Import Thành công!';
+        '<i class="fas fa-check-circle" style="color: #28a745;"></i> Import Successful!';
       resultTitle.style.color = "#28a745";
     } else {
       resultTitle.innerHTML =
-        '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Import Thất bại!';
+        '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Import Failed!';
       resultTitle.style.color = "#dc3545";
     }
 
@@ -340,7 +340,7 @@ prefix="c" %>
       // Show duplicates prominently
       if (duplicateErrors.length > 0) {
         errorHtml += '<div class="alert alert-warning">';
-        errorHtml += '<strong><i class="fas fa-exclamation-triangle me-1"></i> Các lead bị trùng (đã tồn tại trong campaign này):</strong>';
+        errorHtml += '<strong><i class="fas fa-exclamation-triangle me-1"></i> Duplicate Leads (already exist in this campaign):</strong>';
         errorHtml += '<ul class="mb-0 mt-2" style="max-height: 200px; overflow-y: auto;">';
         duplicateErrors.forEach(err => {
           errorHtml += '<li class="text-warning">' + err + '</li>';
@@ -351,7 +351,7 @@ prefix="c" %>
       // Show validation errors
       if (validationErrors.length > 0) {
         errorHtml += '<div class="alert alert-danger mt-2">';
-        errorHtml += '<strong><i class="fas fa-times-circle me-1"></i> Các lead có dữ liệu không hợp lệ:</strong>';
+        errorHtml += '<strong><i class="fas fa-times-circle me-1"></i> Invalid Leads:</strong>';
         errorHtml += '<ul class="mb-0 mt-2" style="max-height: 200px; overflow-y: auto;">';
         validationErrors.forEach(err => {
           errorHtml += '<li>' + err + '</li>';

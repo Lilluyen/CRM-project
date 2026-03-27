@@ -1,4 +1,4 @@
-package Mapper;
+package mapper;
 
 import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
@@ -45,7 +45,6 @@ public class CustomerMapper {
         customer.setUpdatedAt(LocalDateTime.now());
         return customer;
     }
-
 
     public static CustomerDetailDTO toDTO(Customer c) {
 

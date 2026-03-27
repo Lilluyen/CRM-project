@@ -12,18 +12,18 @@
             </div>
             <div>
                 <h4>Marketing Dashboard</h4>
-                <p class="md-subtitle">Tổng quan hiệu quả marketing</p>
+                <p class="md-subtitle">Marketing performance overview</p>
             </div>
         </div>
 
         <!-- Summary Cards Row 1: Leads -->
-        <p class="section-label"><i class="fas fa-user-plus"></i> Tổng quan Leads</p>
+        <p class="section-label"><i class="fas fa-user-plus"></i> Leads Overview</p>
         <div class="row g-3 mb-4">
             <div class="col-md-2">
                 <div class="stat-card stat-primary">
                     <div class="stat-icon"><i class="fas fa-users"></i></div>
                     <div class="stat-number">${totalLeads}</div>
-                    <div class="stat-label">Tổng Leads</div>
+                    <div class="stat-label">Total Leads</div>
                 </div>
             </div>
             <div class="col-md-2">
@@ -71,27 +71,27 @@
         </div>
 
         <!-- Summary Cards Row 2: Campaigns & Conversion -->
-        <p class="section-label"><i class="fas fa-bullhorn"></i> Tổng quan Campaigns</p>
+        <p class="section-label"><i class="fas fa-bullhorn"></i> Campaigns Overview</p>
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="stat-card stat-primary">
                     <div class="stat-icon"><i class="fas fa-bullhorn"></i></div>
                     <div class="stat-number">${totalCampaigns}</div>
-                    <div class="stat-label">Tổng Campaign</div>
+                    <div class="stat-label">Total Campaigns</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-success">
                     <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
                     <div class="stat-number">${activeCampaigns}</div>
-                    <div class="stat-label">Đang chạy</div>
+                    <div class="stat-label">Active Campaigns</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-info">
                     <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
                     <div class="stat-number">${planningCampaigns}</div>
-                    <div class="stat-label">Lên kế hoạch</div>
+                    <div class="stat-label">Planning Campaigns</div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -142,9 +142,9 @@
             <div class="col-md-6">
                 <div class="data-card card">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-fire text-danger me-2"></i>Campaign đang chạy</h5>
+                        <h5 class="mb-0"><i class="fas fa-fire text-danger me-2"></i>Top Active Campaigns</h5>
                         <a href="${pageContext.request.contextPath}/marketing/campaign?status=ACTIVE"
-                           class="md-card-action">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+                           class="md-card-action">View All <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="card-body p-0">
                         <c:choose>
@@ -153,10 +153,10 @@
                                     <table class="table mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Tên Campaign</th>
-                                                <th>Kênh</th>
-                                                <th>Ngân sách</th>
-                                                <th>Kết thúc</th>
+                                                <th>Campaign Name</th>
+                                                <th>Channel</th>
+                                                <th>Budget</th>
+                                                <th>End Date</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -183,7 +183,7 @@
                             <c:otherwise>
                                 <div class="empty-state">
                                     <div class="empty-icon"><i class="fas fa-bullhorn"></i></div>
-                                    <p>Chưa có campaign nào đang chạy</p>
+                                    <p>No active campaigns at the moment</p>
                                 </div>
                             </c:otherwise>
                         </c:choose>
@@ -195,9 +195,9 @@
             <div class="col-md-6">
                 <div class="data-card card">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-user-clock text-primary me-2"></i>Leads mới nhất</h5>
+                        <h5 class="mb-0"><i class="fas fa-user-clock text-primary me-2"></i>Recent Leads</h5>
                         <a href="${pageContext.request.contextPath}/marketing/leads"
-                           class="md-card-action">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+                           class="md-card-action">View All <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="card-body p-0">
                         <c:choose>
@@ -206,10 +206,10 @@
                                     <table class="table mb-0">
                                         <thead>
                                             <tr>
-                                                <th>Họ tên</th>
+                                                <th>Name</th>
                                                 <th>Email</th>
-                                                <th>Điểm</th>
-                                                <th>Trạng thái</th>
+                                                <th>Score</th>
+                                                <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -263,7 +263,7 @@
                             <c:otherwise>
                                 <div class="empty-state">
                                     <div class="empty-icon"><i class="fas fa-inbox"></i></div>
-                                    <p>Chưa có lead nào</p>
+                                    <p>No leads available</p>
                                 </div>
                             </c:otherwise>
                         </c:choose>
@@ -275,19 +275,19 @@
         <!-- Quick Actions -->
         <div class="quick-actions-card card">
             <div class="card-body">
-                <p class="qa-label"><i class="fas fa-bolt me-1"></i> Thao tác nhanh</p>
+                <p class="qa-label"><i class="fas fa-bolt me-1"></i> Quick Actions</p>
                 <div class="d-flex gap-2 flex-wrap">
                     <a href="${pageContext.request.contextPath}/marketing/campaign/form" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i> Tạo Campaign
+                        <i class="fas fa-plus me-1"></i> Create Campaign
                     </a>
                     <a href="${pageContext.request.contextPath}/marketing/leads/form" class="btn btn-success">
-                        <i class="fas fa-user-plus me-1"></i> Tạo Lead
+                        <i class="fas fa-user-plus me-1"></i> Create Lead
                     </a>
                     <a href="${pageContext.request.contextPath}/marketing/leads/import" class="btn btn-outline-primary">
                         <i class="fas fa-file-import me-1"></i> Import Leads
                     </a>
                     <a href="${pageContext.request.contextPath}/marketing/leads?status=QUALIFIED" class="btn btn-outline-success">
-                        <i class="fas fa-star me-1"></i> Xem Lead Qualified
+                        <i class="fas fa-star me-1"></i> View Qualified Leads
                     </a>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 package service;
 
-import Mapper.CustomerMapper;
+import mapper.CustomerMapper;
 import dao.*;
 import dto.*;
 import model.*;

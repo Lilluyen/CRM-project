@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Deal;
 import model.User;
 import util.DBContext;
-import util.CustomerActivityUtil;
+import util.DealActivityUtil;
 
 @WebServlet("/sale/deal/delete")
 public class DeleteDealController extends HttpServlet {
@@ -32,13 +32,13 @@ public class DeleteDealController extends HttpServlet {
 
             dealProductDAO.deleteDealItems(id);
             dealDAO.deleteDeal(id);
-            if (deal != null && deal.getCustomerId() != null && deal.getCustomerId() > 0) {
+            if (deal != null) {
                 User user = (User) request.getSession().getAttribute("user");
-                CustomerActivityUtil.logCustomerActivity(
+                DealActivityUtil.logDealDeleted(
+                        id,
+                        deal.getDealName(),
                         deal.getCustomerId(),
-                        "UPDATE",
-                        "Deal deleted",
-                        "Deleted deal #" + id + " (" + deal.getDealName() + ").",
+                        deal.getLeadId(),
                         user);
             }
 
