@@ -8,14 +8,20 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.CustomerMergeRequest;
+import model.Deal;
+import model.CustomerContact;
+import model.CustomerNote;
 import model.StyleTag;
+import model.Task;
 import service.CustomerService;
 import service.MergeRequestService;
+import util.DBContext;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.List;
 
-@WebServlet(name = "CustomerDetailController", urlPatterns = {"/customers/detail"})
+@WebServlet(name = "CustomerDetailController", urlPatterns = { "/customers/detail" })
 public class CustomerDetailController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -59,19 +65,37 @@ public class CustomerDetailController extends HttpServlet {
             // GỌI SERVICE
             CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
             List<StyleTag> styleTags = customerService.getListStyleTags();
+            int totalDeals = customerService.countDealByCusId(customerId);
+            List<Deal> deals = customerService.getListDealsByCusId(customerId);
             if (customerDetail == null) {
                 response.sendRedirect(request.getContextPath() + "/customers");
                 return;
             }
 
             // Trong CustomerDetailController.doGet() — thêm 2 dòng:
-            List<CustomerMergeRequest> mergeRequests =
-                    mergeRequestService.getByCustomerId(customerId);
+            List<CustomerMergeRequest> mergeRequests = mergeRequestService.getByCustomerId(customerId);
             request.setAttribute("mergeRequests", mergeRequests);
 
-            // 🔥 Set data cho view
+            // Customer report data (contacts, notes, completed tasks)
+            try (Connection conn = DBContext.getConnection()) {
+                List<CustomerContact> contacts = contactDAO.getByCustomerId(conn, customerId);
+                List<CustomerNote> notes = noteDAO.getByCustomerId(conn, customerId);
+                TaskDAO taskDAO = new TaskDAO(conn);
+                List<Task> completedTasks = taskDAO.findCompletedByRelated("customer", customerId, 20);
+
+                request.setAttribute("contacts", contacts);
+                request.setAttribute("notes", notes);
+                request.setAttribute("completedTasks", completedTasks);
+            }
+
+            String activeTab = request.getParameter("tab");
+            request.setAttribute("activeTab", activeTab != null ? activeTab : "growth");
+
+            // Set data cho view
             request.setAttribute("customerDetail", customerDetail);
             request.setAttribute("allStyleTags", styleTags);
+            request.setAttribute("totalDeals", totalDeals);
+            request.setAttribute("deals", deals);
 
             // Layout attributes
             request.setAttribute("pageTitle", "Customer Detail | Clothes CRM");
@@ -96,7 +120,41 @@ public class CustomerDetailController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.sendRedirect(request.getContextPath() + "/customers");
+        String action = request.getParameter("action");
+        if ("addNote".equalsIgnoreCase(action)) {
+            String customerIdRaw = request.getParameter("customerId");
+            String noteText = request.getParameter("note");
+
+            int customerId;
+            try {
+                customerId = Integer.parseInt(customerIdRaw);
+            } catch (Exception e) {
+                response.sendRedirect(request.getContextPath() + "/customers");
+                return;
+            }
+
+            if (noteText != null) noteText = noteText.trim();
+            if (noteText == null || noteText.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/customers/detail?customerId=" + customerId + "&tab=notes");
+                return;
+            }
+
+            Integer userId = 0;
+            Object u = request.getSession().getAttribute("user");
+            if (u instanceof model.User user) {
+                userId = user.getUserId();
+            }
+
+            try (Connection conn = DBContext.getConnection()) {
+                noteDAO.insertCustomerNote(conn, new CustomerNote(customerId, noteText, userId));
+            } catch (Exception e) {
+                log("Error while adding customer note", e);
+            }
+
+            response.sendRedirect(request.getContextPath() + "/customers/detail?customerId=" + customerId + "&tab=notes");
+            return;
+        }
+
         response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 }

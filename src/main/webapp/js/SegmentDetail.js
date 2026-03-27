@@ -126,7 +126,7 @@ function changeInputType(fieldSelect) {
 
         newInput.style = "width: 110px";
 
-        // ✅ giữ lại value cũ
+        //  giữ lại value cũ
         if (oldValue) {
             const exists = Array.from(newInput.options)
                 .some(opt => opt.value === oldValue);

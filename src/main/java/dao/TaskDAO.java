@@ -16,19 +16,26 @@ import java.util.List;
  * TaskDAO – aligned with the CRM_System schema.
  *
  * Changes from previous version:
- *  1. Extracted TASK_BASE_SELECT constant – eliminates 4 copies of the same JOIN block.
- *  2. Unified appendTaskFilters() – single source of truth for WHERE clauses; fixes the
- *     previous bug where getTasksPaged filtered on start_date while countTasksFiltered
- *     filtered on due_date.  Both now use due_date consistently.
- *  3. appendTaskFilters uses EXISTS subquery for assignee – removes the implicit LEFT JOIN
- *     from countTasksFiltered and avoids phantom duplicates.
- *  4. getTasksPaged now calls appendTaskFilters (no more inline duplicate).
- *  5. resolveSortColumn() is a proper private helper (was commented-out dead code).
- *  6. deleteTask() now cascades to Task_Comments.
- *  7. findByAssigneePaged() + countByAssignee() replace the old unpaged findByAssignee().
- *  8. findOverdueTasks() + markOverdue() support the scheduler overdue scenario.
- *  9. getAllTasks() retained for small dropdowns only – its N+1 loadAssignees() call is
- *     intentional for that tiny use-case.
+ * 1. Extracted TASK_BASE_SELECT constant – eliminates 4 copies of the same JOIN
+ * block.
+ * 2. Unified appendTaskFilters() – single source of truth for WHERE clauses;
+ * fixes the
+ * previous bug where getTasksPaged filtered on start_date while
+ * countTasksFiltered
+ * filtered on due_date. Both now use due_date consistently.
+ * 3. appendTaskFilters uses EXISTS subquery for assignee – removes the implicit
+ * LEFT JOIN
+ * from countTasksFiltered and avoids phantom duplicates.
+ * 4. getTasksPaged now calls appendTaskFilters (no more inline duplicate).
+ * 5. resolveSortColumn() is a proper private helper (was commented-out dead
+ * code).
+ * 6. deleteTask() now cascades to Task_Comments.
+ * 7. findByAssigneePaged() + countByAssignee() replace the old unpaged
+ * findByAssignee().
+ * 8. findOverdueTasks() + markOverdue() support the scheduler overdue scenario.
+ * 9. getAllTasks() retained for small dropdowns only – its N+1 loadAssignees()
+ * call is
+ * intentional for that tiny use-case.
  */
 public class TaskDAO {
 
@@ -41,33 +48,34 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     // BASE SELECT – reused by all list/detail queries
     // ─────────────────────────────────────────────────────────────────────────
-    private static final String TASK_BASE_SELECT =
-        "SELECT t.*, "
-      + "u.user_id AS u_id, u.full_name, u.email, u.username, "
-      + "r.role_id, r.role_name "
-      + "FROM Tasks t "
-      + "LEFT JOIN Users u ON t.created_by = u.user_id "
-      + "LEFT JOIN Roles r ON u.role_id = r.role_id ";
+    private static final String TASK_BASE_SELECT = "SELECT t.*, "
+            + "u.user_id AS u_id, u.full_name, u.email, u.username, "
+            + "r.role_id, r.role_name "
+            + "FROM Tasks t "
+            + "LEFT JOIN Users u ON t.created_by = u.user_id "
+            + "LEFT JOIN Roles r ON u.role_id = r.role_id ";
 
     // ─────────────────────────────────────────────────────────────────────────
     // 1. CREATE
     // ─────────────────────────────────────────────────────────────────────────
     public boolean createTask(Task task) {
-        if (task == null || task.getTitle() == null || task.getTitle().isBlank()) return false;
+        if (task == null || task.getTitle() == null || task.getTitle().isBlank())
+            return false;
 
-        String sql =
-            "INSERT INTO Tasks (title, description, status, priority, due_date, start_date, "
-          + "completed_at, progress, created_by, related_type, related_id, created_at, updated_at) "
-          + "VALUES (?,?,?,?,?,?,?,?,?,?,?,GETDATE(),GETDATE())";
+        String sql = "INSERT INTO Tasks (title, description, status, priority, due_date, start_date, "
+                + "completed_at, progress, created_by, related_type, related_id, created_at, updated_at) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,GETDATE(),GETDATE())";
 
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, task.getTitle().trim());
             ps.setString(2, task.getDescription() != null ? task.getDescription().trim() : "");
-            ps.setString(3, task.getStatus()   != null ? task.getStatus()   : "Pending");
+            ps.setString(3, task.getStatus() != null ? task.getStatus() : "Pending");
             ps.setString(4, task.getPriority() != null ? task.getPriority() : "Medium");
-            ps.setObject(5, task.getDueDate()     != null ? Timestamp.valueOf(task.getDueDate())     : null, Types.TIMESTAMP);
-            ps.setObject(6, task.getStartDate()   != null ? Timestamp.valueOf(task.getStartDate())   : null, Types.TIMESTAMP);
-            ps.setObject(7, task.getCompletedAt() != null ? Timestamp.valueOf(task.getCompletedAt()) : null, Types.TIMESTAMP);
+            ps.setObject(5, task.getDueDate() != null ? Timestamp.valueOf(task.getDueDate()) : null, Types.TIMESTAMP);
+            ps.setObject(6, task.getStartDate() != null ? Timestamp.valueOf(task.getStartDate()) : null,
+                    Types.TIMESTAMP);
+            ps.setObject(7, task.getCompletedAt() != null ? Timestamp.valueOf(task.getCompletedAt()) : null,
+                    Types.TIMESTAMP);
             ps.setInt(8, task.getProgress() != null ? task.getProgress() : 0);
             ps.setInt(9, task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0);
             ps.setString(10, task.getRelatedType());
@@ -75,7 +83,8 @@ public class TaskDAO {
 
             if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
-                    if (keys.next()) task.setTaskId(keys.getInt(1));
+                    if (keys.next())
+                        task.setTaskId(keys.getInt(1));
                 }
                 return true;
             }
@@ -89,21 +98,23 @@ public class TaskDAO {
     // 2. UPDATE (full update)
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateTask(Task task) {
-        if (task == null || task.getTaskId() == null || task.getTaskId() <= 0) return false;
+        if (task == null || task.getTaskId() == null || task.getTaskId() <= 0)
+            return false;
 
-        String sql =
-            "UPDATE Tasks SET title=?,description=?,status=?,priority=?,"
-          + "due_date=?,start_date=?,completed_at=?,progress=?,related_type=?,related_id=?,updated_at=GETDATE() "
-          + "WHERE task_id=?";
+        String sql = "UPDATE Tasks SET title=?,description=?,status=?,priority=?,"
+                + "due_date=?,start_date=?,completed_at=?,progress=?,related_type=?,related_id=?,updated_at=GETDATE() "
+                + "WHERE task_id=?";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, task.getTitle()       != null ? task.getTitle().trim()       : "");
+            ps.setString(1, task.getTitle() != null ? task.getTitle().trim() : "");
             ps.setString(2, task.getDescription() != null ? task.getDescription().trim() : "");
-            ps.setString(3, task.getStatus()      != null ? task.getStatus()             : "Pending");
-            ps.setString(4, task.getPriority()    != null ? task.getPriority()           : "Medium");
-            ps.setObject(5, task.getDueDate()     != null ? Timestamp.valueOf(task.getDueDate())     : null, Types.TIMESTAMP);
-            ps.setObject(6, task.getStartDate()   != null ? Timestamp.valueOf(task.getStartDate())   : null, Types.TIMESTAMP);
-            ps.setObject(7, task.getCompletedAt() != null ? Timestamp.valueOf(task.getCompletedAt()) : null, Types.TIMESTAMP);
+            ps.setString(3, task.getStatus() != null ? task.getStatus() : "Pending");
+            ps.setString(4, task.getPriority() != null ? task.getPriority() : "Medium");
+            ps.setObject(5, task.getDueDate() != null ? Timestamp.valueOf(task.getDueDate()) : null, Types.TIMESTAMP);
+            ps.setObject(6, task.getStartDate() != null ? Timestamp.valueOf(task.getStartDate()) : null,
+                    Types.TIMESTAMP);
+            ps.setObject(7, task.getCompletedAt() != null ? Timestamp.valueOf(task.getCompletedAt()) : null,
+                    Types.TIMESTAMP);
             ps.setInt(8, task.getProgress() != null ? task.getProgress() : 0);
             ps.setString(9, task.getRelatedType());
             ps.setObject(10, task.getRelatedId(), Types.INTEGER);
@@ -117,24 +128,23 @@ public class TaskDAO {
 
     // ─────────────────────────────────────────────────────────────────────────
     // 3. UPDATE STATUS ONLY
-    //    When status = Done      → set completed_at = now
-    //    When status = Cancelled → set cancelled_at = now
-    //    Otherwise               → clear completed_at/cancelled_at (reopen / overdue)
+    // When status = Done → set completed_at = now
+    // When status = Cancelled → set cancelled_at = now
+    // Otherwise → clear completed_at/cancelled_at (reopen / overdue)
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateTaskStatus(int taskId, String status) {
-        String sql =
-            "UPDATE Tasks "
-          + "SET status=?, "
-          + "    completed_at = CASE WHEN ? = 'Done' THEN GETDATE() ELSE NULL END, "
-          + "    cancelled_at = CASE WHEN ? = 'Cancelled' THEN GETDATE() ELSE NULL END, "
-          + "    start_date   = CASE WHEN ? = 'In Progress' AND start_date IS NULL THEN GETDATE() ELSE start_date END, "
-          + "    updated_at=GETDATE() "
-          + "WHERE task_id=?";
+        String sql = "UPDATE Tasks "
+                + "SET status=?, "
+                + "    completed_at = CASE WHEN ? = 'Done' THEN GETDATE() ELSE NULL END, "
+                + "    cancelled_at = CASE WHEN ? = 'Cancelled' THEN GETDATE() ELSE NULL END, "
+                + "    start_date   = CASE WHEN ? = 'In Progress' AND start_date IS NULL THEN GETDATE() ELSE start_date END, "
+                + "    updated_at=GETDATE() "
+                + "WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setString(2, status);  // for completed_at CASE
-            ps.setString(3, status);  // for cancelled_at CASE
-            ps.setString(4, status);  // for start_date CASE
+            ps.setString(2, status); // for completed_at CASE
+            ps.setString(3, status); // for cancelled_at CASE
+            ps.setString(4, status); // for start_date CASE
             ps.setInt(5, taskId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -147,21 +157,21 @@ public class TaskDAO {
     // 4. UPDATE PROGRESS – auto-derives status from progress value
     // ─────────────────────────────────────────────────────────────────────────
     public boolean updateProgress(int taskId, int progress) {
-        if (progress < 0 || progress > 100) return false;
+        if (progress < 0 || progress > 100)
+            return false;
 
-        String derivedStatus  = progress >= 100 ? "Done" : (progress > 0 ? "In Progress" : "Pending");
-        String sql =
-            "UPDATE Tasks "
-          + "SET progress=?, status=?, "
-          + "    completed_at = CASE WHEN ? >= 100 THEN GETDATE() ELSE NULL END, "
-          + "    start_date   = CASE WHEN ? > 0 AND start_date IS NULL THEN GETDATE() ELSE start_date END, "
-          + "    updated_at=GETDATE() "
-          + "WHERE task_id=?";
+        String derivedStatus = progress >= 100 ? "Done" : (progress > 0 ? "In Progress" : "Pending");
+        String sql = "UPDATE Tasks "
+                + "SET progress=?, status=?, "
+                + "    completed_at = CASE WHEN ? >= 100 THEN GETDATE() ELSE NULL END, "
+                + "    start_date   = CASE WHEN ? > 0 AND start_date IS NULL THEN GETDATE() ELSE start_date END, "
+                + "    updated_at=GETDATE() "
+                + "WHERE task_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, progress);
             ps.setString(2, derivedStatus);
-            ps.setInt(3, progress);  // for completed_at CASE
-            ps.setInt(4, progress);  // for start_date CASE
+            ps.setInt(3, progress); // for completed_at CASE
+            ps.setInt(4, progress); // for start_date CASE
             ps.setInt(5, taskId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -177,9 +187,8 @@ public class TaskDAO {
      * Mark a single task as Overdue.
      */
     public boolean markOverdue(int taskId) {
-        String sql =
-            "UPDATE Tasks SET status='Overdue', updated_at=GETDATE() "
-          + "WHERE task_id=? AND status NOT IN ('Done','Cancelled','Overdue')";
+        String sql = "UPDATE Tasks SET status='Overdue', updated_at=GETDATE() "
+                + "WHERE task_id=? AND status NOT IN ('Done','Cancelled','Overdue')";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             return ps.executeUpdate() > 0;
@@ -195,12 +204,11 @@ public class TaskDAO {
      */
     public List<Task> findOverdueTasks(int batchSize) {
         List<Task> list = new ArrayList<>();
-        String sql =
-            TASK_BASE_SELECT
-          + "WHERE t.due_date < GETDATE() "
-          + "  AND t.status NOT IN ('Done','Cancelled','Overdue') "
-          + "ORDER BY t.due_date ASC "
-          + "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = TASK_BASE_SELECT
+                + "WHERE t.due_date < GETDATE() "
+                + "  AND t.status NOT IN ('Done','Cancelled','Overdue') "
+                + "ORDER BY t.due_date ASC "
+                + "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, batchSize);
             try (ResultSet rs = ps.executeQuery()) {
@@ -223,7 +231,7 @@ public class TaskDAO {
         List<Task> list = new ArrayList<>();
         String sql = TASK_BASE_SELECT + "ORDER BY t.created_at DESC";
         try (PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Task task = mapRow(rs);
                 task.setAssignees(loadAssignees(task.getTaskId()));
@@ -236,22 +244,58 @@ public class TaskDAO {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // CUSTOMER REPORT HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Customer report: tasks with progress = 100 for a related entity.
+     * Ordered newest first (completed_at, then updated_at, then created_at).
+     */
+    public List<Task> findCompletedByRelated(String relatedType, int relatedId, int limit) {
+        List<Task> list = new ArrayList<>();
+        if (limit <= 0)
+            limit = 20;
+
+        String sql = TASK_BASE_SELECT
+                + "WHERE t.progress >= 100 "
+                + "  AND t.related_type = ? "
+                + "  AND t.related_id = ? "
+                + "ORDER BY COALESCE(t.completed_at, t.updated_at, t.created_at) DESC "
+                + "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, relatedType);
+            ps.setInt(2, relatedId);
+            ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 7. PAGED + FILTERED LIST
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> getTasksPaged(String title, String description,
-                                    String status, String priority,
-                                    String fromDate, String toDate,
-                                    Integer assigneeUserId,
-                                    Integer createdByUserId,
-                                    String relatedType,
-                                    Integer relatedId,
-                                    String sortField, String sortDir,
-                                    int page, int pageSize) {
+            String status, String priority,
+            String fromDate, String toDate,
+            Integer assigneeUserId,
+            Integer createdByUserId,
+            String relatedType,
+            Integer relatedId,
+            String sortField, String sortDir,
+            int page, int pageSize) {
         List<Task> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder(TASK_BASE_SELECT + "WHERE 1=1 ");
-        appendTaskFilters(sql, params, title, description, status, priority, fromDate, toDate, assigneeUserId, createdByUserId, relatedType, relatedId);
+        appendTaskFilters(sql, params, title, description, status, priority, fromDate, toDate, assigneeUserId,
+                createdByUserId, relatedType, relatedId);
 
         sql.append("ORDER BY ").append(resolveSortColumn(sortField)).append(" ");
         sql.append("DESC".equalsIgnoreCase(sortDir) ? "DESC " : "ASC ");
@@ -260,7 +304,8 @@ public class TaskDAO {
         params.add(pageSize);
 
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            for (int i = 0; i < params.size(); i++)
+                ps.setObject(i + 1, params.get(i));
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Task task = mapRow(rs);
@@ -275,20 +320,23 @@ public class TaskDAO {
     }
 
     public int countTasksFiltered(String title, String description,
-                                  String status, String priority,
-                                  String fromDate, String toDate,
-                                  Integer assigneeUserId,
-                                  Integer createdByUserId,
-                                  String relatedType,
-                                  Integer relatedId) {
+            String status, String priority,
+            String fromDate, String toDate,
+            Integer assigneeUserId,
+            Integer createdByUserId,
+            String relatedType,
+            Integer relatedId) {
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Tasks t WHERE 1=1 ");
-        appendTaskFilters(sql, params, title, description, status, priority, fromDate, toDate, assigneeUserId, createdByUserId, relatedType, relatedId);
+        appendTaskFilters(sql, params, title, description, status, priority, fromDate, toDate, assigneeUserId,
+                createdByUserId, relatedType, relatedId);
 
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            for (int i = 0; i < params.size(); i++)
+                ps.setObject(i + 1, params.get(i));
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next())
+                    return rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -321,11 +369,10 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> findByAssigneePaged(int userId, int page, int pageSize) {
         List<Task> list = new ArrayList<>();
-        String sql =
-            TASK_BASE_SELECT
-          + "WHERE EXISTS (SELECT 1 FROM Task_Assignees ta WHERE ta.task_id=t.task_id AND ta.user_id=?) "
-          + "ORDER BY t.created_at DESC "
-          + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = TASK_BASE_SELECT
+                + "WHERE EXISTS (SELECT 1 FROM Task_Assignees ta WHERE ta.task_id=t.task_id AND ta.user_id=?) "
+                + "ORDER BY t.created_at DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, (page - 1) * pageSize);
@@ -344,13 +391,13 @@ public class TaskDAO {
     }
 
     public int countByAssignee(int userId) {
-        String sql =
-            "SELECT COUNT(*) FROM Tasks t "
-          + "WHERE EXISTS (SELECT 1 FROM Task_Assignees ta WHERE ta.task_id=t.task_id AND ta.user_id=?)";
+        String sql = "SELECT COUNT(*) FROM Tasks t "
+                + "WHERE EXISTS (SELECT 1 FROM Task_Assignees ta WHERE ta.task_id=t.task_id AND ta.user_id=?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next())
+                    return rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -366,15 +413,14 @@ public class TaskDAO {
      * Uses MERGE to handle both new assignments and re-activations.
      */
     public boolean addAssignee(int taskId, int userId, int assignedBy) {
-        String sql =
-            "MERGE Task_Assignees AS target "
-          + "USING (VALUES (?, ?)) AS src(task_id, user_id) "
-          + "   ON target.task_id = src.task_id AND target.user_id = src.user_id "
-          + "WHEN MATCHED AND target.is_active = 0 THEN "
-          + "   UPDATE SET is_active = 1, assigned_at = GETDATE(), assigned_by = ? "
-          + "WHEN NOT MATCHED THEN "
-          + "   INSERT (task_id, user_id, assigned_at, assigned_by, is_primary, is_active) "
-          + "   VALUES (?, ?, GETDATE(), ?, 0, 1);";
+        String sql = "MERGE Task_Assignees AS target "
+                + "USING (VALUES (?, ?)) AS src(task_id, user_id) "
+                + "   ON target.task_id = src.task_id AND target.user_id = src.user_id "
+                + "WHEN MATCHED AND target.is_active = 0 THEN "
+                + "   UPDATE SET is_active = 1, assigned_at = GETDATE(), assigned_by = ? "
+                + "WHEN NOT MATCHED THEN "
+                + "   INSERT (task_id, user_id, assigned_at, assigned_by, is_primary, is_active) "
+                + "   VALUES (?, ?, GETDATE(), ?, 0, 1);";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             ps.setInt(2, userId);
@@ -396,7 +442,8 @@ public class TaskDAO {
     public boolean removeAssignee(int taskId, int userId) {
         String sql = "UPDATE Task_Assignees SET is_active = 0 WHERE task_id=? AND user_id=? AND is_active = 1";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, taskId); ps.setInt(2, userId);
+            ps.setInt(1, taskId);
+            ps.setInt(2, userId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -409,11 +456,11 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public boolean deleteTask(int taskId) {
         String[] cascadeStatements = {
-            "DELETE FROM Task_Assignees   WHERE task_id=?",
-            "DELETE FROM Task_Comments    WHERE task_id=?",
-            "DELETE FROM Task_History_Detail WHERE history_id IN (SELECT history_id FROM Task_History WHERE task_id=?)",
-            "DELETE FROM Task_History     WHERE task_id=?",
-            "DELETE FROM Tasks            WHERE task_id=?"
+                "DELETE FROM Task_Assignees   WHERE task_id=?",
+                "DELETE FROM Task_Comments    WHERE task_id=?",
+                "DELETE FROM Task_History_Detail WHERE history_id IN (SELECT history_id FROM Task_History WHERE task_id=?)",
+                "DELETE FROM Task_History     WHERE task_id=?",
+                "DELETE FROM Tasks            WHERE task_id=?"
         };
         try {
             for (String sql : cascadeStatements) {
@@ -445,7 +492,8 @@ public class TaskDAO {
             ps.setString(4, note);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) return keys.getInt(1);
+                if (keys.next())
+                    return keys.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -457,9 +505,8 @@ public class TaskDAO {
     // 13. TASK HISTORY DETAIL – one row per changed field
     // ─────────────────────────────────────────────────────────────────────────
     public boolean insertTaskHistoryDetail(int historyId, String fieldName, String oldValue, String newValue) {
-        String sql =
-            "INSERT INTO Task_History_Detail (history_id, field_name, old_value, new_value) "
-          + "VALUES (?,?,?,?)";
+        String sql = "INSERT INTO Task_History_Detail (history_id, field_name, old_value, new_value) "
+                + "VALUES (?,?,?,?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, historyId);
             ps.setString(2, fieldName);
@@ -477,12 +524,11 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public List<TaskHistory> listTaskHistoryByID(int taskId) {
         List<TaskHistory> list = new ArrayList<>();
-        String sql =
-            "SELECT th.history_id, th.task_id, th.changed_by, th.changed_at, "
-          + "       u.full_name AS changer_name "
-          + "FROM Task_History th "
-          + "LEFT JOIN Users u ON th.changed_by = u.user_id "
-          + "WHERE th.task_id=? ORDER BY th.changed_at DESC";
+        String sql = "SELECT th.history_id, th.task_id, th.changed_by, th.changed_at, "
+                + "       u.full_name AS changer_name "
+                + "FROM Task_History th "
+                + "LEFT JOIN Users u ON th.changed_by = u.user_id "
+                + "WHERE th.task_id=? ORDER BY th.changed_at DESC";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -493,7 +539,8 @@ public class TaskDAO {
                     th.setChangedBy(rs.getInt("changed_by"));
                     th.setChangerName(rs.getString("changer_name"));
                     Timestamp cat = rs.getTimestamp("changed_at");
-                    if (cat != null) th.setChangedAt(cat.toLocalDateTime());
+                    if (cat != null)
+                        th.setChangedAt(cat.toLocalDateTime());
                     list.add(th);
                 }
             }
@@ -508,9 +555,8 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     public List<TaskHistoryDetail> listTaskHistoryDetailsByID(int historyId) {
         List<TaskHistoryDetail> list = new ArrayList<>();
-        String sql =
-            "SELECT detail_id, history_id, field_name, old_value, new_value "
-          + "FROM Task_History_Detail WHERE history_id=?";
+        String sql = "SELECT detail_id, history_id, field_name, old_value, new_value "
+                + "FROM Task_History_Detail WHERE history_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, historyId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -535,18 +581,19 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Shared WHERE-clause builder used by both getTasksPaged and countTasksFiltered.
+     * Shared WHERE-clause builder used by both getTasksPaged and
+     * countTasksFiltered.
      * Date range always operates on due_date (not start_date).
      * Assignee filter always uses EXISTS to avoid JOIN-based duplicates.
      */
     private void appendTaskFilters(StringBuilder sql, List<Object> params,
-                                   String title, String description,
-                                   String status, String priority,
-                                   String fromDate, String toDate,
-                                   Integer assigneeUserId,
-                                   Integer createdByUserId,
-                                   String relatedType,
-                                   Integer relatedId) {
+            String title, String description,
+            String status, String priority,
+            String fromDate, String toDate,
+            Integer assigneeUserId,
+            Integer createdByUserId,
+            String relatedType,
+            Integer relatedId) {
         if (title != null && !title.isBlank()) {
             sql.append("AND t.title LIKE ? ");
             params.add("%" + title.trim() + "%");
@@ -594,14 +641,15 @@ public class TaskDAO {
      * Only whitelisted values are returned – prevents SQL injection.
      */
     private String resolveSortColumn(String sortField) {
-        if (sortField == null) return "t.created_at";
+        if (sortField == null)
+            return "t.created_at";
         return switch (sortField) {
-            case "dueDate"   -> "t.due_date";
+            case "dueDate" -> "t.due_date";
             case "startDate" -> "t.start_date";
-            case "priority"  -> "CASE t.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 WHEN 'Low' THEN 3 ELSE 4 END";
-            case "progress"  -> "t.progress";
-            case "title"     -> "t.title";
-            default          -> "t.created_at";
+            case "priority" -> "CASE t.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 WHEN 'Low' THEN 3 ELSE 4 END";
+            case "progress" -> "t.progress";
+            case "title" -> "t.title";
+            default -> "t.created_at";
         };
     }
 
@@ -617,21 +665,28 @@ public class TaskDAO {
         // ✅ THÊM MỚI: related_type, related_id, cancelled_at
         t.setRelatedType(rs.getString("related_type"));
         int relatedId = rs.getInt("related_id");
-        if (!rs.wasNull()) t.setRelatedId(relatedId);
+        if (!rs.wasNull())
+            t.setRelatedId(relatedId);
 
-        Timestamp due        = rs.getTimestamp("due_date");
-        Timestamp start      = rs.getTimestamp("start_date");
-        Timestamp completed  = rs.getTimestamp("completed_at");
-        Timestamp cancelled  = rs.getTimestamp("cancelled_at");
-        Timestamp createdAt  = rs.getTimestamp("created_at");
-        Timestamp updatedAt  = rs.getTimestamp("updated_at");
+        Timestamp due = rs.getTimestamp("due_date");
+        Timestamp start = rs.getTimestamp("start_date");
+        Timestamp completed = rs.getTimestamp("completed_at");
+        Timestamp cancelled = rs.getTimestamp("cancelled_at");
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        Timestamp updatedAt = rs.getTimestamp("updated_at");
 
-        if (due       != null) t.setDueDate(due.toLocalDateTime());
-        if (start     != null) t.setStartDate(start.toLocalDateTime());
-        if (completed != null) t.setCompletedAt(completed.toLocalDateTime());
-        if (cancelled != null) t.setCancelledAt(cancelled.toLocalDateTime());
-        if (createdAt != null) t.setCreatedAt(createdAt.toLocalDateTime());
-        if (updatedAt != null) t.setUpdatedAt(updatedAt.toLocalDateTime());
+        if (due != null)
+            t.setDueDate(due.toLocalDateTime());
+        if (start != null)
+            t.setStartDate(start.toLocalDateTime());
+        if (completed != null)
+            t.setCompletedAt(completed.toLocalDateTime());
+        if (cancelled != null)
+            t.setCancelledAt(cancelled.toLocalDateTime());
+        if (createdAt != null)
+            t.setCreatedAt(createdAt.toLocalDateTime());
+        if (updatedAt != null)
+            t.setUpdatedAt(updatedAt.toLocalDateTime());
 
         int uId = rs.getInt("u_id");
         if (!rs.wasNull() && uId > 0) {
@@ -654,14 +709,13 @@ public class TaskDAO {
 
     private List<TaskAssignee> loadAssignees(int taskId) {
         List<TaskAssignee> list = new ArrayList<>();
-        String sql =
-            "SELECT ta.task_id, ta.assigned_at, ta.assigned_by, ta.is_primary, ta.is_active, "
-          + "       u.user_id, u.full_name, u.email, u.username, "
-          + "       r.role_id, r.role_name "
-          + "FROM Task_Assignees ta "
-          + "JOIN  Users u  ON ta.user_id  = u.user_id "
-          + "LEFT JOIN Roles r ON u.role_id = r.role_id "
-          + "WHERE ta.task_id=? AND ta.is_active = 1";
+        String sql = "SELECT ta.task_id, ta.assigned_at, ta.assigned_by, ta.is_primary, ta.is_active, "
+                + "       u.user_id, u.full_name, u.email, u.username, "
+                + "       r.role_id, r.role_name "
+                + "FROM Task_Assignees ta "
+                + "JOIN  Users u  ON ta.user_id  = u.user_id "
+                + "LEFT JOIN Roles r ON u.role_id = r.role_id "
+                + "WHERE ta.task_id=? AND ta.is_active = 1";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -682,10 +736,12 @@ public class TaskDAO {
                     ta.setTaskId(rs.getInt("task_id"));
                     ta.setUser(u);
                     Timestamp at = rs.getTimestamp("assigned_at");
-                    if (at != null) ta.setAssignedAt(at.toLocalDateTime());
+                    if (at != null)
+                        ta.setAssignedAt(at.toLocalDateTime());
                     // ✅ THÊM MỚI: assigned_by, is_primary, is_active
                     int assignedBy = rs.getInt("assigned_by");
-                    if (!rs.wasNull()) ta.setAssignedBy(assignedBy);
+                    if (!rs.wasNull())
+                        ta.setAssignedBy(assignedBy);
                     ta.setPrimary(rs.getBoolean("is_primary"));
                     ta.setActive(rs.getBoolean("is_active"));
                     list.add(ta);
@@ -701,7 +757,7 @@ public class TaskDAO {
     // 17. SCHEDULE – tasks within a date range (for weekly timetable)
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> findTasksInDateRange(java.time.LocalDateTime start, java.time.LocalDateTime end,
-                                           Integer assigneeUserId) {
+            Integer assigneeUserId) {
         List<Task> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(TASK_BASE_SELECT);
         sql.append("WHERE (");
@@ -749,25 +805,25 @@ public class TaskDAO {
     public List<Task> findTasksByUser(int userId, int page, int pageSize) {
         List<Task> list = new ArrayList<>();
         String sql = """
-            SELECT DISTINCT t.*,
-                   u.user_id AS u_id, u.full_name, u.email, u.username,
-                   r.role_id, r.role_name
-            FROM Tasks t
-            LEFT JOIN Users u ON t.created_by = u.user_id
-            LEFT JOIN Roles r ON u.role_id = r.role_id
-            WHERE t.task_id IN (
-                -- Tasks where user is owner
-                SELECT task_id FROM Tasks WHERE created_by = ?
-                UNION
-                -- Tasks where user is assignee
-                SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
-                UNION
-                -- Tasks where user is tagged in work items
-                SELECT task_id FROM Task_Comments WHERE assigned_to = ? AND is_deleted = 0
-            )
-            ORDER BY t.created_at DESC
-            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
-            """;
+                SELECT DISTINCT t.*,
+                       u.user_id AS u_id, u.full_name, u.email, u.username,
+                       r.role_id, r.role_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.created_by = u.user_id
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE t.task_id IN (
+                    -- Tasks where user is owner
+                    SELECT task_id FROM Tasks WHERE created_by = ?
+                    UNION
+                    -- Tasks where user is assignee
+                    SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
+                    UNION
+                    -- Tasks where user is tagged in work items
+                    SELECT task_id FROM Task_Comments WHERE assigned_to = ? AND is_deleted = 0
+                )
+                ORDER BY t.created_at DESC
+                OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, userId);
@@ -789,22 +845,23 @@ public class TaskDAO {
 
     public int countTasksByUser(int userId) {
         String sql = """
-            SELECT COUNT(DISTINCT t.task_id)
-            FROM Tasks t
-            WHERE t.task_id IN (
-                SELECT task_id FROM Tasks WHERE created_by = ?
-                UNION
-                SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
-                UNION
-                SELECT task_id FROM Task_Comments WHERE assigned_to = ? AND is_deleted = 0
-            )
-            """;
+                SELECT COUNT(DISTINCT t.task_id)
+                FROM Tasks t
+                WHERE t.task_id IN (
+                    SELECT task_id FROM Tasks WHERE created_by = ?
+                    UNION
+                    SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
+                    UNION
+                    SELECT task_id FROM Task_Comments WHERE assigned_to = ? AND is_deleted = 0
+                )
+                """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, userId);
             ps.setInt(3, userId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next())
+                    return rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -820,15 +877,15 @@ public class TaskDAO {
      * For employee: returns their own tasks + tasks they're assigned to
      * For manager: returns all root tasks of their subordinates
      *
-     * @param userId current user ID
+     * @param userId    current user ID
      * @param isManager whether user is manager/admin
      * @param startDate range start
-     * @param endDate range end
+     * @param endDate   range end
      * @return list of schedule items (tasks and subtasks)
      */
     public List<Task> getScheduleTasks(int userId, boolean isManager,
-                                       java.time.LocalDate startDate,
-                                       java.time.LocalDate endDate) {
+            java.time.LocalDate startDate,
+            java.time.LocalDate endDate) {
         List<Task> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
 
@@ -836,54 +893,54 @@ public class TaskDAO {
             // Manager: get all root tasks (no parent) of subordinates
             // Subordinates = users with role_id != 1 (not admin) and under this manager
             sql.append("""
-                SELECT DISTINCT t.*,
-                       u.user_id AS u_id, u.full_name, u.email, u.username,
-                       r.role_id, r.role_name
-                FROM Tasks t
-                LEFT JOIN Users u ON t.created_by = u.user_id
-                LEFT JOIN Roles r ON u.role_id = r.role_id
-                WHERE t.task_id IN (
-                    -- Root tasks created by subordinates (not admin, not this user)
-                    SELECT t2.task_id
-                    FROM Tasks t2
-                    JOIN Users sub ON t2.created_by = sub.user_id
-                    WHERE sub.role_id != 1
-                    AND t2.task_id NOT IN (
-                        SELECT task_id FROM Task_Comments WHERE parent_comment_id IS NOT NULL
+                    SELECT DISTINCT t.*,
+                           u.user_id AS u_id, u.full_name, u.email, u.username,
+                           r.role_id, r.role_name
+                    FROM Tasks t
+                    LEFT JOIN Users u ON t.created_by = u.user_id
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE t.task_id IN (
+                        -- Root tasks created by subordinates (not admin, not this user)
+                        SELECT t2.task_id
+                        FROM Tasks t2
+                        JOIN Users sub ON t2.created_by = sub.user_id
+                        WHERE sub.role_id != 1
+                        AND t2.task_id NOT IN (
+                            SELECT task_id FROM Task_Comments WHERE parent_comment_id IS NOT NULL
+                        )
                     )
-                )
-                AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
-                AND (
-                    (t.start_date >= ? AND t.start_date < ?)
-                    OR (t.due_date >= ? AND t.due_date < ?)
-                    OR (t.start_date <= ? AND t.due_date >= ?)
-                )
-                ORDER BY t.start_date ASC, t.due_date ASC
-                """);
+                    AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
+                    AND (
+                        (t.start_date >= ? AND t.start_date < ?)
+                        OR (t.due_date >= ? AND t.due_date < ?)
+                        OR (t.start_date <= ? AND t.due_date >= ?)
+                    )
+                    ORDER BY t.start_date ASC, t.due_date ASC
+                    """);
         } else {
             // Employee: get own tasks + assigned tasks
             sql.append("""
-                SELECT DISTINCT t.*,
-                       u.user_id AS u_id, u.full_name, u.email, u.username,
-                       r.role_id, r.role_name
-                FROM Tasks t
-                LEFT JOIN Users u ON t.created_by = u.user_id
-                LEFT JOIN Roles r ON u.role_id = r.role_id
-                WHERE t.task_id IN (
-                    -- Tasks where user is owner
-                    SELECT task_id FROM Tasks WHERE created_by = ?
-                    UNION
-                    -- Tasks where user is assignee
-                    SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
-                )
-                AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
-                AND (
-                    (t.start_date >= ? AND t.start_date < ?)
-                    OR (t.due_date >= ? AND t.due_date < ?)
-                    OR (t.start_date <= ? AND t.due_date >= ?)
-                )
-                ORDER BY t.start_date ASC, t.due_date ASC
-                """);
+                    SELECT DISTINCT t.*,
+                           u.user_id AS u_id, u.full_name, u.email, u.username,
+                           r.role_id, r.role_name
+                    FROM Tasks t
+                    LEFT JOIN Users u ON t.created_by = u.user_id
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE t.task_id IN (
+                        -- Tasks where user is owner
+                        SELECT task_id FROM Tasks WHERE created_by = ?
+                        UNION
+                        -- Tasks where user is assignee
+                        SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
+                    )
+                    AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
+                    AND (
+                        (t.start_date >= ? AND t.start_date < ?)
+                        OR (t.due_date >= ? AND t.due_date < ?)
+                        OR (t.start_date <= ? AND t.due_date >= ?)
+                    )
+                    ORDER BY t.start_date ASC, t.due_date ASC
+                    """);
         }
 
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
@@ -924,8 +981,8 @@ public class TaskDAO {
      * Uses Task_Comments where assigned_to is set.
      */
     public List<TaskComment> getScheduleSubtasks(List<Integer> taskIds,
-                                                  java.time.LocalDate startDate,
-                                                  java.time.LocalDate endDate) {
+            java.time.LocalDate startDate,
+            java.time.LocalDate endDate) {
         List<TaskComment> list = new ArrayList<>();
         if (taskIds == null || taskIds.isEmpty()) {
             return list;
@@ -937,17 +994,17 @@ public class TaskDAO {
         }
 
         String sql = String.format("""
-            SELECT tc.*, u.user_id AS a_u_id, u.full_name AS a_full_name,
-                   t.title AS task_title
-            FROM Task_Comments tc
-            LEFT JOIN Users u ON tc.assigned_to = u.user_id
-            LEFT JOIN Tasks t ON tc.task_id = t.task_id
-            WHERE tc.task_id IN (%s)
-            AND tc.assigned_to IS NOT NULL
-            AND tc.is_deleted = 0
-            AND tc.created_at >= ? AND tc.created_at < ?
-            ORDER BY tc.created_at ASC
-            """, placeholders.toString());
+                SELECT tc.*, u.user_id AS a_u_id, u.full_name AS a_full_name,
+                       t.title AS task_title
+                FROM Task_Comments tc
+                LEFT JOIN Users u ON tc.assigned_to = u.user_id
+                LEFT JOIN Tasks t ON tc.task_id = t.task_id
+                WHERE tc.task_id IN (%s)
+                AND tc.assigned_to IS NOT NULL
+                AND tc.is_deleted = 0
+                AND tc.created_at >= ? AND tc.created_at < ?
+                ORDER BY tc.created_at ASC
+                """, placeholders.toString());
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             int idx = 1;

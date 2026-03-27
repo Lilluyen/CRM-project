@@ -9,7 +9,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h4 class="mb-1"><i class="fas fa-users me-2"></i>Customer Segment List</h4>
-                <p class="text-muted mb-0">Danh sách, tìm kiếm và quản lý phân khúc khách hàng</p>
+                <p class="text-muted mb-0">List, search, and manage customer segments.</p>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-primary" onclick="openCreateModal()">
@@ -35,20 +35,20 @@
         <!-- Filter Section -->
         <div class="card shadow-sm mb-4 filter-card">
             <div class="card-body">
-                <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Tìm kiếm & Lọc</h6>
+                <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Search & Filter</h6>
                 <div class="row g-3">
 
                     <div class="col-md-4">
-                        <label class="form-label">Tìm kiếm</label>
+                        <label class="form-label">Search</label>
                         <input type="text" class="form-control" id="searchInput"
-                               placeholder="Tìm kiếm danh sách..."
+                               placeholder="Search..."
                                value="${keyword}"/>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Segment Type</label>
                         <select class="form-select segment_type" name="segment_type">
-                            <option value="">-- Tất cả --</option>
+                            <option value="">-- All --</option>
                             <option value="STATIC" <c:if test="${segmentType eq 'STATIC'}">selected</c:if>>Static
                             </option>
                             <option value="DYNAMIC" <c:if test="${segmentType eq 'DYNAMIC'}">selected</c:if>>Dynamic
@@ -59,7 +59,7 @@
                     <div class="col-md-2">
                         <label class="form-label">Creator</label>
                         <select class="form-select created_by" name="created_by">
-                            <option value="">-- Tất cả --</option>
+                            <option value="">-- All --</option>
                             <c:forEach items="${staffs}" var="s">
                                 <option value="${s.userId}"
                                         <c:if test="${creator eq s.userId}">selected</c:if>>${s.fullName}</option>
@@ -70,7 +70,7 @@
                     <div class="col-md-2">
                         <label class="form-label">Updater</label>
                         <select class="form-select updated_by" name="updated_by">
-                            <option value="">-- Tất cả --</option>
+                            <option value="">-- All --</option>
                             <c:forEach items="${staffs}" var="s">
                                 <option value="${s.userId}"
                                         <c:if test="${updater eq s.userId}">selected</c:if>>${s.fullName}</option>
@@ -91,12 +91,12 @@
                     <div class="col-5 d-flex gap-2">
                         <button style="height: 43px;
     margin-top: 24px;" type="button" class="btn btn-primary" onclick="filterSegment()">
-                            <i class="fas fa-search me-1"></i> Tìm kiếm
+                            <i class="fas fa-search me-1"></i> Search
                         </button>
                         <a style="height: 43px;
     margin-top: 24px; padding-top: 10px" href="${pageContext.request.contextPath}/customers/segments"
                            class="btn btn-outline-secondary">
-                            <i class="fas fa-redo me-1"></i> Đặt lại
+                            <i class="fas fa-redo me-1"></i> Reset
                         </a>
                     </div>
 
@@ -111,8 +111,8 @@
                 <div class="card shadow-sm text-center py-5">
                     <div class="card-body empty-state">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">Không có segment nào</h5>
-                        <p class="text-muted">Chưa có phân khúc nào. Hãy tạo mới bằng nút bên trên.</p>
+                        <h5 class="text-muted">No segments</h5>
+                        <p class="text-muted">There are no segments yet. Please create a new one using the button above.</p>
                         <button class="btn btn-primary" onclick="openCreateModal()">
                             <i class="fas fa-plus me-1"></i> Add New Segment
                         </button>
@@ -127,7 +127,7 @@
                      style="border-radius: 10px;">
                     <div class="card-body py-3 px-4">
                         <span class="fs-2 fw-bold text-white">${pagination.totalItems}</span>
-                        <span class="ms-2 text-white">Tổng Segment</span>
+                        <span class="ms-2 text-white"> Segments</span>
                     </div>
                 </div>
 
@@ -256,14 +256,14 @@
                 <div class="mb-3">
                     <label class="form-label-modal">Segmentation's name <span class="text-danger">*</span></label>
                     <input type="text" class="form-input-modal" maxlength="50"
-                           name="segment_name" placeholder="Nhập tên segment..." required/>
+                           name="segment_name" placeholder="Enter segment name..." required/>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label-modal">Description</label>
                     <textarea class="form-input-modal" maxlength="500"
                               name="criteria_logic" rows="3"
-                              placeholder="Mô tả tiêu chí phân khúc..."></textarea>
+                              placeholder="Description of segmentation criteria..."></textarea>
                 </div>
 
                 <div class="mb-3">
@@ -284,10 +284,10 @@
 
             <div class="modal-footer-custom">
                 <button class="btn btn-outline-secondary" onclick="closeCreateModal()" type="button">
-                    <i class="fas fa-times me-1"></i> Hủy
+                    <i class="fas fa-times me-1"></i> Cancel
                 </button>
                 <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-check me-1"></i> Đồng ý
+                    <i class="fas fa-check me-1"></i> Submit
                 </button>
             </div>
 

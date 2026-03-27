@@ -11,7 +11,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h4 class="mb-1"><i class="fas fa-users me-2"></i>Customer Center</h4>
-                <p class="text-muted mb-0">Danh sách, tìm kiếm và quản lý khách hàng trong hệ thống</p>
+                <p class="text-muted mb-0">List, search, and manage customers within the system.</p>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-primary" id="assign-segment-btn">
@@ -41,12 +41,12 @@
         <!-- Filter Section -->
         <div class="card shadow-sm mb-4 filter-card">
             <div class="card-body">
-                <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Tìm kiếm & Lọc</h6>
+                <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Search & Filter</h6>
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Tìm kiếm (tên, SĐT, style)</label>
+                        <label class="form-label">Search (name, phone)</label>
                         <input type="text" class="form-control" id="searchInput"
-                               placeholder="Search by name, phone, or style..."
+                               placeholder="Search by name, phone..."
                                <c:if test="${not empty keyword}">value="${keyword}"</c:if> />
                     </div>
 
@@ -149,7 +149,7 @@
                      style="border-radius: 10px;">
                     <div class="card-body py-3 px-4">
                         <span class="fs-2 fw-bold text-white">${totalRecord}</span>
-                        <span class="ms-2 text-white">Tổng Customer</span>
+                        <span class="ms-2 text-white"> Customers</span>
                     </div>
                 </div>
 
@@ -168,7 +168,7 @@
                                 <th>Email</th>
                                 <th>Source</th>
                                 <th>Last Purchase</th>
-                                <th>Hành động</th>
+                                <th class="text-center">Action</th>
                             </tr>
                             </thead>
                             <tbody id="customerTableBody">
@@ -382,7 +382,7 @@
                 <span class="close-btn" onclick="closeSegmentModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <label>Chọn Segment:</label>
+                <label>Choose Segment:</label>
                 <div class="segment-list">
                     <c:forEach items="${segments}" var="s">
                         <div class="segment-item">

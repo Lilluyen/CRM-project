@@ -100,7 +100,8 @@ public class DealDAO {
         }
     }
 
-    public boolean updateDealStage(int dealId, String stage, Integer probability, BigDecimal actualValue) throws SQLException {
+    public boolean updateDealStage(int dealId, String stage, Integer probability, BigDecimal actualValue)
+            throws SQLException {
         String sql = "UPDATE Deals SET stage = ?, probability = COALESCE(?, probability), actual_value = ?, updated_at = ? WHERE deal_id = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -137,18 +138,20 @@ public class DealDAO {
     }
 
     public List<Deal> getDealList(String search, String stage, int page, int pageSize) throws SQLException {
-        if (search == null) search = "";
-        if (stage == null) stage = "";
+        if (search == null)
+            search = "";
+        if (stage == null)
+            stage = "";
 
         int offset = (page - 1) * pageSize;
 
-        String sql =
-                "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at " +
-                        "FROM Deals " +
-                        "WHERE (deal_name LIKE ?) " +
-                        "AND (? = '' OR stage = ?) " +
-                        "ORDER BY updated_at DESC " +
-                        "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at "
+                +
+                "FROM Deals " +
+                "WHERE (deal_name LIKE ?) " +
+                "AND (? = '' OR stage = ?) " +
+                "ORDER BY updated_at DESC " +
+                "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         List<Deal> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -169,8 +172,10 @@ public class DealDAO {
     }
 
     public int countDeals(String search, String stage) throws SQLException {
-        if (search == null) search = "";
-        if (stage == null) stage = "";
+        if (search == null)
+            search = "";
+        if (stage == null)
+            stage = "";
 
         String sql = "SELECT COUNT(*) FROM Deals WHERE (deal_name LIKE ?) AND (? = '' OR stage = ?)";
 
@@ -190,15 +195,17 @@ public class DealDAO {
     }
 
     public List<Deal> searchDealsForExport(String search, String stage) throws SQLException {
-        if (search == null) search = "";
-        if (stage == null) stage = "";
+        if (search == null)
+            search = "";
+        if (stage == null)
+            stage = "";
 
-        String sql =
-                "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at " +
-                        "FROM Deals " +
-                        "WHERE (deal_name LIKE ?) " +
-                        "AND (? = '' OR stage = ?) " +
-                        "ORDER BY updated_at DESC";
+        String sql = "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at "
+                +
+                "FROM Deals " +
+                "WHERE (deal_name LIKE ?) " +
+                "AND (? = '' OR stage = ?) " +
+                "ORDER BY updated_at DESC";
 
         List<Deal> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -213,6 +220,39 @@ public class DealDAO {
             }
         }
 
+        return list;
+    }
+
+    public int countDealByCusId(int id) {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM Deals WHERE customer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return count;
+
+    }
+
+    public List<Deal> getListDealsByCusId(int id) {
+        List<Deal> list = new ArrayList<>();
+        String sql = "SELECT deal_id, customer_id, lead_id, deal_name, expected_value, actual_value, stage, probability, expected_close_date, owner_id, created_at, updated_at FROM Deals WHERE customer_id = ? ORDER BY updated_at DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapDeal(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         return list;
     }
 
@@ -271,17 +311,22 @@ public class DealDAO {
             return null;
         }
         String s = stage.trim();
-        if (s.equalsIgnoreCase("Prospecting")) return 10;
-        if (s.equalsIgnoreCase("Qualified")) return 40;
-        if (s.equalsIgnoreCase("Proposal")) return 60;
-        if (s.equalsIgnoreCase("Negotiation")) return 75;
-        if (s.equalsIgnoreCase("Closed Won")) return 100;
-        if (s.equalsIgnoreCase("Closed Lost")) return 0;
+        if (s.equalsIgnoreCase("Prospecting"))
+            return 10;
+        if (s.equalsIgnoreCase("Qualified"))
+            return 40;
+        if (s.equalsIgnoreCase("Proposal"))
+            return 60;
+        if (s.equalsIgnoreCase("Negotiation"))
+            return 75;
+        if (s.equalsIgnoreCase("Closed Won"))
+            return 100;
+        if (s.equalsIgnoreCase("Closed Lost"))
+            return 0;
         return null;
     }
 
-
-    //chuyển id của lead lên id của cus trong deal
+    // chuyển id của lead lên id của cus trong deal
     public void updateCustomerForDeal(int dealId, int customerId) throws SQLException {
         String sql = "UPDATE Deals SET customer_id = ?, lead_id = NULL WHERE deal_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -291,5 +336,4 @@ public class DealDAO {
         }
     }
 
-    
 }

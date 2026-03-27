@@ -17,8 +17,7 @@ import util.CustomerActivityUtil;
 import java.io.IOException;
 import java.util.Map;
 
-@WebServlet(name = "MergeRequestDetailController",
-        urlPatterns = {"/customers/merge-request/*"})
+@WebServlet(name = "MergeRequestDetailController", urlPatterns = { "/customers/merge-request/*" })
 public class MergeRequestDetailController extends HttpServlet {
 
     private final CustomerDAO customerDAO = new CustomerDAO();
@@ -112,7 +111,7 @@ public class MergeRequestDetailController extends HttpServlet {
             return;
         }
 
-        String action = req.getParameter("action");       // "approve" hoặc "reject"
+        String action = req.getParameter("action"); // "approve" hoặc "reject"
         String rejectReason = req.getParameter("rejectReason"); // chỉ dùng khi reject
 
         try {
@@ -190,7 +189,8 @@ public class MergeRequestDetailController extends HttpServlet {
     // ── Helper: lấy requestId từ URL /merge-request/{id} ─────────────────
     private int extractRequestId(HttpServletRequest req) {
         String pathInfo = req.getPathInfo(); // "/123" hoặc null
-        if (pathInfo == null || pathInfo.equals("/")) return -1;
+        if (pathInfo == null || pathInfo.equals("/"))
+            return -1;
         try {
             return Integer.parseInt(pathInfo.substring(1));
         } catch (NumberFormatException e) {
