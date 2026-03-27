@@ -139,7 +139,7 @@
             <li>
               <a
                 class="${fn:startsWith(page, 'deal-') ? 'active' : ''}"
-                href="${pageContext.request.contextPath}${rolePrefix}/deal/list"
+                href="${pageContext.request.contextPath}/deal/list"
               >Deals</a>
             </li>
             <li>
