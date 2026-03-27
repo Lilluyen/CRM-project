@@ -21,6 +21,7 @@ public class CustomerActivityUtil {
             activity.setCreatedBy(createdBy);
             activity.setActivityDate(LocalDateTime.now());
             new ActivityService(conn).createActivity(activity);
+
         } catch (Exception e) {
             System.err.println(
                     "[CustomerActivityUtil] Failed to log activity for customer " + customerId + ": " + e.getMessage());
