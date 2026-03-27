@@ -445,7 +445,7 @@ public class TaskCommentApiController extends HttpServlet {
                 return;
             }
 
-            boolean ok = dao.softDelete(commentId);
+            boolean ok = dao.softDeleteCascade(commentId);
 
             int[] prog = dao.countProgress(existing.getTaskId());
             int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / prog[0] * 100) : 0;

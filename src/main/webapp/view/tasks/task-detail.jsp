@@ -504,6 +504,15 @@
     let CAN_MODIFY = true;
     let allItems = [];
 
+    // All users for dynamic subtask tag selector
+    const ALL_USERS = [
+        <% for (User u : allUsers) {
+            String un = u.getFullName() != null && !u.getFullName().isBlank() ? u.getFullName() : u.getUsername();
+            String safeUn = un.replace("\\", "\\\\").replace("\"", "\\\""); %>
+        {uid: <%= u.getUserId() %>, name: "<%= safeUn %>"},
+        <% } %>
+    ];
+
     function loadWorkTree(){
     fetch(CTX + '/api/task-comments?taskId=' + TASK_ID)
             .then(r => r.json()).then(d => {
@@ -578,8 +587,11 @@
         : '';
 
     // Visual indent based on nesting level (each level adds 24px indent)
-    const indentPx = level * 24;
     const levelIndicator = level > 0 ? '<span class="badge bg-secondary ms-2" style="font-size:0.65rem">L' + level + '</span>' : '';
+
+    // Build user options for the subtask tag selector
+    const userOpts = '<option value="">— Tag someone (optional) —</option>' +
+        ALL_USERS.map(u => '<option value="' + u.uid + '">' + esc(u.name) + '</option>').join('');
 
     // Render children recursively if any exist
     let childHtml = '';
@@ -587,6 +599,34 @@
         const childItemsHtml = children.map((child, childIdx) => renderItem(child, level + 1, childIdx)).join('');
         childHtml = '<div class="wi-replies" style="margin-left:24px;border-left:2px solid #e9ecef;padding-left:8px;">' + childItemsHtml + '</div>';
     }
+
+    // ── Subtask form (Add Subtask button) ─────────────────────────────────────
+    const subtaskForm = canReply ? (
+        '<div class="d-none" id="rb-' + item.commentId + '" style="padding:6px 14px 10px 52px">' +
+        '<div class="border rounded p-2 bg-white shadow-sm">' +
+        '<div class="fw-semibold mb-2" style="font-size:.8rem;color:#1864ab"><i class="fa fa-plus-circle me-1"></i>New Subtask</div>' +
+        '<div class="mb-2"><label class="form-label mb-1" style="font-size:.78rem;font-weight:600"><i class="fa fa-user-tag me-1"></i>Tag Supporter</label>' +
+        '<select id="rs-' + item.commentId + '" class="form-select form-select-sm">' + userOpts + '</select></div>' +
+        '<div class="mb-2"><label class="form-label mb-1" style="font-size:.78rem;font-weight:600"><i class="fa fa-pen me-1"></i>Content</label>' +
+        '<textarea id="ri-' + item.commentId + '" class="form-control form-control-sm" rows="2" placeholder="Describe the subtask…"></textarea></div>' +
+        '<div class="d-flex justify-content-end gap-2">' +
+        '<button class="btn btn-sm btn-outline-secondary" onclick="hideReply(' + item.commentId + ')">Cancel</button>' +
+        '<button class="btn btn-sm btn-primary" onclick="addReply(' + item.commentId + ')"><i class="fa fa-plus me-1"></i>Add Subtask</button>' +
+        '</div></div></div>'
+    ) : '';
+
+    // ── Response form (Response button – no tagging) ──────────────────────────
+    const responseForm = canReply ? (
+        '<div class="d-none" id="rsp-' + item.commentId + '" style="padding:6px 14px 10px 52px">' +
+        '<div class="border rounded p-2 bg-light shadow-sm">' +
+        '<div class="fw-semibold mb-2" style="font-size:.8rem;color:#198754"><i class="fa fa-reply me-1"></i>Response</div>' +
+        '<div class="mb-2">' +
+        '<textarea id="rspt-' + item.commentId + '" class="form-control form-control-sm" rows="2" placeholder="Write your response…"></textarea></div>' +
+        '<div class="d-flex justify-content-end gap-2">' +
+        '<button class="btn btn-sm btn-outline-secondary" onclick="hideResponse(' + item.commentId + ')">Cancel</button>' +
+        '<button class="btn btn-sm btn-success" onclick="addResponse(' + item.commentId + ')"><i class="fa fa-reply me-1"></i>Send Response</button>' +
+        '</div></div></div>'
+    ) : '';
 
     return '<div class="wi-root ' + (done ? 'wi-done' : '') + '" data-comment-id="' + item.commentId + '" data-level="' + level + '">' +
         '<div class="wi-header">' +
@@ -601,15 +641,13 @@
         '</div>' +
         '<div class="d-flex gap-1 flex-shrink-0">' +
         (canReply ? '<button class="btn btn-xs btn-outline-secondary" style="padding:2px 7px;font-size:.74rem" onclick="showReply(' + item.commentId + ')" title="Add subtask"><i class="fa fa-plus"></i></button>' : '') +
+        (canReply ? '<button class="btn btn-xs btn-outline-success" style="padding:2px 7px;font-size:.74rem" onclick="showResponse(' + item.commentId + ')" title="Response"><i class="fa fa-reply"></i></button>' : '') +
         deleteBtn +
         '</div></div>' +
         childHtml +
-        '<div class="wi-replies d-none" id="rb-' + item.commentId + '">' +
-        '<div class="d-flex gap-2 mt-1">' +
-        '<input id="ri-' + item.commentId + '" class="form-control form-control-sm flex-grow-1" placeholder="Add subtask…" onkeydown="if(event.key===\'Enter\'){addReply(' + item.commentId + '); event.preventDefault();}">' +
-        '<button class="btn btn-sm btn-primary" onclick="addReply(' + item.commentId + ')"><i class="fa fa-plus"></i></button>' +
-        '<button class="btn btn-sm btn-outline-secondary" onclick="hideReply(' + item.commentId + ')">✕</button>' +
-        '</div></div></div>';
+        subtaskForm +
+        responseForm +
+        '</div>';
     }
 
 function addWorkItem(){
@@ -627,16 +665,50 @@ function addWorkItem(){
     }).catch(()=>toast('Network error','danger'));
 }
 
-function showReply(id){document.getElementById('rb-'+id).classList.remove('d-none');document.getElementById('ri-'+id).focus();}
-function hideReply(id){document.getElementById('rb-'+id).classList.add('d-none');}
+function showReply(id){
+  // Hide response form if open
+  const rsp = document.getElementById('rsp-'+id);
+  if (rsp) rsp.classList.add('d-none');
+  const el = document.getElementById('rb-'+id);
+  if (el) { el.classList.remove('d-none'); const ta = document.getElementById('ri-'+id); if(ta) ta.focus(); }
+}
+function hideReply(id){ const el=document.getElementById('rb-'+id); if(el) el.classList.add('d-none'); }
 function addReply(parentId){
   if (!CAN_MODIFY) { toast('Task is overdue - modifications not allowed', 'warning'); return; }
-  const inp=document.getElementById('ri-'+parentId);
-  const text=(inp.value||'').trim();if(!text)return;
+  const ta = document.getElementById('ri-'+parentId);
+  const sel = document.getElementById('rs-'+parentId);
+  const text = (ta ? ta.value : '').trim();
+  if (!text) { if(ta) ta.focus(); return; }
+  const assignedTo = sel && sel.value ? parseInt(sel.value) : null;
   fetch(CTX+'/api/task-comments',{method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({taskId:TASK_ID,content:text,parentCommentId:parentId})})
-    .then(r=>r.json()).then(res=>{if(res.success)loadWorkTree();else toast(res.message||'Failed','danger');});
+    body:JSON.stringify({taskId:TASK_ID,content:text,parentCommentId:parentId,assignedTo})})
+    .then(r=>r.json()).then(res=>{
+      if(res.success){ if(ta) ta.value=''; if(sel) sel.value=''; hideReply(parentId); loadWorkTree(); }
+      else toast(res.message||'Failed','danger');
+    }).catch(()=>toast('Network error','danger'));
+}
+
+function showResponse(id){
+  // Hide subtask form if open
+  const rb = document.getElementById('rb-'+id);
+  if (rb) rb.classList.add('d-none');
+  const el = document.getElementById('rsp-'+id);
+  if (el) { el.classList.remove('d-none'); const ta = document.getElementById('rspt-'+id); if(ta) ta.focus(); }
+}
+function hideResponse(id){ const el=document.getElementById('rsp-'+id); if(el) el.classList.add('d-none'); }
+function addResponse(parentId){
+  if (!CAN_MODIFY) { toast('Task is overdue - modifications not allowed', 'warning'); return; }
+  const ta = document.getElementById('rspt-'+parentId);
+  const text = (ta ? ta.value : '').trim();
+  if (!text) { if(ta) ta.focus(); return; }
+  fetch(CTX+'/api/task-comments',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({taskId:TASK_ID,content:text,parentCommentId:parentId,assignedTo:null})})
+    .then(r=>r.json()).then(res=>{
+      if(res.success){ if(ta) ta.value=''; hideResponse(parentId); loadWorkTree(); }
+      else toast(res.message||'Failed','danger');
+    }).catch(()=>toast('Network error','danger'));
 }
 
 function toggleDone(id,done){
