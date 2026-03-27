@@ -40,7 +40,7 @@ public class LeadDetailController extends HttpServlet {
             Lead lead = leadService.getLeadById(leadId);
 
             if (lead == null) {
-                request.getSession().setAttribute("errorMessage", "Lead không tồn tại.");
+                request.getSession().setAttribute("errorMessage", "Lead is not found.");
                 response.sendRedirect(request.getContextPath() + "/marketing/leads");
                 return;
             }

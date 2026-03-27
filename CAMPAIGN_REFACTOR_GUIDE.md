@@ -13,62 +13,65 @@
   - Bootstrap JS Bundle
   - JavaScript menu active state detection
 
-### 2. **Tạo campaign.css (Consolidated CSS)**
+### 2. **Tách CSS theo từng màn hình**
 
-- **Đường dẫn:** `/assets/css/campaign.css`
-- **Kích thước:** ~400+ lines
+- **Đường dẫn:**
+  - `/assets/css/campaign_list.css`
+  - `/assets/css/campaign_form.css`
+  - `/assets/css/campaign_detail.css`
+  - `/assets/css/lead_list.css`
+  - `/assets/css/lead_form.css`
+  - `/assets/css/lead_detail.css`
 - **Nội dung:**
-  - CSS variables (colors, gradients)
-  - Navbar, Page Header, Breadcrumb
-  - Cards, Tables, Badges/Status
-  - Forms & Validation
-  - Detail Page Styles (grid, stats, timeline)
-  - Buttons, Alerts, Empty States
+  - CSS riêng cho từng màn hình (list, form, detail)
+  - Có thể dùng chung biến màu, layout, badge, button, table...
   - Responsive Design (mobile first)
 
-### 3. **Cập nhật 3 JSP chính**
+### 3. **Cập nhật JSP theo từng chức năng**
 
-#### **campaign_list.jsp**
-
-- ✅ Thêm DOCTYPE & HTML5 structure
-- ✅ Link `/assets/css/campaign.css` (thay vì inline styles)
-- ✅ Loại bỏ navbar boilerplate code (giữ navbar logic)
-- ✅ Giữ toàn bộ Campaign List logic (filter, search, table)
-- ✅ Thêm footer + Bootstrap JS
-
-#### **campaign_form.jsp**
-
-- ✅ Thêm DOCTYPE & HTML5 structure
-- ✅ Link `/assets/css/campaign.css`
-- ✅ Loại bỏ inline styles
-- ✅ Giữ form logic (Create/Edit)
-- ✅ Date validation script
-- ✅ Thêm footer + Bootstrap JS
-
-#### **campaign_detail.jsp**
-
-- ✅ Thêm DOCTYPE & HTML5 structure
-- ✅ Link `/assets/css/campaign.css`
-- ✅ Loại bỏ inline styles
-- ✅ Giữ detail view logic (stats, cards, timeline)
-- ✅ Thêm footer + Bootstrap JS
+- **Đường dẫn:**
+  - `/view/marketing/campaign/campaign_list.jsp`
+  - `/view/marketing/campaign/campaign_form.jsp`
+  - `/view/marketing/campaign/campaign_detail.jsp`
+  - `/view/marketing/campaign/campaign_report.jsp`
+  - `/view/marketing/lead/lead_list.jsp`
+  - `/view/marketing/lead/lead_form.jsp`
+  - `/view/marketing/lead/lead_detail.jsp`
+  - `/view/marketing/lead/lead_import.jsp`
+- **Nội dung:**
+  - Mỗi màn hình có file JSP riêng biệt, link đúng file CSS tương ứng
+  - Sử dụng layout_marketing.jsp làm master layout
 
 ---
 
-## 📁 CẤU TRÚC THỜI GIAN THỰC
+src/main/webapp/
+
+## 📁 CẤU TRÚC THƯ MỤC THỰC TẾ
 
 ```
 src/main/webapp/
 ├── assets/
 │   └── css/
-│       └── campaign.css                 ← ✅ CSS tập trung
+│       ├── campaign_list.css
+│       ├── campaign_form.css
+│       ├── campaign_detail.css
+│       ├── lead_list.css
+│       ├── lead_form.css
+│       └── lead_detail.css
 │
 └── view/
-    └── marketing/
-        ├── campaign_list.jsp             ← ✅ Updated (link CSS)
-        ├── campaign_form.jsp             ← ✅ Updated (link CSS)
-        ├── campaign_detail.jsp           ← ✅ Updated (link CSS)
-        └── layout_marketing.jsp          ← ✅ Master layout (NEW)
+  └── marketing/
+    ├── layout_marketing.jsp
+    ├── campaign/
+    │   ├── campaign_list.jsp
+    │   ├── campaign_form.jsp
+    │   ├── campaign_detail.jsp
+    │   └── campaign_report.jsp
+    └── lead/
+      ├── lead_list.jsp
+      ├── lead_form.jsp
+      ├── lead_detail.jsp
+      └── lead_import.jsp
 ```
 
 ---
@@ -79,17 +82,17 @@ src/main/webapp/
 
 ```
 GET /marketing/campaign?action=list
-    ↓
-CampaignController.doGet()
-    ↓
+  ↓
+CampaignListController.doGet()
+  ↓
 CampaignService.getAllCampaigns()
-    ↓
+  ↓
 CampaignDAO.getAllCampaign()
-    ↓
+  ↓
 request.setAttribute("campaigns", list)
-request.getRequestDispatcher("/view/marketing/campaign_list.jsp")
-           .forward(request, response)
-    ↓
+request.getRequestDispatcher("/view/marketing/campaign/campaign_list.jsp")
+       .forward(request, response)
+  ↓
 campaign_list.jsp renders:
   - Navbar
   - Page Header
@@ -98,34 +101,34 @@ campaign_list.jsp renders:
   - Campaign Table (with status badges)
   - Empty State (nếu không có data)
   - Footer
-    ↓
-Browser receives HTML + CSS from campaign.css + JS
+  ↓
+Browser receives HTML + CSS from campaign_list.css + JS
 ```
 
 ### **Create/Edit Campaign**
 
 ```
 GET /marketing/campaign?action=create
-    ↓
-CampaignController.doGet()
-    ↓
-request.getRequestDispatcher("/view/marketing/campaign_form.jsp")
-           .forward(request, response)
-    ↓
+  ↓
+CampaignFormController.doGet()
+  ↓
+request.getRequestDispatcher("/view/marketing/campaign/campaign_form.jsp")
+       .forward(request, response)
+  ↓
 campaign_form.jsp renders:
   - Form with 2-column layout
   - Section 1: Campaign Info (name, channel, description)
   - Section 2: Budget & Timeline (dates, budget input)
   - Section 3: Status (only on edit)
   - Inline validation + date comparison
-    ↓
+  ↓
 POST /marketing/campaign?action=create
-    ↓
-CampaignController.doPost()
-    → Validate in CampaignService
-    → Save via CampaignDAO.insert()
-    → Redirect to /campaign?action=list
-    ↓
+  ↓
+CampaignFormController.doPost()
+  → Validate in CampaignService
+  → Save via CampaignDAO.insert()
+  → Redirect to /marketing/campaign?action=list
+  ↓
 Flash message displayed (success/error)
 ```
 
@@ -133,22 +136,22 @@ Flash message displayed (success/error)
 
 ```
 GET /marketing/campaign?action=detail&id=1
-    ↓
-CampaignController.doGet()
-    ↓
+  ↓
+CampaignDetailController.doGet()
+  ↓
 Campaign campaign = CampaignService.getCampaignById(1)
-    ↓
+  ↓
 request.setAttribute("campaign", campaign)
-request.getRequestDispatcher("/view/marketing/campaign_detail.jsp")
-           .forward(request, response)
-    ↓
+request.getRequestDispatcher("/view/marketing/campaign/campaign_detail.jsp")
+       .forward(request, response)
+  ↓
 campaign_detail.jsp renders:
   - Campaign header (name, status badge, description)
   - Budget & Channel info
   - Campaign details card (timeline, budget section)
   - Stats grid (4 cards: Total Leads, Qualified, Converted, Conversion Rate)
   - Action buttons (Back, Edit, View Leads)
-    ↓
+  ↓
 Delete modal (+confirm before delete)
 ```
 
@@ -228,11 +231,17 @@ Delete modal (+confirm before delete)
 
 ### **Thêm Lead Management vào Campaign**
 
-**File mới cần:**
+**File cần:**
 
-1. `src/main/java/controller/marketing/LeadController.java` (existing)
-2. `src/main/webapp/view/marketing/lead_list.jsp`
-3. `src/main/webapp/assets/css/lead.css` (hoặc reuse campaign.css)
+1. `src/main/java/controller/marketing/LeadListController.java`
+2. `src/main/java/controller/marketing/LeadFormController.java`
+3. `src/main/java/controller/marketing/LeadDetailController.java`
+4. `src/main/webapp/view/marketing/lead/lead_list.jsp`
+5. `src/main/webapp/view/marketing/lead/lead_form.jsp`
+6. `src/main/webapp/view/marketing/lead/lead_detail.jsp`
+7. `src/main/webapp/assets/css/lead_list.css`
+8. `src/main/webapp/assets/css/lead_form.css`
+9. `src/main/webapp/assets/css/lead_detail.css`
 
 **Flow:**
 

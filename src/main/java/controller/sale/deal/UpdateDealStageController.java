@@ -14,6 +14,7 @@ import model.Lead;
 import model.User;
 import util.DBContext;
 import util.CustomerActivityUtil;
+import util.DealActivityUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -42,27 +43,26 @@ public class UpdateDealStageController extends HttpServlet {
 
             DealDAO dao = new DealDAO(conn);
             Deal beforeUpdate = dao.getById(dealId);
+            User currentUser = (User) request.getSession().getAttribute("user");
             dao.updateDealStage(dealId, stage, probability, actualValue);
 
             //xử lý Closed Won
             if ("Closed Won".equalsIgnoreCase(stage)) {
-                handleClosedWon(dealId, conn, (User) request.getSession().getAttribute("user"));
+                handleClosedWon(dealId, conn, currentUser);
             }
 
             if (beforeUpdate != null) {
                 Deal afterUpdate = dao.getById(dealId);
-                Integer customerId = afterUpdate != null ? afterUpdate.getCustomerId() : beforeUpdate.getCustomerId();
-                if (customerId != null && customerId > 0) {
-                    String oldStage = beforeUpdate.getStage() == null ? "(none)" : beforeUpdate.getStage();
-                    String newStage = stage == null ? "(none)" : stage;
-                    if (!oldStage.equalsIgnoreCase(newStage)) {
-                        CustomerActivityUtil.logCustomerActivity(
-                                customerId,
-                                "UPDATE",
-                                "Deal stage updated",
-                                "Updated deal #" + dealId + " stage: " + oldStage + " -> " + newStage + ".",
-                                (User) request.getSession().getAttribute("user"));
-                    }
+                String oldStage = beforeUpdate.getStage();
+                String newStage = afterUpdate != null ? afterUpdate.getStage() : stage;
+                if (!safeEqualsIgnoreCase(oldStage, newStage)) {
+                    DealActivityUtil.logDealStageUpdated(
+                            dealId,
+                            oldStage,
+                            newStage,
+                            afterUpdate != null ? afterUpdate.getCustomerId() : beforeUpdate.getCustomerId(),
+                            afterUpdate != null ? afterUpdate.getLeadId() : beforeUpdate.getLeadId(),
+                            currentUser);
                 }
             }
             conn.commit();
@@ -142,5 +142,15 @@ public class UpdateDealStageController extends HttpServlet {
                     "Converted lead #" + lead.getLeadId() + " to customer via deal #" + dealId + ".",
                     currentUser);
         }
+    }
+
+    private boolean safeEqualsIgnoreCase(String left, String right) {
+        if (left == null && right == null) {
+            return true;
+        }
+        if (left == null || right == null) {
+            return false;
+        }
+        return left.equalsIgnoreCase(right);
     }
 }

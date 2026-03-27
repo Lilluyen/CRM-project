@@ -51,14 +51,14 @@ public class CampaignFormController extends HttpServlet {
                 }
 
                 request.setAttribute("campaign", campaign);
-                forwardForm(request, response, "Chỉnh sửa Campaign - CRM");
+                forwardForm(request, response, "Edit Campaign - CRM");
 
             } catch (NumberFormatException e) {
                 response.sendRedirect(request.getContextPath() + "/marketing/campaign");
             }
         } else {
             // Create mode: hiển thị form trống
-            forwardForm(request, response, "Tạo Campaign Mới - CRM");
+            forwardForm(request, response, "Create New Campaign - CRM");
         }
     }
 
@@ -90,43 +90,43 @@ public class CampaignFormController extends HttpServlet {
             String budgetStr = request.getParameter("budget");
 
             if (name == null || name.trim().isEmpty()) {
-                throw new IllegalArgumentException("Tên campaign không được để trống.");
+                throw new IllegalArgumentException("Name of campaign is not empty.");
             }
 
             BigDecimal budget;
             try {
                 budget = new BigDecimal(budgetStr);
                 if (budget.compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new IllegalArgumentException("Ngân sách phải lớn hơn 0.");
+                    throw new IllegalArgumentException("Budget must be a positive number.");
                 }
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Ngân sách không hợp lệ.");
+                throw new IllegalArgumentException("Invalid budget format.");
             }
 
             String startDateStr = request.getParameter("startDate");
             String endDateStr = request.getParameter("endDate");
             if (startDateStr == null || startDateStr.trim().isEmpty()) {
-                throw new IllegalArgumentException("Ngày bắt đầu không được để trống.");
+                throw new IllegalArgumentException("Start date is not empty.");
             }
             if (endDateStr == null || endDateStr.trim().isEmpty()) {
-                throw new IllegalArgumentException("Ngày kết thúc không được để trống.");
+                throw new IllegalArgumentException("End date is not empty.");
             }
             LocalDate startDate = LocalDate.parse(startDateStr);
             if (startDate.isBefore(LocalDate.now())) {
-                throw new IllegalArgumentException("Ngày bắt đầu phải là ngày hôm nay hoặc sau đó.");
+                throw new IllegalArgumentException("Start date must be today or a future date.");
             }
             LocalDate endDate = LocalDate.parse(endDateStr);
             if (endDate.isBefore(LocalDate.now())) {
-                throw new IllegalArgumentException("Ngày kết thúc phải là ngày hôm nay hoặc sau đó.");
+                throw new IllegalArgumentException("End date must be today or a future date.");
             }
 
             if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
-                throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
+                throw new IllegalArgumentException("End date must be after start date.");
             }
 
             String channel = request.getParameter("channel");
             if (channel == null || channel.trim().isEmpty()) {
-                throw new IllegalArgumentException("Kênh marketing không được để trống.");
+                throw new IllegalArgumentException("Marketing channel is not empty.");
             }
 
             int createdBy = ((User) request.getSession().getAttribute("user")).getUserId();
@@ -135,12 +135,12 @@ public class CampaignFormController extends HttpServlet {
                     channel, "ACTIVE", createdBy, null, null);
 
             campaignService.createCampaign(campaign);
-            request.getSession().setAttribute("successMessage", "Campaign \"" + name + "\" đã được tạo thành công!");
+            request.getSession().setAttribute("successMessage", "Campaign \"" + name + "\" has been created successfully!");
             response.sendRedirect(request.getContextPath() + "/marketing/campaign");
 
         } catch (Exception e) {
             request.setAttribute("error", e.getMessage());
-            forwardForm(request, response, "Tạo Campaign - CRM");
+            forwardForm(request, response, "Create Campaign - CRM");
         }
     }
 
@@ -158,90 +158,90 @@ public class CampaignFormController extends HttpServlet {
             String budgetStr = request.getParameter("budget");
 
             if (name == null || name.trim().isEmpty()) {
-                throw new IllegalArgumentException("Tên campaign không được để trống.");
+                throw new IllegalArgumentException("Campaign name is not empty.");
             }
 
             BigDecimal budget;
             try {
                 budget = new BigDecimal(budgetStr);
                 if (budget.compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new IllegalArgumentException("Ngân sách phải lớn hơn 0.");
+                    throw new IllegalArgumentException("Budget must be a positive number.");
                 }
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Ngân sách không hợp lệ.");
+                throw new IllegalArgumentException("Invalid budget format.");
             }
 
             String status = request.getParameter("status");
             if (status == null || status.trim().isEmpty()) {
-                throw new IllegalArgumentException("Trạng thái không được để trống.");
+                throw new IllegalArgumentException("Status is not empty.");
             }
 
             String startDateStr = request.getParameter("startDate");
             String endDateStr = request.getParameter("endDate");
             if (startDateStr == null || startDateStr.trim().isEmpty()) {
-                throw new IllegalArgumentException("Ngày bắt đầu không được để trống.");
+                throw new IllegalArgumentException("Start date is not empty.");
             }
             if (endDateStr == null || endDateStr.trim().isEmpty()) {
-                throw new IllegalArgumentException("Ngày kết thúc không được để trống.");
+                throw new IllegalArgumentException("End date is not empty.");
             }
             LocalDate startDate = LocalDate.parse(startDateStr);
             LocalDate endDate = LocalDate.parse(endDateStr);
             if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
-                throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu.");
+                throw new IllegalArgumentException("End date must be after start date.");
             }
 
             LocalDate today = LocalDate.now();
             String normalizedStatus = status.trim().toUpperCase();
             if ("PLANNING".equals(normalizedStatus)) {
                 if (startDate.isBefore(today)) {
-                    throw new IllegalArgumentException("Campaign đang ở trạng thái LÊN KẾ HOẠCH: ngày bắt đầu phải là hôm nay hoặc sau đó.");
+                    throw new IllegalArgumentException("Campaign is in PLANNING status: start date must be today or later.");
                 }
                 if (endDate.isBefore(today)) {
-                    throw new IllegalArgumentException("Campaign đang ở trạng thái LÊN KẾ HOẠCH: ngày kết thúc phải là hôm nay hoặc sau đó.");
+                    throw new IllegalArgumentException("Campaign is in PLANNING status: end date must be today or later.");
                 }
             } else if ("ACTIVE".equals(normalizedStatus)) {
                 // ACTIVE: hôm nay phải nằm trong khoảng chạy
                 if (startDate.isAfter(today)) {
-                    throw new IllegalArgumentException("Campaign đang ở trạng thái ĐANG CHẠY: ngày bắt đầu không được sau hôm nay.");
+                    throw new IllegalArgumentException("Campaign is in ACTIVE status: start date must be today or later.");
                 }
                 if (endDate.isBefore(today)) {
-                    throw new IllegalArgumentException("Campaign đang ở trạng thái ĐANG CHẠY: ngày kết thúc phải là hôm nay hoặc sau đó.");
+                    throw new IllegalArgumentException("Campaign is in ACTIVE status: end date must be today or later.");
                 }
             } else if ("COMPLETED".equals(normalizedStatus)) {
                 // COMPLETED: đã kết thúc (endDate ở quá khứ hoặc hôm nay)
                 if (endDate.isAfter(today)) {
-                    throw new IllegalArgumentException("Campaign đang ở trạng thái KẾT THÚC: ngày kết thúc không được sau hôm nay.");
+                    throw new IllegalArgumentException("Campaign is in COMPLETED status: end date must be today or earlier.");
                 }
             } else if ("PAUSED".equals(normalizedStatus)) {
                 // PAUSED: có thể tạm dừng trước khi chạy hoặc trong khi chạy,
                 // nhưng không hợp lý nếu endDate đã qua (nên là COMPLETED).
                 if (endDate.isBefore(today)) {
-                    throw new IllegalArgumentException("Campaign đã qua ngày kết thúc. Vui lòng chọn trạng thái KẾT THÚC.");
+                    throw new IllegalArgumentException("Campaign is in PAUSED status: end date must be today or later.");
                 }
             } else {
-                throw new IllegalArgumentException("Trạng thái campaign không hợp lệ.");
+                throw new IllegalArgumentException("Invalid campaign status.");
             }
 
             String channel = request.getParameter("channel");
             if (channel == null || channel.trim().isEmpty()) {
-                throw new IllegalArgumentException("Kênh marketing không được để trống.");
+                throw new IllegalArgumentException("Marketing channel cannot be empty.");
             }
 
             Campaign campaign = new Campaign(campaignId, name, description, budget, startDate,
                     endDate, channel, status, 0, null, null);
 
             if (campaignService.updateCampaign(campaign)) {
-                request.getSession().setAttribute("successMessage", "Campaign \"" + name + "\" đã được cập nhật thành công!");
+                request.getSession().setAttribute("successMessage", "Campaign \"" + name + "\" has been updated successfully!");
                 response.sendRedirect(request.getContextPath() + "/marketing/campaign");
             } else {
-                throw new Exception("Cập nhật campaign thất bại.");
+                throw new Exception("Failed to update campaign.");
             }
 
         } catch (Exception e) {
             Campaign campaign = campaignService.getCampaignById(campaignId);
             request.setAttribute("campaign", campaign);
             request.setAttribute("error", e.getMessage());
-            forwardForm(request, response, "Chỉnh sửa Campaign - CRM");
+            forwardForm(request, response, " Edit Campaign - CRM");
         }
     }
 }

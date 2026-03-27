@@ -67,7 +67,7 @@ public class LeadImportController extends HttpServlet {
             if (filePart == null || filePart.getSize() == 0) {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("Vui lòng chọn file");
+                errorResponse.setMessage("Please select a file");
                 response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
@@ -77,7 +77,7 @@ public class LeadImportController extends HttpServlet {
             if (!fileName.endsWith(".xlsx")) {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("Chỉ hỗ trợ file .xlsx");
+                errorResponse.setMessage("Only .xlsx files are supported. Please select a valid Excel file.");
                 response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
@@ -114,8 +114,8 @@ public class LeadImportController extends HttpServlet {
                 // File format error - can't read Excel
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("Vui lòng nhập file khác vì sai định dạng. File phải là .xlsx và không bị corrupt.");
-                errorResponse.addError("Lỗi đọc file: " + e.getMessage());
+                errorResponse.setMessage("Please select a different file as the format is incorrect. The file must be a .xlsx file and not corrupted.");
+                errorResponse.addError("Error reading file: " + e.getMessage());
                 response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
@@ -124,7 +124,7 @@ public class LeadImportController extends HttpServlet {
             if (leads == null || leads.isEmpty()) {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("File không có dữ liệu hoặc không đúng định dạng.");
+                errorResponse.setMessage("File does not contain data or is not in the correct format.");
                 response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
@@ -140,11 +140,11 @@ public class LeadImportController extends HttpServlet {
                 importResponse.setTotalFailed(importResponse.getTotalFailed() + parseErrors.size());
             }
 
-            // ===== Log Activity for imported leads =====
+            // ===== Log Activity CHỈ cho lead MỚI (chưa tồn tại trong hệ thống) =====
             if (importResponse.isSuccess()) {
                 User sessionUser = (User) request.getSession().getAttribute("user");
                 if (sessionUser != null) {
-                    for (Lead imported : importResponse.getImportedLeads()) {
+                    for (Lead imported : importResponse.getNewlyCreatedLeads()) {
                         LeadActivityUtil.logLeadActivity(
                                 imported.getLeadId(),
                                 imported.getFullName(),
@@ -162,7 +162,7 @@ public class LeadImportController extends HttpServlet {
         } catch (Exception e) {
             ImportLeadResponse errorResponse = new ImportLeadResponse();
             errorResponse.setSuccess(false);
-            errorResponse.setMessage("Lỗi: " + e.getMessage());
+            errorResponse.setMessage("Error: " + e.getMessage());
             errorResponse.addError(e.toString());
             response.getWriter().write(JsonUtility.toJson(errorResponse));
         }

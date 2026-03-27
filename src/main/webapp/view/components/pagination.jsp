@@ -22,9 +22,9 @@
 
         <%-- LEFT: Thông tin hiển thị --%>
         <small class="text-muted">
-            Hiển thị <strong>${pagination.startItemNumber}</strong> –
+            Showing <strong>${pagination.startItemNumber}</strong> –
             <strong>${pagination.endItemNumber}</strong>
-            / <strong>${pagination.totalItems}</strong> bản ghi
+            / <strong>${pagination.totalItems}</strong> records
         </small>
 
         <%-- CENTER: Điều hướng trang --%>
@@ -89,15 +89,15 @@
 
         <%-- RIGHT: Chọn số bản ghi / trang --%>
         <div class="d-flex align-items-center gap-2">
-            <small class="text-muted">Hiển thị</small>
+            <small class="text-muted">Showing</small>
             <select class="form-select form-select-sm" style="width: auto;"
                     onchange="paginationChangePageSize(this.value)"
-                    aria-label="Số bản ghi mỗi trang">
+                    aria-label="Number of records per page">
                 <option value="5"  ${pagination.pageSize == 5  ? 'selected' : ''}>5</option>
                 <option value="10" ${pagination.pageSize == 10 ? 'selected' : ''}>10</option>
                 <option value="20" ${pagination.pageSize == 20 ? 'selected' : ''}>20</option>
             </select>
-            <small class="text-muted">/ trang</small>
+            <small class="text-muted">/ page</small>
         </div>
     </div>
 
