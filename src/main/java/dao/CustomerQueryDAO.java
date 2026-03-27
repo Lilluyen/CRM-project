@@ -251,6 +251,155 @@ public class CustomerQueryDAO {
 
     }
 
+    // Chuyển toàn bộ dữ liệu liên quan từ source -> target trước khi xóa source
+    public void reassignCustomerRelatedData(int sourceCustomerId, int targetCustomerId, Connection connection)
+            throws SQLException {
+        if (sourceCustomerId <= 0 || targetCustomerId <= 0 || sourceCustomerId == targetCustomerId) {
+            return;
+        }
+
+        // 1) Deal / Ticket / Lead conversion
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Deals SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Tickets SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Leads SET converted_customer_id = ? WHERE converted_customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 2) Activities linked to customer (both related and source)
+        try (PreparedStatement stm = connection.prepareStatement("""
+                UPDATE Activities
+                SET related_id = ?
+                WHERE LOWER(related_type) = 'customer' AND related_id = ?
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection.prepareStatement("""
+                UPDATE Activities
+                SET source_id = ?
+                WHERE LOWER(source_type) = 'customer' AND source_id = ?
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 3) Customer notes
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE customer_note SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 4) Contacts: chỉ chuyển contact chưa tồn tại ở target (theo value)
+        try (PreparedStatement stm = connection.prepareStatement("""
+                INSERT INTO customer_contact (customer_id, is_primary, type, value)
+                SELECT ?, 0, sc.type, sc.value
+                FROM customer_contact sc
+                WHERE sc.customer_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM customer_contact tc
+                    WHERE tc.customer_id = ?
+                      AND LOWER(tc.value) = LOWER(sc.value)
+                  )
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.setInt(3, targetCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM customer_contact WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 5) Style tags: merge unique tags
+        try (PreparedStatement stm = connection.prepareStatement("""
+                INSERT INTO Customer_Style_Map (customer_id, tag_id)
+                SELECT ?, sm.tag_id
+                FROM Customer_Style_Map sm
+                WHERE sm.customer_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM Customer_Style_Map tm
+                    WHERE tm.customer_id = ?
+                      AND tm.tag_id = sm.tag_id
+                  )
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.setInt(3, targetCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM Customer_Style_Map WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 6) Segment map: merge unique segments
+        try (PreparedStatement stm = connection.prepareStatement("""
+                INSERT INTO Customer_Segment_Map (customer_id, segment_id)
+                SELECT ?, s.segment_id
+                FROM Customer_Segment_Map s
+                WHERE s.customer_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM Customer_Segment_Map t
+                    WHERE t.customer_id = ?
+                      AND t.segment_id = s.segment_id
+                  )
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.setInt(3, targetCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM Customer_Segment_Map WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 7) Wardrobe
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Virtual_Wardrobe SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 8) OTP: dữ liệu ngắn hạn, không merge; dọn source để tránh rác
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM CustomerOTP WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
+    }
+
     private SQLServerDataTable toStringTVP(List<String> list) throws SQLException {
 
         SQLServerDataTable tvp = new SQLServerDataTable();

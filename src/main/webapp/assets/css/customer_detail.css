@@ -566,7 +566,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    padding: 0.875rem 1rem 0.875rem 10px;
+    padding: 0.875rem 1rem 0.875rem 0;
     border-right: 1px solid var(--rank-border);
 }
 
@@ -721,39 +721,116 @@ body {
 }
 
 /* ============================================================
-   TAG PICKER
+   TAG PICKER — Modal overlay
    ============================================================ */
+
+/* Backdrop */
 .tag-picker {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: -30px;
-    width: 296px;
+    position: fixed;
+    inset: 0;
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 30, 53, .45);
+    backdrop-filter: blur(3px);
+    animation: tp-backdrop-in .2s var(--ease) both;
+}
+
+@keyframes tp-backdrop-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Dialog box */
+.tag-picker__dialog {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
     background: var(--white);
     border: 1px solid var(--rank-border);
     border-radius: var(--r-lg);
-    padding: 1rem;
     box-shadow: var(--shadow-lg), var(--rank-glow);
-    z-index: 200;
-    animation: tp-in .15s var(--ease) both;
+    overflow: hidden;
+    animation: tp-in .22s var(--ease) both;
+}
+
+/* Top gradient stripe */
+.tag-picker__dialog::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--rank-accent), var(--rank-accent2), transparent);
 }
 
 @keyframes tp-in {
     from {
         opacity: 0;
-        transform: translateY(-8px);
+        transform: scale(.94) translateY(10px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
     }
+}
+
+/* Header inside dialog */
+.tag-picker__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--rank-gradient);
+}
+
+.tag-picker__title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 0;
+}
+
+.tag-picker__close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--text-faint);
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: background .15s, color .15s;
+}
+
+.tag-picker__close:hover {
+    background: var(--rank-accent-soft);
+    color: var(--rank-text);
+}
+
+/* Body */
+.tag-picker__body {
+    padding: 1rem 1.25rem;
 }
 
 .tag-picker__list {
     display: flex;
     flex-wrap: wrap;
     gap: 7px;
-    max-height: 156px;
+    max-height: 200px;
     overflow-y: auto;
     margin-bottom: 0.875rem;
     padding-right: 2px;

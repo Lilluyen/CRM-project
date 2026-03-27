@@ -115,13 +115,18 @@ public class CustomerService {
                 if ("update".equals(source) && incoming.getCustomerId() != null) {
                     int incomingId = incoming.getCustomerId();
 
-                    // Xóa related data trước (style tags, contacts, notes...)
-                    customerQueryDAO.deleteCustomerRelatedData(incomingId, conn);
+                    // Chuyển toàn bộ dữ liệu liên quan về existing trước khi xóa incoming
+                    customerQueryDAO.reassignCustomerRelatedData(incomingId, existingId, conn);
 
                     // Xóa bản ghi customer
                     customerDAO.deleteCustomerById(incomingId, conn);
                 }
-                // 5. Ghi note lịch sử merge
+
+                // 5. Re-calc các chỉ số tổng hợp sau merge
+                customerDAO.updateTotalSpent(conn, existingId);
+                customerDAO.updateLastPurchase(conn, existingId);
+                customerDAO.updateLoyaltyTier(conn, existingId);
+                // 6. Ghi note lịch sử merge
                 noteDAO.insertCustomerNote(conn, new CustomerNote(
                         existingId,
                         "Merged"
