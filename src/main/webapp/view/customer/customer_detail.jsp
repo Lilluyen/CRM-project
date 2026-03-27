@@ -1,9 +1,10 @@
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ page isELIgnored="false" %>
 
-<div class="customer-detail">
+<div class="customer-detail rank-${fn:toLowerCase(fn:replace(customerDetail.loyaltyTier, ' ', '-'))}">
 
     <!-- HEADER -->
     <div class="customer-detail__header">
@@ -48,7 +49,7 @@
                 Merge with...
             </button>
 
-            <a href="mailto:${customerDetail.email}"
+            <a style="display: none;" href="mailto:${customerDetail.email}"
                class="customer-detail__btn customer-detail__btn--primary">
                 Send Email
             </a>
@@ -78,6 +79,25 @@
                 <div class="customer-detail__row">
                     <span>Source</span>
                     <strong>${customerDetail.source}</strong>
+                </div>
+            </div>
+            <div class="customer-detail__card">
+               
+                <div class="d-flex align-items-center justify-content-between">
+                    <h3 class="customer-detail__card-title">Deals (${totalDeals})</h3>
+                    <a style="margin: 0 0 1.1rem;
+                                padding-bottom: 0.75rem;" 
+                    href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${customerDetail.customerId}&relatedType=CUSTOMER">+ New</a>
+                </div>
+
+                <div class="customer-detail__deals">
+                    <c:forEach items="${deals}" var="d">
+                        <div class="customer-detail__row">
+                            <a href="${pageContext.request.contextPath}/sale/deal/detail?id=${d.dealId}"><strong style="color: blue;">${d.dealName}</strong></a>
+                            <span>Value: <fmt:formatNumber type="number" value="${d.actualValue}" maxFractionDigits="0"/>đ</span> 
+                            
+                        </div>
+                    </c:forEach>
                 </div>
             </div>
 
@@ -147,15 +167,15 @@
             <div class="customer-detail__card">
                 <h3 class="customer-detail__card-title">Customer Metrics</h3>
                 <div class="customer-detail__metrics">
-                    <div class="customer-detail__metric">
+                    <!-- <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">Status</span>
                         <span class="customer-detail__metric-value customer-detail__badge">
                             ${customerDetail.status}
                         </span>
-                    </div>
+                    </div> -->
                     <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">Loyalty Tier</span>
-                        <span class="customer-detail__metric-value">${customerDetail.loyaltyTier}</span>
+                        <span class="customer-detail__metric-value customer-detail__rank-pill">${customerDetail.loyaltyTier}</span>
                     </div>
                     <div class="customer-detail__metric">
                         <span class="customer-detail__metric-label">Total Spent</span>
@@ -168,7 +188,138 @@
                 </div>
             </div>
 
+            <div class="customer-detail__card">
+                <h3 class="customer-detail__card-title">Customer Report</h3>
+                <div class="cd-report">
+                    <div class="cd-report__tabs" role="tablist">
+                        <button type="button" class="cd-report__tab" data-tab="growth">Growth</button>
+                        <button type="button" class="cd-report__tab" data-tab="activities">Recent activities</button>
+                        <button type="button" class="cd-report__tab" data-tab="contacts">Contacts</button>
+                        <button type="button" class="cd-report__tab" data-tab="notes">Notes</button>
+                    </div>
+
+                    <div class="cd-report__content">
+                        <div class="cd-report__panel" data-panel="growth">
+                            <div class="cd-report__panel-header">
+                                <div>
+                                    <div class="cd-report__title">Customer growth</div>
+                                    <div class="cd-report__subtitle">Cumulative spend from deals (by month)</div>
+                                </div>
+                            </div>
+                            <div class="cd-report__chart-wrap">
+                                <canvas id="growthChart" height="90"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="cd-report__panel" data-panel="activities">
+                            <div class="cd-report__panel-header">
+                                <div class="cd-report__title">Completed tasks</div>
+                                <div class="cd-report__subtitle">Tasks with progress = 100</div>
+                            </div>
+                            <c:choose>
+                                <c:when test="${empty completedTasks}">
+                                    <div class="cd-report__empty">No completed tasks yet.</div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="cd-timeline">
+                                        <c:forEach items="${completedTasks}" var="t">
+                                            <div class="cd-timeline__item">
+                                                <div class="cd-timeline__dot"></div>
+                                                <div class="cd-timeline__body">
+                                                    <div class="cd-timeline__title">${fn:escapeXml(t.title)}</div>
+                                                    <div class="cd-timeline__meta">
+                                                        <c:choose>
+                                                            <c:when test="${not empty t.completedAt}">
+                                                                ${t.completedAt}
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                ${t.updatedAt}
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                        • Progress: ${t.progress}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+
+                        <div class="cd-report__panel" data-panel="contacts">
+                            <div class="cd-report__panel-header">
+                                <div class="cd-report__title">Contact tab</div>
+                                <div class="cd-report__subtitle">All contacts of customer</div>
+                            </div>
+                            <c:choose>
+                                <c:when test="${empty contacts}">
+                                    <div class="cd-report__empty">No contacts found.</div>
+                                </c:when>
+                                <c:otherwise>
+                                    <table class="cd-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Value</th>
+                                            <th>Primary</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <c:forEach items="${contacts}" var="c">
+                                            <tr>
+                                                <td>${c.type}</td>
+                                                <td>${fn:escapeXml(c.value)}</td>
+                                                <td>
+                                                    <c:if test="${c.primary}">Yes</c:if>
+                                                    <c:if test="${not c.primary}">No</c:if>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+
+                        <div class="cd-report__panel" data-panel="notes">
+                            <div class="cd-report__panel-header">
+                                <div class="cd-report__title">Notes</div>
+                                <div class="cd-report__subtitle">Create a note and view newest first</div>
+                            </div>
+
+                            <form class="cd-note-form" method="post" action="${pageContext.request.contextPath}/customers/detail">
+                                <input type="hidden" name="action" value="addNote"/>
+                                <input type="hidden" name="customerId" value="${customerDetail.customerId}"/>
+                                <textarea name="note" rows="3" class="cd-note-form__textarea"
+                                          placeholder="Write a note for this customer..."></textarea>
+                                <div class="cd-note-form__actions">
+                                    <button type="submit" class="cd-note-form__btn">Save note</button>
+                                </div>
+                            </form>
+
+                            <c:choose>
+                                <c:when test="${empty notes}">
+                                    <div class="cd-report__empty">No notes yet.</div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="cd-notes">
+                                        <c:forEach items="${notes}" var="n">
+                                            <div class="cd-notes__item">
+                                                <div class="cd-notes__meta">
+                                                    <c:if test="${not empty n.createdAt}">${n.createdAt}</c:if>
+                                                </div>
+                                                <div class="cd-notes__text">${fn:escapeXml(n.note)}</div>
+                                            </div>
+                                        </c:forEach>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
 
     </div>
 
@@ -230,9 +381,9 @@
     </div>
 </div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-    var CURRENT_CUSTOMER_ID = ${customerDetail.customerId};
+    var CURRENT_CUSTOMER_ID = Number('${customerDetail.customerId}');
     var CONTEXT_PATH = '${pageContext.request.contextPath}';
     var searchTimer = null;
 
@@ -314,4 +465,102 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeMergeModal();
     });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Customer Report Tabs + Growth Chart
+    // ─────────────────────────────────────────────────────────────────────────
+    function initCustomerReport() {
+        var defaultTab = '${activeTab}';
+        var tabs = document.querySelectorAll('.cd-report__tab');
+        var panels = document.querySelectorAll('.cd-report__panel');
+
+        function setActive(tabName) {
+            tabs.forEach(function (b) {
+                b.classList.toggle('is-active', b.dataset.tab === tabName);
+            });
+            panels.forEach(function (p) {
+                p.style.display = (p.dataset.panel === tabName) ? 'block' : 'none';
+            });
+        }
+
+        tabs.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var t = btn.dataset.tab;
+                setActive(t);
+                try {
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('tab', t);
+                    window.history.replaceState({}, '', url.toString());
+                } catch (e) {
+                }
+            });
+        });
+
+        setActive(defaultTab || 'growth');
+        renderGrowthChart();
+    }
+
+    function renderGrowthChart() {
+        var el = document.getElementById('growthChart');
+        if (!el || typeof Chart === 'undefined') return;
+
+        var deals = [
+            <c:forEach items="${deals}" var="d" varStatus="st">
+            {
+                createdAt: '${d.createdAt}',
+                stage: '${d.stage}',
+                actualValue: Number('${empty d.actualValue ? 0 : d.actualValue}')
+            }<c:if test="${!st.last}">,</c:if>
+            </c:forEach>
+        ];
+
+        var byMonth = {};
+        deals.forEach(function (d) {
+            if (!d.createdAt) return;
+            var stage = String(d.stage || '').toLowerCase().replace(/[_\-\s]+/g, ' ').trim();
+            if (stage !== 'closed won') return; // totalSpent chỉ tính deal đã win
+            var month = String(d.createdAt).substring(0, 7); // yyyy-MM
+            byMonth[month] = (byMonth[month] || 0) + (Number(d.actualValue) || 0);
+        });
+        var months = Object.keys(byMonth).sort();
+        var cumulative = [];
+        var run = 0;
+        months.forEach(function (m) {
+            run += byMonth[m];
+            cumulative.push(run);
+        });
+
+        new Chart(el, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Total spent',
+                    data: cumulative,
+                    tension: 0.25,
+                    borderWidth: 2,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {legend: {display: false}},
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function (value) {
+                                try {
+                                    return Number(value).toLocaleString('vi-VN') + ' đ';
+                                } catch (e) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initCustomerReport);
 </script>

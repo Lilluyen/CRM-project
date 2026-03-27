@@ -13,6 +13,7 @@ import model.Lead;
 import model.Product;
 import util.DBContext;
 import util.CustomerActivityUtil;
+import util.DealActivityUtil;
 import model.User;
 
 import java.io.IOException;
@@ -112,28 +113,38 @@ public class EditDealController extends HttpServlet {
             DealDAO dealDAO = new DealDAO(conn);
             DealProductDAO dealProductDAO = new DealProductDAO(conn);
             Deal beforeUpdate = dealDAO.getById(dealId);
+            User currentUser = (User) request.getSession().getAttribute("user");
 
             if (!dealDAO.updateDeal(deal)) {
                 throw new RuntimeException("Cập nhật deal thất bại.");
             }
             if ("Closed Won".equalsIgnoreCase(deal.getStage())) {
-                handleClosedWon(dealId, conn, (User) request.getSession().getAttribute("user"));
+                handleClosedWon(dealId, conn, currentUser);
             }
 
+            Deal afterUpdate = dealDAO.getById(dealId);
+            Integer customerIdForLog = afterUpdate != null ? afterUpdate.getCustomerId() : deal.getCustomerId();
+            Integer leadIdForLog = afterUpdate != null ? afterUpdate.getLeadId() : deal.getLeadId();
+            String dealNameForLog = afterUpdate != null ? afterUpdate.getDealName() : deal.getDealName();
+
+            DealActivityUtil.logDealUpdated(
+                    dealId,
+                    dealNameForLog,
+                    customerIdForLog,
+                    leadIdForLog,
+                    currentUser);
+
             if (beforeUpdate != null) {
-                Deal afterUpdate = dealDAO.getById(dealId);
-                Integer customerId = afterUpdate != null ? afterUpdate.getCustomerId() : deal.getCustomerId();
-                if (customerId != null && customerId > 0) {
-                    String oldStage = beforeUpdate.getStage() == null ? "(none)" : beforeUpdate.getStage();
-                    String newStage = deal.getStage() == null ? "(none)" : deal.getStage();
-                    if (!oldStage.equalsIgnoreCase(newStage)) {
-                        CustomerActivityUtil.logCustomerActivity(
-                                customerId,
-                                "UPDATE",
-                                "Deal stage updated",
-                                "Updated deal #" + dealId + " stage: " + oldStage + " -> " + newStage + ".",
-                                (User) request.getSession().getAttribute("user"));
-                    }
+                String oldStage = beforeUpdate.getStage();
+                String newStage = afterUpdate != null ? afterUpdate.getStage() : deal.getStage();
+                if (!safeEqualsIgnoreCase(oldStage, newStage)) {
+                    DealActivityUtil.logDealStageUpdated(
+                            dealId,
+                            oldStage,
+                            newStage,
+                            customerIdForLog,
+                            leadIdForLog,
+                            currentUser);
                 }
             }
             List<DealItemDTO> items = extractItemsFromRequest(request);
@@ -348,6 +359,16 @@ public class EditDealController extends HttpServlet {
             return defaultValue;
         }
         return new BigDecimal(s.trim());
+    }
+
+    private boolean safeEqualsIgnoreCase(String left, String right) {
+        if (left == null && right == null) {
+            return true;
+        }
+        if (left == null || right == null) {
+            return false;
+        }
+        return left.equalsIgnoreCase(right);
     }
 
     private void handleClosedWon(int dealId, Connection conn, User currentUser) throws SQLException {

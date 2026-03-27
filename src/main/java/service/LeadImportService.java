@@ -32,7 +32,7 @@ public class LeadImportService {
             response.setSuccess(false);
             response.setTotalImported(0);
             response.setTotalFailed(0);
-            response.setMessage("File không có dữ liệu.");
+            response.setMessage("File does not contain data.");
             return response;
         }
 
@@ -73,43 +73,43 @@ public class LeadImportService {
             String rawEmail = lead.getEmail() != null ? lead.getEmail().trim() : "";
             String email = rawEmail.toLowerCase();
 
-            String displayName = name.isEmpty() ? "Không có tên" : name;
-            String displayEmail = rawEmail.isEmpty() ? "Không có email" : rawEmail;
+            String displayName = name.isEmpty() ? "No Name" : name;
+            String displayEmail = rawEmail.isEmpty() ? "No Email" : rawEmail;
 
             // ===== VALIDATE BASIC =====
             if (name.isEmpty()) {
-                errors.add("thiếu họ tên");
+                errors.add("missing full name");
             }
 
             if (rawEmail.isEmpty()) {
-                errors.add("thiếu email");
+                errors.add("missing email");
             } else if (!EmailCheck.isValidEmail(rawEmail)) {
-                errors.add("email không đúng định dạng (ví dụ: ten@congty.com)");
+                errors.add("email is not in the correct format (e.g., name@company.com)");
             }
 
             if (!errors.isEmpty()) {
                 totalFailed++;
-                response.addError("Dòng " + row + " — " + displayName + " (" + displayEmail + "): "
-                        + "Dữ liệu không hợp lệ: " + String.join(", ", errors) + ". "
-                        + "Vui lòng kiểm tra và sửa lại.");
+                response.addError("Row " + row + " — " + displayName + " (" + displayEmail + "): "
+                        + "Invalid data: " + String.join(", ", errors) + ". "
+                        + "Please check and correct the data.");
                 continue;
             }
 
             // ===== DUPLICATE TRONG FILE =====
             if (emailsInBatch.contains(email)) {
                 totalFailed++;
-                response.addError("Dòng " + row + " — " + displayName + " (" + displayEmail + "): "
-                        + "Email này đã xuất hiện ở dòng trước trong file. "
-                        + "Mỗi khách hàng chỉ được dùng một email duy nhất.");
+                response.addError("Row " + row + " — " + displayName + " (" + displayEmail + "): "
+                        + "Duplicate email in the file. Each customer must have a unique email address. "
+                        + "Each customer must have a unique email address.");
                 continue;
             }
 
             // ===== DUPLICATE TRONG CAMPAIGN =====
             if (emailsInCampaign.contains(email)) {
                 totalFailed++;
-                response.addError("Dòng " + row + " — " + displayName + " (" + displayEmail + "): "
-                        + "Khách hàng này đã tồn tại trong chiến dịch. "
-                        + "Không thể import trùng.");
+                response.addError("Row " + row + " — " + displayName + " (" + displayEmail + "): "
+                        + "Customer already exists in the campaign. "
+                        + "Cannot import duplicates.");
                 continue;
             }
 
@@ -119,6 +119,7 @@ public class LeadImportService {
             Lead existing = allExistingByEmail.get(email);
 
             if (existing != null) {
+                // Lead đã tồn tại trong hệ thống → chỉ thêm vào campaign, không log activity
                 existingLeadsToAdd.add(existing);
             } else {
                 int score = LeadScoringUtil.calculateScore(
@@ -152,7 +153,7 @@ public class LeadImportService {
             response.setSuccess(false);
             response.setTotalImported(0);
             response.setTotalFailed(totalFailed);
-            response.setMessage("Import thất bại: tất cả dữ liệu đều không hợp lệ.");
+            response.setMessage("Import failed: all data is invalid.");
             return response;
         }
 
@@ -181,17 +182,18 @@ public class LeadImportService {
 
             if (campaignId != null && campaignId > 0) {
 
-                // NEW LEADS
+                // NEW LEADS → assign campaign + đánh dấu để log activity
                 for (Lead l : newLeads) {
                     Lead created = createdMap.get(l.getEmail().toLowerCase());
                     if (created != null) {
                         campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), "NEW");
                         response.addImportedLead(created);
+                        response.addNewlyCreatedLead(created); // chỉ lead mới → sẽ được log activity
                         totalSuccess++;
                     }
                 }
 
-                // EXISTING LEADS
+                // EXISTING LEADS → chỉ assign campaign, KHÔNG addNewlyCreatedLead → không log activity
                 for (Lead l : existingLeadsToAdd) {
                     campaignLeadDAO.assignLeadToCampaign(campaignId, l.getLeadId(), "NEW");
                     response.addImportedLead(l);
@@ -205,21 +207,21 @@ public class LeadImportService {
             response.setTotalFailed(totalFailed);
 
             if (totalFailed == 0) {
-                response.setMessage("🎉 Import thành công! Đã thêm "
-                        + totalSuccess + " khách hàng vào chiến dịch.");
+                response.setMessage("🎉 Import successful! Added "
+                        + totalSuccess + " customers to the campaign.");
             } else {
-                response.setMessage("⚠️ Import hoàn tất: "
-                        + totalSuccess + " khách hàng được thêm thành công, "
-                        + totalFailed + " dòng bị lỗi. "
-                        + "Vui lòng kiểm tra chi tiết bên dưới để sửa lại file.");
+                response.setMessage("⚠️ Import completed: "
+                        + totalSuccess + " customers added successfully, "
+                        + totalFailed + " rows failed. "
+                        + "Please check the details below to correct the file.");
             }
 
         } catch (Exception e) {
             response.setSuccess(false);
             response.setTotalImported(0);
             response.setTotalFailed(totalFailed);
-            response.setMessage("❌ Đã xảy ra lỗi hệ thống khi import.");
-            response.addError("Chi tiết kỹ thuật: " + e.toString());
+            response.setMessage("❌ An error occurred while importing.");
+            response.addError("Technical details: " + e.toString());
         }
 
         return response;
