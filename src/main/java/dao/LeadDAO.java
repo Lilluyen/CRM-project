@@ -593,17 +593,28 @@ public class LeadDAO {
     // BULK LOOKUP — dùng cho import performance
     // ==============================
     public Set<String> getExistingEmailsByCampaign(int campaignId) {
-        String sql = "SELECT email FROM Leads WHERE campaign_id = ? AND email IS NOT NULL";
+        String sql = """
+        SELECT LOWER(l.email) AS email
+        FROM Leads l
+        JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id
+        WHERE cl.campaign_id = ? AND l.email IS NOT NULL
+    """;
+
         Set<String> emails = new HashSet<>();
+
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, campaignId);
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
-                emails.add(rs.getString("email").toLowerCase());
+                emails.add(rs.getString("email").trim()); // đã LOWER từ SQL
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return emails;
     }
 
