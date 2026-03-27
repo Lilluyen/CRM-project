@@ -17,8 +17,8 @@ public class SaleFilter extends HttpFilter {
 
     @Override
     protected void doFilter(HttpServletRequest request,
-                            HttpServletResponse response,
-                            FilterChain chain)
+            HttpServletResponse response,
+            FilterChain chain)
             throws IOException, ServletException {
 
         String context = request.getContextPath();
@@ -34,11 +34,14 @@ public class SaleFilter extends HttpFilter {
 
         User user = (User) session.getAttribute("user");
 
-        if (2 != user.getRole().getRoleId()) {
-            response.sendRedirect(context + "/login?error=accessDenied");
+        int roleId = user.getRole() != null ? user.getRole().getRoleId() : -1;
+
+        // SALE vào toàn bộ /sale/*
+        if (roleId == 2 || roleId == 5) {
+            chain.doFilter(request, response);
             return;
         }
 
-        chain.doFilter(request, response);
+        response.sendRedirect(context + "/login?error=accessDenied");
     }
 }
