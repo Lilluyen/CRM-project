@@ -140,11 +140,11 @@ public class LeadImportController extends HttpServlet {
                 importResponse.setTotalFailed(importResponse.getTotalFailed() + parseErrors.size());
             }
 
-            // ===== Log Activity for imported leads =====
+            // ===== Log Activity CHỈ cho lead MỚI (chưa tồn tại trong hệ thống) =====
             if (importResponse.isSuccess()) {
                 User sessionUser = (User) request.getSession().getAttribute("user");
                 if (sessionUser != null) {
-                    for (Lead imported : importResponse.getImportedLeads()) {
+                    for (Lead imported : importResponse.getNewlyCreatedLeads()) {
                         LeadActivityUtil.logLeadActivity(
                                 imported.getLeadId(),
                                 imported.getFullName(),

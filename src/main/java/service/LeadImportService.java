@@ -119,6 +119,7 @@ public class LeadImportService {
             Lead existing = allExistingByEmail.get(email);
 
             if (existing != null) {
+                // Lead đã tồn tại trong hệ thống → chỉ thêm vào campaign, không log activity
                 existingLeadsToAdd.add(existing);
             } else {
                 int score = LeadScoringUtil.calculateScore(
@@ -181,17 +182,18 @@ public class LeadImportService {
 
             if (campaignId != null && campaignId > 0) {
 
-                // NEW LEADS
+                // NEW LEADS → assign campaign + đánh dấu để log activity
                 for (Lead l : newLeads) {
                     Lead created = createdMap.get(l.getEmail().toLowerCase());
                     if (created != null) {
                         campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), "NEW");
                         response.addImportedLead(created);
+                        response.addNewlyCreatedLead(created); // chỉ lead mới → sẽ được log activity
                         totalSuccess++;
                     }
                 }
 
-                // EXISTING LEADS
+                // EXISTING LEADS → chỉ assign campaign, KHÔNG addNewlyCreatedLead → không log activity
                 for (Lead l : existingLeadsToAdd) {
                     campaignLeadDAO.assignLeadToCampaign(campaignId, l.getLeadId(), "NEW");
                     response.addImportedLead(l);

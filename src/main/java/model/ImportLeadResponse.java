@@ -93,4 +93,21 @@ public class ImportLeadResponse {
     public void addImportedLead(Lead lead) {
         this.importedLeads.add(lead);
     }
+
+    private List<Lead> newlyCreatedLeads = new ArrayList<>();
+
+    public List<Lead> getNewlyCreatedLeads() {
+        return newlyCreatedLeads;
+    }
+
+    public void setNewlyCreatedLeads(List<Lead> newlyCreatedLeads) {
+        this.newlyCreatedLeads = newlyCreatedLeads;
+    }
+
+    public void addNewlyCreatedLead(Lead lead) {
+        if (this.newlyCreatedLeads == null) {
+            this.newlyCreatedLeads = new ArrayList<>();
+        }
+        this.newlyCreatedLeads.add(lead);
+    }
 }
