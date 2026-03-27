@@ -11,10 +11,10 @@
                 <h4 class="mb-1">
                     <c:choose>
                         <c:when test="${lead.leadId > 0}">
-                            <i class="fas fa-edit me-2"></i>Chỉnh sửa Lead
+                            <i class="fas fa-edit me-2"></i>Edit Lead
                         </c:when>
                         <c:otherwise>
-                            <i class="fas fa-plus-circle me-2"></i>Tạo Lead Mới
+                            <i class="fas fa-plus-circle me-2"></i>Create New Lead
                         </c:otherwise>
                     </c:choose>
                 </h4>
@@ -25,8 +25,8 @@
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">
                             <c:choose>
-                                <c:when test="${lead.leadId > 0}">Chỉnh sửa</c:when>
-                                <c:otherwise>Tạo mới</c:otherwise>
+                                <c:when test="${lead.leadId > 0}">Edit</c:when>
+                                <c:otherwise>Create</c:otherwise>
                             </c:choose>
                         </li>
                     </ol>
@@ -34,7 +34,7 @@
             </div>
             <a href="${pageContext.request.contextPath}/marketing/leads${not empty lockedCampaignId ? '?campaignId='.concat(lockedCampaignId) : (not empty param.campaignId ? '?campaignId='.concat(param.campaignId) : '')}"
                class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                <i class="fas fa-arrow-left me-1"></i> Back to List
             </a>
         </div>
 
@@ -42,7 +42,7 @@
         <c:if test="${not empty error}">
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle me-1"></i>
-                <strong>Lỗi!</strong> ${error}
+                <strong>Error!</strong> ${error}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
@@ -58,16 +58,16 @@
 
                 <!-- Section 1: Thông tin cơ bản -->
                 <div class="form-section">
-                    <h5><i class="fas fa-user me-1"></i> Thông tin Lead</h5>
+                    <h5><i class="fas fa-user me-1"></i> Lead Information</h5>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="fullName" class="form-label required">Họ tên</label>
+                                <label for="fullName" class="form-label required">Full Name</label>
                                 <input type="text" class="form-control" id="fullName" name="fullName"
-                                       value="${lead.fullName}" placeholder="VD: Nguyễn Văn A"
+                                       value="${lead.fullName}" placeholder="e.g., John Doe"
                                        maxlength="100" required>
-                                <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
+                                <div class="invalid-feedback">Please enter your full name.</div>
                             </div>
                         </div>
 
@@ -75,9 +75,9 @@
                             <div class="field-group">
                                 <label for="email" class="form-label required">Email</label>
                                 <input type="email" class="form-control" id="email" name="email"
-                                       value="${lead.email}" placeholder="VD: nguyenvana@company.com"
+                                       value="${lead.email}" placeholder="e.g., john.doe@company.com"
                                        maxlength="100" required>
-                                <div class="invalid-feedback">Vui lòng nhập email hợp lệ.</div>
+                                <div class="invalid-feedback">Please enter a valid email address.</div>
                             </div>
                         </div>
                     </div>
@@ -85,18 +85,18 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="phone" class="form-label">Số điện thoại</label>
+                                <label for="phone" class="form-label">Phone Number</label>
                                 <input type="text" class="form-control" id="phone" name="phone"
-                                       value="${lead.phone}" placeholder="VD: 0901234567"
+                                       value="${lead.phone}" placeholder="e.g., 0901234567"
                                        maxlength="20">
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="interest" class="form-label">Sở thích / Quan tâm</label>
+                                <label for="interest" class="form-label">Interests / Preferences</label>
                                 <input type="text" class="form-control" id="interest" name="interest"
-                                       value="${lead.interest}" placeholder="VD: Sản phẩm A, Dịch vụ B"
+                                       value="${lead.interest}" placeholder="e.g., Product A, Service B"
                                        maxlength="255">
                             </div>
                         </div>
@@ -105,14 +105,14 @@
 
                 <!-- Section 2: Nguồn & Campaign -->
                 <div class="form-section">
-                    <h5><i class="fas fa-bullhorn me-1"></i> Nguồn & Campaign</h5>
+                    <h5><i class="fas fa-bullhorn me-1"></i> Source & Campaign</h5>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="source" class="form-label">Nguồn Lead</label>
+                                <label for="source" class="form-label">Lead Source</label>
                                 <select class="form-select" id="source" name="source">
-                                    <option value="">-- Chọn nguồn --</option>
+                                    <option value="">-- Select Source --</option>
                                     <option value="Website"      ${lead.source == 'Website'      ? 'selected' : ''}>Website</option>
                                     <option value="Facebook"     ${lead.source == 'Facebook'     ? 'selected' : ''}>Facebook</option>
                                     <option value="LinkedIn"     ${lead.source == 'LinkedIn'     ? 'selected' : ''}>LinkedIn</option>
@@ -121,7 +121,7 @@
                                     <option value="Email"        ${lead.source == 'Email'        ? 'selected' : ''}>Email Campaign</option>
                                     <option value="Cold Call"    ${lead.source == 'Cold Call'    ? 'selected' : ''}>Cold Call</option>
                                     <option value="Import"       ${lead.source == 'Import'       ? 'selected' : ''}>Import File</option>
-                                    <option value="Other"        ${lead.source == 'Other'        ? 'selected' : ''}>Khác</option>
+                                    <option value="Other"        ${lead.source == 'Other'        ? 'selected' : ''}>Other</option>
                                 </select>
                             </div>
                         </div>
@@ -140,7 +140,7 @@
                                                value="${lockedCampaignName}" readonly/>
                                         <small class="form-text text-muted mt-1 d-block">
                                             <i class="fas fa-lock me-1"></i>
-                                            Lead sẽ được gắn vào campaign này.
+                                            Lead will be attached to this campaign.
                                         </small>
                                     </c:when>
 
@@ -163,9 +163,9 @@
                                                 <span id="campBtnText">
                                                     <c:choose>
                                                         <c:when test="${joinedCount > 0}">
-                                                            Đã chọn <strong>${joinedCount}</strong> campaign
+                                                            Selected <strong>${joinedCount}</strong> campaign
                                                         </c:when>
-                                                        <c:otherwise>-- Chưa chọn campaign --</c:otherwise>
+                                                        <c:otherwise>-- No campaign selected --</c:otherwise>
                                                     </c:choose>
                                                 </span>
                                                 <i class="fas fa-chevron-down" id="campChevron"
@@ -182,14 +182,14 @@
                                                 <div class="d-flex justify-content-between align-items-center
                                                             px-3 py-2 border-bottom bg-light"
                                                      style="position:sticky; top:0; z-index:1;">
-                                                    <span class="small fw-semibold text-muted">Danh sách Campaign</span>
+                                                    <span class="small fw-semibold text-muted">Campaign List</span>
                                                     <div class="d-flex gap-2">
                                                         <button type="button"
                                                                 class="btn btn-sm btn-outline-primary py-0 px-2"
-                                                                onclick="selectAllCamps()">Chọn tất cả</button>
+                                                                onclick="selectAllCamps()">Select All</button>
                                                         <button type="button"
                                                                 class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                                                onclick="deselectAllCamps()">Bỏ tất cả</button>
+                                                                onclick="deselectAllCamps()">Deselect All</button>
                                                     </div>
                                                 </div>
                                                 <div class="p-2">
@@ -218,14 +218,14 @@
                                                                         <span class="flex-grow-1">${camp.name}</span>
                                                                         <c:if test="${isTicked}">
                                                                             <span class="badge bg-primary"
-                                                                                  style="font-size:.65rem;">Đang tham gia</span>
+                                                                                  style="font-size:.65rem;">Currently Joined</span>
                                                                         </c:if>
                                                                     </label>
                                                                 </c:if>
                                                             </c:forEach>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <p class="text-muted small px-2 mb-0">Chưa có campaign nào.</p>
+                                                            <p class="text-muted small px-2 mb-0">No campaign available.</p>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </div>
@@ -233,7 +233,7 @@
                                         </div>
                                         <small class="form-text text-muted mt-1 d-block">
                                             <i class="fas fa-info-circle me-1"></i>
-                                            Tích để thêm, bỏ tích để rời campaign.
+                                            Check to add, uncheck to leave campaign.
                                         </small>
                                     </c:when>
 
@@ -244,7 +244,7 @@
                                                     class="form-select text-start d-flex justify-content-between align-items-center"
                                                     style="cursor:pointer;"
                                                     onclick="toggleCampPanel(event)">
-                                                <span id="campBtnText">-- Chưa chọn campaign --</span>
+                                                <span id="campBtnText">-- No Campaign Selected --</span>
                                                 <i class="fas fa-chevron-down" id="campChevron"
                                                    style="transition:transform .2s; flex-shrink:0;"></i>
                                             </button>
@@ -258,14 +258,14 @@
                                                 <div class="d-flex justify-content-between align-items-center
                                                             px-3 py-2 border-bottom bg-light"
                                                      style="position:sticky; top:0; z-index:1;">
-                                                    <span class="small fw-semibold text-muted">Danh sách Campaign</span>
+                                                    <span class="small fw-semibold text-muted"> Campaign List</span>
                                                     <div class="d-flex gap-2">
                                                         <button type="button"
                                                                 class="btn btn-sm btn-outline-primary py-0 px-2"
-                                                                onclick="selectAllCamps()">Chọn tất cả</button>
+                                                                onclick="selectAllCamps()">Select All</button>
                                                         <button type="button"
                                                                 class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                                                onclick="deselectAllCamps()">Bỏ tất cả</button>
+                                                                onclick="deselectAllCamps()">Deselect All</button>
                                                     </div>
                                                 </div>
                                                 <div class="p-2">
@@ -289,7 +289,7 @@
                                                             </c:forEach>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <p class="text-muted small px-2 mb-0">Chưa có campaign nào.</p>
+                                                            <p class="text-muted small px-2 mb-0">No campaign available.</p>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </div>
@@ -297,7 +297,7 @@
                                         </div>
                                         <small class="form-text text-muted mt-1 d-block">
                                             <i class="fas fa-info-circle me-1"></i>
-                                            Tích để thêm vào campaign. Chỉ hiển thị campaign đang ACTIVE.
+                                            Check to add to campaign. Only shows ACTIVE campaigns.
                                         </small>
                                     </c:otherwise>
 
@@ -311,7 +311,7 @@
                             <div class="field-group">
                                 <label for="assignedTo" class="form-label">Assigned To</label>
                                 <select class="form-select" id="assignedTo" name="assignedTo">
-                                    <option value="0">-- Chưa phân công --</option>
+                                    <option value="0">-- Not Assigned --</option>
                                     <c:forEach var="user" items="${users}">
                                         <option value="${user.userId}"
                                             ${lead.assignedTo == user.userId ? 'selected' : ''}>
@@ -327,22 +327,22 @@
                 <!-- Section 3: Trạng thái & Điểm (chỉ cho edit mode, read-only) -->
                 <c:if test="${lead.leadId > 0}">
                     <div class="form-section">
-                        <h5><i class="fas fa-chart-line me-1"></i> Trạng thái & Điểm số</h5>
+                        <h5><i class="fas fa-chart-line me-1"></i> Status & Score</h5>
 
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="field-group">
-                                    <label class="form-label">Trạng thái</label>
+                                    <label class="form-label">Status</label>
                                     <input type="text" class="form-control" value="${lead.status}" disabled>
-                                    <small class="form-text text-muted">Trạng thái được tự động xác định theo điểm</small>
+                                    <small class="form-text text-muted">Status is automatically determined based on score</small>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="field-group">
-                                    <label class="form-label">Điểm số</label>
+                                    <label class="form-label">Score</label>
                                     <input type="text" class="form-control" value="${lead.score}" disabled>
-                                    <small class="form-text text-muted">Họ tên +20 | Email +20 | SĐT +20 | Campaign +10</small>
+                                    <small class="form-text text-muted">Full Name +20 | Email +20 | Phone +20 | Campaign +10</small>
                                 </div>
                             </div>
                         </div>
@@ -353,21 +353,21 @@
                 <div class="form-actions">
                     <a href="${pageContext.request.contextPath}/marketing/leads${not empty lockedCampaignId ? '?campaignId='.concat(lockedCampaignId) : (not empty param.campaignId ? '?campaignId='.concat(param.campaignId) : '')}"
                        class="btn btn-large btn-cancel">
-                        <i class="fas fa-times-circle me-1"></i> Hủy
+                        <i class="fas fa-times-circle me-1"></i> Cancel
                     </a>
 
                     <c:choose>
                         <c:when test="${lead.leadId > 0}">
                             <button type="submit" class="btn btn-large btn-save">
-                                <i class="fas fa-check-circle me-1"></i> Cập nhật
+                                <i class="fas fa-check-circle me-1"></i> Update
                             </button>
                         </c:when>
                         <c:otherwise>
                             <button type="reset" class="btn btn-large btn-delete">
-                                <i class="fas fa-eraser me-1"></i> Làm trống
+                                <i class="fas fa-eraser me-1"></i> Clear
                             </button>
                             <button type="submit" class="btn btn-large btn-save">
-                                <i class="fas fa-plus-circle me-1"></i> Tạo mới
+                                <i class="fas fa-plus-circle me-1"></i> Create New
                             </button>
                         </c:otherwise>
                     </c:choose>
@@ -398,17 +398,17 @@
             const email = document.getElementById('email').value.trim();
 
             if (!fullName) {
-                showFieldError('fullName', 'Vui lòng nhập họ tên.');
+                showFieldError('fullName', 'Please enter your full name.');
                 return false;
             }
             if (!email) {
-                showFieldError('email', 'Vui lòng nhập email.');
+                showFieldError('email', 'Please enter your email.');
                 return false;
             }
             // Simple email format check
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-                showFieldError('email', 'Email không đúng định dạng.');
+                showFieldError('email', 'Invalid email format.');
                 return false;
             }
 
@@ -416,7 +416,7 @@
             if (scoreField) {
                 const score = parseInt(scoreField.value);
                 if (scoreField.value !== '' && (isNaN(score) || score < 0 || score > 100)) {
-                    showFieldError('score', 'Điểm số phải từ 0 đến 100.');
+                    showFieldError('score', 'Score must be between 0 and 100.');
                     return false;
                 }
             }
@@ -497,8 +497,8 @@
             if (!txt) return;
             var count = document.querySelectorAll('.camp-cb:checked').length;
             txt.innerHTML = count > 0
-                ? 'Đã chọn <strong>' + count + '</strong> campaign'
-                : '-- Chưa chọn campaign --';
+                ? 'Selected <strong>' + count + '</strong> campaign'
+                : '-- No Campaign Selected --';
         }
     </script>
 </div>

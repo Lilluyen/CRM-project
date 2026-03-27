@@ -183,9 +183,9 @@
             <table class="rpt-table" style="font-size:13px;">
               <thead>
                 <tr>
-                  <th style="text-align:left">Nguồn</th>
-                  <th style="text-align:right">Số Lead</th>
-                  <th style="text-align:right">Tỷ lệ</th>
+                  <th style="text-align:left">Source</th>
+                  <th style="text-align:right">Number of Leads</th>
+                  <th style="text-align:right">Percentage</th>
                 </tr>
               </thead>
               <tbody>

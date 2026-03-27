@@ -11,10 +11,10 @@
                 <h4 class="mb-1">
                     <c:choose>
                         <c:when test="${campaign.campaignId != null}">
-                            <i class="fas fa-edit me-2"></i>Chỉnh sửa Campaign
+                            <i class="fas fa-edit me-2"></i>Edit Campaign
                         </c:when>
                         <c:otherwise>
-                            <i class="fas fa-plus-circle me-2"></i>Tạo Campaign Mới
+                            <i class="fas fa-plus-circle me-2"></i>Create New Campaign
                         </c:otherwise>
                     </c:choose>
                 </h4>
@@ -23,8 +23,8 @@
                         <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/marketing/campaign">Campaign</a></li>
                         <li class="breadcrumb-item active" aria-current="page">
                             <c:choose>
-                                <c:when test="${campaign.campaignId != null}">Chỉnh sửa</c:when>
-                                <c:otherwise>Tạo mới</c:otherwise>
+                                <c:when test="${campaign.campaignId != null}">Edit</c:when>
+                                <c:otherwise>Create</c:otherwise>
                             </c:choose>
                         </li>
                     </ol>
@@ -32,7 +32,7 @@
             </div>
             <a href="${pageContext.request.contextPath}/marketing/campaign"
                class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                <i class="fas fa-arrow-left me-1"></i> Back
             </a>
         </div>
 
@@ -40,7 +40,7 @@
         <c:if test="${not empty error}">
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle"></i>
-                <strong>Lỗi!</strong> ${error}
+                <strong>Error!</strong> ${error}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
@@ -56,24 +56,24 @@
 
                 <!-- Section 1: Campaign Information -->
                 <div class="form-section">
-                    <h5><i class="bi bi-info-circle"></i> Thông tin Chiến dịch</h5>
+                    <h5><i class="bi bi-info-circle"></i> Campaign Information</h5>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="name" class="form-label required">Tên Campaign</label>
+                                <label for="name" class="form-label required">Campaign Name</label>
                                 <input type="text" class="form-control" id="name" name="name" 
                                        value="${campaign.name}" placeholder="VD: Campaign Q1 2026"
                                        maxlength="255" required>
-                                <div class="invalid-feedback">Vui lòng nhập tên campaign.</div>
+                                <div class="invalid-feedback">Please enter the campaign name.</div>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="channel" class="form-label required">Kênh Marketing</label>
+                                <label for="channel" class="form-label required">Marketing Channel</label>
                                 <select class="form-select" id="channel" name="channel" required>
-                                    <option value="">-- Chọn kênh --</option>
+                                    <option value="">-- Select Channel --</option>
                                     <option value="Email" ${campaign.channel == 'Email' ? 'selected' : ''}>
                                         <i class="bi bi-envelope"></i> Email
                                     </option>
@@ -105,50 +105,50 @@
                                         <i class="bi bi-diagram-3"></i> Multi-channel
                                     </option>
                                 </select>
-                                <div class="invalid-feedback">Vui lòng chọn kênh marketing.</div>
+                                <div class="invalid-feedback">Please select a marketing channel.</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="field-group">
-                        <label for="description" class="form-label">Mô tả</label>
+                        <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" 
-                                  rows="4" placeholder="Nhập mô tả chi tiết về campaign..."
+                                  rows="4" placeholder="Enter detailed description about the campaign..."
                                   maxlength="500">${campaign.description}</textarea>
-                        <small class="form-text">Độ dài tối đa: 500 ký tự</small>
+                        <small class="form-text">Maximum length: 500 characters</small>
                     </div>
                 </div>
 
                 <!-- Section 2: Budget & Timeline -->
                 <div class="form-section">
-                    <h5><i class="bi bi-calendar2-event"></i> Ngân sách & Thời gian</h5>
+                    <h5><i class="bi bi-calendar2-event"></i> Budget & Timeline</h5>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="field-group">
-                                <label for="budget" class="form-label required">Ngân sách (₫)</label>
+                                <label for="budget" class="form-label required">Budget (₫)</label>
                                 <input type="number" class="form-control" id="budget" name="budget"
                                        value="${campaign.budget}" placeholder="VD: 50000000"
                                        min="0" step="1000" required>
-                                <span class="currency-helper">Nhập số tiền dự kiến cho campaign</span>
-                                <div class="invalid-feedback">Vui lòng nhập ngân sách hợp lệ.</div>
+                                <span class="currency-helper">Enter the estimated budget for the campaign</span>
+                                <div class="invalid-feedback">Please enter a valid budget.</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="date-input-group">
                         <div class="field-group">
-                            <label for="startDate" class="form-label required">Ngày bắt đầu</label>
+                            <label for="startDate" class="form-label required">Start Date</label>
                             <input type="date" class="form-control" id="startDate" name="startDate"
                                    value="${campaign.startDate}" required>
-                            <div class="invalid-feedback">Vui lòng chọn ngày bắt đầu.</div>
+                            <div class="invalid-feedback">Please select a start date.</div>
                         </div>
 
                         <div class="field-group">
-                            <label for="endDate" class="form-label required">Ngày kết thúc</label>
+                            <label for="endDate" class="form-label required">End Date</label>
                             <input type="date" class="form-control" id="endDate" name="endDate"
                                    value="${campaign.endDate}" required>
-                            <div class="invalid-feedback">Vui lòng chọn ngày kết thúc.</div>
+                            <div class="invalid-feedback">Please select an end date.</div>
                         </div>
                     </div>
                 </div>
@@ -156,26 +156,26 @@
                 <!-- Section 3: Status (only for edit) -->
                 <c:if test="${campaign.campaignId != null}">
                     <div class="form-section">
-                        <h5><i class="bi bi-toggles"></i> Trạng thái</h5>
+                        <h5><i class="bi bi-toggles"></i> Status</h5>
 
                         <div class="field-group">
-                            <label for="status" class="form-label required">Trạng thái Campaign</label>
+                            <label for="status" class="form-label required">Campaign Status</label>
                             <select class="form-select" id="status" name="status" required>
-                                <option value="">-- Chọn trạng thái --</option>
+                                <option value="">-- Select Status --</option>
                                 <option value="PLANNING" ${campaign.status == 'PLANNING' ? 'selected' : ''}>
-                                    <i class="bi bi-hourglass"></i> Lên kế hoạch
+                                    <i class="bi bi-hourglass"></i> Planning
                                 </option>
                                 <option value="ACTIVE" ${campaign.status == 'ACTIVE' ? 'selected' : ''}>
-                                    <i class="bi bi-play-fill"></i> Đang chạy
+                                    <i class="bi bi-play-fill"></i> Active
                                 </option>
                                 <option value="PAUSED" ${campaign.status == 'PAUSED' ? 'selected' : ''}>
-                                    <i class="bi bi-pause-fill"></i> Tạm dừng
+                                    <i class="bi bi-pause-fill"></i> Paused
                                 </option>
                                 <option value="COMPLETED" ${campaign.status == 'COMPLETED' ? 'selected' : ''}>
-                                    <i class="bi bi-check-circle"></i> Kết thúc
+                                    <i class="bi bi-check-circle"></i> Completed
                                 </option>
                             </select>
-                            <div class="invalid-feedback">Vui lòng chọn trạng thái.</div>
+                            <div class="invalid-feedback">Please select a status.</div>
                         </div>
                     </div>
                 </c:if>
@@ -187,7 +187,7 @@
     <!-- Cancel -->
     <a href="${pageContext.request.contextPath}/marketing/campaign"
        class="btn btn-large btn-cancel">
-        <i class="bi bi-x-circle"></i> Hủy
+        <i class="bi bi-x-circle"></i> Cancel
     </a>
 
    
@@ -196,16 +196,16 @@
     <c:choose>
         <c:when test="${not empty campaign.campaignId}">
             <button type="submit" class="btn btn-large btn-save">
-                <i class="bi bi-check-circle"></i> Cập nhật
+                <i class="bi bi-check-circle"></i> Update
             </button>
         </c:when>
         <c:otherwise>
              <!-- Reset Form -->
     <button type="reset" class="btn btn-large btn-delete">
-        <i class="bi bi-eraser"></i> Làm trống
+        <i class="bi bi-eraser"></i> Reset Form
     </button>
             <button type="submit" class="btn btn-large btn-save">
-                <i class="bi bi-plus-circle"></i> Tạo mới
+                <i class="bi bi-plus-circle"></i> Create New
             </button>
         </c:otherwise>
     </c:choose>
@@ -264,27 +264,27 @@
         
         // Kiểm tra required fields
         if (!name) {
-            showFieldError('name', 'Vui lòng nhập tên campaign.');
+            showFieldError('name', 'Please enter the campaign name.');
             return false;
         }
         
         if (!channel) {
-            showFieldError('channel', 'Vui lòng chọn kênh marketing.');
+            showFieldError('channel', 'Please select a marketing channel.');
             return false;
         }
         
         if (!startDate) {
-            showFieldError('startDate', 'Vui lòng chọn ngày bắt đầu.');
+            showFieldError('startDate', 'Please select a start date.');
             return false;
         }
         
         if (!endDate) {
-            showFieldError('endDate', 'Vui lòng chọn ngày kết thúc.');
+            showFieldError('endDate', 'Please select an end date.');
             return false;
         }
         
         if (!budget || parseFloat(budget) <= 0) {
-            showFieldError('budget', 'Vui lòng nhập ngân sách hợp lệ (> 0).');
+            showFieldError('budget', 'Please enter a valid budget (> 0).');
             return false;
         }
         
@@ -293,7 +293,7 @@
         const endDateObj = new Date(endDate);
         
         if (endDateObj <= startDateObj) {
-            showFieldError('endDate', 'Ngày kết thúc phải sau ngày bắt đầu.');
+            showFieldError('endDate', 'End date must be after start date.');
             return false;
         }
         
@@ -301,7 +301,7 @@
         if (campaignId != null) {
             const status = document.getElementById('status').value;
             if (!status) {
-                showFieldError('status', 'Vui lòng chọn trạng thái.');
+                showFieldError('status', 'Please select a status.');
                 return false;
             }
         }
@@ -333,7 +333,7 @@
                 endDateField.classList.add('is-invalid');
                 const feedback = endDateField.parentElement.querySelector('.invalid-feedback');
                 if (feedback) {
-                    feedback.textContent = 'Ngày kết thúc phải sau ngày bắt đầu.';
+                    feedback.textContent = 'End date must be after start date.';
                 }
             } else {
                 endDateField.classList.remove('is-invalid');
