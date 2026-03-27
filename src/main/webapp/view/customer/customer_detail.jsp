@@ -117,7 +117,7 @@
             </div>
 
             <%-- Merge Requests liên quan đến customer này --%>
-            <c:if test="${not empty mergeRequests}">
+            <!-- <c:if test="${not empty mergeRequests}">
                 <div class="customer-detail__card">
                     <h3 class="customer-detail__card-title">Merge Requests</h3>
                     <div class="cd-merge-list">
@@ -140,7 +140,7 @@
                         </c:forEach>
                     </div>
                 </div>
-            </c:if>
+            </c:if> -->
 
         </div>
 

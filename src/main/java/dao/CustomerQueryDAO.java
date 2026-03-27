@@ -258,6 +258,21 @@ public class CustomerQueryDAO {
             return;
         }
 
+        // 0) Merge requests: FK_cmr_target không CASCADE — phải bỏ tham chiếu tới customer sắp xóa
+        try (PreparedStatement stm = connection.prepareStatement("""
+                UPDATE customer_merge_request
+                SET target_id = ?
+                WHERE target_id = ?
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM customer_merge_request WHERE source_id = target_id")) {
+            stm.executeUpdate();
+        }
+
         // 1) Deal / Ticket / Lead conversion
         try (PreparedStatement stm = connection
                 .prepareStatement("UPDATE Deals SET customer_id = ? WHERE customer_id = ?")) {
