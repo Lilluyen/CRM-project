@@ -1,12 +1,18 @@
 package dao;
 
-import model.Deal;
-
 import java.math.BigDecimal;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import model.Deal;
 
 public class DealDAO {
 
@@ -328,7 +334,7 @@ public class DealDAO {
 
     // chuyển id của lead lên id của cus trong deal
     public void updateCustomerForDeal(int dealId, int customerId) throws SQLException {
-        String sql = "UPDATE Deals SET customer_id = ?, lead_id = NULL WHERE deal_id = ?";
+        String sql = "UPDATE Deals SET customer_id = ? WHERE deal_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerId);
             ps.setInt(2, dealId);
