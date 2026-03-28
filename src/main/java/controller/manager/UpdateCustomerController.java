@@ -120,7 +120,7 @@ public class UpdateCustomerController extends HttpServlet {
 //            if (gender == null || gender.isBlank()) {
 //                fieldErrors.put("gender", "Please select a gender.");
 //            } else
-            if (!gender.equalsIgnoreCase("MALE")
+            if (gender != null && !gender.equalsIgnoreCase("MALE")
                     && !gender.equalsIgnoreCase("FEMALE")
                     && !gender.equalsIgnoreCase("OTHER")) {
                 fieldErrors.put("gender", "Invalid gender value.");
