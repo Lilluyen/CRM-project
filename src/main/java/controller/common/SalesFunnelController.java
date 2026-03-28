@@ -1,10 +1,5 @@
 package controller.common;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.util.List;
-
 import dao.SalesFunnelDAO;
 import dto.report.SalesFunnelStageDTO;
 import jakarta.servlet.ServletException;
@@ -16,7 +11,12 @@ import jakarta.servlet.http.HttpSession;
 import model.User;
 import util.DBContext;
 
-@WebServlet(name = "SalesFunnelController", urlPatterns = { "/funnel" })
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.util.List;
+
+@WebServlet(name = "SalesFunnelController", urlPatterns = {"/funnel"})
 public class SalesFunnelController extends HttpServlet {
 
     @Override
@@ -31,7 +31,7 @@ public class SalesFunnelController extends HttpServlet {
 
         User user = (User) session.getAttribute("user");
         int roleId = user.getRole() != null ? user.getRole().getRoleId() : 0;
-        if (roleId != 2 && roleId != 5) {
+        if (roleId != 2 && roleId != 5 && roleId != 1) {
             response.sendRedirect(request.getContextPath() + "/login?error=accessDenied");
             return;
         }
@@ -64,7 +64,7 @@ public class SalesFunnelController extends HttpServlet {
             request.setAttribute("page", "sales-funnel");
             request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
             // request.getRequestDispatcher("/view/sale/funnel/salesFunnel.jsp").forward(request, response);
-            
+
 
         } catch (Exception e) {
             throw new ServletException(e);

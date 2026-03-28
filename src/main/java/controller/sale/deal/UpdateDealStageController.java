@@ -12,8 +12,8 @@ import model.Customer;
 import model.Deal;
 import model.Lead;
 import model.User;
-import util.DBContext;
 import util.CustomerActivityUtil;
+import util.DBContext;
 import util.DealActivityUtil;
 
 import java.io.IOException;
@@ -57,6 +57,7 @@ public class UpdateDealStageController extends HttpServlet {
                 String newStage = afterUpdate != null ? afterUpdate.getStage() : stage;
                 if (!safeEqualsIgnoreCase(oldStage, newStage)) {
                     DealActivityUtil.logDealStageUpdated(
+                            conn,
                             dealId,
                             oldStage,
                             newStage,
@@ -95,10 +96,12 @@ public class UpdateDealStageController extends HttpServlet {
             customerDAO.updateLastPurchase(conn, customerId);
 
             // 2. tính lại total_spent
-           customerDAO.updateTotalSpent(conn, customerId);
+            customerDAO.updateTotalSpent(conn, customerId);
 
-           // 3. tính lại loyalty_tier
-           customerDAO.updateLoyaltyTier(conn, customerId);
+            // 3. tính lại loyalty_tier
+            customerDAO.updateLoyaltyTier(conn, customerId);
+
+
         }
 
         // 3. Nếu có lead → convert

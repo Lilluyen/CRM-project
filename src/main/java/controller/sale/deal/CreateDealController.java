@@ -105,6 +105,7 @@ public class CreateDealController extends HttpServlet {
             dealProductDAO.replaceDealItems(newId, items);
             User createdBy = (User) request.getSession().getAttribute("user");
             DealActivityUtil.logDealCreated(
+                    conn,
                     newId,
                     deal.getDealName(),
                     deal.getCustomerId(),
