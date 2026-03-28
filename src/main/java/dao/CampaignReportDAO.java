@@ -191,7 +191,7 @@ public class CampaignReportDAO {
                 + "FROM Campaigns c "
                 + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
                 + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
-                + "WHERE 1 = 1 ");
+                + "WHERE 1 = 1 AND c.status = 'ACTIVE' ");
 
         List<Object> params = new ArrayList<>();
         if (campaignId != null) {
@@ -300,7 +300,7 @@ public class CampaignReportDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT "
                 + "ISNULL(SUM(CASE WHEN l.status = 'NEW_LEAD' THEN 1 ELSE 0 END), 0) AS new_cnt, "
-                + "ISNULL(SUM(CASE WHEN l.status = 'CONTACTED' THEN 1 ELSE 0 END), 0) AS contacted_cnt, "
+                + "ISNULL(SUM(CASE WHEN l.status = 'NURTURING' THEN 1 ELSE 0 END), 0) AS contacted_cnt, "
                 + "ISNULL(SUM(CASE WHEN l.status = 'QUALIFIED' THEN 1 ELSE 0 END), 0) AS qualified_cnt, "
                 + "ISNULL(SUM(CASE WHEN l.status = 'DEAL_CREATED' THEN 1 ELSE 0 END), 0) AS converted_cnt, "
                 + "ISNULL(SUM(CASE WHEN l.status = 'LOST' THEN 1 ELSE 0 END), 0) AS lost_cnt "
@@ -343,11 +343,12 @@ public class CampaignReportDAO {
         DealResultReportDTO dto = new DealResultReportDTO(0, 0, 0);
 
         StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(DISTINCT d.deal_id) AS total_deals, "
-                + "COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) AS deals_won, "
-                + "COUNT(DISTINCT CASE WHEN d.stage = 'Closed Lost' THEN d.deal_id END) AS deals_lost "
-                + "FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
-                + "WHERE 1 = 1 ");  // ✅ dùng WHERE 1=1 thay vì hardcode campaign_id
+                """
+                    SELECT COUNT(DISTINCT d.deal_id) AS total_deals,
+                    COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) AS deals_won,
+                    COUNT(DISTINCT CASE WHEN d.stage = 'Closed Lost' THEN d.deal_id END) AS deals_lost
+                    FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id
+                    WHERE 1 = 1""");  // ✅ dùng WHERE 1=1 thay vì hardcode campaign_id
 
         List<Object> params = new ArrayList<>();
         if (campaignId != null) {
@@ -398,9 +399,15 @@ public class CampaignReportDAO {
 
         // Count total parameter placeholders needed
         int paramCount = 0;
-        if (campaignId != null) paramCount += 5;
-        if (fromDate != null && !fromDate.isEmpty()) paramCount += 3;
-        if (toDate != null && !toDate.isEmpty()) paramCount += 3;
+        if (campaignId != null) {
+            paramCount += 5;
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            paramCount += 3;
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            paramCount += 3;
+        }
 
         StringBuilder sql = new StringBuilder(
                 "SELECT "
@@ -435,8 +442,7 @@ public class CampaignReportDAO {
                 + dateConditionCampaigns
                 + " ) AS cost");
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             int paramIndex = 1;
             if (campaignId != null) {
