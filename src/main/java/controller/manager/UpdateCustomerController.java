@@ -9,21 +9,21 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.ContactValidationResult;
+import model.User;
 import service.CustomerService;
+import util.ControllerUltil;
+import util.CustomerActivityUtil;
 import util.PhoneCheck;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import util.ControllerUltil;
-import util.CustomerActivityUtil;
-import model.User;
-import java.time.format.DateTimeFormatter;
 
-@WebServlet(name = "UpdateCustomerController", urlPatterns = { "/customers/edit" })
+@WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
 public class UpdateCustomerController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -117,9 +117,10 @@ public class UpdateCustomerController extends HttpServlet {
             }
 
             // Gender
-            if (gender == null || gender.isBlank()) {
-                fieldErrors.put("gender", "Please select a gender.");
-            } else if (!gender.equalsIgnoreCase("MALE")
+//            if (gender == null || gender.isBlank()) {
+//                fieldErrors.put("gender", "Please select a gender.");
+//            } else
+            if (!gender.equalsIgnoreCase("MALE")
                     && !gender.equalsIgnoreCase("FEMALE")
                     && !gender.equalsIgnoreCase("OTHER")) {
                 fieldErrors.put("gender", "Invalid gender value.");
@@ -189,15 +190,15 @@ public class UpdateCustomerController extends HttpServlet {
             // Chỉ gọi 1 lần
             int row = customerService.updateCustomer(dto, customerId);
             String description = (phone != null && !phone.isBlank() ? "Updated customer with phone: " + phone
-                    : (null + ", ")) +
-                    (email != null && !email.isBlank() ? ", with email: " + email : (null)) +
-                    (gender != null && !gender.isBlank() ? ", with gender: " + gender : (null)) +
+                    : ("")) +
+                    (email != null && !email.isBlank() ? ", with email: " + email : ("")) +
+                    (gender != null && !gender.isBlank() ? ", with gender: " + gender : ("")) +
                     (birthday != null && birthday.isBefore(LocalDate.now())
                             ? ", with birthday: " + birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                            : null)
+                            : "")
                     +
-                    (source != null && !source.isBlank() ? ", from: " + source : (null)) +
-                    (address != null && !address.isBlank() ? ", address: " + address : (null));
+                    (source != null && !source.isBlank() ? ", from: " + source : ("")) +
+                    (address != null && !address.isBlank() ? ", address: " + address : (""));
             if (row > 0) {
                 CustomerActivityUtil.logCustomerActivity(customerId, "UPDATE", "Customer updated",
                         description + ".",
@@ -253,7 +254,7 @@ public class UpdateCustomerController extends HttpServlet {
 
     // ── Reload form: always fetch fresh customer data from DB ─────────────
     private void reloadFormData(HttpServletRequest request, int customerId,
-            Map<String, String> fieldErrors, String globalMessage)
+                                Map<String, String> fieldErrors, String globalMessage)
             throws ServletException {
         try {
             request.setAttribute("customerDetail",
@@ -283,7 +284,7 @@ public class UpdateCustomerController extends HttpServlet {
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,
-            Map<String, String> errors) {
+                                             Map<String, String> errors) {
         if (value == null || value.isBlank())
             return null;
         try {

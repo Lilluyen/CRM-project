@@ -13,11 +13,7 @@ import model.ContactValidationResult;
 import model.StyleTag;
 import model.User;
 import service.CustomerService;
-import util.ControllerUltil;
-import util.CustomerActivityUtil;
-import util.EmailCheck;
-import util.NameCheck;
-import util.PhoneCheck;
+import util.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -27,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@WebServlet(name = "CreateCustomerController", urlPatterns = { "/customers/add-customer" })
+@WebServlet(name = "CreateCustomerController", urlPatterns = {"/customers/add-customer"})
 public class CreateCustomerController extends HttpServlet {
 
     CustomerDAO customerDAO = new CustomerDAO();
@@ -121,9 +117,9 @@ public class CreateCustomerController extends HttpServlet {
             }
 
             // Validate gender
-            if (gender == null || gender.isBlank()) {
-                fieldErrors.put("gender", "Please select a gender.");
-            }
+//            if (gender == null || gender.isBlank()) {
+//                fieldErrors.put("gender", "Please select a gender.");
+//            }
 
             // Validate birthday
             LocalDate birthday = null;
@@ -180,16 +176,16 @@ public class CreateCustomerController extends HttpServlet {
             int newId = customerService.createCustomer(dto, user.getUserId());
             if (newId != 0) {
                 String description = (phone != null && !phone.isBlank() ? "Created customer with phone: " + phone
-                        : (null + ", ")) +
-                        (email != null && !email.isBlank() ? ", with email: " + email : (null)) +
-                        (gender != null && !gender.isBlank() ? ", with gender: " + gender : (null)) +
+                        : ("")) +
+                        (email != null && !email.isBlank() ? ", with email: " + email : ("")) +
+                        (gender != null && !gender.isBlank() ? ", with gender: " + gender : ("")) +
                         (birthday != null && birthday.isBefore(LocalDate.now())
                                 ? ", with birthday: " + birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                : null)
+                                : "")
                         +
 
-                        (source != null && !source.isBlank() ? ", from: " + source : (null)) +
-                        (address != null && !address.isBlank() ? ", address: " + address : (null));
+                        (source != null && !source.isBlank() ? ", from: " + source : ("")) +
+                        (address != null && !address.isBlank() ? ", address: " + address : (""));
                 CustomerActivityUtil.logCustomerActivity(newId, "CREATE", "Customer created", description + ".",
                         user);
             }
@@ -243,10 +239,10 @@ public class CreateCustomerController extends HttpServlet {
 
     // ── Reload form with errors + previously typed values ────────────────
     private void reloadFormOnError(HttpServletRequest req,
-            Map<String, String> fieldErrors,
-            String name, String phone, String email,
-            String gender, String birthday,
-            String source, String address, String[] selectedTags)
+                                   Map<String, String> fieldErrors,
+                                   String name, String phone, String email,
+                                   String gender, String birthday,
+                                   String source, String address, String[] selectedTags)
             throws ServletException {
         try {
             // Errors
@@ -290,7 +286,7 @@ public class CreateCustomerController extends HttpServlet {
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,
-            Map<String, String> errors) {
+                                             Map<String, String> errors) {
         if (value == null || value.isBlank())
             return null;
         try {
