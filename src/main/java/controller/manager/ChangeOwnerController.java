@@ -31,14 +31,14 @@ public class ChangeOwnerController extends HttpServlet {
 
             service.changeOwner(segmentId, customerId, userId);
 
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=success");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + segmentId + "&status=success");
 
         } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=failed");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + req.getParameter("segment_id") + "&status=failed");
 
         } catch (SQLException e) {
             e.printStackTrace();
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=failed");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + req.getParameter("segment_id") + "&status=failed");
         }
     }
 }

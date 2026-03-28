@@ -19,7 +19,8 @@ public class RemoveCustomerFromSegmentController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.sendRedirect(req.getContextPath() + "/customers/segments");
+        String segmentId = req.getParameter("segment_id");
+        resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + segmentId);
     }
 
     @Override
@@ -36,11 +37,11 @@ public class RemoveCustomerFromSegmentController extends HttpServlet {
                     "Segment removed",
                     "Removed customer from segment #" + segmentId + ".",
                     user);
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=success");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + segmentId + "&status=success");
         } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=failed");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + req.getParameter("segment_id") + "&status=failed");
         } catch (SQLException e) {
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=failed");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + req.getParameter("segment_id") + "&status=failed");
             throw new RuntimeException(e);
         }
     }
