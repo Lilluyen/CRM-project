@@ -124,6 +124,28 @@
                             </div>
                             <% } %>
                         </div>
+
+                        <%-- Related Entity (like activity-create.jsp) --%>
+                        <div class="col-md-3">
+                            <label for="taskRelatedType" class="form-label fw-semibold">Related Type</label>
+                            <select name="relatedType" class="form-select" id="taskRelatedType" onchange="loadRelatedEntities()">
+                                <option value="">-- None --</option>
+                                <option value="CUSTOMER">Customer</option>
+                                <option value="LEAD">Lead</option>
+                                <option value="DEAL">Deal</option>
+                                <option value="TASK">Task</option>
+                                <option value="CAMPAIGN">Campaign</option>
+                                <option value="INTERNAL">Internal</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="taskRelatedId" class="form-label fw-semibold">Related Name</label>
+                            <select name="relatedId" class="form-select" id="taskRelatedId" disabled>
+                                <option value="">Select type first</option>
+                            </select>
+                        </div>
+
                     </div>
 
                     <div class="d-flex gap-2 mt-4">
@@ -197,5 +219,41 @@ if (searchInput) {
             i.style.display = (name.includes(q) || email.includes(q)) ? '' : 'none';
         });
     });
+}
+
+// Load related entities for dropdown (same as activity-create.jsp)
+function loadRelatedEntities() {
+    const typeSelect = document.getElementById('taskRelatedType');
+    const idSelect  = document.getElementById('taskRelatedId');
+    const selectedType = typeSelect.value;
+
+    idSelect.innerHTML = '<option value="">Loading...</option>';
+    idSelect.disabled = true;
+
+    if (!selectedType) {
+        idSelect.innerHTML = '<option value="">Select type first</option>';
+        return;
+    }
+    if (selectedType === 'INTERNAL') {
+        idSelect.innerHTML = '<option value="">No entities</option>';
+        return;
+    }
+
+    const apiType = selectedType.toLowerCase();
+    fetch(CTX + '/api/related-entities?type=' + apiType)
+        .then(r => r.json())
+        .then(data => {
+            idSelect.innerHTML = '<option value="">-- Select --</option>';
+            data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.name + (item.email ? ' (' + item.email + ')' : '');
+                idSelect.appendChild(opt);
+            });
+            idSelect.disabled = false;
+        })
+        .catch(() => {
+            idSelect.innerHTML = '<option value="">Error loading</option>';
+        });
 }
 </script>

@@ -216,9 +216,9 @@ public class TaskService {
     }
 
     /** Backward-compat overload – no related entity context. */
-    public boolean createTask(Task task) {
-        return createTask(task, null, null);
-    }
+//    public boolean createTask(Task task) {
+//        return createTask(task, null, null);
+//    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // UPDATE – logs every changed field (Scenarios 3, 4, 6, 7, 10)
