@@ -27,7 +27,7 @@
                 <div class="col-md-5">
                     <label class="form-label">Search</label>
                     <input type="text" name="search" value="${param.search}" class="form-control"
-                           placeholder="Search deal name..." />
+                           placeholder="Search deal name..."/>
                 </div>
 
                 <div class="col-md-4">
@@ -81,17 +81,23 @@
                             <td>${d.actualValue}</td>
                             <td>${d.expectedCloseDate}</td>
                             <td>
-                                <a class="btn btn-sm btn-info" href="${pageContext.request.contextPath}/sale/deal/detail?id=${d.dealId}">View</a>
-                                <a class="btn btn-sm btn-warning" href="${pageContext.request.contextPath}/sale/deal/edit?id=${d.dealId}">Edit</a>
-                                <a class="btn btn-sm btn-danger" href="${pageContext.request.contextPath}/sale/deal/delete?id=${d.dealId}"
+                                <a class="btn btn-sm btn-info"
+                                   href="${pageContext.request.contextPath}/sale/deal/detail?id=${d.dealId}">View</a>
+                                <a class="btn btn-sm btn-warning"
+                                   href="${pageContext.request.contextPath}/sale/deal/edit?id=${d.dealId}">Edit</a>
+                                <a class="btn btn-sm btn-danger"
+                                   href="${pageContext.request.contextPath}/sale/deal/delete?id=${d.dealId}"
                                    onclick="return confirm('Delete this deal?')">Delete</a>
 
-                                <form method="post" action="${pageContext.request.contextPath}/sale/deal/stage" style="display:inline-block;">
-                                    <input type="hidden" name="id" value="${d.dealId}" />
-                                    <input type="hidden" name="actualValue" value="${d.actualValue}" />
-                                    <select name="stage" class="form-select form-select-sm" style="width:auto; display:inline-block;">
+                                <form method="post" action="${pageContext.request.contextPath}/sale/deal/stage"
+                                      style="display:inline-block;">
+                                    <input type="hidden" name="id" value="${d.dealId}"/>
+                                    <input type="hidden" name="actualValue" value="${d.actualValue}"/>
+                                    <select name="stage" class="form-select form-select-sm"
+                                            style="width:auto; display:inline-block;">
                                         <c:forEach var="s" items="${stages}">
-                                            <option value="${s}" <c:if test="${d.stage == s}">selected</c:if>>${s}</option>
+                                            <option value="${s}"
+                                                    <c:if test="${d.stage == s}">selected</c:if>>${s}</option>
                                         </c:forEach>
                                     </select>
                                     <button type="submit" class="btn btn-sm btn-outline-primary">Move</button>
@@ -113,7 +119,8 @@
                 <ul class="pagination">
                     <c:forEach begin="1" end="${totalPages}" var="i">
                         <li class="page-item <c:if test='${i == currentPage}'>active</c:if>">
-                            <a class="page-link" href="${pageContext.request.contextPath}/sale/deal/list?page=${i}&search=${param.search}&stage=${param.stage}">${i}</a>
+                            <a class="page-link"
+                               href="${pageContext.request.contextPath}/deal/list?page=${i}&search=${param.search}&stage=${param.stage}">${i}</a>
                         </li>
                     </c:forEach>
                 </ul>

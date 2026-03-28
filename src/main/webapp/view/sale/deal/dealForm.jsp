@@ -167,7 +167,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-1"></i> Save
                     </button>
-                    <a href="${pageContext.request.contextPath}/sale/deal/list" class="btn btn-secondary">Cancel</a>
+                    <a href="${pageContext.request.contextPath}/deal/list" class="btn btn-secondary">Cancel</a>
                 </div>
 
             </form>
