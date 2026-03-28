@@ -870,28 +870,20 @@ public class TaskDAO {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 20. SCHEDULE - Get tasks for a specific week with subtasks
+    // MONTHLY TIMELINE
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
-     * Get tasks and subtasks for a user's schedule within a date range.
-     * For employee: returns their own tasks + tasks they're assigned to
-     * For manager: returns all root tasks of their subordinates
-     *
-     * @param userId    current user ID
-     * @param isManager whether user is manager/admin
-     * @param startDate range start
-     * @param endDate   range end
-     * @return list of schedule items (tasks and subtasks)
+     * Get tasks for the monthly timeline.
+     * - Manager: ALL root tasks (no role filter on creator).
+     * - Employee: tasks where user is owner, active assignee, or mentioned in comments.
      */
-    public List<Task> getScheduleTasks(int userId, boolean isManager,
-            java.time.LocalDate startDate,
-            java.time.LocalDate endDate) {
+    public List<Task> getMonthlyTasks(int userId, boolean isManager) {
         List<Task> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
 
         if (isManager) {
-            // Manager: get all root tasks (no parent) of subordinates
-            // Subordinates = users with role_id != 1 (not admin) and under this manager
+            // Manager: ALL root tasks (no role filter on creator)
             sql.append("""
                     SELECT DISTINCT t.*,
                            u.user_id AS u_id, u.full_name, u.email, u.username,
@@ -899,26 +891,13 @@ public class TaskDAO {
                     FROM Tasks t
                     LEFT JOIN Users u ON t.created_by = u.user_id
                     LEFT JOIN Roles r ON u.role_id = r.role_id
-                    WHERE t.task_id IN (
-                        -- Root tasks created by subordinates (not admin, not this user)
-                        SELECT t2.task_id
-                        FROM Tasks t2
-                        JOIN Users sub ON t2.created_by = sub.user_id
-                        WHERE sub.role_id != 1
-                        AND t2.task_id NOT IN (
-                            SELECT task_id FROM Task_Comments WHERE parent_comment_id IS NOT NULL
-                        )
-                    )
-                    AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
-                    AND (
-                        (t.start_date >= ? AND t.start_date < ?)
-                        OR (t.due_date >= ? AND t.due_date < ?)
-                        OR (t.start_date <= ? AND t.due_date >= ?)
+                    WHERE t.task_id NOT IN (
+                        SELECT task_id FROM Task_Comments WHERE parent_comment_id IS NOT NULL
                     )
                     ORDER BY t.start_date ASC, t.due_date ASC
                     """);
         } else {
-            // Employee: get own tasks + assigned tasks
+            // Employee: own tasks + assigned tasks + tasks tagged in comments
             sql.append("""
                     SELECT DISTINCT t.*,
                            u.user_id AS u_id, u.full_name, u.email, u.username,
@@ -927,45 +906,27 @@ public class TaskDAO {
                     LEFT JOIN Users u ON t.created_by = u.user_id
                     LEFT JOIN Roles r ON u.role_id = r.role_id
                     WHERE t.task_id IN (
-                        -- Tasks where user is owner
                         SELECT task_id FROM Tasks WHERE created_by = ?
                         UNION
-                        -- Tasks where user is assignee
                         SELECT task_id FROM Task_Assignees WHERE user_id = ? AND is_active = 1
-                    )
-                    AND (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
-                    AND (
-                        (t.start_date >= ? AND t.start_date < ?)
-                        OR (t.due_date >= ? AND t.due_date < ?)
-                        OR (t.start_date <= ? AND t.due_date >= ?)
+                        UNION
+                        SELECT tc.task_id FROM Task_Comments tc
+                        WHERE tc.assigned_to = ? AND tc.is_deleted = 0
                     )
                     ORDER BY t.start_date ASC, t.due_date ASC
                     """);
         }
 
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-            if (isManager) {
-                ps.setObject(1, startDate);
-                ps.setObject(2, endDate);
-                ps.setObject(3, startDate);
-                ps.setObject(4, endDate);
-                ps.setObject(5, endDate.minusDays(1));
-                ps.setObject(6, startDate);
-            } else {
+            if (!isManager) {
                 ps.setInt(1, userId);
                 ps.setInt(2, userId);
-                ps.setObject(3, startDate);
-                ps.setObject(4, endDate);
-                ps.setObject(5, startDate);
-                ps.setObject(6, endDate);
-                ps.setObject(7, endDate.minusDays(1));
-                ps.setObject(8, startDate);
+                ps.setInt(3, userId);
             }
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Task task = mapRow(rs);
-                    // Load assignees for each task
                     task.setAssignees(loadAssignees(task.getTaskId()));
                     list.add(task);
                 }
@@ -977,12 +938,11 @@ public class TaskDAO {
     }
 
     /**
-     * Get subtasks (work items) for specific tasks within a date range.
-     * Uses Task_Comments where assigned_to is set.
+     * Get subtasks for the monthly timeline.
+     * - Manager: ALL subtasks of ALL root tasks (no user filter).
+     * - Employee: subtasks where assigned_to = userId OR created_by = userId.
      */
-    public List<TaskComment> getScheduleSubtasks(List<Integer> taskIds,
-            java.time.LocalDate startDate,
-            java.time.LocalDate endDate) {
+    public List<TaskComment> getMonthlySubtasks(int userId, boolean isManager, List<Integer> taskIds) {
         List<TaskComment> list = new ArrayList<>();
         if (taskIds == null || taskIds.isEmpty()) {
             return list;
@@ -993,32 +953,53 @@ public class TaskDAO {
             placeholders.append(i > 0 ? "," : "").append("?");
         }
 
-        String sql = String.format("""
-                SELECT tc.*, u.user_id AS a_u_id, u.full_name AS a_full_name,
-                       t.title AS task_title
-                FROM Task_Comments tc
-                LEFT JOIN Users u ON tc.assigned_to = u.user_id
-                LEFT JOIN Tasks t ON tc.task_id = t.task_id
-                WHERE tc.task_id IN (%s)
-                AND tc.assigned_to IS NOT NULL
-                AND tc.is_deleted = 0
-                AND tc.created_at >= ? AND tc.created_at < ?
-                ORDER BY tc.created_at ASC
-                """, placeholders.toString());
+        String sql;
+        if (isManager) {
+            // All subtasks of subordinates' root tasks (no user filter)
+            sql = String.format("""
+                    SELECT tc.*,
+                           u.user_id AS a_u_id, u.full_name AS a_full_name,
+                           t.title AS task_title
+                    FROM Task_Comments tc
+                    LEFT JOIN Users u ON tc.assigned_to = u.user_id
+                    LEFT JOIN Tasks t ON tc.task_id = t.task_id
+                    WHERE tc.task_id IN (%s)
+                    AND tc.parent_comment_id IS NOT NULL
+                    AND tc.is_deleted = 0
+                    ORDER BY tc.created_at ASC
+                    """, placeholders.toString());
+        } else {
+            // Subtasks where assigned_to = userId OR created_by = userId
+            sql = String.format("""
+                    SELECT tc.*,
+                           u.user_id AS a_u_id, u.full_name AS a_full_name,
+                           t.title AS task_title
+                    FROM Task_Comments tc
+                    LEFT JOIN Users u ON tc.assigned_to = u.user_id
+                    LEFT JOIN Tasks t ON tc.task_id = t.task_id
+                    WHERE tc.task_id IN (%s)
+                    AND (tc.assigned_to = ? OR tc.created_by = ?)
+                    AND tc.is_deleted = 0
+                    ORDER BY tc.created_at ASC
+                    """, placeholders.toString());
+        }
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             int idx = 1;
             for (Integer taskId : taskIds) {
                 ps.setInt(idx++, taskId);
             }
-            ps.setObject(idx++, startDate);
-            ps.setObject(idx, endDate);
+            if (!isManager) {
+                ps.setInt(idx++, userId);
+                ps.setInt(idx++, userId);
+            }
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     TaskComment tc = new TaskComment();
                     tc.setCommentId(rs.getInt("comment_id"));
                     tc.setTaskId(rs.getInt("task_id"));
+                    tc.setCreatedBy(rs.getInt("created_by"));
                     tc.setContent(rs.getString("content"));
                     tc.setCompleted(rs.getBoolean("is_completed"));
 

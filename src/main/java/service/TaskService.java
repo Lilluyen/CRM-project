@@ -9,7 +9,6 @@ import model.TaskComment;
 import model.User;
 
 import java.sql.Connection;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -894,22 +893,21 @@ public class TaskService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SCHEDULE
+    // MONTHLY TIMELINE
     // ─────────────────────────────────────────────────────────────────────────
-    public List<Task> getScheduleTasks(int userId, boolean isManager,
-            LocalDate startDate, LocalDate endDate) {
+
+    public List<Task> getMonthlyTasks(int userId, boolean isManager) {
         try {
-            return taskDAO.getScheduleTasks(userId, isManager, startDate, endDate);
+            return taskDAO.getMonthlyTasks(userId, isManager);
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
         }
     }
 
-    public List<TaskComment> getScheduleSubtasks(List<Integer> taskIds,
-            LocalDate startDate, LocalDate endDate) {
+    public List<TaskComment> getMonthlySubtasks(int userId, boolean isManager, List<Integer> taskIds) {
         try {
-            return taskDAO.getScheduleSubtasks(taskIds, startDate, endDate);
+            return taskDAO.getMonthlySubtasks(userId, isManager, taskIds);
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();

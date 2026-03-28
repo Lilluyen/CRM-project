@@ -15,30 +15,34 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * GET /tasks/schedule - Show weekly schedule view
+ * GET /tasks/schedule - Show monthly timeline view of tasks and subtasks
  *
  * Query params:
- *   weekOffset - offset from current week (-10 to +10)
- *   view - "week" (default) or "month" - currently just week view
+ *   monthOffset - offset from current month (-3 to +3)
  *
- * For employee: shows their tasks + subtasks for the selected week
- * For manager: shows all root tasks of subordinates for the selected week
+ * For manager (role 1 or 5): shows ALL root tasks of subordinates on timeline
+ * For employee: shows tasks owned by, assigned to, or mentioned-in-comments to that user
  */
 @WebServlet("/tasks/schedule")
 public class TaskScheduleController extends HttpServlet {
 
-    private static final int MAX_WEEK_OFFSET = 10;
+    /** Only allow navigating 3 months back and 3 months forward */
+    private static final int MAX_MONTH_OFFSET = 3;
+    private static final int MAX_ITEMS_PER_DAY = 5;
+    private static final String DATE_FMT_MONTH = "MMMM yyyy";
+    private static final String DATE_FMT_MONTH_SHORT = "MMM yyyy";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -50,92 +54,136 @@ public class TaskScheduleController extends HttpServlet {
             return;
         }
 
-        // Parse week offset
-        int weekOffset = 0;
+        // ── Parse & clamp month offset ──────────────────────────────────────
+        int monthOffset = 0;
         try {
-            String offsetStr = req.getParameter("weekOffset");
+            String offsetStr = req.getParameter("monthOffset");
             if (offsetStr != null && !offsetStr.isBlank()) {
-                weekOffset = Integer.parseInt(offsetStr);
+                monthOffset = Integer.parseInt(offsetStr);
             }
         } catch (NumberFormatException ignored) {}
+        monthOffset = Math.max(-MAX_MONTH_OFFSET, Math.min(MAX_MONTH_OFFSET, monthOffset));
 
-        // Clamp week offset to [-10, +10]
-        weekOffset = Math.max(-MAX_WEEK_OFFSET, Math.min(MAX_WEEK_OFFSET, weekOffset));
-
-        // Calculate the target week's start and end
         LocalDate today = LocalDate.now();
-        LocalDate weekStart = today.plusWeeks(weekOffset).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate weekEnd = weekStart.plusDays(7); // Exclusive end
-
-        // Check if user is manager
+        
+        YearMonth targetMonth = YearMonth.from(today).plusMonths(monthOffset);
         boolean isManager = isManagerOrAdmin(user);
 
-        // Get tasks and subtasks for the week
+        // ── Fetch data ────────────────────────────────────────────────────────
         List<Task> tasks = new ArrayList<>();
         List<TaskComment> subtasks = new ArrayList<>();
 
         try (Connection conn = DBContext.getConnection()) {
             TaskService svc = new TaskService(conn);
+            tasks = svc.getMonthlyTasks(user.getUserId(), isManager);
 
-            tasks = svc.getScheduleTasks(user.getUserId(), isManager, weekStart, weekEnd);
-
-            // Get task IDs to fetch subtasks
             List<Integer> taskIds = tasks.stream()
                     .map(Task::getTaskId)
                     .collect(Collectors.toList());
 
             if (!taskIds.isEmpty()) {
-                subtasks = svc.getScheduleSubtasks(taskIds, weekStart, weekEnd);
+                subtasks = svc.getMonthlySubtasks(user.getUserId(), isManager, taskIds);
             }
         } catch (SQLException ex) {
             Logger.getLogger(TaskScheduleController.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        // Build week days
-        List<LocalDate> weekDays = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
-            weekDays.add(weekStart.plusDays(i));
+        // ── Group tasks/subtasks by date ──────────────────────────────────────
+        Map<LocalDate, List<Task>> tasksByDate = tasks.stream()
+                .collect(Collectors.toMap(
+                        t -> {
+                            if (t.getStartDate() != null) return t.getStartDate().toLocalDate();
+                            if (t.getDueDate() != null) return t.getDueDate().toLocalDate();
+                            return null;
+                        },
+                        List::of,
+                        (a, b) -> { List<Task> m = new ArrayList<>(a); m.addAll(b); return m; }
+                ));
+        tasksByDate = tasksByDate.entrySet().stream()
+                .filter(e -> e.getKey() != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        Map<LocalDate, List<TaskComment>> subtasksByDate = subtasks.stream()
+                .filter(sc -> sc.getCreatedAt() != null)
+                .collect(Collectors.toMap(
+                        sc -> sc.getCreatedAt().toLocalDate(),
+                        List::of,
+                        (a, b) -> { List<TaskComment> m = new ArrayList<>(a); m.addAll(b); return m; }
+                ));
+
+        // ── Build single-month strip ─────────────────────────────────────────
+        List<DayData> days = new ArrayList<>();
+        int firstDow = targetMonth.atDay(1).getDayOfWeek().getValue(); // Mon=1
+
+        // Leading empty cells (before the 1st day)
+        for (int i = 1; i < firstDow; i++) {
+            days.add(DayData.empty());
         }
 
-        // Format week range for display
-        String weekRange;
-        if (weekStart.getMonth() == weekEnd.minusDays(1).getMonth()) {
-            weekRange = weekStart.format(DateTimeFormatter.ofPattern("MMM d")) + " - "
-                      + weekEnd.minusDays(1).format(DateTimeFormatter.ofPattern("d, yyyy"));
-        } else if (weekStart.getYear() == weekEnd.minusDays(1).getYear()) {
-            weekRange = weekStart.format(DateTimeFormatter.ofPattern("MMM d")) + " - "
-                      + weekEnd.minusDays(1).format(DateTimeFormatter.ofPattern("MMM d, yyyy"));
-        } else {
-            weekRange = weekStart.format(DateTimeFormatter.ofPattern("MMM d, yyyy")) + " - "
-                      + weekEnd.minusDays(1).format(DateTimeFormatter.ofPattern("MMM d, yyyy"));
+        // Actual days of the month
+        for (int d = 1; d <= targetMonth.lengthOfMonth(); d++) {
+            LocalDate date = targetMonth.atDay(d);
+            boolean isToday = date.equals(today);
+
+            List<Task> dayTasks = tasksByDate.getOrDefault(date, Collections.emptyList());
+            List<TaskComment> daySubs = subtasksByDate.getOrDefault(date, Collections.emptyList());
+            int hidden = Math.max(0, dayTasks.size() - MAX_ITEMS_PER_DAY);
+
+            days.add(new DayData(d, date, isToday, false, dayTasks, daySubs, hidden));
         }
 
-        // Build week options for dropdown (-10 to +10)
-        List<WeekOption> weekOptions = new ArrayList<>();
-        for (int i = -MAX_WEEK_OFFSET; i <= MAX_WEEK_OFFSET; i++) {
-            LocalDate ws = today.plusWeeks(i).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        // Trailing empty cells (fill the last row)
+        int totalCells = firstDow - 1 + targetMonth.lengthOfMonth();
+        int trailing = (7 - (totalCells % 7)) % 7;
+        for (int i = 0; i < trailing; i++) {
+            days.add(DayData.empty());
+        }
+
+        // Wrap in list for consistent EL (no forEach over a single object)
+        List<MonthStripData> monthStrips = Collections.singletonList(new MonthStripData(
+                targetMonth,
+                targetMonth.format(DateTimeFormatter.ofPattern(DATE_FMT_MONTH)),
+                targetMonth.equals(YearMonth.from(today)),
+                targetMonth.format(DateTimeFormatter.ofPattern(DATE_FMT_MONTH_SHORT)),
+                days
+        ));
+
+        // ── Build dropdown options (±3 months) ───────────────────────────────
+        List<MonthOptionData> monthOptions = new ArrayList<>();
+        for (int i = -MAX_MONTH_OFFSET; i <= MAX_MONTH_OFFSET; i++) {
+            YearMonth m = YearMonth.from(today).plusMonths(i);
             String label;
             if (i == 0) {
-                label = "This Week";
+                label = "This Month";
             } else if (i < 0) {
-                label = Math.abs(i) + " week" + (Math.abs(i) > 1 ? "s" : "") + " ago";
+                int abs = Math.abs(i);
+                label = abs + " month" + (abs > 1 ? "s" : "") + " ago";
             } else {
-                label = "In " + i + " week" + (i > 1 ? "s" : "");
+                label = "In " + i + " month" + (i > 1 ? "s" : "");
             }
-            weekOptions.add(new WeekOption(i, ws.format(DateTimeFormatter.ofPattern("MMM d")), label));
+            monthOptions.add(new MonthOptionData(
+                    i,
+                    m.format(DateTimeFormatter.ofPattern(DATE_FMT_MONTH_SHORT)),
+                    label
+            ));
         }
 
-        // Set attributes
-        req.setAttribute("tasks", tasks);
-        req.setAttribute("subtasks", subtasks);
-        req.setAttribute("weekDays", weekDays);
-        req.setAttribute("weekStart", weekStart);
-        req.setAttribute("weekEnd", weekEnd);
-        req.setAttribute("weekOffset", weekOffset);
-        req.setAttribute("weekRange", weekRange);
-        req.setAttribute("weekOptions", weekOptions);
+        // ── Stats ──────────────────────────────────────────────────────────────
+        long totalTasks = tasks.size();
+        long totalSubtasks = subtasks.size();
+        long completedSubtasks = subtasks.stream().filter(TaskComment::isCompleted).count();
+
+        // ── Set request attributes ────────────────────────────────────────────
+        req.setAttribute("monthStrips", monthStrips);
+        req.setAttribute("monthOptions", monthOptions);
+        req.setAttribute("targetMonth", targetMonth);
+        req.setAttribute("targetMonthName", targetMonth.format(DateTimeFormatter.ofPattern(DATE_FMT_MONTH)));
+        req.setAttribute("monthOffset", monthOffset);
         req.setAttribute("isManager", isManager);
         req.setAttribute("currentUserId", user.getUserId());
+        req.setAttribute("totalTasks", totalTasks);
+        req.setAttribute("totalSubtasks", totalSubtasks);
+        req.setAttribute("completedSubtasks", completedSubtasks);
 
         req.setAttribute("pageTitle", "Task Schedule");
         req.setAttribute("contentPage", "/view/tasks/task-schedule.jsp");
@@ -148,23 +196,83 @@ public class TaskScheduleController extends HttpServlet {
         if (user == null || user.getRole() == null) return false;
         int roleId = user.getRole().getRoleId();
         String roleName = user.getRole().getRoleName();
-        return roleId == 1 || roleId == 5 || "ADMIN".equalsIgnoreCase(roleName) || "MANAGER".equalsIgnoreCase(roleName);
+        return roleId == 1 || roleId == 5
+                || "ADMIN".equalsIgnoreCase(roleName)
+                || "MANAGER".equalsIgnoreCase(roleName);
     }
 
-    // Helper class for week dropdown
-    public static class WeekOption {
+    // ─────────────────────────────────────────────────────────────────────────
+    // Data classes
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public static class MonthOptionData {
         private final int offset;
-        private final String dateLabel;
+        private final String monthLabel;
         private final String displayLabel;
 
-        public WeekOption(int offset, String dateLabel, String displayLabel) {
+        public MonthOptionData(int offset, String monthLabel, String displayLabel) {
             this.offset = offset;
-            this.dateLabel = dateLabel;
+            this.monthLabel = monthLabel;
             this.displayLabel = displayLabel;
         }
-
         public int getOffset() { return offset; }
-        public String getDateLabel() { return dateLabel; }
+        public String getMonthLabel() { return monthLabel; }
         public String getDisplayLabel() { return displayLabel; }
+    }
+
+    public static class MonthStripData {
+        private final YearMonth yearMonth;
+        private final String monthName;
+        private final boolean isCurrentMonth;
+        private final String monthNameShort;
+        private final List<DayData> days;
+
+        public MonthStripData(YearMonth yearMonth, String monthName, boolean isCurrentMonth,
+                            String monthNameShort, List<DayData> days) {
+            this.yearMonth = yearMonth;
+            this.monthName = monthName;
+            this.isCurrentMonth = isCurrentMonth;
+            this.monthNameShort = monthNameShort;
+            this.days = days;
+        }
+        public YearMonth getYearMonth() { return yearMonth; }
+        public String getMonthName() { return monthName; }
+        public boolean isCurrentMonth() { return isCurrentMonth; }
+        public String getMonthNameShort() { return monthNameShort; }
+        public List<DayData> getDays() { return days; }
+    }
+
+    public static class DayData {
+        private final int dayOfMonth;
+        private final LocalDate date;
+        private final boolean isToday;
+        private final boolean isEmpty;
+        private final List<Task> tasks;
+        private final List<TaskComment> subtasks;
+        private final int hiddenTaskCount;
+
+        private DayData(int dayOfMonth, LocalDate date, boolean isToday, boolean isEmpty,
+                       List<Task> tasks, List<TaskComment> subtasks, int hiddenTaskCount) {
+            this.dayOfMonth = dayOfMonth;
+            this.date = date;
+            this.isToday = isToday;
+            this.isEmpty = isEmpty;
+            this.tasks = tasks;
+            this.subtasks = subtasks;
+            this.hiddenTaskCount = hiddenTaskCount;
+        }
+
+        public static DayData empty() {
+            return new DayData(0, null, false, true,
+                    Collections.emptyList(), Collections.emptyList(), 0);
+        }
+
+        public int getDayOfMonth() { return dayOfMonth; }
+        public LocalDate getDate() { return date; }
+        public boolean isToday() { return isToday; }
+        public boolean isEmpty() { return isEmpty; }
+        public List<Task> getTasks() { return tasks; }
+        public List<TaskComment> getSubtasks() { return subtasks; }
+        public int getHiddenTaskCount() { return hiddenTaskCount; }
     }
 }
