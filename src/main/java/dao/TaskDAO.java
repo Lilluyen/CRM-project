@@ -1022,4 +1022,72 @@ public class TaskDAO {
         }
         return list;
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 19. SALE DASHBOARD – today's follow-up tasks for a user
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Tasks due today that relate to a Lead or Customer and are still active.
+     */
+    public List<Task> getTodaysTasksForUser(int userId, boolean isManager, java.time.LocalDate today) {
+        List<Task> list = new ArrayList<>();
+        String sql;
+        if (isManager) {
+            sql = """
+                SELECT t.*,
+                       u.user_id AS u_id, u.full_name, u.email, u.username,
+                       r.role_id, r.role_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.created_by = u.user_id
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE CAST(t.due_date AS DATE) = ?
+                  AND t.related_type IN ('Lead', 'Customer')
+                  AND t.status NOT IN ('Done', 'Cancelled')
+                ORDER BY t.due_date ASC
+                OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
+                """;
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setDate(1, java.sql.Date.valueOf(today));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Task task = mapRow(rs);
+                        task.setAssignees(loadAssignees(task.getTaskId()));
+                        list.add(task);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            sql = """
+                SELECT t.*,
+                       u.user_id AS u_id, u.full_name, u.email, u.username,
+                       r.role_id, r.role_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.created_by = u.user_id
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE CAST(t.due_date AS DATE) = ?
+                  AND t.related_type = 'Lead'
+                  AND t.related_id IN (SELECT lead_id FROM Leads WHERE assigned_to = ?)
+                  AND t.status NOT IN ('Done', 'Cancelled')
+                ORDER BY t.due_date ASC
+                OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
+                """;
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setDate(1, java.sql.Date.valueOf(today));
+                ps.setInt(2, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Task task = mapRow(rs);
+                        task.setAssignees(loadAssignees(task.getTaskId()));
+                        list.add(task);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return list;
+    }
+
 }

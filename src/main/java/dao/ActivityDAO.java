@@ -349,6 +349,33 @@ public class ActivityDAO {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // 10. SALE DASHBOARD – recent activities for a sale staff member
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<Activity> getRecentActivitiesForDashboard(int userId, int limit) {
+        List<Activity> list = new ArrayList<>();
+        String sql =
+            BASE_SELECT
+          + "WHERE (a.created_by = ? OR a.performed_by = ?) "
+          + "ORDER BY a.created_at DESC "
+          + "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        // Resolve related entity names (Lead / Customer / Deal / Task)
+        for (Activity a : list) {
+            resolveRelatedName(a);
+        }
+        return list;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // PRIVATE HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 

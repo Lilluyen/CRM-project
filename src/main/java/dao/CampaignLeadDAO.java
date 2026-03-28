@@ -88,7 +88,7 @@ public class CampaignLeadDAO {
 
     // Đếm số lượng lead theo trạng thái trong một campaign
     public int countLeadByStatus(int campaignId, String leadStatus) {
-        String sql = "SELECT COUNT(*) as cnt FROM Campaign_Leads WHERE campaign_id = ? AND lead_status = ?";
+        String sql = "SELECT COUNT(Distinct l.lead_id) as cnt FROM Campaign_Leads cl join Leads l on l.campaign_id = cl.campaign_id WHERE cl.campaign_id = ? AND status = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ps.setString(2, leadStatus);

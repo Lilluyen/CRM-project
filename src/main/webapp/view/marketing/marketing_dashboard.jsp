@@ -48,6 +48,13 @@
                 </div>
             </div>
             <div class="col-md-2">
+                <div class="stat-card stat-danger">
+                    <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                    <div class="stat-number">${lostLeads}</div>
+                    <div class="stat-label">Lost Leads</div>
+                </div>
+            </div>
+            <div class="col-md-2">
                 <div class="stat-card stat-purple">
                     <div class="stat-icon"><i class="fas fa-handshake"></i></div>
                     <div class="stat-number">${dealsCreated}</div>
@@ -61,13 +68,7 @@
                     <div class="stat-label">Deals Won</div>
                 </div>
             </div>
-            <div class="col-md-2">
-                <div class="stat-card stat-danger">
-                    <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
-                    <div class="stat-number">${lostLeads}</div>
-                    <div class="stat-label">Lost</div>
-                </div>
-            </div>
+            
         </div>
 
         <!-- Summary Cards Row 2: Campaigns & Conversion -->

@@ -754,4 +754,48 @@ public class LeadDAO {
             ps.executeUpdate();
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SALE DASHBOARD – lead stage distribution for a user
+    // Returns a list of {stage, count} pairs for the leads pipeline chart.
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<LeadStageCount> getLeadStageDistribution(int userId, boolean isManager) {
+        List<LeadStageCount> result = new ArrayList<>();
+        String sql;
+        if (isManager) {
+            sql = "SELECT status, COUNT(*) AS cnt FROM Leads GROUP BY status ORDER BY cnt DESC";
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new LeadStageCount(rs.getString("status"), rs.getInt("cnt")));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            sql = "SELECT status, COUNT(*) AS cnt FROM Leads WHERE assigned_to = ? GROUP BY status ORDER BY cnt DESC";
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        result.add(new LeadStageCount(rs.getString("status"), rs.getInt("cnt")));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    /** Simple DTO for lead stage counts (matches SaleDashboardController.LeadStageCount). */
+    public static class LeadStageCount {
+        private final String status;
+        private final int count;
+        public LeadStageCount(String status, int count) { this.status = status; this.count = count; }
+        public String getStatus() { return status; }
+        public int getCount() { return count; }
+    }
 }

@@ -281,7 +281,7 @@
                         <div class="stat-label">Qualified Leads</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">${report != null ? report.convertedLead : 0}</div>
+                        <div class="stat-number">${dealsCreated}</div>
                         <div class="stat-label">Deals Created</div>
                     </div>
                     <div class="stat-card">

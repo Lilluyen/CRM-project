@@ -20,6 +20,7 @@ public class Deal {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<Product> products = new ArrayList<>();
+    private String customerName; // transient – resolved from Customers / Leads join
 
     public Deal() {
     }
@@ -144,4 +145,7 @@ public class Deal {
     public void setProducts(List<Product> products) {
         this.products = products;
     }
+
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
 }
