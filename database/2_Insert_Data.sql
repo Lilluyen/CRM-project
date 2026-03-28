@@ -78,25 +78,25 @@ GO
 */
 SET IDENTITY_INSERT [dbo].[Campaigns] ON
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (1, N'Facebook Lead Gen Q1', N'Run ads to generate leads for CRM products', CAST(5000.00 AS Decimal(15, 2)), CAST(N'2026-01-01' AS Date), CAST(N'2026-03-31' AS Date), N'Facebook', N'ACTIVE', 1, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (1, N'Facebook Lead Gen Q1', N'Run ads to generate leads for CRM products', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-01-01' AS Date), CAST(N'2026-03-31' AS Date), N'Facebook', N'ACTIVE', 1, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (2, N'Google Search Ads - Cloud', N'Keyword advertising for Cloud Migration services', CAST(7000.00 AS Decimal(15, 2)), CAST(N'2026-02-01' AS Date), CAST(N'2026-04-30' AS Date), N'Google', N'ACTIVE', 2, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (2, N'Google Search Ads - Cloud', N'Keyword advertising for Cloud Migration services', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-02-01' AS Date), CAST(N'2026-04-30' AS Date), N'Google', N'ACTIVE', 2, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (3, N'Email Marketing Automation', N'Send nurturing emails to potential customers.', CAST(2000.00 AS Decimal(15, 2)), CAST(N'2026-01-15' AS Date), CAST(N'2026-02-28' AS Date), N'Email', N'COMPLETED', 3, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (3, N'Email Marketing Automation', N'Send nurturing emails to potential customers.', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-01-15' AS Date), CAST(N'2026-02-28' AS Date), N'Email', N'COMPLETED', 3, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (4, N'Business Seminar 2026', N'Organize a digital transformation workshop for businesses.', CAST(12000.00 AS Decimal(15, 2)), CAST(N'2026-03-10' AS Date), CAST(N'2026-03-10' AS Date), N'Event', N'PLANNING', 1, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (4, N'Business Seminar 2026', N'Organize a digital transformation workshop for businesses.', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-03-10' AS Date), CAST(N'2026-03-10' AS Date), N'Event', N'PLANNING', 1, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (5, N'LinkedIn B2B Outreach', N'Business customer outreach campaign', CAST(3500.00 AS Decimal(15, 2)), CAST(N'2026-02-10' AS Date), CAST(N'2026-05-10' AS Date), N'LinkedIn', N'ACTIVE', 4, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (5, N'LinkedIn B2B Outreach', N'Business customer outreach campaign', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-02-10' AS Date), CAST(N'2026-05-10' AS Date), N'LinkedIn', N'ACTIVE', 4, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (6, N'SEO Branding Campaign', N'Increase brand awareness through SEO.', CAST(4000.00 AS Decimal(15, 2)), CAST(N'2025-11-01' AS Date), CAST(N'2026-02-01' AS Date), N'SEO', N'COMPLETED', 2, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (6, N'SEO Branding Campaign', N'Increase brand awareness through SEO.', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2025-11-01' AS Date), CAST(N'2026-02-01' AS Date), N'SEO', N'COMPLETED', 2, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (7, N'Referral Partner Program', N'Encourage partners to refer customers.', CAST(3000.00 AS Decimal(15, 2)), CAST(N'2026-01-01' AS Date), CAST(N'2026-12-31' AS Date), N'Referral', N'ACTIVE', 5, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (7, N'Referral Partner Program', N'Encourage partners to refer customers.', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-01-01' AS Date), CAST(N'2026-12-31' AS Date), N'Referral', N'ACTIVE', 5, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (8, N'Product Launch Ads', N'Promoting the launch of the new version of the CRM system.', CAST(9000.00 AS Decimal(15, 2)), CAST(N'2026-03-01' AS Date), CAST(N'2026-04-15' AS Date), N'Facebook', N'ACTIVE', 3, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (8, N'Product Launch Ads', N'Promoting the launch of the new version of the CRM system.', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-03-01' AS Date), CAST(N'2026-04-15' AS Date), N'Facebook', N'ACTIVE', 3, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (9, N'Retargeting Campaign', N'Retarget customers who have visited the website.', CAST(2500.00 AS Decimal(15, 2)), CAST(N'2026-02-20' AS Date), CAST(N'2026-03-30' AS Date), N'Google Display', N'ACTIVE', 4, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (9, N'Retargeting Campaign', N'Retarget customers who have visited the website.', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2026-02-20' AS Date), CAST(N'2026-03-30' AS Date), N'Google Display', N'ACTIVE', 4, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
-INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (10, N'Year End Promotion 2025', N'Year-end promotional campaign', CAST(6000.00 AS Decimal(15, 2)), CAST(N'2025-10-01' AS Date), CAST(N'2025-12-31' AS Date), N'Multi-channel', N'COMPLETED', 1, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
+INSERT [dbo].[Campaigns] ([campaign_id], [name], [description], [budget], [start_date], [end_date], [channel], [status], [created_by], [created_at], [updated_at]) VALUES (10, N'Year End Promotion 2025', N'Year-end promotional campaign', CAST(10000000.00 AS Decimal(15, 2)), CAST(N'2025-10-01' AS Date), CAST(N'2025-12-31' AS Date), N'Multi-channel', N'COMPLETED', 1, CAST(N'2026-03-02T13:17:33.460' AS DateTime), CAST(N'2026-03-02T13:17:33.460' AS DateTime))
 GO
 SET IDENTITY_INSERT [dbo].[Campaigns] OFF
 GO
@@ -305,43 +305,43 @@ SET IDENTITY_INSERT [dbo].[Products] ON
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(1, N'Luxury Rouge Evening Dress', N'RED-001', CAST(4500000.00 AS Decimal(15, 2)), N'High-end designer evening dress, imported silk fabric, wine red color', N'ACTIVE', CAST(N'2026-01-10T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:50.653' AS DateTime))
+(1, N'Luxury Rouge Evening Dress', N'RED-001', CAST(699000.00 AS Decimal(15, 2)), N'High-end designer evening dress, imported silk fabric, wine red color', N'ACTIVE', CAST(N'2026-01-10T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:50.653' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(2, N'Sapphire Office Dress', N'OD-002', CAST(1850000.00 AS Decimal(15, 2)), N'Elegant office dress, tweed fabric, sapphire blue color', N'ACTIVE', CAST(N'2026-01-10T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:44.700' AS DateTime))
+(2, N'Sapphire Office Dress', N'OD-002', CAST(699000.00 AS Decimal(15, 2)), N'Elegant office dress, tweed fabric, sapphire blue color', N'ACTIVE', CAST(N'2026-01-10T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:44.700' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(3, N'Ivory Princess Wedding Dress', N'PWD-003', CAST(12000000.00 AS Decimal(15, 2)), N'Princess-style wedding dress, French lace, 1.5m long train, ivory color', N'ACTIVE', CAST(N'2026-01-10T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:47.500' AS DateTime))
+(3, N'Ivory Princess Wedding Dress', N'PWD-003', CAST(699000.00 AS Decimal(15, 2)), N'Princess-style wedding dress, French lace, 1.5m long train, ivory color', N'ACTIVE', CAST(N'2026-01-10T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:47.500' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(4, N'Bohemian Sunset Designer Dress', N'SDD-004', CAST(2200000.00 AS Decimal(15, 2)), N'Boho-style designer dress, floral printed pattern, soft chiffon fabric', N'ACTIVE', CAST(N'2026-01-15T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:38.833' AS DateTime))
+(4, N'Bohemian Sunset Designer Dress', N'SDD-004', CAST(699000.00 AS Decimal(15, 2)), N'Boho-style designer dress, floral printed pattern, soft chiffon fabric', N'ACTIVE', CAST(N'2026-01-15T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:38.833' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(5, N'Midnight Sequin Party Dress', N'SPD-005', CAST(3100000.00 AS Decimal(15, 2)), N'Party dress with silver sequin details, body-fit design, suitable for events', N'ACTIVE', CAST(N'2026-01-15T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:41.960' AS DateTime))
+(5, N'Midnight Sequin Party Dress', N'SPD-005', CAST(699000.00 AS Decimal(15, 2)), N'Party dress with silver sequin details, body-fit design, suitable for events', N'ACTIVE', CAST(N'2026-01-15T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:41.960' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(6, N'Summer Blossom Casual Dress', N'BCD-006', CAST(980000.00 AS Decimal(15, 2)), N'Fresh floral dress, soft cotton fabric, suitable for summer outings', N'ACTIVE', CAST(N'2026-01-20T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:33.263' AS DateTime))
+(6, N'Summer Blossom Casual Dress', N'BCD-006', CAST(699000.00 AS Decimal(15, 2)), N'Fresh floral dress, soft cotton fabric, suitable for summer outings', N'ACTIVE', CAST(N'2026-01-20T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:33.263' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(7, N'Velvet Noir Premium Dress', N'NPD-007', CAST(5800000.00 AS Decimal(15, 2)), N'Premium black velvet dress, deep V-neck, suitable for luxury evening parties', N'ACTIVE', CAST(N'2026-01-20T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:36.327' AS DateTime))
+(7, N'Velvet Noir Premium Dress', N'NPD-007', CAST(699000.00 AS Decimal(15, 2)), N'Premium black velvet dress, deep V-neck, suitable for luxury evening parties', N'ACTIVE', CAST(N'2026-01-20T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:36.327' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(8, N'Minimalist Grey Office Dress', N'GOD-008', CAST(1650000.00 AS Decimal(15, 2)), N'Minimalist office dress, dark grey color, high-quality polyester fabric', N'ACTIVE', CAST(N'2026-02-01T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:27.533' AS DateTime))
+(8, N'Minimalist Grey Office Dress', N'GOD-008', CAST(699000.00 AS Decimal(15, 2)), N'Minimalist office dress, dark grey color, high-quality polyester fabric', N'ACTIVE', CAST(N'2026-02-01T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:27.533' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(9, N'Vintage Floral Midi Dress', N'FMD-009', CAST(1350000.00 AS Decimal(15, 2)), N'Vintage midi dress with retro floral pattern, breathable linen fabric', N'ACTIVE', CAST(N'2026-02-01T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:30.483' AS DateTime))
+(9, N'Vintage Floral Midi Dress', N'FMD-009', CAST(699000.00 AS Decimal(15, 2)), N'Vintage midi dress with retro floral pattern, breathable linen fabric', N'ACTIVE', CAST(N'2026-02-01T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:30.483' AS DateTime))
 GO
 
 INSERT [dbo].[Products] ([product_id], [name], [sku], [price], [description], [status], [created_at], [updated_at]) VALUES
-(10, N'Pearl Evening Gown', N'EG-010', CAST(7500000.00 AS Decimal(15, 2)), N'Evening gown with handcrafted pearl details, flared design, satin fabric', N'ACTIVE', CAST(N'2026-02-05T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:24.020' AS DateTime))
+(10, N'Pearl Evening Gown', N'EG-010', CAST(699000.00 AS Decimal(15, 2)), N'Evening gown with handcrafted pearl details, flared design, satin fabric', N'ACTIVE', CAST(N'2026-02-05T08:00:00.000' AS DateTime), CAST(N'2026-03-28T16:23:24.020' AS DateTime))
 GO
 
 SET IDENTITY_INSERT [dbo].[Products] OFF
