@@ -5,8 +5,6 @@
 <%
   boolean isManager   = Boolean.TRUE.equals(request.getAttribute("isManager"));
   User    currentUser = (User) session.getAttribute("user");
-  String  relatedType = (String) request.getAttribute("relatedType"); if(relatedType==null)relatedType="";
-  String  relatedId   = (String) request.getAttribute("relatedId");   if(relatedId==null)relatedId="";
 
   // Get users from server-side (loaded by controller for managers)
   List<User> allUsers = (List<User>) request.getAttribute("allUsers");
@@ -26,8 +24,6 @@
 
         <div class="card"><div class="card-body">
                 <form method="post" action="${pageContext.request.contextPath}/tasks/create">
-                    <input type="hidden" name="relatedType" value="${fn:escapeXml(relatedType)}">
-                    <input type="hidden" name="relatedId"   value="${fn:escapeXml(relatedId)}">
                     <input type="hidden" name="progress" value="0">
 
                     <div class="row g-3">
@@ -132,10 +128,10 @@
                                 <option value="">-- None --</option>
                                 <option value="CUSTOMER">Customer</option>
                                 <option value="LEAD">Lead</option>
-                                <option value="DEAL">Deal</option>
+<!--                                <option value="DEAL">Deal</option>
                                 <option value="TASK">Task</option>
                                 <option value="CAMPAIGN">Campaign</option>
-                                <option value="INTERNAL">Internal</option>
+                                <option value="INTERNAL">Internal</option>-->
                             </select>
                         </div>
 
