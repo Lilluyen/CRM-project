@@ -146,9 +146,9 @@
                                             'birthday'}">selected</c:if>>Birth Day
                                                 </option>
 
-                                                <option value="return_rate" data-type="number" <c:if test="${f.field eq
-                                            'return_rate'}">selected</c:if>>Return Rate
-                                                </option>
+                                                    <%--                                                <option value="return_rate" data-type="number" <c:if test="${f.field eq--%>
+                                                    <%--                                            'return_rate'}">selected</c:if>>Return Rate--%>
+                                                    <%--                                                </option>--%>
 
                                                 <option value="source" data-input="select" data-source="source-options"
                                                         <c:if test="${f.field eq 'source'}">selected</c:if>>
@@ -236,7 +236,7 @@
 
                                             <option value="birthday" data-type="date">Birth Day</option>
 
-                                            <option value="return_rate" data-type="number">Return Rate</option>
+                                            <%--                                            <option value="return_rate" data-type="number">Return Rate</option>--%>
 
                                             <option value="source" data-input="select" data-source="source-options">
                                                 Source

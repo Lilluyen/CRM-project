@@ -321,7 +321,7 @@ public class CreateDealController extends HttpServlet {
         DealDAO dealDAO = new DealDAO(conn);
         LeadDAO leadDAO = new LeadDAO();
         CustomerDAO customerDAO = new CustomerDAO();
-
+        CustomerContactDAO contactDAO = new CustomerContactDAO();
         // 1. Lấy deal
         Deal deal = dealDAO.getById(dealId);
 
@@ -376,6 +376,10 @@ public class CreateDealController extends HttpServlet {
             customerDAO.updateTotalSpent(conn, customerId);
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
+
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
+
             CustomerActivityUtil.logCustomerActivity(
                     customerId,
                     "UPDATE",
