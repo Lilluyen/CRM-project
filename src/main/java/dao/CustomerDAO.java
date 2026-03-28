@@ -282,7 +282,7 @@ public class CustomerDAO {
         String sql = """
                     SELECT DISTINCT source
                     FROM Customers
-
+                
                 """;
         List<String> sources = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -298,7 +298,7 @@ public class CustomerDAO {
         String sql = """
                     SELECT DISTINCT loyalty_tier
                                   FROM Customers
-
+                
                 """;
         List<String> ranks = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -428,10 +428,10 @@ public class CustomerDAO {
                     SET loyalty_tier = (
                         Case
                             WHEN total_spent >= 100000000 THEN 'DIAMOND'
-                            WHEN total_spent >= 5000000 THEN 'PLATINUM'
-                            WHEN total_spent >= 1000000 THEN 'GOLD'
-                            WHEN total_spent >= 500000 THEN 'SILVER'
-                            WHEN total_spent >= 100000 THEN 'BRONZE'
+                            WHEN total_spent >= 50000000 THEN 'PLATINUM'
+                            WHEN total_spent >= 10000000 THEN 'GOLD'
+                            WHEN total_spent >= 5000000 THEN 'SILVER'
+                            WHEN total_spent >= 1000000 THEN 'BRONZE'
                             WHEN total_spent >= 0 THEN 'BRONZE'
                             ELSE 'BLACKLIST'
                         END

@@ -331,3 +331,91 @@ document.getElementById("staffSearch").addEventListener("input", function () {
     });
 });
 
+
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', function () {
+    // currentPage = window.__CURRENT_PAGE__ || 1;
+    // totalPages = window.__TOTAL_PAGES__ || 1;
+
+    // Parse server-rendered rows vào currentPageCustomers
+    // để openPreview() hoạt động ngay khi F5 mà không cần gọi API trước
+    // currentPageCustomers = parseCustomersFromDOM();
+
+
+    // const rowsSelect = document.getElementById('rowsPerPage');
+    // if (rowsSelect) rowsSelect.value = rowsPerPage;
+
+
+    const pageStatus = window.__PAGE_STATUS__;
+    if (pageStatus) {
+        let toastType = 'info';
+        if (pageStatus.toLowerCase().includes('success') || pageStatus.toLowerCase().includes('successfully') || pageStatus.toLowerCase().includes('created')) {
+            toastType = 'success';
+        } else if (pageStatus.toLowerCase().includes('error') || pageStatus.toLowerCase().includes('failed')) {
+            toastType = 'error';
+        } else if (pageStatus.toLowerCase().includes('warning')) {
+            toastType = 'warning';
+        }
+        showToast(pageStatus, toastType);
+    }
+});
+
+// ===== TOAST NOTIFICATIONS =====
+function showToast(message, type = 'success', duration = 3000) {
+    const toast = document.getElementById('toast');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastBar = document.getElementById('toastBar');
+
+    if (!toast)
+        return;
+
+    // Set icon based on type
+    const icons = {
+        success: '<i class="fas fa-check-circle" style="color: #10b981; font-size: 20px;"></i>',
+        error: '<i class="fas fa-exclamation-circle" style="color: #ef4444; font-size: 20px;"></i>',
+        info: '<i class="fas fa-info-circle" style="color: #3b82f6; font-size: 20px;"></i>',
+        warning: '<i class="fas fa-warning" style="color: #f59e0b; font-size: 20px;"></i>'
+    };
+
+    // Set bar color based on type
+    const barColors = {
+        success: '#10b981',
+        error: '#ef4444',
+        info: '#3b82f6',
+        warning: '#f59e0b'
+    };
+
+    toastIcon.innerHTML = icons[type] || icons.info;
+    toastMessage.textContent = `${message}`;
+    toastMessage.style = "text-align: center;"
+
+    // Set bar color
+    toastBar.style.background = barColors[type] || barColors.info;
+
+    // Reset animation
+    toast.classList.remove('show', 'hide');
+    toastBar.style.animation = 'none';
+
+    // Show toast
+    toast.classList.add('show');
+
+    // Trigger animation
+    setTimeout(() => {
+        toastBar.style.animation = `slideOut ${duration}ms ease-out forwards`;
+    }, 10);
+
+    // Hide after duration
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+    }, duration);
+}
+
+// Toast close button
+document.getElementById('toastCloseBtn')?.addEventListener('click', function () {
+    const toast = document.getElementById('toast');
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+});
+

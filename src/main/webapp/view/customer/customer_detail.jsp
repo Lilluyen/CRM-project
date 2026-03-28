@@ -113,28 +113,11 @@
                     <button type="button" class="customer-detail__add-tag"
                             onclick="toggleTagPicker()">+ Add Tag
                     </button>
-                    <div id="tagPicker" class="tag-picker hidden">
-                        <form action="${pageContext.request.contextPath}/add-tag" method="post">
-                            <input type="hidden" name="customerId" value="${customerDetail.customerId}"/>
-                            <div class="tag-picker__list">
-                                <c:forEach var="tag" items="${allStyleTags}">
-                                    <label class="tag-picker__item">
-                                        <input type="checkbox" name="tagIds" value="${tag.tagId}"/>
-                                        <span>${tag.tagName}</span>
-                                    </label>
-                                </c:forEach>
-                            </div>
-                            <div class="tag-picker__actions">
-                                <button type="submit">Add</button>
-                                <button type="button" onclick="toggleTagPicker()">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </div>
 
             <%-- Merge Requests liên quan đến customer này --%>
-            <c:if test="${not empty mergeRequests}">
+            <!-- <c:if test="${not empty mergeRequests}">
                 <div class="customer-detail__card">
                     <h3 class="customer-detail__card-title">Merge Requests</h3>
                     <div class="cd-merge-list">
@@ -157,7 +140,7 @@
                         </c:forEach>
                     </div>
                 </div>
-            </c:if>
+            </c:if> -->
 
         </div>
 
@@ -325,6 +308,33 @@
 
 </div>
 
+<!-- ══ TAG PICKER MODAL ══ -->
+<div id="tagPicker" class="tag-picker hidden" onclick="handleTagPickerBackdrop(event)">
+    <div class="tag-picker__dialog">
+        <div class="tag-picker__header">
+            <h3 class="tag-picker__title">Add Style Tags</h3>
+            <button type="button" class="tag-picker__close" onclick="toggleTagPicker()" title="Close">✕</button>
+        </div>
+        <div class="tag-picker__body">
+            <form action="${pageContext.request.contextPath}/add-tag" method="post">
+                <input type="hidden" name="customerId" value="${customerDetail.customerId}"/>
+                <div class="tag-picker__list">
+                    <c:forEach var="tag" items="${allStyleTags}">
+                        <label class="tag-picker__item">
+                            <input type="checkbox" name="tagIds" value="${tag.tagId}"/>
+                            <span>${tag.tagName}</span>
+                        </label>
+                    </c:forEach>
+                </div>
+                <div class="tag-picker__actions">
+                    <button type="submit">Add</button>
+                    <button type="button" onclick="toggleTagPicker()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- ══ MERGE MODAL ══ -->
 <div id="mergeModal" class="merge-modal" style="display:none">
     <div class="merge-modal__backdrop" onclick="closeMergeModal()"></div>
@@ -388,7 +398,13 @@
     var searchTimer = null;
 
     function toggleTagPicker() {
-        document.getElementById("tagPicker").classList.toggle("hidden");
+        var el = document.getElementById("tagPicker");
+        el.classList.toggle("hidden");
+        document.body.style.overflow = el.classList.contains("hidden") ? '' : 'hidden';
+    }
+
+    function handleTagPickerBackdrop(e) {
+        if (e.target === document.getElementById("tagPicker")) toggleTagPicker();
     }
 
     function openMergeModal() {

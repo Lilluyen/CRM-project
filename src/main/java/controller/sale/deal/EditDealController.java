@@ -128,6 +128,7 @@ public class EditDealController extends HttpServlet {
             String dealNameForLog = afterUpdate != null ? afterUpdate.getDealName() : deal.getDealName();
 
             DealActivityUtil.logDealUpdated(
+                    conn,
                     dealId,
                     dealNameForLog,
                     customerIdForLog,
@@ -139,6 +140,7 @@ public class EditDealController extends HttpServlet {
                 String newStage = afterUpdate != null ? afterUpdate.getStage() : deal.getStage();
                 if (!safeEqualsIgnoreCase(oldStage, newStage)) {
                     DealActivityUtil.logDealStageUpdated(
+                            conn,
                             dealId,
                             oldStage,
                             newStage,

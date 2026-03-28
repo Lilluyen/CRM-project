@@ -240,8 +240,15 @@ public class MergeRequestService {
                         + " — approved by user #" + reviewerId,
                 reviewerId));
 
-        // 5. Xóa source customer
-        customerQueryDAO.deleteCustomerRelatedData(sourceId, conn);
+        // 5. Chuyển toàn bộ dữ liệu liên quan source -> target
+        customerQueryDAO.reassignCustomerRelatedData(sourceId, targetId, conn);
+
+        // 6. Re-calc các chỉ số tổng hợp của target
+        customerDAO.updateTotalSpent(conn, targetId);
+        customerDAO.updateLastPurchase(conn, targetId);
+        customerDAO.updateLoyaltyTier(conn, targetId);
+
+        // 7. Xóa source customer
         customerDAO.deleteCustomerById(sourceId, conn);
     }
 

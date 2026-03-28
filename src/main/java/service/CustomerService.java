@@ -1,8 +1,8 @@
 package service;
 
-import mapper.CustomerMapper;
 import dao.*;
 import dto.*;
+import mapper.CustomerMapper;
 import model.*;
 import util.DBContext;
 import util.EmailCheck;
@@ -23,11 +23,11 @@ public class CustomerService {
     private final CustomerNoteDAO noteDAO;
 
     public CustomerService(CustomerDAO customerDAO,
-            CustomerStyleDAO customerStyleDAO,
-            CustomerQueryDAO customerQueryDAO,
-            CustomerSegmentDAO customerSegmentDAO,
-            CustomerContactDAO contactDAO,
-            CustomerNoteDAO noteDAO) {
+                           CustomerStyleDAO customerStyleDAO,
+                           CustomerQueryDAO customerQueryDAO,
+                           CustomerSegmentDAO customerSegmentDAO,
+                           CustomerContactDAO contactDAO,
+                           CustomerNoteDAO noteDAO) {
         this.customerDAO = customerDAO;
         this.customerStyleDAO = customerStyleDAO;
         this.customerQueryDAO = customerQueryDAO;
@@ -115,19 +115,24 @@ public class CustomerService {
                 if ("update".equals(source) && incoming.getCustomerId() != null) {
                     int incomingId = incoming.getCustomerId();
 
-                    // Xóa related data trước (style tags, contacts, notes...)
-                    customerQueryDAO.deleteCustomerRelatedData(incomingId, conn);
+                    // Chuyển toàn bộ dữ liệu liên quan về existing trước khi xóa incoming
+                    customerQueryDAO.reassignCustomerRelatedData(incomingId, existingId, conn);
 
                     // Xóa bản ghi customer
                     customerDAO.deleteCustomerById(incomingId, conn);
                 }
-                // 5. Ghi note lịch sử merge
+
+                // 5. Re-calc các chỉ số tổng hợp sau merge
+                customerDAO.updateTotalSpent(conn, existingId);
+                customerDAO.updateLastPurchase(conn, existingId);
+                customerDAO.updateLoyaltyTier(conn, existingId);
+                // 6. Ghi note lịch sử merge
                 noteDAO.insertCustomerNote(conn, new CustomerNote(
                         existingId,
                         "Merged"
                                 + ("update".equals(source)
-                                        ? " và xóa customer #" + incoming.getCustomerId()
-                                        : " data từ bản ghi mới")
+                                ? " và xóa customer #" + incoming.getName()
+                                : " data từ bản ghi mới")
                                 + " — phone=" + incoming.getPhone()
                                 + ", email=" + incoming.getEmail(),
                         userId));
@@ -189,7 +194,7 @@ public class CustomerService {
     }
 
     public void ignoreAndUpdate(CustomerCreateDTO dto, int customerId,
-            int conflictWithId, String reason, int userId)
+                                int conflictWithId, String reason, int userId)
             throws Exception {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
@@ -302,7 +307,7 @@ public class CustomerService {
     }
 
     public int countTotalCustomer(String keyword, List<String> loyaltyTier, List<String> source, String gender,
-            List<TimeCondition> timeConditions) throws SQLException {
+                                  List<TimeCondition> timeConditions) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return customerQueryDAO.countTotalCustomers(conn, keyword, loyaltyTier, source, gender, timeConditions);
         }
@@ -407,7 +412,7 @@ public class CustomerService {
     }
 
     public List<Customer> filterAdvanced(String keyword, List<String> loyaltyTier,
-            List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size)
+                                         List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size)
             throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return customerQueryDAO.filterAdvanced(conn, keyword, loyaltyTier, source, gender, timeConditions, page,
@@ -456,8 +461,8 @@ public class CustomerService {
     }
 
     public List<ContactValidationResult> saveExtraContacts(int customerId,
-            String[] types,
-            String[] values)
+                                                           String[] types,
+                                                           String[] values)
             throws Exception {
         if (types == null || values == null)
             return Collections.emptyList();
@@ -607,8 +612,8 @@ public class CustomerService {
     }
 
     public List<CustomerSearchResultDTO> searchForMerge(String keyword,
-            int excludeId,
-            int limit) throws Exception {
+                                                        int excludeId,
+                                                        int limit) throws Exception {
         try (Connection conn = DBContext.getConnection()) {
             return customerQueryDAO.searchForMerge(conn, keyword, excludeId, limit);
         }
