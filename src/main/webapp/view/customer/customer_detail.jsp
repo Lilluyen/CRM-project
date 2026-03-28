@@ -82,20 +82,23 @@
                 </div>
             </div>
             <div class="customer-detail__card">
-               
+
                 <div class="d-flex align-items-center justify-content-between">
                     <h3 class="customer-detail__card-title">Deals (${totalDeals})</h3>
                     <a style="margin: 0 0 1.1rem;
-                                padding-bottom: 0.75rem;" 
-                    href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${customerDetail.customerId}&relatedType=CUSTOMER">+ New</a>
+                                padding-bottom: 0.75rem;"
+                       href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${customerDetail.customerId}&relatedType=CUSTOMER">+
+                        New</a>
                 </div>
 
                 <div class="customer-detail__deals">
                     <c:forEach items="${deals}" var="d">
                         <div class="customer-detail__row">
-                            <a href="${pageContext.request.contextPath}/sale/deal/detail?id=${d.dealId}"><strong style="color: blue;">${d.dealName}</strong></a>
-                            <span>Value: <fmt:formatNumber type="number" value="${d.actualValue}" maxFractionDigits="0"/>đ</span> 
-                            
+                            <a href="${pageContext.request.contextPath}/sale/deal/detail?id=${d.dealId}"><strong
+                                    style="color: blue;">${d.dealName}</strong></a>
+                            <span>Value: <fmt:formatNumber type="number" value="${d.actualValue}"
+                                                           maxFractionDigits="0"/>đ</span>
+
                         </div>
                     </c:forEach>
                 </div>
@@ -213,7 +216,7 @@
                                                     <div class="cd-timeline__meta">
                                                         <c:choose>
                                                             <c:when test="${not empty t.completedAt}">
-                                                                ${t.completedAt}
+                                                                ${t.completedAtDate}
                                                             </c:when>
                                                             <c:otherwise>
                                                                 ${t.updatedAt}
@@ -270,7 +273,8 @@
                                 <div class="cd-report__subtitle">Create a note and view newest first</div>
                             </div>
 
-                            <form class="cd-note-form" method="post" action="${pageContext.request.contextPath}/customers/detail">
+                            <form class="cd-note-form" method="post"
+                                  action="${pageContext.request.contextPath}/customers/detail">
                                 <input type="hidden" name="action" value="addNote"/>
                                 <input type="hidden" name="customerId" value="${customerDetail.customerId}"/>
                                 <textarea name="note" rows="3" class="cd-note-form__textarea"
@@ -526,7 +530,7 @@
                 createdAt: '${d.createdAt}',
                 stage: '${d.stage}',
                 actualValue: Number('${empty d.actualValue ? 0 : d.actualValue}')
-            }<c:if test="${!st.last}">,</c:if>
+            }<c:if test="${!st.last}">, </c:if>
             </c:forEach>
         ];
 
