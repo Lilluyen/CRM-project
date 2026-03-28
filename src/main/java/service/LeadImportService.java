@@ -122,9 +122,21 @@ public class LeadImportService {
                 // Lead đã tồn tại trong hệ thống → chỉ thêm vào campaign, không log activity
                 existingLeadsToAdd.add(existing);
             } else {
+                // Set campaignId TRƯỚC khi tính score để đảm bảo +10 cho campaign
+                if (campaignId != null) {
+                    lead.setCampaignId(campaignId);
+                }
+
+                // Normalize phone: nếu là 9 chữ số (Excel đọc mất 0 đầu) → thêm lại 0
+                String normalizedPhone = lead.getPhone();
+                if (normalizedPhone != null && normalizedPhone.trim().length() == 9
+                        && normalizedPhone.matches("\\d{9}")) {
+                    normalizedPhone = "0" + normalizedPhone.trim();
+                }
+
                 int score = LeadScoringUtil.calculateScore(
-                        name, email, null,
-                        campaignId != null ? campaignId : 0,
+                        name, email, normalizedPhone,
+                        lead.getCampaignId(),
                         lead.getInterest()
                 );
 
@@ -133,9 +145,6 @@ public class LeadImportService {
 
                 if (source != null) {
                     lead.setSource(source);
-                }
-                if (campaignId != null) {
-                    lead.setCampaignId(campaignId);
                 }
 
                 // assign round-robin
