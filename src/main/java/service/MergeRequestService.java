@@ -247,6 +247,8 @@ public class MergeRequestService {
         customerDAO.updateTotalSpent(conn, targetId);
         customerDAO.updateLastPurchase(conn, targetId);
         customerDAO.updateLoyaltyTier(conn, targetId);
+        TaskDAO taskDAO = new TaskDAO(conn);
+        taskDAO.changeTargetTask(targetId, sourceId);
 
         // 7. Xóa source customer
         customerDAO.deleteCustomerById(sourceId, conn);

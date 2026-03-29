@@ -768,6 +768,9 @@
                 inp.value = '';
                 if (sel)
                     sel.value = '';
+                // Cập nhật progress ngay lập tức từ response, không cần chờ loadWorkTree
+                if (res.progressPct !== undefined)
+                    updateProgress(res.progressPct, res.completed, res.total);
                 loadWorkTree();
             } else
                 toast(res.message || 'Failed', 'danger');
@@ -816,6 +819,8 @@
                 if (sel)
                     sel.value = '';
                 hideReply(parentId);
+                if (res.progressPct !== undefined)
+                    updateProgress(res.progressPct, res.completed, res.total);
                 loadWorkTree();
             } else
                 toast(res.message || 'Failed', 'danger');
@@ -860,6 +865,8 @@
                 if (ta)
                     ta.value = '';
                 hideResponse(parentId);
+                if (res.progressPct !== undefined)
+                    updateProgress(res.progressPct, res.completed, res.total);
                 loadWorkTree();
             } else
                 toast(res.message || 'Failed', 'danger');
@@ -873,9 +880,11 @@
         }
         fetch(CTX + '/api/task-comments?id=' + id + '&done=' + done, {method: 'PUT'})
                 .then(r => r.json()).then(res => {
-            if (res.success)
+            if (res.success) {
+                // Cập nhật progress ring ngay lập tức từ response (không chờ loadWorkTree)
+                updateProgress(res.progressPct, res.completed, res.total);
                 loadWorkTree();
-            else
+            } else
                 toast(res.message || 'Failed', 'danger');
         });
     }
@@ -889,9 +898,11 @@
             return;
         fetch(CTX + '/api/task-comments?id=' + id, {method: 'DELETE'})
                 .then(r => r.json()).then(res => {
-            if (res.success)
+            if (res.success) {
+                // Cập nhật progress ring ngay lập tức từ response (không chờ loadWorkTree)
+                updateProgress(res.progressPct, res.completed, res.total);
                 loadWorkTree();
-            else
+            } else
                 toast(res.message || 'Failed', 'danger');
         });
     }
@@ -910,7 +921,7 @@
         if (pEl)
             pEl.textContent = pct + '%';
         if (sEl)
-            sEl.textContent = (completed || 0) + ' / ' + (total || 0) + ' work items done';
+            sEl.textContent = (completed || 0) + ' / ' + (total +1 || 0) + ' work items done';
         if (aEl)
             aEl.classList.toggle('d-none', !(total > 0 && (completed || 0) < total));
     }

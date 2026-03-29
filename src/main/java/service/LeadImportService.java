@@ -195,7 +195,7 @@ public class LeadImportService {
                 for (Lead l : newLeads) {
                     Lead created = createdMap.get(l.getEmail().toLowerCase());
                     if (created != null) {
-                        campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), "NEW");
+                        campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), created.getStatus());
                         response.addImportedLead(created);
                         response.addNewlyCreatedLead(created); // chỉ lead mới → sẽ được log activity
                         totalSuccess++;
@@ -204,7 +204,7 @@ public class LeadImportService {
 
                 // EXISTING LEADS → chỉ assign campaign, KHÔNG addNewlyCreatedLead → không log activity
                 for (Lead l : existingLeadsToAdd) {
-                    campaignLeadDAO.assignLeadToCampaign(campaignId, l.getLeadId(), "NEW");
+                    campaignLeadDAO.assignLeadToCampaign(campaignId, l.getLeadId(), l.getStatus());
                     response.addImportedLead(l);
                     totalSuccess++;
                 }

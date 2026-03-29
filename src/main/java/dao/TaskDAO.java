@@ -1089,5 +1089,21 @@ public class TaskDAO {
         }
         return list;
     }
+    
+    public void changeTargetTask(int target, int source){
+        String sql = """
+                     update Tasks
+                     Set related_id = ?
+                     Where related_id = ? AND related_type = 'CUSTOMER'
+                     """;
+        try(PreparedStatement ps = connection.prepareStatement(sql)){
+            ps.setInt(1, target);
+            ps.setInt(2, source);
+            ps.executeUpdate();
+        }catch(SQLException e){
+            e.printStackTrace();
+
+        }
+    }
 
 }

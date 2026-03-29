@@ -596,7 +596,7 @@ public class TaskService {
         activityService.createActivity(buildTaskActivity(
                 activityType,
                 activityType.replace('_', ' ') + ": " + nullSafe(task.getTitle()),
-                null, task.getTaskId(), null, null, actor));
+                task.getDescription(), task.getTaskId(), task.getRelatedType(), task.getRelatedId(), actor));
 
         return ok;
     }
