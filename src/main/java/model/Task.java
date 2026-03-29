@@ -191,7 +191,7 @@ public class Task {
         this.historys = historys;
     }
 
-    public String completedAtDate() {
+    public String getCompletedAtDate() {
         if (completedAt == null) {
             return "";
         }
