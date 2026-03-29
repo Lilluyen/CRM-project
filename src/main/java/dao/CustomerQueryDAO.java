@@ -1,20 +1,14 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
-
 import dto.CustomerSearchResultDTO;
 import dto.TimeCondition;
 import model.Customer;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class CustomerQueryDAO {
 
@@ -77,9 +71,9 @@ public class CustomerQueryDAO {
     }
 
     public int countTotalCustomers(Connection connection,
-            String keyword,
-            List<String> loyaltyTier,
-            List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
+                                   String keyword,
+                                   List<String> loyaltyTier,
+                                   List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
                 SELECT COUNT(*)
@@ -126,12 +120,9 @@ public class CustomerQueryDAO {
 
                 // map field -> column
                 String column = switch (t.getField()) {
-                    case "last_purchase" ->
-                        "last_purchase";
-                    case "birth_day" ->
-                        "birthday";
-                    default ->
-                        null;
+                    case "last_purchase" -> "last_purchase";
+                    case "birth_day" -> "birthday";
+                    default -> null;
                 };
 
                 if (column == null) {
@@ -140,14 +131,10 @@ public class CustomerQueryDAO {
 
                 // map operator -> SQL operator
                 String op = switch (t.getOperator()) {
-                    case "equal" ->
-                        "=";
-                    case "before" ->
-                        "<";
-                    case "after" ->
-                        ">";
-                    default ->
-                        "=";
+                    case "equal" -> "=";
+                    case "before" -> "<";
+                    case "after" -> ">";
+                    default -> "=";
                 };
 
                 sql.append(column).append(" ").append(op).append(" ?");
@@ -231,12 +218,25 @@ public class CustomerQueryDAO {
             stm.executeUpdate();
         }
 
+
         // 4. Xóa Customer Segment Map
         String deleteCsmSegmentSql = """
                 DELETE FROM Customer_Segment_Map WHERE customer_id = ?""";
         try (PreparedStatement stm = connection.prepareStatement(deleteCsmSegmentSql)) {
             stm.setInt(1, customerId);
             stm.executeUpdate();
+        }
+
+        String updateSegmentCount = """
+                    UPDATE Customer_Segments
+                    SET customer_count = (
+                        SELECT COUNT(*)
+                        FROM Customer_Segment_Map csm
+                        WHERE csm.segment_id = Customer_Segments.segment_id
+                    );
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(updateSegmentCount)) {
+            ps.executeUpdate();
         }
 
         // 5. Xóa Virtual Wardrobe
@@ -271,6 +271,8 @@ public class CustomerQueryDAO {
             stm.setInt(1, customerId);
             stm.executeUpdate();
         }
+
+
     }
 
     // Chuyển toàn bộ dữ liệu liên quan từ source -> target trước khi xóa source
@@ -511,12 +513,9 @@ public class CustomerQueryDAO {
 
                 // map field -> column
                 String column = switch (t.getField()) {
-                    case "last_purchase" ->
-                        "last_purchase";
-                    case "birth_day" ->
-                        "birthday";
-                    default ->
-                        null;
+                    case "last_purchase" -> "last_purchase";
+                    case "birth_day" -> "birthday";
+                    default -> null;
                 };
 
                 if (column == null) {
@@ -525,14 +524,10 @@ public class CustomerQueryDAO {
 
                 // map operator -> SQL operator
                 String op = switch (t.getOperator()) {
-                    case "equal" ->
-                        "=";
-                    case "before" ->
-                        "<";
-                    case "after" ->
-                        ">";
-                    default ->
-                        "=";
+                    case "equal" -> "=";
+                    case "before" -> "<";
+                    case "after" -> ">";
+                    default -> "=";
                 };
 
                 sql.append(column).append(" ").append(op).append(" ?");
@@ -585,9 +580,9 @@ public class CustomerQueryDAO {
     }
 
     public List<CustomerSearchResultDTO> searchForMerge(Connection conn,
-            String keyword,
-            int excludeId,
-            int limit) throws SQLException {
+                                                        String keyword,
+                                                        int excludeId,
+                                                        int limit) throws SQLException {
         String sql = """
                 SELECT TOP (?) customer_id, name, phone, email
                 FROM customers

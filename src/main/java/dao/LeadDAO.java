@@ -1,21 +1,11 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import model.Lead;
 import util.DBContext;
+
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public class LeadDAO {
 
@@ -437,8 +427,6 @@ public class LeadDAO {
             params.add("%" + interest.trim() + "%");
         }
 
-        // // Loại trừ lead đã converted
-        // sql += "AND l.status <> 'Converted' ";
         sql += "ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         params.add((page - 1) * pageSize);
         params.add(pageSize);
@@ -496,9 +484,6 @@ public class LeadDAO {
             params.add("%" + interest.trim() + "%");
         }
 
-        // Loại trừ lead đã converted
-        sql += "AND l.status <> 'Converted' ";
-
         sql += "ORDER BY l.updated_at DESC OFFSET 0 ROWS FETCH NEXT 10000 ROWS ONLY";
 
         List<Lead> leads = new ArrayList<>();
@@ -531,7 +516,7 @@ public class LeadDAO {
                 = "SELECT COUNT(*) FROM ( "
                 + "  SELECT MIN(lead_id) AS lead_id "
                 + "  FROM Leads "
-                + "  WHERE 1=1 ";
+                + "  WHERE 1=1 AND status <> 'CONVERTED'";
 
         List<Object> params = new ArrayList<>();
 
@@ -560,8 +545,6 @@ public class LeadDAO {
             params.add("%" + interest.trim() + "%");
         }
 
-        // Loại trừ lead đã converted
-        sql += "AND status <> 'Converted' ";
         sql += "  GROUP BY email "
                 + ") AS base ";
 
@@ -601,11 +584,11 @@ public class LeadDAO {
     // ==============================
     public Set<String> getExistingEmailsByCampaign(int campaignId) {
         String sql = """
-        SELECT LOWER(l.email) AS email
-        FROM Leads l
-        JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id
-        WHERE cl.campaign_id = ? AND l.email IS NOT NULL
-    """;
+                    SELECT LOWER(l.email) AS email
+                    FROM Leads l
+                    JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id
+                    WHERE cl.campaign_id = ? AND l.email IS NOT NULL
+                """;
 
         Set<String> emails = new HashSet<>();
 
@@ -761,8 +744,6 @@ public class LeadDAO {
             ps.executeUpdate();
         }
     }
-<<<<<<< Updated upstream
-=======
 
     // ─────────────────────────────────────────────────────────────────────────
     // SALE DASHBOARD – lead stage distribution for a user
@@ -773,7 +754,9 @@ public class LeadDAO {
         String sql;
         if (isManager) {
             sql = "SELECT status, COUNT(*) AS cnt FROM Leads GROUP BY status ORDER BY cnt DESC";
-            try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     result.add(new LeadStageCount(rs.getString("status"), rs.getInt("cnt")));
                 }
@@ -782,7 +765,8 @@ public class LeadDAO {
             }
         } else {
             sql = "SELECT status, COUNT(*) AS cnt FROM Leads WHERE assigned_to = ? GROUP BY status ORDER BY cnt DESC";
-            try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, userId);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -797,11 +781,9 @@ public class LeadDAO {
     }
 
     /**
-     * Simple DTO for lead stage counts (matches
-     * SaleDashboardController.LeadStageCount).
+     * Simple DTO for lead stage counts (matches SaleDashboardController.LeadStageCount).
      */
     public static class LeadStageCount {
-
         private final String status;
         private final int count;
 
@@ -818,5 +800,4 @@ public class LeadDAO {
             return count;
         }
     }
->>>>>>> Stashed changes
 }

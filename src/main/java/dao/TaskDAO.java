@@ -1,12 +1,6 @@
 package dao;
 
-import model.Task;
-import model.TaskAssignee;
-import model.TaskComment;
-import model.TaskHistory;
-import model.TaskHistoryDetail;
-import model.User;
-import model.Role;
+import model.*;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,7 +8,7 @@ import java.util.List;
 
 /**
  * TaskDAO – aligned with the CRM_System schema.
- *
+ * <p>
  * Changes from previous version:
  * 1. Extracted TASK_BASE_SELECT constant – eliminates 4 copies of the same JOIN
  * block.
@@ -58,7 +52,7 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     // 1. CREATE
     // ─────────────────────────────────────────────────────────────────────────
-    public boolean createTask(Task task) {
+    public boolean createTask(Task task, String relatedType, Integer relatedId) {
         if (task == null || task.getTitle() == null || task.getTitle().isBlank())
             return false;
 
@@ -78,8 +72,8 @@ public class TaskDAO {
                     Types.TIMESTAMP);
             ps.setInt(8, task.getProgress() != null ? task.getProgress() : 0);
             ps.setInt(9, task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0);
-            ps.setString(10, task.getRelatedType());
-            ps.setObject(11, task.getRelatedId(), Types.INTEGER);
+            ps.setString(10, relatedType);
+            ps.setObject(11, relatedId, Types.INTEGER);
 
             if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -183,6 +177,7 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     // 5. MARK OVERDUE – scheduler sets status = Overdue for past-due tasks
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
      * Mark a single task as Overdue.
      */
@@ -231,7 +226,7 @@ public class TaskDAO {
         List<Task> list = new ArrayList<>();
         String sql = TASK_BASE_SELECT + "ORDER BY t.created_at DESC";
         try (PreparedStatement ps = connection.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Task task = mapRow(rs);
                 task.setAssignees(loadAssignees(task.getTaskId()));
@@ -282,14 +277,14 @@ public class TaskDAO {
     // 7. PAGED + FILTERED LIST
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> getTasksPaged(String title, String description,
-            String status, String priority,
-            String fromDate, String toDate,
-            Integer assigneeUserId,
-            Integer createdByUserId,
-            String relatedType,
-            Integer relatedId,
-            String sortField, String sortDir,
-            int page, int pageSize) {
+                                    String status, String priority,
+                                    String fromDate, String toDate,
+                                    Integer assigneeUserId,
+                                    Integer createdByUserId,
+                                    String relatedType,
+                                    Integer relatedId,
+                                    String sortField, String sortDir,
+                                    int page, int pageSize) {
         List<Task> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
@@ -320,12 +315,12 @@ public class TaskDAO {
     }
 
     public int countTasksFiltered(String title, String description,
-            String status, String priority,
-            String fromDate, String toDate,
-            Integer assigneeUserId,
-            Integer createdByUserId,
-            String relatedType,
-            Integer relatedId) {
+                                  String status, String priority,
+                                  String fromDate, String toDate,
+                                  Integer assigneeUserId,
+                                  Integer createdByUserId,
+                                  String relatedType,
+                                  Integer relatedId) {
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Tasks t WHERE 1=1 ");
         appendTaskFilters(sql, params, title, description, status, priority, fromDate, toDate, assigneeUserId,
@@ -408,6 +403,7 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     // 10. ADD / REMOVE ASSIGNEE
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
      * Add assignee with tracking of who assigned (assignedBy).
      * Uses MERGE to handle both new assignments and re-activations.
@@ -587,13 +583,13 @@ public class TaskDAO {
      * Assignee filter always uses EXISTS to avoid JOIN-based duplicates.
      */
     private void appendTaskFilters(StringBuilder sql, List<Object> params,
-            String title, String description,
-            String status, String priority,
-            String fromDate, String toDate,
-            Integer assigneeUserId,
-            Integer createdByUserId,
-            String relatedType,
-            Integer relatedId) {
+                                   String title, String description,
+                                   String status, String priority,
+                                   String fromDate, String toDate,
+                                   Integer assigneeUserId,
+                                   Integer createdByUserId,
+                                   String relatedType,
+                                   Integer relatedId) {
         if (title != null && !title.isBlank()) {
             sql.append("AND t.title LIKE ? ");
             params.add("%" + title.trim() + "%");
@@ -757,7 +753,7 @@ public class TaskDAO {
     // 17. SCHEDULE – tasks within a date range (for weekly timetable)
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> findTasksInDateRange(java.time.LocalDateTime start, java.time.LocalDateTime end,
-            Integer assigneeUserId) {
+                                           Integer assigneeUserId) {
         List<Task> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(TASK_BASE_SELECT);
         sql.append("WHERE (");
@@ -794,12 +790,13 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     // 18. GET TASKS BY USER (recursive - owner + assignee + subtask supporter)
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
      * Find all tasks where user is involved:
      * 1. Task owner (created_by)
      * 2. Task assignee (Task_Assignees)
      * 3. Tagged in work items (Task_Comments.assigned_to)
-     *
+     * <p>
      * This is a "recursive" query that finds all tasks the user is connected to.
      */
     public List<Task> findTasksByUser(int userId, int page, int pageSize) {
@@ -1025,4 +1022,72 @@ public class TaskDAO {
         }
         return list;
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 19. SALE DASHBOARD – today's follow-up tasks for a user
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Tasks due today that relate to a Lead or Customer and are still active.
+     */
+    public List<Task> getTodaysTasksForUser(int userId, boolean isManager, java.time.LocalDate today) {
+        List<Task> list = new ArrayList<>();
+        String sql;
+        if (isManager) {
+            sql = """
+                SELECT t.*,
+                       u.user_id AS u_id, u.full_name, u.email, u.username,
+                       r.role_id, r.role_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.created_by = u.user_id
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE CAST(t.due_date AS DATE) = ?
+                  AND t.related_type IN ('Lead', 'Customer')
+                  AND t.status NOT IN ('Done', 'Cancelled')
+                ORDER BY t.due_date ASC
+                OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
+                """;
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setDate(1, java.sql.Date.valueOf(today));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Task task = mapRow(rs);
+                        task.setAssignees(loadAssignees(task.getTaskId()));
+                        list.add(task);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            sql = """
+                SELECT t.*,
+                       u.user_id AS u_id, u.full_name, u.email, u.username,
+                       r.role_id, r.role_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.created_by = u.user_id
+                LEFT JOIN Roles r ON u.role_id = r.role_id
+                WHERE CAST(t.due_date AS DATE) = ?
+                  AND t.related_type = 'Lead'
+                  AND t.related_id IN (SELECT lead_id FROM Leads WHERE assigned_to = ?)
+                  AND t.status NOT IN ('Done', 'Cancelled')
+                ORDER BY t.due_date ASC
+                OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
+                """;
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setDate(1, java.sql.Date.valueOf(today));
+                ps.setInt(2, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Task task = mapRow(rs);
+                        task.setAssignees(loadAssignees(task.getTaskId()));
+                        list.add(task);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return list;
+    }
+
 }

@@ -26,7 +26,8 @@ public class Task {
     private List<TaskAssignee> assignees;
     private List<TaskHistory> historys;
 
-    public Task() {}
+    public Task() {
+    }
 
     public Task(Integer taskId, String title, String description, String status,
                 String priority, LocalDateTime dueDate, LocalDateTime startDate,
@@ -54,54 +55,146 @@ public class Task {
         this.historys = historys;
     }
 
-    public Integer getTaskId() { return taskId; }
-    public void setTaskId(Integer taskId) { this.taskId = taskId; }
+    public Integer getTaskId() {
+        return taskId;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public void setTaskId(Integer taskId) {
+        this.taskId = taskId;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public String getPriority() { return priority; }
-    public void setPriority(String priority) { this.priority = priority; }
+    public String getDescription() {
+        return description;
+    }
 
-    public LocalDateTime getDueDate() { return dueDate; }
-    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public LocalDateTime getStartDate() { return startDate; }
-    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
+    public String getStatus() {
+        return status;
+    }
 
-    public LocalDateTime getCompletedAt() { return completedAt; }
-    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-    public LocalDateTime getCancelledAt() { return cancelledAt; }
-    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
+    public String getPriority() {
+        return priority;
+    }
 
-    public Integer getProgress() { return progress; }
-    public void setProgress(Integer progress) { this.progress = progress; }
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
 
-    public User getCreatedBy() { return createdBy; }
-    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
 
-    public String getRelatedType() { return relatedType; }
-    public void setRelatedType(String relatedType) { this.relatedType = relatedType; }
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
 
-    public Integer getRelatedId() { return relatedId; }
-    public void setRelatedId(Integer relatedId) { this.relatedId = relatedId; }
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
 
-    public List<TaskAssignee> getAssignees() { return assignees; }
-    public void setAssignees(List<TaskAssignee> assignees) { this.assignees = assignees; }
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
+    }
 
-    public List<TaskHistory> getHistorys() { return historys; }
-    public void setHistorys(List<TaskHistory> historys) { this.historys = historys; }
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(LocalDateTime cancelledAt) {
+        this.cancelledAt = cancelledAt;
+    }
+
+    public Integer getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getRelatedType() {
+        return relatedType;
+    }
+
+    public void setRelatedType(String relatedType) {
+        this.relatedType = relatedType;
+    }
+
+    public Integer getRelatedId() {
+        return relatedId;
+    }
+
+    public void setRelatedId(Integer relatedId) {
+        this.relatedId = relatedId;
+    }
+
+    public List<TaskAssignee> getAssignees() {
+        return assignees;
+    }
+
+    public void setAssignees(List<TaskAssignee> assignees) {
+        this.assignees = assignees;
+    }
+
+    public List<TaskHistory> getHistorys() {
+        return historys;
+    }
+
+    public void setHistorys(List<TaskHistory> historys) {
+        this.historys = historys;
+    }
+
+    public String getCompletedAtDate() {
+        if (completedAt == null) {
+            return "";
+        }
+        return completedAt.toLocalDate().toString();
+    }
 }

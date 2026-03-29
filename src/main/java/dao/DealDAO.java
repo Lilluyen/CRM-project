@@ -342,4 +342,178 @@ public class DealDAO {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // DASHBOARD METHODS (Sale Dashboard)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ─── Helper: bind date range params (2 params: startDate, endDate) ────
+    private void bindDateRange(PreparedStatement ps, java.time.LocalDate startDate,
+                               java.time.LocalDate endDate, int startIdx) throws SQLException {
+        ps.setDate(startIdx,     java.sql.Date.valueOf(startDate));
+        ps.setDate(startIdx + 1, java.sql.Date.valueOf(endDate));
+    }
+
+    public double getMonthlyRevenue(int userId, boolean isManager,
+                                    java.time.LocalDate startDate, java.time.LocalDate endDate)
+            throws SQLException {
+        if (isManager) {
+            String sql = "SELECT COALESCE(SUM(actual_value), 0) FROM Deals "
+                       + "WHERE stage = 'Closed Won' AND updated_at >= ? AND updated_at < DATEADD(day, 1, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getDouble(1);
+                }
+            }
+        } else {
+            String sql = "SELECT COALESCE(SUM(actual_value), 0) FROM Deals "
+                       + "WHERE stage = 'Closed Won' AND updated_at >= ? AND updated_at < DATEADD(day, 1, ?) AND owner_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                ps.setInt(3, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getDouble(1);
+                }
+            }
+        }
+        return 0.0;
+    }
+
+    public int countDealsWonThisMonth(int userId, boolean isManager,
+                                      java.time.LocalDate startDate, java.time.LocalDate endDate)
+            throws SQLException {
+        if (isManager) {
+            String sql = "SELECT COUNT(*) FROM Deals "
+                       + "WHERE stage = 'Closed Won' AND updated_at >= ? AND updated_at < DATEADD(day, 1, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getInt(1);
+                }
+            }
+        } else {
+            String sql = "SELECT COUNT(*) FROM Deals "
+                       + "WHERE stage = 'Closed Won' AND updated_at >= ? AND updated_at < DATEADD(day, 1, ?) AND owner_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                ps.setInt(3, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public int countDealsLostThisMonth(int userId, boolean isManager,
+                                        java.time.LocalDate startDate, java.time.LocalDate endDate)
+            throws SQLException {
+        if (isManager) {
+            String sql = "SELECT COUNT(*) FROM Deals "
+                       + "WHERE stage = 'Closed Lost' AND updated_at >= ? AND updated_at < DATEADD(day, 1, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getInt(1);
+                }
+            }
+        } else {
+            String sql = "SELECT COUNT(*) FROM Deals "
+                       + "WHERE stage = 'Closed Lost' AND updated_at >= ? AND updated_at < DATEADD(day, 1, ?) AND owner_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                ps.setInt(3, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public int countNewLeadsThisMonth(int userId, boolean isManager,
+                                       java.time.LocalDate startDate, java.time.LocalDate endDate)
+            throws SQLException {
+        if (isManager) {
+            String sql = "SELECT COUNT(*) FROM Leads WHERE created_at >= ? AND created_at < DATEADD(day, 1, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getInt(1);
+                }
+            }
+        } else {
+            String sql = "SELECT COUNT(*) FROM Leads WHERE created_at >= ? AND created_at < DATEADD(day, 1, ?) AND assigned_to = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindDateRange(ps, startDate, endDate, 1);
+                ps.setInt(3, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public int countFollowUpsToday(int userId, java.time.LocalDate today)
+            throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Tasks t "
+                   + "WHERE CAST(t.due_date AS DATE) = ? "
+                   + "  AND t.related_type IN ('Lead', 'Customer') "
+                   + "  AND t.status NOT IN ('Done', 'Cancelled') "
+                   + "  AND EXISTS (SELECT 1 FROM Leads l WHERE l.lead_id = t.related_id AND l.assigned_to = ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(today));
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public List<Deal> getOpenDealsForUser(int userId, boolean isManager) throws SQLException {
+        List<Deal> list = new ArrayList<>();
+        if (isManager) {
+            String sql = "SELECT d.deal_id, d.customer_id, d.lead_id, d.deal_name, "
+                       + "       d.expected_value, d.actual_value, d.stage, d.probability, "
+                       + "       d.expected_close_date, d.owner_id, d.created_at, d.updated_at, "
+                       + "       COALESCE(c.name, l.full_name, 'Unknown') AS customer_name "
+                       + "FROM Deals d "
+                       + "LEFT JOIN Customers c ON d.customer_id = c.customer_id "
+                       + "LEFT JOIN Leads l    ON d.lead_id     = l.lead_id "
+                       + "WHERE d.stage NOT IN ('Closed Won', 'Closed Lost') "
+                       + "ORDER BY d.updated_at DESC OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY";
+            try (PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Deal d = mapDeal(rs);
+                    d.setCustomerName(rs.getString("customer_name"));
+                    list.add(d);
+                }
+            }
+        } else {
+            String sql = "SELECT d.deal_id, d.customer_id, d.lead_id, d.deal_name, "
+                       + "       d.expected_value, d.actual_value, d.stage, d.probability, "
+                       + "       d.expected_close_date, d.owner_id, d.created_at, d.updated_at, "
+                       + "       COALESCE(c.name, l.full_name, 'Unknown') AS customer_name "
+                       + "FROM Deals d "
+                       + "LEFT JOIN Customers c ON d.customer_id = c.customer_id "
+                       + "LEFT JOIN Leads l    ON d.lead_id     = l.lead_id "
+                       + "WHERE d.stage NOT IN ('Closed Won', 'Closed Lost') AND d.owner_id = ? "
+                       + "ORDER BY d.updated_at DESC OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Deal d = mapDeal(rs);
+                        d.setCustomerName(rs.getString("customer_name"));
+                        list.add(d);
+                    }
+                }
+            }
+        }
+        return list;
+    }
+
 }

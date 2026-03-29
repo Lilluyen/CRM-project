@@ -270,6 +270,8 @@ public class TaskCommentApiController extends HttpServlet {
             res.addProperty("success", true);
             res.addProperty("commentId", item.getCommentId());
             res.addProperty("progressPct", pct);
+            res.addProperty("total", prog[0]);
+            res.addProperty("completed", prog[1]);
             writeJson(resp, 200, GSON.toJson(res));
 
         } catch (SQLException ex) {
@@ -456,6 +458,8 @@ public class TaskCommentApiController extends HttpServlet {
             JsonObject res = new JsonObject();
             res.addProperty("success", ok);
             res.addProperty("progressPct", pct);
+            res.addProperty("total", prog[0]);
+            res.addProperty("completed", prog[1]);
             writeJson(resp, ok ? 200 : 500, GSON.toJson(res));
 
         } catch (SQLException ex) {

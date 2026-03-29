@@ -148,12 +148,12 @@ public class TaskCreateController extends HttpServlet {
             req.getSession().setAttribute("flashSuccess",
                     "Task \"" + task.getTitle() + "\" đã được tạo.");
 
-            if (relatedTypeFinal != null && relatedId != null) {
-                String entityPath = resolveEntityPath(relatedTypeFinal, relatedId);
-                resp.sendRedirect(req.getContextPath() + entityPath);
-            } else {
+//            if (relatedTypeFinal != null && relatedId != null) {
+//                String entityPath = resolveEntityPath(relatedTypeFinal, relatedId);
+//                resp.sendRedirect(req.getContextPath() + entityPath);
+//            } else {
                 resp.sendRedirect(req.getContextPath() + "/tasks/list");
-            }
+//            }
 
         } catch (SQLException ex) {
             LOG.log(Level.SEVERE, "Error creating task", ex);
@@ -172,7 +172,8 @@ public class TaskCreateController extends HttpServlet {
         t.setStatus(nvl(req.getParameter("status"),   "Pending"));
         t.setPriority(nvl(req.getParameter("priority"), "Medium"));
         t.setCreatedBy(creator);
-
+        t.setRelatedType(req.getParameter("relatedType"));
+        t.setRelatedId(Integer.parseInt(req.getParameter("relatedId")));
         String progress = req.getParameter("progress");
         t.setProgress(progress != null && !progress.isBlank()
                 ? Integer.parseInt(progress) : 0);
@@ -186,15 +187,13 @@ public class TaskCreateController extends HttpServlet {
         return t;
     }
 
-    private String resolveEntityPath(String relatedType, int relatedId) {
-        return switch (relatedType.toLowerCase()) {
-            case "customer" -> "/customers/details?id=" + relatedId;
-            case "lead"     -> "/leads/details?id="     + relatedId;
-            case "deal"     -> "/deals/details?id="     + relatedId;
-            case "ticket"   -> "/tickets/details?id="   + relatedId;
-            default         -> "/tasks/list";
-        };
-    }
+//    private String resolveEntityPath(String relatedType, int relatedId) {
+//        return switch (relatedType.toLowerCase()) {
+//            case "customer" -> "/customers/detail?customerId=" + relatedId;
+//            case "lead"     -> "/marketing/leads/detail?id="     + relatedId;
+//            default         -> "/tasks/list";
+//        };
+//    }
 
     private boolean isManagerOrAdmin(User user) {
         if (user == null || user.getRole() == null) return false;
