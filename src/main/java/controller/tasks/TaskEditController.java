@@ -190,11 +190,11 @@ public class TaskEditController extends HttpServlet {
             if(existing.getStatus().equalsIgnoreCase("Done")){
                 add=1;
             }
-            pct = pro[0] > 0 ? (int) Math.round((double) (pro[1] +add)/ (pro[0]+1) * 100) : 0;} 
+            pct = (int) Math.round((double) (pro[1] +add)/ (pro[0]+1) * 100);} 
         catch (SQLException ex) {
             Logger.getLogger(TaskEditController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        existing.setProgress(pct!=0 ? pct : existing.getProgress());
+        existing.setProgress(pct<=100 ? pct : existing.getProgress());
 
         // Due date / priority: per-task rule (see canEditDuePriority)
         if (canEditDuePriority) {
