@@ -1,9 +1,6 @@
 package controller.sale.deal;
 
-import dao.CustomerContactDAO;
-import dao.CustomerDAO;
-import dao.DealDAO;
-import dao.LeadDAO;
+import dao.*;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -112,6 +109,8 @@ public class UpdateDealStageController extends HttpServlet {
             if (lead.isConverted()) {
                 // chỉ cần gắn lại customer vào deal
                 dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
+                TaskDAO taskDAO = new TaskDAO(conn);
+                taskDAO.updateTaskLeadToCus(lead.getConvertedCustomerId(), deal.getLeadId());
                 return;
             }
 
@@ -138,6 +137,8 @@ public class UpdateDealStageController extends HttpServlet {
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
 
+            TaskDAO taskDAO = new TaskDAO(conn);
+            taskDAO.updateTaskLeadToCus(customerId, lead.getLeadId());
             contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
             contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
             CustomerActivityUtil.logCustomerActivity(

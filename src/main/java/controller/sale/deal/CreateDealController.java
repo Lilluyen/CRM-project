@@ -378,6 +378,8 @@ public class CreateDealController extends HttpServlet {
             if (lead.isConverted()) {
                 // chỉ cần gắn lại customer vào deal
                 dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
+                TaskDAO taskDAO = new TaskDAO(conn);
+                taskDAO.updateTaskLeadToCus(lead.getConvertedCustomerId(), deal.getLeadId());
                 return;
             }
 
@@ -404,6 +406,8 @@ public class CreateDealController extends HttpServlet {
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
 
+            TaskDAO taskDAO = new TaskDAO(conn);
+            taskDAO.updateTaskLeadToCus(customerId, lead.getLeadId());
             contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
             contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
 
@@ -431,10 +435,12 @@ public class CreateDealController extends HttpServlet {
                 ? Integer.parseInt(progress) : 0);
 
         String due = req.getParameter("dueDate");
-        if (due != null && !due.isBlank()) t.setDueDate(LocalDateTime.now().plusWeeks(1));
+//        if (due != null && !due.isBlank())
+        t.setDueDate(LocalDateTime.now().plusWeeks(1));
 
         String start = req.getParameter("startDate");
-        if (start != null && !start.isBlank()) t.setStartDate(LocalDateTime.now());
+//        if (start != null && !start.isBlank())
+        t.setStartDate(LocalDateTime.now());
 
         return t;
     }

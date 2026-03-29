@@ -402,6 +402,7 @@ public class EditDealController extends HttpServlet {
                 // chỉ cần gắn lại customer vào deal
                 dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
                 TaskDAO taskDAO = new TaskDAO(conn);
+                taskDAO.updateTaskLeadToCus(lead.getConvertedCustomerId(), deal.getLeadId());
                 return;
             }
 
@@ -428,6 +429,8 @@ public class EditDealController extends HttpServlet {
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
 
+            TaskDAO taskDAO = new TaskDAO(conn);
+            taskDAO.updateTaskLeadToCus(customerId, lead.getLeadId());
             contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
             contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
             CustomerActivityUtil.logCustomerActivity(

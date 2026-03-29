@@ -1026,6 +1026,7 @@ public class TaskDAO {
     // ─────────────────────────────────────────────────────────────────────────
     // 19. SALE DASHBOARD – today's follow-up tasks for a user
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
      * Tasks due today that relate to a Lead or Customer and are still active.
      */
@@ -1034,18 +1035,18 @@ public class TaskDAO {
         String sql;
         if (isManager) {
             sql = """
-                SELECT t.*,
-                       u.user_id AS u_id, u.full_name, u.email, u.username,
-                       r.role_id, r.role_name
-                FROM Tasks t
-                LEFT JOIN Users u ON t.created_by = u.user_id
-                LEFT JOIN Roles r ON u.role_id = r.role_id
-                WHERE CAST(t.due_date AS DATE) = ?
-                  AND t.related_type IN ('Lead', 'Customer')
-                  AND t.status NOT IN ('Done', 'Cancelled')
-                ORDER BY t.due_date ASC
-                OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
-                """;
+                    SELECT t.*,
+                           u.user_id AS u_id, u.full_name, u.email, u.username,
+                           r.role_id, r.role_name
+                    FROM Tasks t
+                    LEFT JOIN Users u ON t.created_by = u.user_id
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE CAST(t.due_date AS DATE) = ?
+                      AND t.related_type IN ('Lead', 'Customer')
+                      AND t.status NOT IN ('Done', 'Cancelled')
+                    ORDER BY t.due_date ASC
+                    OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
+                    """;
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setDate(1, java.sql.Date.valueOf(today));
                 try (ResultSet rs = ps.executeQuery()) {
@@ -1060,19 +1061,19 @@ public class TaskDAO {
             }
         } else {
             sql = """
-                SELECT t.*,
-                       u.user_id AS u_id, u.full_name, u.email, u.username,
-                       r.role_id, r.role_name
-                FROM Tasks t
-                LEFT JOIN Users u ON t.created_by = u.user_id
-                LEFT JOIN Roles r ON u.role_id = r.role_id
-                WHERE CAST(t.due_date AS DATE) = ?
-                  AND t.related_type = 'Lead'
-                  AND t.related_id IN (SELECT lead_id FROM Leads WHERE assigned_to = ?)
-                  AND t.status NOT IN ('Done', 'Cancelled')
-                ORDER BY t.due_date ASC
-                OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
-                """;
+                    SELECT t.*,
+                           u.user_id AS u_id, u.full_name, u.email, u.username,
+                           r.role_id, r.role_name
+                    FROM Tasks t
+                    LEFT JOIN Users u ON t.created_by = u.user_id
+                    LEFT JOIN Roles r ON u.role_id = r.role_id
+                    WHERE CAST(t.due_date AS DATE) = ?
+                      AND t.related_type = 'Lead'
+                      AND t.related_id IN (SELECT lead_id FROM Leads WHERE assigned_to = ?)
+                      AND t.status NOT IN ('Done', 'Cancelled')
+                    ORDER BY t.due_date ASC
+                    OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY
+                    """;
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setDate(1, java.sql.Date.valueOf(today));
                 ps.setInt(2, userId);
@@ -1089,21 +1090,38 @@ public class TaskDAO {
         }
         return list;
     }
-    
-    public void changeTargetTask(int target, int source){
+
+    public void changeTargetTask(int target, int source) {
         String sql = """
-                     update Tasks
-                     Set related_id = ?
-                     Where related_id = ? AND related_type = 'CUSTOMER'
-                     """;
-        try(PreparedStatement ps = connection.prepareStatement(sql)){
+                update Tasks
+                Set related_id = ?
+                Where related_id = ? AND related_type = 'CUSTOMER'
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, target);
             ps.setInt(2, source);
             ps.executeUpdate();
-        }catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
 
         }
     }
+
+    public void updateTaskLeadToCus(int target, int source) {
+        String sql = """
+                update Tasks
+                Set related_id = ?, related_type = 'CUSTOMER'
+                Where related_id = ?
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, target);
+            ps.setInt(2, source);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+        }
+    }
+
 
 }
