@@ -1,21 +1,11 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import model.Lead;
 import util.DBContext;
+
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public class LeadDAO {
 
@@ -526,7 +516,7 @@ public class LeadDAO {
                 = "SELECT COUNT(*) FROM ( "
                 + "  SELECT MIN(lead_id) AS lead_id "
                 + "  FROM Leads "
-                + "  WHERE 1=1 ";
+                + "  WHERE 1=1 AND status <> 'CONVERTED'";
 
         List<Object> params = new ArrayList<>();
 
@@ -594,11 +584,11 @@ public class LeadDAO {
     // ==============================
     public Set<String> getExistingEmailsByCampaign(int campaignId) {
         String sql = """
-        SELECT LOWER(l.email) AS email
-        FROM Leads l
-        JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id
-        WHERE cl.campaign_id = ? AND l.email IS NOT NULL
-    """;
+                    SELECT LOWER(l.email) AS email
+                    FROM Leads l
+                    JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id
+                    WHERE cl.campaign_id = ? AND l.email IS NOT NULL
+                """;
 
         Set<String> emails = new HashSet<>();
 
@@ -790,12 +780,24 @@ public class LeadDAO {
         return result;
     }
 
-    /** Simple DTO for lead stage counts (matches SaleDashboardController.LeadStageCount). */
+    /**
+     * Simple DTO for lead stage counts (matches SaleDashboardController.LeadStageCount).
+     */
     public static class LeadStageCount {
         private final String status;
         private final int count;
-        public LeadStageCount(String status, int count) { this.status = status; this.count = count; }
-        public String getStatus() { return status; }
-        public int getCount() { return count; }
+
+        public LeadStageCount(String status, int count) {
+            this.status = status;
+            this.count = count;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public int getCount() {
+            return count;
+        }
     }
 }

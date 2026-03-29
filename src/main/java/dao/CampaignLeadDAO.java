@@ -1,17 +1,13 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 import model.Campaign;
 import model.Lead;
 import util.DBContext;
+
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CampaignLeadDAO {
 
@@ -88,7 +84,7 @@ public class CampaignLeadDAO {
 
     // Đếm số lượng lead theo trạng thái trong một campaign
     public int countLeadByStatus(int campaignId, String leadStatus) {
-        String sql = "SELECT COUNT(Distinct l.lead_id) as cnt FROM Campaign_Leads cl join Leads l on l.campaign_id = cl.campaign_id WHERE cl.campaign_id = ? AND status = ?";
+        String sql = "SELECT COUNT(Distinct l.lead_id) as cnt FROM Campaign_Leads cl join Leads l on l.campaign_id = cl.campaign_id WHERE cl.campaign_id = ? AND l.status = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, campaignId);
             ps.setString(2, leadStatus);
@@ -159,13 +155,13 @@ public class CampaignLeadDAO {
 
     /**
      * FIX: Lấy TẤT CẢ campaigns của một người dựa trên EMAIL.
-     *
+     * <p>
      * Lý do cần method này: - Bảng Leads có thể có nhiều row cùng email (mỗi
      * campaign tạo 1 row riêng, hoặc dùng MIN(lead_id) khi hiển thị list). -
      * searchLeads() chỉ trả về MIN(lead_id) per email → leadId đó chỉ thuộc 1
      * campaign trong Campaign_Leads. - Để hiện đủ campaigns trên trang detail,
      * cần JOIN qua tất cả lead_id có cùng email, không chỉ 1 leadId.
-     *
+     * <p>
      * SQL: lấy DISTINCT campaigns từ tất cả lead_id có email = email của leadId
      * này.
      */
