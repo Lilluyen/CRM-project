@@ -101,7 +101,7 @@ public class TaskCommentApiController extends HttpServlet {
             int[] prog = new TaskCommentDAO(conn).countProgress(taskId);
             int total = prog[0];
             int completed = prog[1];
-            int progressPct = total > 0 ? (int) Math.round((double) completed / total * 100) : 0;
+            int progressPct = total > 0 ? (int) Math.round((double) completed / (total+1) * 100) : 0;
 
             // Return overdue lock info so frontend can disable UI
             boolean overdue = isTaskOverdue(task);
@@ -386,7 +386,7 @@ public class TaskCommentApiController extends HttpServlet {
 
             // Recompute task progress
             int[] prog = dao.countProgress(existing.getTaskId());
-            int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / prog[0] * 100) : 0;
+            int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / (prog[0]+1) * 100) : 0;
 
             // Cập nhật progress vào database
             new TaskService(conn).updateProgress(existing.getTaskId(), pct, user.getUserId());
@@ -450,7 +450,7 @@ public class TaskCommentApiController extends HttpServlet {
             boolean ok = dao.softDeleteCascade(commentId);
 
             int[] prog = dao.countProgress(existing.getTaskId());
-            int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / prog[0] * 100) : 0;
+            int pct = prog[0] > 0 ? (int) Math.round((double) prog[1] / (prog[0]+1) * 100) : 0;
 
             // Cập nhật progress vào database
             new TaskService(conn).updateProgress(existing.getTaskId(), pct, user.getUserId());

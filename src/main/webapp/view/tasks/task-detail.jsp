@@ -921,7 +921,7 @@
         if (pEl)
             pEl.textContent = pct + '%';
         if (sEl)
-            sEl.textContent = (completed || 0) + ' / ' + (total || 0) + ' work items done';
+            sEl.textContent = (completed || 0) + ' / ' + (total +1 || 0) + ' work items done';
         if (aEl)
             aEl.classList.toggle('d-none', !(total > 0 && (completed || 0) < total));
     }

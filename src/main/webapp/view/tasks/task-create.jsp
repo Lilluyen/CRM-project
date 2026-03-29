@@ -23,7 +23,7 @@
         </c:if>
 
         <div class="card"><div class="card-body">
-                <form method="post" action="${pageContext.request.contextPath}/tasks/create">
+                <form id="taskForm" method="post" action="${pageContext.request.contextPath}/tasks/create">
                     <input type="hidden" name="progress" value="0">
 
                     <div class="row g-3">
@@ -68,6 +68,7 @@
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Due Date</label>
                             <input type="datetime-local" name="dueDate" class="form-control">
+                            <div id="dateError" class="text-danger mt-1" style="display:none;"></div>
                         </div>
 
                         <div class="col-md-3">
@@ -252,4 +253,26 @@ function loadRelatedEntities() {
             idSelect.innerHTML = '<option value="">Error loading</option>';
         });
 }
+document.getElementById("taskForm").addEventListener("submit", function (e) {
+
+    const startInput = document.querySelector("input[name='startDate']");
+    const dueInput   = document.querySelector("input[name='dueDate']");
+    const errBox     = document.getElementById("dateError");
+
+    errBox.style.display = "none";
+    errBox.textContent = "";
+
+    if (startInput.value && dueInput.value) {
+        const start = new Date(startInput.value);
+        const due   = new Date(dueInput.value);
+
+        // nếu start > due thì lỗi
+        if (start > due) {
+            e.preventDefault(); // chặn submit
+            errBox.textContent = "The Start Date must be less than or equal to the Due Date";
+            errBox.style.display = "block";
+            dueInput.focus();
+        }
+    }
+});
 </script>
