@@ -13,12 +13,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Campaign;
 import model.Lead;
 import model.User;
+import service.CampaignService;
 import service.LeadService;
 
 @WebServlet(name = "LeadDetailController", urlPatterns = {"/marketing/leads/detail"})
 public class LeadDetailController extends HttpServlet {
 
     private final LeadService leadService = new LeadService();
+    private final CampaignService campaignService = new CampaignService();
     private final CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
     private final UserDAO userDAO = new UserDAO();
 
@@ -38,7 +40,7 @@ public class LeadDetailController extends HttpServlet {
             Lead lead = leadService.getLeadById(leadId);
 
             if (lead == null) {
-                request.getSession().setAttribute("errorMessage", "Lead không tồn tại.");
+                request.getSession().setAttribute("errorMessage", "Lead is not found.");
                 response.sendRedirect(request.getContextPath() + "/marketing/leads");
                 return;
             }
@@ -53,22 +55,32 @@ public class LeadDetailController extends HttpServlet {
 
             request.setAttribute("lead", lead);
 
-            // Load danh sách users cho dropdown (cho phép re-assign)
+            // ---------------------------------------------------------------
+            // FIX: Dùng getCampaignsByLeadEmail() thay vì getCampaignsByLeadId()
+            //
+            // Lý do: searchLeads() hiển thị 1 đại diện per email (MIN lead_id),
+            // lead_id đó chỉ có 1 row trong Campaign_Leads.
+            // getCampaignsByLeadEmail() query qua TẤT CẢ lead_id có cùng email
+            // → trả về đủ tất cả campaigns mà người này đã tham gia.
+            // ---------------------------------------------------------------
+            List<Campaign> leadCampaigns = campaignLeadDAO.getCampaignsByLeadEmail(leadId);
+            request.setAttribute("leadCampaigns", leadCampaigns);
+
+            // Tất cả campaigns trong hệ thống (cho checkbox cập nhật)
+            List<Campaign> allCampaigns = campaignService.getAllCampaigns();
+            request.setAttribute("allCampaigns", allCampaigns);
+
+            // Load danh sách users
             List<User> users = userDAO.getActiveUsers();
             request.setAttribute("users", users);
 
-            // Load danh sách campaigns mà lead tham gia
-            List<Campaign> leadCampaigns = campaignLeadDAO.getCampaignsByLeadId(leadId);
-            request.setAttribute("leadCampaigns", leadCampaigns);
-
-            // Flash success message from session (PRG pattern)
+            // Flash success message (PRG pattern)
             String successMsg = (String) request.getSession().getAttribute("successMessage");
             if (successMsg != null) {
                 request.setAttribute("success", successMsg);
                 request.getSession().removeAttribute("successMessage");
             }
 
-            // Layout attributes
             request.setAttribute("pageTitle", lead.getFullName() + " - CRM");
             request.setAttribute("contentPage", "marketing/lead/lead_detail.jsp");
             request.setAttribute("pageCss", "lead_detail.css");

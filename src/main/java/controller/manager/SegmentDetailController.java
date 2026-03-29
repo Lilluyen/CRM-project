@@ -26,15 +26,17 @@ public class SegmentDetailController extends HttpServlet {
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     private final CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    private final CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+
     private final CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
     private final CustomerSegmentService customerSegmentService = new CustomerSegmentService();
-    private final CustomerService customerService = new CustomerService(
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
+    CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

@@ -121,11 +121,17 @@
             <%-- Status – editable for everyone --%>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Status</label>
+              <% if (canEditDuePriority) { %>
               <select name="status" class="form-select">
                 <% for (String s : new String[]{"Pending","In Progress","Done","Overdue","Cancelled"}) { %>
                 <option value="<%= s %>" <%= s.equalsIgnoreCase(task.getStatus()) ? "selected" : "" %>><%= s %></option>
                 <% } %>
               </select>
+              <% } else { %>
+              <input type="text" class="form-control" value="<%= task.getStatus() %>" readonly>
+              <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Locked</small>
+              <% } %>
+              
             </div>
 
             <%-- Due Date – manager only --%>
@@ -139,6 +145,7 @@
                      readonly>
               <small class="readonly-hint"><i class="fa fa-lock me-1"></i>Locked</small>
               <% } %>
+              <div id="dateErrorEdit" class="text-danger mt-1" style="display:none;"></div>
             </div>
 
             <%-- Progress (inline in form so it saves together) – everyone --%>
@@ -446,4 +453,29 @@ function showToast(msg, type) {
 //    document.body.appendChild(div);
 //    setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 3500);
 }
+/* ── Validate Start Date / Due Date before submit ─────────────────── */
+document.getElementById("editForm").addEventListener("submit", function (e) {
+
+    const startInput = document.querySelector("input[name='startDate']");
+    const dueInput   = document.querySelector("input[name='dueDate']");
+    const errBox     = document.getElementById("dateErrorEdit");
+
+    if (!startInput || !dueInput) return; // nếu user ko có quyền edit thì bỏ qua
+
+    errBox.style.display = "none";
+    errBox.textContent = "";
+
+    if (startInput.value && dueInput.value) {
+        const start = new Date(startInput.value);
+        const due   = new Date(dueInput.value);
+
+        // nếu start > due thì chặn submit
+        if (start > due) {
+            e.preventDefault();
+            errBox.textContent = "The Start Date must be less than or equal to the Due Date";
+            errBox.style.display = "block";
+            dueInput.focus();
+        }
+    }
+});
 </script>

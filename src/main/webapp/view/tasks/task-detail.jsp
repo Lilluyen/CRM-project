@@ -60,10 +60,10 @@
         background:#fff;
         overflow:hidden
     }
-    .wi-done .wi-content{
+/*    .wi-done .wi-content{
         text-decoration:line-through;
         color:#adb5bd
-    }
+    }*/
     .wi-header{
         display:flex;
         align-items:flex-start;
@@ -247,6 +247,20 @@
             <% session.removeAttribute("flashSuccess"); %>
         </c:if>
 
+        <% if ("Overdue".equalsIgnoreCase(task.getStatus())) { %>
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="fa fa-exclamation-circle me-2" style="font-size:1.2rem"></i>
+            <div>
+                <strong>This task is overdue.</strong>
+                <% if (isManager || (task.getCreatedBy() != null && task.getCreatedBy().getUserId() == currentUid)) { %>
+                You can still modify work items as a manager/owner.
+                <% } else { %>
+                Work items are locked. Only the manager or task owner can make changes.
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+
         <div class="row g-3">
             <!-- Task info -->
             <div class="col-lg-8">
@@ -379,101 +393,193 @@
             </div>
         </div>
 
-        <!-- HISTORY -->
+        <!-- ================= CHANGE HISTORY ================= -->
         <div class="card mt-2">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="fa fa-history me-1"></i>Change History</h5>
-                <a href="<%= ctx %>/tasks/view-history?id=<%= task.getTaskId() %>" class="btn btn-sm btn-outline-dark">Full History</a>
+                <h5 class="card-title mb-0">
+                    <i class="fa fa-history me-1"></i>Change History
+                </h5>
+                <a href="${pageContext.request.contextPath}/tasks/view-history?id=${task.taskId}"
+                   class="btn btn-sm btn-outline-dark">
+                    Full History
+                </a>
             </div>
+
             <div class="card-body">
-                <% if(historyViews.isEmpty()){ %>
-                <div class="alert alert-light border mb-0"><i class="fa fa-inbox me-1"></i>No history yet.</div>
-                <% }else{for(HistoryView hv:historyViews){
-                     TaskHistory h=hv.getHistory();int hid=h!=null?h.getHistoryId():0;
-                     List<TaskHistoryDetail> dets=h!=null?h.getDetails():new ArrayList<>();
-                     if(dets==null)dets=new ArrayList<>();
-                     java.util.LinkedHashSet<String> lbls=new java.util.LinkedHashSet<>();
-                     for(TaskHistoryDetail d:dets){
-                       String fname=d!=null&&d.getFieldName()!=null?d.getFieldName().trim().toLowerCase():"";
-                       switch(fname){
-                         case"progress"->lbls.add("Progress updated");case"status"->lbls.add("Status changed");
-                         case"priority"->lbls.add("Priority changed");case"duedate"->lbls.add("Due date changed");
-                         case"title"->lbls.add("Title changed");case"description"->lbls.add("Description changed");
-                         case"assignee_added"->lbls.add("Assignee added");case"assignee_removed"->lbls.add("Assignee removed");
-                         case"created"->lbls.add("Task created");
-                         default->{if(!fname.isEmpty())lbls.add(fname.replace('_',' '));}
-                       }
-                     }
-                     String summary=lbls.isEmpty()?"Updated":String.join(" · ",lbls);
-                     String cid="h_"+hid; %>
-                <div class="tl-item">
-                    <div class="tl-line">
-                        <div class="tl-time"><%= hv.getChangedAtDisplay() %></div>
-                        <div class="tl-sum"><%= summary %>
-                            <% if(hv.getChangedByName()!=null&&!hv.getChangedByName().isBlank()){ %>
-                            <span class="text-muted small">
-                                by ${fn:escapeXml(hv.changedByName)}
-                            </span>
-                            <% } %>
-                        </div>
-                        <% if(!dets.isEmpty()){ %>
-                        <a class="tl-tog" data-bs-toggle="collapse" href="#<%= cid %>"><i class="fa fa-caret-down"></i></a>
-                            <% } %>
+
+                <!-- Không có lịch sử -->
+                <c:if test="${empty historyViews}">
+                    <div class="alert alert-light border mb-0">
+                        <i class="fa fa-inbox me-1"></i>No history yet.
                     </div>
-                    <% if(!dets.isEmpty()){ %>
-                    <div class="collapse" id="<%= cid %>">
-                        <div class="det-box">
-                            <% for(TaskHistoryDetail d:dets){ %>
-                            <div class="det-row">
-                                <div class="d-f">
-                                    ${fn:escapeXml(d.fieldName)}
-                                </div>
+                </c:if>
 
-                                <div class="d-o">
-                                    ${not empty d.oldValue ? fn:escapeXml(d.oldValue) : "—"}
-                                </div>
+                <!-- Có lịch sử -->
+                <c:forEach var="hv" items="${historyViews}">
 
-                                <div class="text-muted">→</div>
+                    <c:set var="hid" value="${hv.history.historyId}" />
+                    <c:set var="cid" value="h_${hid}" />
 
-                                <div class="d-n">
-                                    ${not empty d.newValue ? fn:escapeXml(d.newValue) : "—"}
-                                </div>
-                            </div>
-                            <% } %>
-                        </div>
-                    </div>
-                    <% } %>
-                </div>
-                <% }}%>
-            </div>
-        </div>
-
-        <% if(actPag!=null&&actPag.getTotalItems()>0){ %>
-        <div class="card mt-2">
-            <div class="card-header"><h5 class="card-title mb-0"><i class="fa fa-stream me-1"></i>Activity Timeline</h5></div>
-            <div class="card-body">
-                <c:forEach var="act" items="${activities}">
                     <div class="tl-item">
                         <div class="tl-line">
 
+                            <!-- Time -->
                             <div class="tl-time">
-                                ${act.activityDate != null ? fn:substringBefore(fn:replace(act.activityDate, 'T', ' '), '') : ""}
+                                ${hv.changedAtDisplay}
                             </div>
 
+                            <!-- Summary -->
                             <div class="tl-sum">
-                                <span class="badge bg-light text-dark border me-1">
-                                    ${act.activityType != null ? fn:replace(act.activityType, '_', ' ') : ""}
-                                </span>
 
-                                ${not empty act.subject ? fn:escapeXml(act.subject) : ""}
+                                <!-- Tạo summary theo fieldName -->
+                                <c:set var="summary" value="" />
+
+                                <c:forEach var="d" items="${hv.history.details}">
+                                    <c:choose>
+                                        <c:when test="${d.fieldName == 'status'}">
+                                            <c:set var="summary" value="${summary} Status changed ·" />
+                                        </c:when>
+
+                                        <c:when test="${d.fieldName == 'priority'}">
+                                            <c:set var="summary" value="${summary} Priority changed ·" />
+                                        </c:when>
+
+                                        <c:when test="${d.fieldName == 'progress'}">
+                                            <c:set var="summary" value="${summary} Progress updated ·" />
+                                        </c:when>
+
+                                        <c:when test="${d.fieldName == 'duedate'}">
+                                            <c:set var="summary" value="${summary} Due date changed ·" />
+                                        </c:when>
+
+                                        <c:when test="${d.fieldName == 'title'}">
+                                            <c:set var="summary" value="${summary} Title changed ·" />
+                                        </c:when>
+
+                                        <c:when test="${d.fieldName == 'description'}">
+                                            <c:set var="summary" value="${summary} Description changed ·" />
+                                        </c:when>
+
+                                        <c:when test="${d.fieldName == 'assignee_added'}">
+                                            <c:set var="summary" value="${summary} Assignee added ·" />
+                                        </c:when>
+
+                                        <c:when test="${d.fieldName == 'assignee_removed'}">
+                                            <c:set var="summary" value="${summary} Assignee removed ·" />
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            <c:set var="summary" value="${summary} ${d.fieldName} ·" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+
+                                <!-- Hiển thị summary -->
+                                ${summary}
+
+                                <!-- Tên người thay đổi -->
+                                <c:if test="${not empty hv.changedByName}">
+                                    <span class="text-muted small">
+                                        by ${fn:escapeXml(hv.changedByName)}
+                                    </span>
+                                </c:if>
                             </div>
+
+                            <!-- Button mở detail -->
+                            <c:if test="${not empty hv.history.details}">
+                                <a class="tl-tog" data-bs-toggle="collapse" href="#${cid}">
+                                    <i class="fa fa-caret-down"></i>
+                                </a>
+                            </c:if>
 
                         </div>
+
+                        <!-- DETAIL -->
+                        <c:if test="${not empty hv.history.details}">
+                            <div class="collapse" id="${cid}">
+                                <div class="det-box">
+
+                                    <c:forEach var="d" items="${hv.history.details}">
+                                        <div class="det-row">
+
+                                            <div class="d-f">
+                                                ${fn:escapeXml(d.fieldName)}
+                                            </div>
+
+                                            <div class="d-o">
+                                                <c:choose>
+                                                    <c:when test="${not empty d.oldValue}">
+                                                        ${fn:escapeXml(d.oldValue)}
+                                                    </c:when>
+                                                    <c:otherwise>—</c:otherwise>
+                                                </c:choose>
+                                            </div>
+
+                                            <div class="text-muted">→</div>
+
+                                            <div class="d-n">
+                                                <c:choose>
+                                                    <c:when test="${not empty d.newValue}">
+                                                        ${fn:escapeXml(d.newValue)}
+                                                    </c:when>
+                                                    <c:otherwise>—</c:otherwise>
+                                                </c:choose>
+                                            </div>
+
+                                        </div>
+                                    </c:forEach>
+
+                                </div>
+                            </div>
+                        </c:if>
+
                     </div>
                 </c:forEach>
+
             </div>
         </div>
-        <% } %>
+
+
+
+        <!-- ================= ACTIVITY TIMELINE ================= -->
+        <%--<c:if test="${actPag != null && actPag.totalItems > 0}">
+            <div class="card mt-2">
+
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fa fa-stream me-1"></i>Activity Timeline
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <c:forEach var="act" items="${activities}">
+                        <div class="tl-item">
+                            <div class="tl-line">
+
+                                <!-- Time -->
+                                <div class="tl-time">
+                                    ${act.activityDate}
+                                </div>
+
+                                <!-- Nội dung -->
+                                <div class="tl-sum">
+
+                                    <span class="badge bg-light text-dark border me-1">
+                                        ${fn:replace(act.activityType, '_', ' ')}
+                                    </span>
+
+                                    ${fn:escapeXml(act.subject)}
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </c:forEach>
+
+                </div>
+            </div>
+        </c:if>--%>
 
     </div></div>
 
@@ -483,191 +589,461 @@
     const CUR_UID =<%= currentUid %>;
     const IS_MGR =<%= isManager %>;
     const TASK_STATUS = '<%= task.getStatus() %>';
+    const TASK_OWNER_ID = <%= task.getCreatedBy() != null ? task.getCreatedBy().getUserId() : 0 %>;
+
+    // Lock state - will be set after loading work items
+    let IS_OVERDUE = false;
+    let CAN_MODIFY = true;
     let allItems = [];
-    function loadWorkTree(){
-    fetch(CTX + '/api/task-comments?taskId=' + TASK_ID)
-            .then(r => r.json()).then(d => {
-    allItems = d.items || [];
-    renderTree();
-    updateProgress(d.progressPct, d.completed, d.total);
-    }).catch(() => {});
+
+    // All users for dynamic subtask tag selector
+    const ALL_USERS = [
+    <% for (User u : allUsers) {
+        String un = u.getFullName() != null && !u.getFullName().isBlank() ? u.getFullName() : u.getUsername();
+        String safeUn = un.replace("\\", "\\\\").replace("\"", "\\\""); %>
+        {uid: <%= u.getUserId() %>, name: "<%= safeUn %>"},
+    <% } %>
+    ];
+
+    function loadWorkTree() {
+        fetch(CTX + '/api/task-comments?taskId=' + TASK_ID)
+                .then(r => r.json()).then(d => {
+            allItems = d.items || [];
+            IS_OVERDUE = d.isOverdue || false;
+            CAN_MODIFY = d.canModify !== false; // default true
+            renderTree();
+            updateProgress(d.progressPct, d.completed, d.total);
+            updateUIForOverdue();
+        }).catch(() => {
+        });
     }
 
-    function renderTree(){
-    const box = document.getElementById('workTree');
-    const cnt = document.getElementById('wiCount');
-    const roots = allItems.filter(i => !i.parentCommentId);
-    cnt.textContent = allItems.length;
-    if (!allItems.length){
-    box.innerHTML = '<p class="text-muted small mb-0"><i class="fa fa-inbox me-1"></i>No work items yet.</p>';
-    return;
+    // Update UI based on overdue status and permissions
+    function updateUIForOverdue() {
+        const addForm = document.querySelector('.card.bg-light');
+        if (addForm) {
+            if (!CAN_MODIFY) {
+                addForm.classList.add('opacity-50');
+                const textarea = addForm.querySelector('textarea');
+                const select = addForm.querySelector('select');
+                const buttons = addForm.querySelectorAll('button');
+                if (textarea) {
+                    textarea.disabled = true;
+                    textarea.placeholder = 'Task is overdue - no modifications allowed';
+                }
+                if (select)
+                    select.disabled = true;
+                buttons.forEach(b => b.disabled = true);
+            } else if (IS_OVERDUE && CAN_MODIFY) {
+                // Manager/owner can modify - show warning
+                const existingWarning = document.getElementById('overdueWarning');
+                if (!existingWarning && addForm) {
+                    const warn = document.createElement('div');
+                    warn.id = 'overdueWarning';
+                    warn.className = 'alert alert-warning py-2 px-3 mb-2';
+                    warn.innerHTML = '<i class="fa fa-exclamation-triangle me-1"></i>Task is overdue. Only manager or owner can modify.';
+                    addForm.querySelector('.card-body').insertBefore(warn, addForm.querySelector('.card-body').firstChild);
+                }
+            }
+        }
     }
-    box.innerHTML = roots.map(i => renderItem(i)).join('');
+
+    function renderTree() {
+        const box = document.getElementById('workTree');
+        const cnt = document.getElementById('wiCount');
+        cnt.textContent = allItems.length;
+        if (!allItems.length) {
+            box.innerHTML = '<p class="text-muted small mb-0"><i class="fa fa-inbox me-1"></i>No work items yet.</p>';
+            return;
+        }
+        // Build tree structure with unlimited nesting levels
+        const rootItems = allItems.filter(i => !i.parentCommentId);
+        box.innerHTML = rootItems.map((item, idx) => renderItem(item, 0, idx)).join('');
     }
 
-    function renderItem(item){
-    const children = allItems.filter(i => i.parentCommentId === item.commentId);
-    const done = item.isCompleted;
-    const canChk = IS_MGR || item.userId === CUR_UID || item.assignedTo === CUR_UID;
-    const canDel = IS_MGR || item.userId === CUR_UID;
-    const av = avColor(item.authorName || '?');
-    const body = esc(item.content || '').replace(/@([\S]+)/g, '<span class="mention-tag">@$1</span>');
-    const pill = item.assignedTo ? '<span class="assignee-badge ms-1"><i class="fa fa-user-tag"></i>' + esc(item.assignedName || '') + '</span>' : '';
-    const stamp = done && item.completedAt ? '<small class="text-success ms-1"><i class="fa fa-check-circle"></i>' + esc(item.completedAt) + '</small>' : '';
-    const childHtml = children.length ? '<div class="wi-replies">' + children.map(c => renderReply(c)).join('') + '</div>' : '';
-    const checkbox = canChk ? '<input type="checkbox" class="wi-check" ' + (done ? 'checked' : '') + ' onchange="toggleDone(' + item.commentId + ',this.checked)">' : '<div style="width:18px;flex-shrink:0"></div>';
-    const deleteBtn = canDel ? '<button class="btn btn-xs btn-outline-danger" style="padding:2px 7px;font-size:.74rem" onclick="delItem(' + item.commentId + ')"><i class="fa fa-trash"></i></button>' : '';
-    return '<div class="wi-root ' + (done ? 'wi-done' : '') + '">' +
-        '<div class="wi-header">' +
-        checkbox +
-        '<div class="av" style="background:' + av + '">' + (item.authorName || '?').charAt(0).toUpperCase() + '</div>' +
-        '<div class="flex-grow-1">' +
-        '<div class="d-flex align-items-center flex-wrap gap-1 mb-1">' +
-        '<strong style="font-size:.87rem">' + esc(item.authorName || '?') + '</strong>' +
-        '<small class="text-muted">' + esc(item.createdAt) + '</small>' + pill + stamp +
-        '</div>' +
-        '<div class="wi-content">' + body + '</div>' +
-        '</div>' +
-        '<div class="d-flex gap-1 flex-shrink-0">' +
-        '<button class="btn btn-xs btn-outline-secondary" style="padding:2px 7px;font-size:.74rem" onclick="showReply(' + item.commentId + ')" title="Reply"><i class="fa fa-reply"></i></button>' +
-        deleteBtn +
-        '</div></div>' +
-        childHtml +
-        '<div class="wi-replies d-none" id="rb-' + item.commentId + '">' +
-        '<div class="d-flex gap-2 mt-1">' +
-        '<input id="ri-' + item.commentId + '" class="form-control form-control-sm flex-grow-1" placeholder="Reply…" onkeydown="if(event.key===\'Enter\'){addReply(' + item.commentId + '); event.preventDefault();}">' +
-        '<button class="btn btn-sm btn-primary" onclick="addReply(' + item.commentId + ')">Send</button>' +
-        '<button class="btn btn-sm btn-outline-secondary" onclick="hideReply(' + item.commentId + ')">✕</button>' +
-        '</div></div></div>';
-}
+    // Recursive function to render nested subtasks at any depth
+    function renderItem(item, level, index) {
+        const children = allItems.filter(i => i.parentCommentId === item.commentId);
+        const done = item.isCompleted;
+        const av = avColor(item.authorName || '?');
+        const body = esc(item.content || '').replace(/@([\S]+)/g, '<span class="mention-tag">@$1</span>');
+        const pill = item.assignedTo ? '<span class="assignee-badge ms-1"><i class="fa fa-user-tag"></i>' + esc(item.assignedName || '') + '</span>' : '';
+        const stamp = done && item.completedAt ? '<small class="text-success ms-1"><i class="fa fa-check-circle"></i>' + esc(item.completedAt) + '</small>' : '';
 
-function renderReply(item){
-  const done=item.isCompleted;
-  const canChk=IS_MGR||item.userId===CUR_UID||item.assignedTo===CUR_UID;
-  const canDel=IS_MGR||item.userId===CUR_UID;
-  const body=esc(item.content||'').replace(/@([\S]+)/g,'<span class="mention-tag">@$1</span>');
-  const pill=item.assignedTo ? '<span class="assignee-badge ms-1"><i class="fa fa-user-tag"></i>' + esc(item.assignedName || '') + '</span>' : '';
-  const av = avColor(item.authorName || '?');
-  const checkbox = canChk ? '<input type="checkbox" class="wi-check" ' + (done ? 'checked' : '') + ' onchange="toggleDone(' + item.commentId + ',this.checked)">' : '<div style="width:18px"></div>';
-  const deleteBtn = canDel ? '<button class="btn btn-xs btn-outline-danger ms-auto" style="padding:1px 6px;font-size:.72rem" onclick="delItem(' + item.commentId + ')"><i class="fa fa-trash"></i></button>' : '';
-  return '<div class="wi-reply ' + (done ? 'r-done' : '') + '">' +
-      '<div class="d-flex gap-2 align-items-flex-start">' +
-      checkbox +
-      '<div class="av av-sm" style="background:' + av + '">' + (item.authorName || '?').charAt(0).toUpperCase() + '</div>' +
-      '<div class="flex-grow-1">' +
-      '<div class="d-flex align-items-center gap-1 flex-wrap mb-1">' +
-      '<strong style="font-size:.82rem">' + esc(item.authorName || '?') + '</strong>' +
-      '<small class="text-muted">' + esc(item.createdAt) + '</small>' + pill +
-      '</div>' +
-      '<div class="wi-content">' + body + '</div>' +
-      '</div>' +
-      deleteBtn +
-      '</div></div>';
-}
+        // Permission checks
+        const canChk = CAN_MODIFY && (IS_MGR || item.userId === CUR_UID || item.assignedTo === CUR_UID);
+        const canDel = CAN_MODIFY && (IS_MGR || item.userId === CUR_UID);
+        const canReply = CAN_MODIFY;
 
-function addWorkItem(){
-  const inp=document.getElementById('wiInput');
-  const sel=document.getElementById('assignedToSelect');
-  const text=(inp.value||'').trim();if(!text){inp.focus();return;}
-  const assignedTo=sel&&sel.value?parseInt(sel.value):null;
-  fetch(CTX+'/api/task-comments',{method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({taskId:TASK_ID,content:text,assignedTo})})
-    .then(r=>r.json()).then(res=>{
-      if(res.success){inp.value='';if(sel)sel.value='';loadWorkTree();}
-      else toast(res.message||'Failed','danger');
-    }).catch(()=>toast('Network error','danger'));
-}
+        const checkbox = canChk
+                ? '<input type="checkbox" class="wi-check" ' + (done ? 'checked' : '') + ' onchange="toggleDone(' + item.commentId + ',this.checked)">'
+                : '<div style="width:18px;flex-shrink:0"></div>';
 
-function showReply(id){document.getElementById('rb-'+id).classList.remove('d-none');document.getElementById('ri-'+id).focus();}
-function hideReply(id){document.getElementById('rb-'+id).classList.add('d-none');}
-function addReply(parentId){
-  const inp=document.getElementById('ri-'+parentId);
-  const text=(inp.value||'').trim();if(!text)return;
-  fetch(CTX+'/api/task-comments',{method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({taskId:TASK_ID,content:text,parentCommentId:parentId})})
-    .then(r=>r.json()).then(res=>{if(res.success)loadWorkTree();else toast(res.message||'Failed','danger');});
-}
+        const deleteBtn = canDel
+                ? '<button class="btn btn-xs btn-outline-danger" style="padding:2px 7px;font-size:.74rem" onclick="delItem(' + item.commentId + ')"><i class="fa fa-trash"></i></button>'
+                : '';
 
-function toggleDone(id,done){
-  fetch(CTX+'/api/task-comments?id='+id+'&done='+done,{method:'PUT'})
-    .then(r=>r.json()).then(res=>{loadWorkTree();});
-}
+        // Visual indent based on nesting level (each level adds 24px indent)
+        const levelIndicator = level > 0 ? '<span class="badge bg-secondary ms-2" style="font-size:0.65rem">L' + level + '</span>' : '';
 
-function delItem(id){
-  if(!confirm('Delete this work item?'))return;
-  fetch(CTX+'/api/task-comments?id='+id,{method:'DELETE'})
-    .then(r=>r.json()).then(res=>{if(res.success)loadWorkTree();else toast(res.message||'Failed','danger');});
-}
+        // Build user options for the subtask tag selector
+        const userOpts = '<option value="">— Tag someone (optional) —</option>' +
+                ALL_USERS.map(u => '<option value="' + u.uid + '">' + esc(u.name) + '</option>').join('');
 
-function updateProgress(pct,completed,total){
-  const arc=document.getElementById('progArc');
-  const pEl=document.getElementById('progPct');
-  const sEl=document.getElementById('progSub');
-  const aEl=document.getElementById('progAlert');
-  pct=pct||0;
-  const c=2*Math.PI*50;
-  if(arc){arc.style.strokeDashoffset=c-(pct/100)*c;arc.setAttribute('stroke',pct>=75?'#198754':pct>=40?'#fd7e14':'#dc3545');}
-  if(pEl)pEl.textContent=pct+'%';
-  if(sEl)sEl.textContent=(completed||0)+' / '+(total||0)+' work items done';
-  if(aEl)aEl.classList.toggle('d-none',!(total>0&&(completed||0)<total));
-}
+        // Render children recursively if any exist
+        let childHtml = '';
+        if (children.length > 0) {
+            const childItemsHtml = children.map((child, childIdx) => renderItem(child, level + 1, childIdx)).join('');
+            childHtml = '<div class="wi-replies" style="margin-left:24px;border-left:2px solid #e9ecef;padding-left:8px;">' + childItemsHtml + '</div>';
+        }
 
-function reopenTask(){
-  if(!confirm('Reopen this task?'))return;
-  fetch(CTX+'/tasks/edit',{method:'POST',
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:'subAction=status&taskId='+TASK_ID+'&status=Reopened'})
-    .then(r=>r.json()).then(res=>{
-      if(res.success){toast('Task reopened.','success');setTimeout(()=>location.reload(),900);}
-      else toast(res.message||'Failed','danger');
+        // ── Subtask form (Add Subtask button) ─────────────────────────────────────
+        const subtaskForm = canReply ? (
+                '<div class="d-none" id="rb-' + item.commentId + '" style="padding:6px 14px 10px 52px">' +
+                '<div class="border rounded p-2 bg-white shadow-sm">' +
+                '<div class="fw-semibold mb-2" style="font-size:.8rem;color:#1864ab"><i class="fa fa-plus-circle me-1"></i>New Subtask</div>' +
+                '<div class="mb-2"><label class="form-label mb-1" style="font-size:.78rem;font-weight:600"><i class="fa fa-user-tag me-1"></i>Tag Supporter</label>' +
+                '<select id="rs-' + item.commentId + '" class="form-select form-select-sm">' + userOpts + '</select></div>' +
+                '<div class="mb-2"><label class="form-label mb-1" style="font-size:.78rem;font-weight:600"><i class="fa fa-pen me-1"></i>Content</label>' +
+                '<textarea id="ri-' + item.commentId + '" class="form-control form-control-sm" rows="2" placeholder="Describe the subtask…"></textarea></div>' +
+                '<div class="d-flex justify-content-end gap-2">' +
+                '<button class="btn btn-sm btn-outline-secondary" onclick="hideReply(' + item.commentId + ')">Cancel</button>' +
+                '<button class="btn btn-sm btn-primary" onclick="addReply(' + item.commentId + ')"><i class="fa fa-plus me-1"></i>Add Subtask</button>' +
+                '</div></div></div>'
+                ) : '';
+
+        // ── Response form (Response button – no tagging) ──────────────────────────
+        const responseForm = canReply ? (
+                '<div class="d-none" id="rsp-' + item.commentId + '" style="padding:6px 14px 10px 52px">' +
+                '<div class="border rounded p-2 bg-light shadow-sm">' +
+                '<div class="fw-semibold mb-2" style="font-size:.8rem;color:#198754"><i class="fa fa-reply me-1"></i>Response</div>' +
+                '<div class="mb-2">' +
+                '<textarea id="rspt-' + item.commentId + '" class="form-control form-control-sm" rows="2" placeholder="Write your response…"></textarea></div>' +
+                '<div class="d-flex justify-content-end gap-2">' +
+                '<button class="btn btn-sm btn-outline-secondary" onclick="hideResponse(' + item.commentId + ')">Cancel</button>' +
+                '<button class="btn btn-sm btn-success" onclick="addResponse(' + item.commentId + ')"><i class="fa fa-reply me-1"></i>Send Response</button>' +
+                '</div></div></div>'
+                ) : '';
+
+        return '<div class="wi-root ' + (done ? 'wi-done' : '') + '" data-comment-id="' + item.commentId + '" data-level="' + level + '">' +
+                '<div class="wi-header">' +
+                checkbox +
+                '<div class="av" style="background:' + av + '">' + (item.authorName || '?').charAt(0).toUpperCase() + '</div>' +
+                '<div class="flex-grow-1">' +
+                '<div class="d-flex align-items-center flex-wrap gap-1 mb-1">' +
+                '<strong style="font-size:.87rem">' + esc(item.authorName || '?') + '</strong>' +
+                '<small class="text-muted">' + esc(item.createdAt) + '</small>' + pill + stamp + levelIndicator +
+                '</div>' +
+                '<div class="wi-content">' + body + '</div>' +
+                '</div>' +
+                '<div class="d-flex gap-1 flex-shrink-0">' +
+                (canReply ? '<button class="btn btn-xs btn-outline-secondary" style="padding:2px 7px;font-size:.74rem" onclick="showReply(' + item.commentId + ')" title="Add subtask"><i class="fa fa-plus"></i></button>' : '') +
+                (canReply ? '<button class="btn btn-xs btn-outline-success" style="padding:2px 7px;font-size:.74rem" onclick="showResponse(' + item.commentId + ')" title="Response"><i class="fa fa-reply"></i></button>' : '') +
+                deleteBtn +
+                '</div></div>' +
+                childHtml +
+                subtaskForm +
+                responseForm +
+                '</div>';
+    }
+
+    function addWorkItem() {
+        if (!CAN_MODIFY) {
+            toast('Task is overdue - modifications not allowed', 'warning');
+            return;
+        }
+        const inp = document.getElementById('wiInput');
+        const sel = document.getElementById('assignedToSelect');
+        const text = (inp.value || '').trim();
+        if (!text) {
+            inp.focus();
+            return;
+        }
+        const assignedTo = sel && sel.value ? parseInt(sel.value) : null;
+        fetch(CTX + '/api/task-comments', {method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({taskId: TASK_ID, content: text, assignedTo})})
+                .then(r => r.json()).then(res => {
+            if (res.success) {
+                inp.value = '';
+                if (sel)
+                    sel.value = '';
+                // Cập nhật progress ngay lập tức từ response, không cần chờ loadWorkTree
+                if (res.progressPct !== undefined)
+                    updateProgress(res.progressPct, res.completed, res.total);
+                loadWorkTree();
+            } else
+                toast(res.message || 'Failed', 'danger');
+        }).catch(() => toast('Network error', 'danger'));
+    }
+
+    function showReply(id) {
+        // Hide response form if open
+        const rsp = document.getElementById('rsp-' + id);
+        if (rsp)
+            rsp.classList.add('d-none');
+        const el = document.getElementById('rb-' + id);
+        if (el) {
+            el.classList.remove('d-none');
+            const ta = document.getElementById('ri-' + id);
+            if (ta)
+                ta.focus();
+        }
+    }
+    function hideReply(id) {
+        const el = document.getElementById('rb-' + id);
+        if (el)
+            el.classList.add('d-none');
+    }
+    function addReply(parentId) {
+        if (!CAN_MODIFY) {
+            toast('Task is overdue - modifications not allowed', 'warning');
+            return;
+        }
+        const ta = document.getElementById('ri-' + parentId);
+        const sel = document.getElementById('rs-' + parentId);
+        const text = (ta ? ta.value : '').trim();
+        if (!text) {
+            if (ta)
+                ta.focus();
+            return;
+        }
+        const assignedTo = sel && sel.value ? parseInt(sel.value) : null;
+        fetch(CTX + '/api/task-comments', {method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({taskId: TASK_ID, content: text, parentCommentId: parentId, assignedTo})})
+                .then(r => r.json()).then(res => {
+            if (res.success) {
+                if (ta)
+                    ta.value = '';
+                if (sel)
+                    sel.value = '';
+                hideReply(parentId);
+                if (res.progressPct !== undefined)
+                    updateProgress(res.progressPct, res.completed, res.total);
+                loadWorkTree();
+            } else
+                toast(res.message || 'Failed', 'danger');
+        }).catch(() => toast('Network error', 'danger'));
+    }
+
+    function showResponse(id) {
+        // Hide subtask form if open
+        const rb = document.getElementById('rb-' + id);
+        if (rb)
+            rb.classList.add('d-none');
+        const el = document.getElementById('rsp-' + id);
+        if (el) {
+            el.classList.remove('d-none');
+            const ta = document.getElementById('rspt-' + id);
+            if (ta)
+                ta.focus();
+        }
+    }
+    function hideResponse(id) {
+        const el = document.getElementById('rsp-' + id);
+        if (el)
+            el.classList.add('d-none');
+    }
+    function addResponse(parentId) {
+        if (!CAN_MODIFY) {
+            toast('Task is overdue - modifications not allowed', 'warning');
+            return;
+        }
+        const ta = document.getElementById('rspt-' + parentId);
+        const text = (ta ? ta.value : '').trim();
+        if (!text) {
+            if (ta)
+                ta.focus();
+            return;
+        }
+        fetch(CTX + '/api/task-comments', {method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({taskId: TASK_ID, content: text, parentCommentId: parentId, assignedTo: null})})
+                .then(r => r.json()).then(res => {
+            if (res.success) {
+                if (ta)
+                    ta.value = '';
+                hideResponse(parentId);
+                if (res.progressPct !== undefined)
+                    updateProgress(res.progressPct, res.completed, res.total);
+                loadWorkTree();
+            } else
+                toast(res.message || 'Failed', 'danger');
+        }).catch(() => toast('Network error', 'danger'));
+    }
+
+    function toggleDone(id, done) {
+        if (!CAN_MODIFY) {
+            toast('Task is overdue - modifications not allowed', 'warning');
+            return;
+        }
+        fetch(CTX + '/api/task-comments?id=' + id + '&done=' + done, {method: 'PUT'})
+                .then(r => r.json()).then(res => {
+            if (res.success) {
+                // Cập nhật progress ring ngay lập tức từ response (không chờ loadWorkTree)
+                updateProgress(res.progressPct, res.completed, res.total);
+                loadWorkTree();
+            } else
+                toast(res.message || 'Failed', 'danger');
+        });
+    }
+
+    function delItem(id) {
+        if (!CAN_MODIFY) {
+            toast('Task is overdue - modifications not allowed', 'warning');
+            return;
+        }
+        if (!confirm('Delete this work item and all subtasks?'))
+            return;
+        fetch(CTX + '/api/task-comments?id=' + id, {method: 'DELETE'})
+                .then(r => r.json()).then(res => {
+            if (res.success) {
+                // Cập nhật progress ring ngay lập tức từ response (không chờ loadWorkTree)
+                updateProgress(res.progressPct, res.completed, res.total);
+                loadWorkTree();
+            } else
+                toast(res.message || 'Failed', 'danger');
+        });
+    }
+
+    function updateProgress(pct, completed, total) {
+        const arc = document.getElementById('progArc');
+        const pEl = document.getElementById('progPct');
+        const sEl = document.getElementById('progSub');
+        const aEl = document.getElementById('progAlert');
+        pct = pct || 0;
+        const c = 2 * Math.PI * 50;
+        if (arc) {
+            arc.style.strokeDashoffset = c - (pct / 100) * c;
+            arc.setAttribute('stroke', pct >= 75 ? '#198754' : pct >= 40 ? '#fd7e14' : '#dc3545');
+        }
+        if (pEl)
+            pEl.textContent = pct + '%';
+        if (sEl)
+            sEl.textContent = (completed || 0) + ' / ' + (total +1 || 0) + ' work items done';
+        if (aEl)
+            aEl.classList.toggle('d-none', !(total > 0 && (completed || 0) < total));
+    }
+
+    function reopenTask() {
+        if (!confirm('Reopen this task?'))
+            return;
+        fetch(CTX + '/tasks/edit', {method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'subAction=status&taskId=' + TASK_ID + '&status=Reopened'})
+                .then(r => r.json()).then(res => {
+            if (res.success) {
+                toast('Task reopened.', 'success');
+                setTimeout(() => location.reload(), 900);
+            } else
+                toast(res.message || 'Failed', 'danger');
+        });
+    }
+
+    /* @mention */
+    let mPos = -1, mIdx = 0;
+    function handleMention(ta) {
+        if (!CAN_MODIFY)
+            return;
+        const val = ta.value, pos = ta.selectionStart;
+        let at = -1;
+        for (let i = pos - 1; i >= 0; i--) {
+            if (val[i] === '@') {
+                at = i;
+                break;
+            }
+            if (val[i] === ' ' || val[i] === '\n')
+                break;
+        }
+        const drop = document.getElementById('mentionDrop');
+        if (at === -1) {
+            drop.style.display = 'none';
+            mPos = -1;
+            return;
+        }
+        mPos = at;
+        const q = val.substring(at + 1, pos).toLowerCase();
+        let vis = 0;
+        drop.querySelectorAll('.mi').forEach(mi => {
+            const ok = !q || (mi.dataset.name || '').toLowerCase().includes(q) || (mi.dataset.uname || '').toLowerCase().includes(q);
+            mi.style.display = ok ? '' : 'none';
+            if (ok)
+                vis++;
+        });
+        drop.style.display = vis ? '' : 'none';
+        mIdx = 0;
+        updMention();
+    }
+    function mentionKeydown(e) {
+        const drop = document.getElementById('mentionDrop');
+        if (drop.style.display === 'none')
+            return;
+        const vis = [...drop.querySelectorAll('.mi:not([style*="none"])')];
+        if (!vis.length)
+            return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            mIdx = (mIdx + 1) % vis.length;
+            updMention();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            mIdx = (mIdx - 1 + vis.length) % vis.length;
+            updMention();
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+            if (vis[mIdx]) {
+                e.preventDefault();
+                insertMention(vis[mIdx]);
+            }
+        } else if (e.key === 'Escape')
+            drop.style.display = 'none';
+    }
+    function updMention() {
+        [...document.querySelectorAll('#mentionDrop .mi:not([style*="none"])')].forEach((el, i) => el.classList.toggle('active', i === mIdx));
+    }
+    function insertMention(el) {
+        const ta = document.getElementById('wiInput');
+        const pos = ta.selectionStart;
+        const name = el.dataset.name;
+        ta.value = ta.value.substring(0, mPos) + '@' + name + ' ' + ta.value.substring(pos);
+        ta.selectionStart = ta.selectionEnd = mPos + name.length + 2;
+        ta.focus();
+        const sel = document.getElementById('assignedToSelect');
+        if (sel && el.dataset.uid)
+            sel.value = el.dataset.uid;
+        document.getElementById('mentionDrop').style.display = 'none';
+        mPos = -1;
+    }
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.mention-box'))
+            document.getElementById('mentionDrop').style.display = 'none';
     });
-}
 
-/* @mention */
-let mPos=-1,mIdx=0;
-function handleMention(ta){
-  const val=ta.value,pos=ta.selectionStart;
-  let at=-1;
-  for(let i=pos-1;i>=0;i--){if(val[i]==='@'){at=i;break;}if(val[i]===' '||val[i]==='\n')break;}
-  const drop=document.getElementById('mentionDrop');
-  if(at===-1){drop.style.display='none';mPos=-1;return;}
-  mPos=at;const q=val.substring(at+1,pos).toLowerCase();
-  let vis=0;
-  drop.querySelectorAll('.mi').forEach(mi=>{
-    const ok=!q||(mi.dataset.name||'').toLowerCase().includes(q)||(mi.dataset.uname||'').toLowerCase().includes(q);
-    mi.style.display=ok?'':'none';if(ok)vis++;
-  });
-  drop.style.display=vis?'':'none';mIdx=0;updMention();
-}
-function mentionKeydown(e){
-  const drop=document.getElementById('mentionDrop');
-  if(drop.style.display==='none')return;
-  const vis=[...drop.querySelectorAll('.mi:not([style*="none"])')];
-  if(!vis.length)return;
-  if(e.key==='ArrowDown'){e.preventDefault();mIdx=(mIdx+1)%vis.length;updMention();}
-  else if(e.key==='ArrowUp'){e.preventDefault();mIdx=(mIdx-1+vis.length)%vis.length;updMention();}
-  else if(e.key==='Enter'||e.key==='Tab'){if(vis[mIdx]){e.preventDefault();insertMention(vis[mIdx]);}}
-  else if(e.key==='Escape')drop.style.display='none';
-}
-function updMention(){
-  [...document.querySelectorAll('#mentionDrop .mi:not([style*="none"])')].forEach((el,i)=>el.classList.toggle('active',i===mIdx));
-}
-function insertMention(el){
-  const ta=document.getElementById('wiInput');
-  const pos=ta.selectionStart;const name=el.dataset.name;
-  ta.value=ta.value.substring(0,mPos)+'@'+name+' '+ta.value.substring(pos);
-  ta.selectionStart=ta.selectionEnd=mPos+name.length+2;ta.focus();
-  const sel=document.getElementById('assignedToSelect');
-  if(sel&&el.dataset.uid)sel.value=el.dataset.uid;
-  document.getElementById('mentionDrop').style.display='none';mPos=-1;
-}
-document.addEventListener('click',e=>{if(!e.target.closest('.mention-box'))document.getElementById('mentionDrop').style.display='none';});
+    function avColor(n) {
+        let h = 0;
+        for (let i = 0; i < n.length; i++)
+            h = n.charCodeAt(i) + ((h << 5) - h);
+        return'#' + (((h & 0xFFFFFF) + 0x404040) & 0xFFFFFF).toString(16).padStart(6, '0');
+    }
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s || '';
+        return d.innerHTML;
+    }
+    function toast(msg, type) {
+        const id = 't' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'alert alert-' + type + ' alert-dismissible fade show';
+        div.style.cssText = 'position:fixed;top:70px;right:20px;z-index:9999;min-width:260px;';
+        div.innerHTML = msg + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        document.body.appendChild(div);
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el)
+                el.remove();
+        }, 3500);
+    }
 
-function avColor(n){let h=0;for(let i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return'#'+(((h&0xFFFFFF)+0x404040)&0xFFFFFF).toString(16).padStart(6,'0');}
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-function toast(msg,type){const id='t'+Date.now();const div=document.createElement('div');div.id=id;div.className='alert alert-'+type+' alert-dismissible fade show';div.style.cssText='position:fixed;top:70px;right:20px;z-index:9999;min-width:260px;';div.innerHTML=msg+'<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';document.body.appendChild(div);setTimeout(()=>{const el=document.getElementById(id);if(el)el.remove();},3500);}
-
-document.addEventListener('DOMContentLoaded',loadWorkTree);
-                                </script>
+    document.addEventListener('DOMContentLoaded', loadWorkTree);
+</script>

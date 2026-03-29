@@ -42,7 +42,7 @@ import java.util.logging.Logger;
 @WebServlet("/tasks/details")
 public class TaskDetailController extends HttpServlet {
 
-    private static final int    ACTIVITY_PAGE_SIZE = 10;
+//    private static final int    ACTIVITY_PAGE_SIZE = 10;
     private static final Logger LOG = Logger.getLogger(TaskDetailController.class.getName());
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("HH:mm dd/MM/yy");
 
@@ -88,10 +88,9 @@ public class TaskDetailController extends HttpServlet {
             }
 
             // 3. Activity timeline (Scenario 14)
-            int actTotal = svc.countActivitiesForTask(taskId);
-            Pagination actPag = new Pagination(activityPage, ACTIVITY_PAGE_SIZE, actTotal);
-            List<Activity> activities = svc.getActivitiesForTask(
-                    taskId, actPag.getCurrentPage(), actPag.getPageSize());
+//            int actTotal = svc.countActivitiesForTask(taskId);
+//            Pagination actPag = new Pagination(activityPage, ACTIVITY_PAGE_SIZE, actTotal);
+//           List<Activity> activities = svc.getActivitiesForTask(taskId, actPag.getCurrentPage(), actPag.getPageSize());
 
             // 4. All active users for @mention autocomplete + tag-supporter picker
             List<User> allUsers;
@@ -102,8 +101,8 @@ public class TaskDetailController extends HttpServlet {
 
             req.setAttribute("task",               task);
             req.setAttribute("historyViews",       historyViews);
-            req.setAttribute("activities",         activities);
-            req.setAttribute("activityPagination", actPag);
+//            req.setAttribute("activities",         activities);
+//            req.setAttribute("activityPagination", actPag);
             req.setAttribute("allUsers",           allUsers);
             req.setAttribute("isManager",          isManager);
             req.setAttribute("pageTitle",   "Task Details – " + task.getTitle());

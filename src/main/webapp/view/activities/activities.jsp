@@ -149,7 +149,7 @@
                       else if ("MEETING".equals(at)) typeBadge = "bg-success";
                       else if ("NOTE".equals(at))    typeBadge = "bg-warning text-dark";
                       else if ("TASK".equals(at))    typeBadge = "bg-danger";
-                      else if (at.startsWith("TASK_")) typeBadge = "bg-purple";
+                      else if (at.startsWith("TASK_")) typeBadge = "bg-danger";
               %>
               <tr>
                 <td><%= a.getActivityId() %></td>

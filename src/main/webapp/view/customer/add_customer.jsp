@@ -44,7 +44,7 @@
                 <!-- ══ COL 1: PERSONAL INFO ══ -->
                 <div class="cf__col cf__col--1">
                     <div class="cf__col-header">
-                        <div class="cf__col-icon cf__col-icon--blue">
+                        <div class="cf__col-icon cf__col-icon--orange">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
@@ -137,7 +137,7 @@
                                     <line x1="2" y1="12" x2="22" y2="12"/>
                                     <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
                                 </svg>
-                                Gender <span class="cf__req">*</span>
+                                Gender <span class="cf__req"></span>
                             </label>
                             <select class="cf__input" name="gender">
                                 <option value="">Select gender</option>
@@ -213,188 +213,51 @@
                     </div>
                 </div>
 
-                <!-- ══ COL 2: MEASUREMENTS ══ -->
+                <!-- ══ COL 2: CONTACT ══ -->
                 <div class="cf__col cf__col--2">
                     <div class="cf__col-header">
-                        <div class="cf__col-icon cf__col-icon--gold">
+                        <div class="cf__col-icon cf__col-icon--amber">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                  stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="2" y1="12" x2="22" y2="12"/>
-                                <path d="M5 8l-3 4 3 4"/>
-                                <path d="M19 8l3 4-3 4"/>
-                                <line x1="8" y1="9" x2="8" y2="15"/>
-                                <line x1="12" y1="6" x2="12" y2="18"/>
-                                <line x1="16" y1="9" x2="16" y2="15"/>
+                                <path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81 19.79 19.79 0 012 2.18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.37 7.69a16 16 0 006 6l.88-.88a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
                             </svg>
                         </div>
-                        <span class="cf__col-title">Body Measurements</span>
+                        <span class="cf__col-title">Additional Contacts</span>
                     </div>
 
-                    <div class="cf__fields">
+                    <p class="cf__tag-hint">Add extra phone numbers or emails for this customer.</p>
 
-                        <div class="cf__subgroup">
-                            <p class="cf__subgroup-label">Fit Profile</p>
-                            <div class="cf__inline-grid">
+                    <div class="cf__fields" id="contactList">
+                        <%-- Dynamic rows injected by JS --%>
+                    </div>
 
-                                <c:set var="e" value="${fieldErrors['height']}"/>
-                                <div class="cf__field${not empty e ? ' cf__field--error' : ''}">
-                                    <label class="cf__label">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                             stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="12" y1="2" x2="12" y2="22"/>
-                                            <path d="M9 5l3-3 3 3"/>
-                                            <path d="M9 19l3 3 3-3"/>
-                                        </svg>
-                                        Height (cm)
-                                    </label>
-                                    <input class="cf__input" type="number" name="height"
-                                           value="${not empty oldHeight ? oldHeight : ''}"
-                                           placeholder="170">
-                                    <c:if test="${not empty e}"><span class="cf__err-msg"><svg viewBox="0 0 24 24"><circle
-                                            cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12"
-                                                                                                                y1="16"
-                                                                                                                x2="12.01"
-                                                                                                                y2="16"/></svg>
-                                            ${e}</span></c:if>
-                                </div>
+                    <div class="cf__contact-actions">
+                        <button type="button" class="cf__contact-add-btn" onclick="addContact('PHONE')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Phone
+                        </button>
+                        <button type="button" class="cf__contact-add-btn" onclick="addContact('EMAIL')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Email
+                        </button>
+                    </div>
 
-                                <c:set var="e" value="${fieldErrors['weight']}"/>
-                                <div class="cf__field${not empty e ? ' cf__field--error' : ''}">
-                                    <label class="cf__label">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                             stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="8"/>
-                                            <path d="M8 12a4 4 0 018 0"/>
-                                        </svg>
-                                        Weight (kg)
-                                    </label>
-                                    <input class="cf__input" type="number" name="weight"
-                                           value="${not empty oldWeight ? oldWeight : ''}"
-                                           placeholder="65">
-                                    <c:if test="${not empty e}"><span class="cf__err-msg"><svg viewBox="0 0 24 24"><circle
-                                            cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12"
-                                                                                                                y1="16"
-                                                                                                                x2="12.01"
-                                                                                                                y2="16"/></svg>
-                                            ${e}</span></c:if>
-                                </div>
-
-                            </div>
-
-                            <div class="cf__field">
-                                <label class="cf__label">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="7" width="20" height="14" rx="2"/>
-                                        <path d="M16 3H8l-2 4h12l-2-4z"/>
-                                    </svg>
-                                    Preferred Size
-                                </label>
-                                <select class="cf__input" name="preferred_size">
-                                    <option value="S"  ${oldPreferredSize == 'S'  ? 'selected' : ''}>S</option>
-                                    <option value="M"  ${oldPreferredSize == 'M' or empty oldPreferredSize ? 'selected' : ''}>
-                                        M
-                                    </option>
-                                    <option value="L"  ${oldPreferredSize == 'L'  ? 'selected' : ''}>L</option>
-                                    <option value="XL" ${oldPreferredSize == 'XL' ? 'selected' : ''}>XL</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="cf__subgroup">
-                            <p class="cf__subgroup-label">Circumference</p>
-                            <div class="cf__measure-grid">
-
-                                <c:set var="e" value="${fieldErrors['bust']}"/>
-                                <div class="cf__measure-tile cf__field${not empty e ? ' cf__field--error' : ''}">
-                                    <label class="cf__label">Bust</label>
-                                    <input class="cf__input" type="number" step="0.1" name="bust"
-                                           value="${not empty oldBust ? oldBust : ''}" placeholder="90.5">
-                                    <span class="cf__unit">cm</span>
-                                    <c:if test="${not empty e}"><span class="cf__err-msg"><svg viewBox="0 0 24 24"><circle
-                                            cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12"
-                                                                                                                y1="16"
-                                                                                                                x2="12.01"
-                                                                                                                y2="16"/></svg>
-                                            ${e}</span></c:if>
-                                </div>
-
-                                <c:set var="e" value="${fieldErrors['waist']}"/>
-                                <div class="cf__measure-tile cf__field${not empty e ? ' cf__field--error' : ''}">
-                                    <label class="cf__label">Waist</label>
-                                    <input class="cf__input" type="number" step="0.1" name="waist"
-                                           value="${not empty oldWaist ? oldWaist : ''}" placeholder="75.0">
-                                    <span class="cf__unit">cm</span>
-                                    <c:if test="${not empty e}"><span class="cf__err-msg"><svg viewBox="0 0 24 24"><circle
-                                            cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12"
-                                                                                                                y1="16"
-                                                                                                                x2="12.01"
-                                                                                                                y2="16"/></svg>
-                                            ${e}</span></c:if>
-                                </div>
-
-                                <c:set var="e" value="${fieldErrors['hips']}"/>
-                                <div class="cf__measure-tile cf__field${not empty e ? ' cf__field--error' : ''}">
-                                    <label class="cf__label">Hips</label>
-                                    <input class="cf__input" type="number" step="0.1" name="hips"
-                                           value="${not empty oldHips ? oldHips : ''}" placeholder="95.5">
-                                    <span class="cf__unit">cm</span>
-                                    <c:if test="${not empty e}"><span class="cf__err-msg"><svg viewBox="0 0 24 24"><circle
-                                            cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12"
-                                                                                                                y1="16"
-                                                                                                                x2="12.01"
-                                                                                                                y2="16"/></svg>
-                                            ${e}</span></c:if>
-                                </div>
-
-                                <c:set var="e" value="${fieldErrors['shoulder']}"/>
-                                <div class="cf__measure-tile cf__field${not empty e ? ' cf__field--error' : ''}">
-                                    <label class="cf__label">Shoulder</label>
-                                    <input class="cf__input" type="number" step="0.1" name="shoulder"
-                                           value="${not empty oldShoulder ? oldShoulder : ''}" placeholder="40.0">
-                                    <span class="cf__unit">cm</span>
-                                    <c:if test="${not empty e}"><span class="cf__err-msg"><svg viewBox="0 0 24 24"><circle
-                                            cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12"
-                                                                                                                y1="16"
-                                                                                                                x2="12.01"
-                                                                                                                y2="16"/></svg>
-                                            ${e}</span></c:if>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="cf__field">
-                            <label class="cf__label">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                                </svg>
-                                Body Shape
-                            </label>
-                            <select name="bodyShape" class="cf__input">
-                                <option value="HOURGLASS"         ${oldBodyShape == 'HOURGLASS'         ? 'selected' : ''}>
-                                    ⧖ Hourglass
-                                </option>
-                                <option value="PEAR"              ${oldBodyShape == 'PEAR'              ? 'selected' : ''}>
-                                    🍐 Pear
-                                </option>
-                                <option value="APPLE"             ${oldBodyShape == 'APPLE'             ? 'selected' : ''}>
-                                    🍎 Apple
-                                </option>
-                                <option value="RECTANGLE"         ${oldBodyShape == 'RECTANGLE'         ? 'selected' : ''}>
-                                    ▭ Rectangle
-                                </option>
-                                <option value="INVERTED TRIANGLE" ${oldBodyShape == 'INVERTED TRIANGLE' ? 'selected' : ''}>
-                                    ▽ Inverted Triangle
-                                </option>
-                                <option value="SLENDER"           ${oldBodyShape == 'SLENDER'           ? 'selected' : ''}>
-                                    | Slender
-                                </option>
-                            </select>
-                        </div>
-
+                    <div class="cf__contact-note">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        These contacts are saved as secondary — they won't be used for duplicate checking.
                     </div>
                 </div>
 
@@ -431,16 +294,16 @@
             <div class="cf__footer">
                 <button type="button" class="cf__btn cf__btn--secondary"
                         onclick="window.location.href='${pageContext.request.contextPath}/customers'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
                     Cancel
                 </button>
                 <button type="submit" class="cf__btn cf__btn--primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/>
                         <polyline points="17 21 17 13 7 13 7 21"/>
                         <polyline points="7 3 7 8 15 8"/>
@@ -455,6 +318,40 @@
 
 <script>
     (function () {
+        var contactIndex = 0;
+
+        window.addContact = function (type) {
+            var list = document.getElementById('contactList');
+            var row = document.createElement('div');
+            row.className = 'cf__field cf__contact-row';
+            row.dataset.index = contactIndex;
+
+            var icon = type === 'PHONE'
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81 19.79 19.79 0 012 2.18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.37 7.69a16 16 0 006 6l.88-.88a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+
+            var placeholder = type === 'PHONE' ? 'Ex: 0987654321' : 'Ex: example@gmail.com';
+            var inputType = type === 'PHONE' ? 'tel' : 'email';
+
+            row.innerHTML =
+                '<label class="cf__label">' + icon + ' ' + (type === 'PHONE' ? 'Phone' : 'Email') + '</label>' +
+                '<div class="cf__contact-input-wrap">' +
+                '  <input class="cf__input" type="' + inputType + '" name="extraContactValue" placeholder="' + placeholder + '">' +
+                '  <input type="hidden" name="extraContactType" value="' + type + '">' +
+                '  <button type="button" class="cf__contact-remove" onclick="removeContact(this)">' +
+                '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                '  </button>' +
+                '</div>';
+
+            list.appendChild(row);
+            contactIndex++;
+            row.querySelector('input[type=' + inputType + ']').focus();
+        };
+
+        window.removeContact = function (btn) {
+            btn.closest('.cf__contact-row').remove();
+        };
+
         /* Auto-scroll to first error field */
         var first = document.querySelector('.cf__field--error');
         if (first) {
@@ -462,6 +359,7 @@
             var input = first.querySelector('input, select');
             if (input) input.focus({preventScroll: true});
         }
+
         /* Auto-dismiss error banner after 6s */
         var banner = document.getElementById('cfErrorBanner');
         if (banner) {

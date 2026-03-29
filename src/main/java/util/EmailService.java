@@ -71,11 +71,11 @@ public class EmailService {
             System.out.println("Email sent successfully to: " + email.getTo());
             return true;
         } catch (MessagingException e) {
-            System.err.println("Failed to send email: " + e.getMessage());
-            e.printStackTrace();
+//            System.err.println("Failed to send email: " + e.getMessage());
+//            e.printStackTrace();
             return false;
         } catch (IllegalArgumentException e) {
-            System.err.println("Email validation error: " + e.getMessage());
+//            System.err.println("Email validation error: " + e.getMessage());
             return false;
         }
     }

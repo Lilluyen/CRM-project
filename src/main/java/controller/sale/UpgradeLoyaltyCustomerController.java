@@ -6,7 +6,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.User;
 import service.CustomerService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,15 +19,16 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
     CustomerDAO customerDAO = new CustomerDAO();
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -47,6 +50,13 @@ public class UpgradeLoyaltyCustomerController extends HttpServlet {
 
             boolean success = customerService.upgradeToLoyaltyCustomer(customerId);
             if (success) {
+                User user = (User) request.getSession().getAttribute("user");
+                CustomerActivityUtil.logCustomerActivity(
+                        customerId,
+                        "UPDATE",
+                        "Loyalty upgraded",
+                        "Upgraded customer loyalty tier.",
+                        user);
                 response.sendRedirect(request.getContextPath() + "/customers?status=success");
             } else {
                 response.sendRedirect(request.getContextPath() + "/customers?status=failed");

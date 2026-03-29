@@ -1,5 +1,6 @@
 package controller.sale.deal;
 
+import dao.CustomerContactDAO;
 import dao.CustomerDAO;
 import dao.DealDAO;
 import dao.LeadDAO;
@@ -8,10 +9,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Customer;
-import model.Deal;
-import model.Lead;
+import model.*;
+import util.CustomerActivityUtil;
 import util.DBContext;
+import util.DealActivityUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -39,11 +40,29 @@ public class UpdateDealStageController extends HttpServlet {
             }
 
             DealDAO dao = new DealDAO(conn);
+            Deal beforeUpdate = dao.getById(dealId);
+            User currentUser = (User) request.getSession().getAttribute("user");
             dao.updateDealStage(dealId, stage, probability, actualValue);
 
             //xử lý Closed Won
             if ("Closed Won".equalsIgnoreCase(stage)) {
-                handleClosedWon(dealId, conn);
+                handleClosedWon(dealId, conn, currentUser);
+            }
+
+            if (beforeUpdate != null) {
+                Deal afterUpdate = dao.getById(dealId);
+                String oldStage = beforeUpdate.getStage();
+                String newStage = afterUpdate != null ? afterUpdate.getStage() : stage;
+                if (!safeEqualsIgnoreCase(oldStage, newStage)) {
+                    DealActivityUtil.logDealStageUpdated(
+                            conn,
+                            dealId,
+                            oldStage,
+                            newStage,
+                            afterUpdate != null ? afterUpdate.getCustomerId() : beforeUpdate.getCustomerId(),
+                            afterUpdate != null ? afterUpdate.getLeadId() : beforeUpdate.getLeadId(),
+                            currentUser);
+                }
             }
             conn.commit();
             String redirect = request.getHeader("Referer");
@@ -57,11 +76,12 @@ public class UpdateDealStageController extends HttpServlet {
         }
     }
 
-    private void handleClosedWon(int dealId, Connection conn) throws SQLException {
+    private void handleClosedWon(int dealId, Connection conn, User currentUser) throws SQLException {
 
         DealDAO dealDAO = new DealDAO(conn);
         LeadDAO leadDAO = new LeadDAO();
         CustomerDAO customerDAO = new CustomerDAO();
+        CustomerContactDAO contactDAO = new CustomerContactDAO();
 
         // 1. Lấy deal
         Deal deal = dealDAO.getById(dealId);
@@ -74,10 +94,13 @@ public class UpdateDealStageController extends HttpServlet {
             // 1. update last_purchase
             customerDAO.updateLastPurchase(conn, customerId);
 
-            // 2. tính lại RFM
-            customerDAO.calculateRFM(conn);
+            // 2. tính lại total_spent
+            customerDAO.updateTotalSpent(conn, customerId);
 
-//            return;
+            // 3. tính lại loyalty_tier
+            customerDAO.updateLoyaltyTier(conn, customerId);
+
+
         }
 
         // 3. Nếu có lead → convert
@@ -85,7 +108,7 @@ public class UpdateDealStageController extends HttpServlet {
 
             Lead lead = leadDAO.getLeadById(deal.getLeadId());
 
-            // ❌ tránh convert lại
+            //  tránh convert lại
             if (lead.isConverted()) {
                 // chỉ cần gắn lại customer vào deal
                 dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
@@ -109,6 +132,30 @@ public class UpdateDealStageController extends HttpServlet {
 
             // 7. Update deal
             dealDAO.updateCustomerForDeal(dealId, customerId);
+
+            // 8. tính lại total_spent
+            customerDAO.updateTotalSpent(conn, customerId);
+            // 9. tính lại loyalty_tier
+            customerDAO.updateLoyaltyTier(conn, customerId);
+
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
+            CustomerActivityUtil.logCustomerActivity(
+                    customerId,
+                    "UPDATE",
+                    "Lead converted",
+                    "Converted lead #" + lead.getLeadId() + " to customer via deal #" + dealId + ".",
+                    currentUser);
         }
+    }
+
+    private boolean safeEqualsIgnoreCase(String left, String right) {
+        if (left == null && right == null) {
+            return true;
+        }
+        if (left == null || right == null) {
+            return false;
+        }
+        return left.equalsIgnoreCase(right);
     }
 }

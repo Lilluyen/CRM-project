@@ -1,7 +1,11 @@
 package service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import dao.CampaignLeadDAO;
 import dao.LeadDAO;
@@ -9,171 +13,224 @@ import model.ImportLeadResponse;
 import model.Lead;
 import util.EmailCheck;
 import util.LeadScoringUtil;
-import util.PhoneCheck;
 
-/**
- * Service xử lý logic import leads
- */
 public class LeadImportService {
 
     private LeadDAO leadDAO = new LeadDAO();
     private CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
-    private LeadService leadService = new LeadService();
 
-    /**
-     * Import leads với validation và scoring
-     *
-     * @return ImportLeadResponse
-     */
-    /**
-     * Overload cũ — gọi version mới với danh sách assign rỗng.
-     */
-    public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId) {
-        return importLeads(leads, source, campaignId, new ArrayList<>());
-    }
-
-    /**
-     * Import leads với validation, scoring và round-robin assign cho danh sách
-     * sale đã chọn.
-     *
-     * Logic:
-     * - Cùng email + cùng campaign → lỗi "đã tồn tại trong campaign"
-     * - Cùng email + khác campaign → OK (1 người có thể ở nhiều campaign)
-     * - File có mix dữ liệu mới + cũ → import dữ liệu mới, báo lỗi dữ liệu cũ
-     */
     public ImportLeadResponse importLeads(List<Lead> leads, String source, Integer campaignId, List<Integer> assignedToIds) {
+
         ImportLeadResponse response = new ImportLeadResponse();
-        List<Lead> validLeads = new ArrayList<>();
-        int rowNumber = 2; // Excel row (1-based + header)
 
-        // ===== VALIDATION PHASE =====
-        for (Lead lead : leads) {
-            List<String> errors = new ArrayList<>();
+        // ===== INIT SAFE =====
+        if (response.getImportedLeads() == null) {
+            response.setImportedLeads(new ArrayList<>());
+        }
 
-            // Validate fullName
-            if (lead.getFullName() == null || lead.getFullName().trim().isEmpty()) {
-                errors.add("Tên không được để trống");
-            }
+        if (leads == null || leads.isEmpty()) {
+            response.setSuccess(false);
+            response.setTotalImported(0);
+            response.setTotalFailed(0);
+            response.setMessage("File does not contain data.");
+            return response;
+        }
 
-            // Validate email
-            if (lead.getEmail() == null || !EmailCheck.isValidEmail(lead.getEmail())) {
-                errors.add("Email không hợp lệ: " + lead.getEmail());
-            }
+        Map<String, Lead> allExistingByEmail = leadDAO.findLeadsByEmailMap();
+        if (allExistingByEmail == null) {
+            allExistingByEmail = new HashMap<>();
+        }
 
-            // Validate phone (nếu có)
-            if (lead.getPhone() != null && !lead.getPhone().isEmpty()) {
-                if (!PhoneCheck.isValidPhone(lead.getPhone())) {
-                    errors.add("Số điện thoại không hợp lệ: " + lead.getPhone());
+        // ===== LOAD EMAIL TRONG CAMPAIGN (ĐÃ FIX LOWER + TRIM) =====
+        Set<String> emailsInCampaign = new HashSet<>();
+        if (campaignId != null && campaignId > 0) {
+            Set<String> temp = leadDAO.getExistingEmailsByCampaign(campaignId);
+            if (temp != null) {
+                for (String e : temp) {
+                    if (e != null) {
+                        emailsInCampaign.add(e.trim().toLowerCase());
+                    }
                 }
             }
+        }
 
-            // Check duplicate - chỉ khi không có lỗi validation khác
-            if (errors.isEmpty()) {
+        Set<String> emailsInBatch = new HashSet<>();
+
+        List<Lead> newLeads = new ArrayList<>();
+        List<Lead> existingLeadsToAdd = new ArrayList<>();
+
+        int totalFailed = 0;
+        int assignIndex = 0;
+
+        // ===== VALIDATE =====
+        for (int i = 0; i < leads.size(); i++) {
+            Lead lead = leads.get(i);
+            int row = i + 2;
+
+            List<String> errors = new ArrayList<>();
+
+            String name = lead.getFullName() != null ? lead.getFullName().trim() : "";
+            String rawEmail = lead.getEmail() != null ? lead.getEmail().trim() : "";
+            String email = rawEmail.toLowerCase();
+
+            String displayName = name.isEmpty() ? "No Name" : name;
+            String displayEmail = rawEmail.isEmpty() ? "No Email" : rawEmail;
+
+            // ===== VALIDATE BASIC =====
+            if (name.isEmpty()) {
+                errors.add("missing full name");
+            }
+
+            if (rawEmail.isEmpty()) {
+                errors.add("missing email");
+            } else if (!EmailCheck.isValidEmail(rawEmail)) {
+                errors.add("email is not in the correct format (e.g., name@company.com)");
+            }
+
+            if (!errors.isEmpty()) {
+                totalFailed++;
+                response.addError("Row " + row + " — " + displayName + " (" + displayEmail + "): "
+                        + "Invalid data: " + String.join(", ", errors) + ". "
+                        + "Please check and correct the data.");
+                continue;
+            }
+
+            // ===== DUPLICATE TRONG FILE =====
+            if (emailsInBatch.contains(email)) {
+                totalFailed++;
+                response.addError("Row " + row + " — " + displayName + " (" + displayEmail + "): "
+                        + "Duplicate email in the file. Each customer must have a unique email address. "
+                        + "Each customer must have a unique email address.");
+                continue;
+            }
+
+            // ===== DUPLICATE TRONG CAMPAIGN =====
+            if (emailsInCampaign.contains(email)) {
+                totalFailed++;
+                response.addError("Row " + row + " — " + displayName + " (" + displayEmail + "): "
+                        + "Customer already exists in the campaign. "
+                        + "Cannot import duplicates.");
+                continue;
+            }
+
+            emailsInBatch.add(email);
+
+            // ===== CHECK DB =====
+            Lead existing = allExistingByEmail.get(email);
+
+            if (existing != null) {
+                // Lead đã tồn tại trong hệ thống → chỉ thêm vào campaign, không log activity
+                existingLeadsToAdd.add(existing);
+            } else {
+                // Set campaignId TRƯỚC khi tính score để đảm bảo +10 cho campaign
                 if (campaignId != null) {
                     lead.setCampaignId(campaignId);
                 }
 
-                try {
-                    leadService.validateLeadUniqueness(lead);
-                } catch (IllegalArgumentException ex) {
-                    // Duplicate in same campaign → báo lỗi rõ ràng
-                    errors.add(ex.getMessage());
+                // Normalize phone: nếu là 9 chữ số (Excel đọc mất 0 đầu) → thêm lại 0
+                String normalizedPhone = lead.getPhone();
+                if (normalizedPhone != null && normalizedPhone.trim().length() == 9
+                        && normalizedPhone.matches("\\d{9}")) {
+                    normalizedPhone = "0" + normalizedPhone.trim();
                 }
-            }
 
-            rowNumber++;
+                int score = LeadScoringUtil.calculateScore(
+                        name, email, normalizedPhone,
+                        lead.getCampaignId(),
+                        lead.getInterest()
+                );
 
-            if (errors.isEmpty()) {
-                validLeads.add(lead);
-            } else {
-                // Format: "Row X - Nguyễn Văn A (email@...) : lý do lỗi"
-                String leadInfo = (lead.getFullName() != null ? lead.getFullName() : "N/A")
-                        + " (" + (lead.getEmail() != null ? lead.getEmail() : "N/A") + ")";
-                response.addError("Row " + (rowNumber - 1) + " - " + leadInfo + ": " + String.join(", ", errors));
-            }
-        }
+                lead.setScore(score);
+                lead.setStatus(LeadScoringUtil.determineStatus(score));
 
-        response.setTotalFailed(leads.size() - validLeads.size());
+                if (source != null) {
+                    lead.setSource(source);
+                }
 
-        // ===== SCORING PHASE =====
-        for (Lead lead : validLeads) {
-            int score = LeadScoringUtil.calculateScore(
-                    lead.getFullName(),
-                    lead.getEmail(),
-                    lead.getPhone(),
-                    (campaignId != null) ? campaignId : 0,
-                    lead.getInterest()
-            );
-            lead.setScore(score);
-            lead.setStatus(LeadScoringUtil.determineStatus(score));
-            if (source != null) {
-                lead.setSource(source);
-            }
-            // Gắn campaign nếu có chọn
-            if (campaignId != null) {
-                lead.setCampaignId(campaignId);
-            }
-            // Round-robin assign sale staff
-            if (assignedToIds != null && !assignedToIds.isEmpty()) {
-                int idx = validLeads.indexOf(lead) % assignedToIds.size();
-                lead.setAssignedTo(assignedToIds.get(idx));
+                // assign round-robin
+                if (assignedToIds != null && !assignedToIds.isEmpty()) {
+                    lead.setAssignedTo(assignedToIds.get(assignIndex % assignedToIds.size()));
+                    assignIndex++;
+                }
+
+                newLeads.add(lead);
             }
         }
 
-        // ===== IMPORT PHASE (Transaction) =====
-        if (validLeads.isEmpty()) {
+        // ===== NO VALID DATA =====
+        if (newLeads.isEmpty() && existingLeadsToAdd.isEmpty()) {
             response.setSuccess(false);
-            int totalFailed = leads.size();
+            response.setTotalImported(0);
             response.setTotalFailed(totalFailed);
-            if (totalFailed == 1) {
-                response.setMessage("Không có lead nào hợp lệ để import.");
-            } else {
-                response.setMessage("Không có lead nào hợp lệ để import. Tất cả " + totalFailed + " leads đều bị lỗi.");
-            }
+            response.setMessage("Import failed: all data is invalid.");
             return response;
         }
 
         try {
-            int imported = leadDAO.importLeads(validLeads);
-            response.setTotalImported(imported);
+            int inserted = 0;
 
-            // Gắn lead mới vào Campaign_Leads nếu có campaign
-            // Đồng thời query lại để lấy danh sách lead đã import (cho activity logging)
-            for (Lead lead : validLeads) {
-                Lead created;
-                if (campaignId != null && campaignId > 0) {
-                    // Query by email + campaign
-                    created = leadDAO.findLeadByEmailAndCampaign(lead.getEmail(), campaignId);
+            if (!newLeads.isEmpty()) {
+                inserted = leadDAO.importLeads(newLeads);
+            }
+
+            Map<String, Lead> createdMap = new HashMap<>();
+
+            if (!newLeads.isEmpty()) {
+                List<String> emails = new ArrayList<>();
+                for (Lead l : newLeads) {
+                    emails.add(l.getEmail());
+                }
+
+                Map<String, Lead> temp = leadDAO.findLeadsByEmails(emails);
+                if (temp != null) {
+                    createdMap = temp;
+                }
+            }
+
+            int totalSuccess = 0;
+
+            if (campaignId != null && campaignId > 0) {
+
+                // NEW LEADS → assign campaign + đánh dấu để log activity
+                for (Lead l : newLeads) {
+                    Lead created = createdMap.get(l.getEmail().toLowerCase());
                     if (created != null) {
-                        if (!campaignLeadDAO.isLeadInCampaign(campaignId, created.getLeadId())) {
-                            campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), "NEW");
-                        }
+                        campaignLeadDAO.assignLeadToCampaign(campaignId, created.getLeadId(), created.getStatus());
+                        response.addImportedLead(created);
+                        response.addNewlyCreatedLead(created); // chỉ lead mới → sẽ được log activity
+                        totalSuccess++;
                     }
-                } else {
-                    // Query by email only (no campaign)
-                    created = leadDAO.findLeadByEmail(lead.getEmail());
                 }
 
-                // Add to response for activity logging
-                if (created != null) {
-                    response.addImportedLead(created);
+                // EXISTING LEADS → chỉ assign campaign, KHÔNG addNewlyCreatedLead → không log activity
+                for (Lead l : existingLeadsToAdd) {
+                    campaignLeadDAO.assignLeadToCampaign(campaignId, l.getLeadId(), l.getStatus());
+                    response.addImportedLead(l);
+                    totalSuccess++;
                 }
             }
 
-            // Build success message
-            String campaignInfo = (campaignId != null) ? " vào campaign" : "";
-            if (response.getTotalFailed() > 0) {
-                response.setSuccess(true);
-                response.setMessage("Import thành công " + imported + " leads" + campaignInfo + ". " + response.getTotalFailed() + " leads bị lỗi (trùng lặp hoặc dữ liệu không hợp lệ).");
+            // ===== FINAL RESULT =====
+            response.setSuccess(totalSuccess > 0);
+            response.setTotalImported(totalSuccess);
+            response.setTotalFailed(totalFailed);
+
+            if (totalFailed == 0) {
+                response.setMessage("🎉 Import successful! Added "
+                        + totalSuccess + " customers to the campaign.");
             } else {
-                response.setSuccess(true);
-                response.setMessage("Import thành công " + imported + " leads" + campaignInfo + "!");
+                response.setMessage("⚠️ Import completed: "
+                        + totalSuccess + " customers added successfully, "
+                        + totalFailed + " rows failed. "
+                        + "Please check the details below to correct the file.");
             }
+
         } catch (Exception e) {
             response.setSuccess(false);
-            response.setMessage("Lỗi import: " + e.getMessage());
-            response.addError("Exception: " + e.toString());
-            e.printStackTrace();
+            response.setTotalImported(0);
+            response.setTotalFailed(totalFailed);
+            response.setMessage("❌ An error occurred while importing.");
+            response.addError("Technical details: " + e.toString());
         }
 
         return response;

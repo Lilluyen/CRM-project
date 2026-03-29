@@ -8,25 +8,25 @@
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h4 class="mb-1"><i class="fas fa-bullhorn me-2"></i>Quản lý Campaign</h4>
-                <p class="text-muted mb-0">Tạo, cập nhật, và theo dõi hiệu quả chiến dịch marketing</p>
+                <h4 class="mb-1"><i class="fas fa-bullhorn me-2"></i>Campaign Management</h4>
+                <p class="text-muted mb-0">Create, update, and track the effectiveness of marketing campaigns</p>
             </div>
             <a href="${pageContext.request.contextPath}/marketing/campaign/form"
                class="btn btn-primary">
-                <i class="fas fa-plus-circle me-1"></i> Tạo Campaign Mới
+                <i class="fas fa-plus-circle me-1"></i> Create New Campaign
             </a>
         </div>
 
         <!-- Alert messages -->
         <c:if test="${not empty success}">
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-1"></i> <strong>Thành công!</strong> ${success}
+                <i class="fas fa-check-circle me-1"></i> <strong>Success!</strong> ${success}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
         <c:if test="${not empty error}">
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-1"></i> <strong>Lỗi!</strong> ${error}
+                <i class="fas fa-exclamation-circle me-1"></i> <strong>Error!</strong> ${error}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
@@ -34,33 +34,33 @@
         <!-- Filter Section -->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
-                <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Tìm kiếm &amp; Lọc</h6>
+                <h6 class="card-title mb-3"><i class="fas fa-filter me-1"></i> Search & Filter</h6>
                 <form method="GET" action="${pageContext.request.contextPath}/marketing/campaign" class="row g-3">
 
                     <div class="col-md-5">
-                        <label class="form-label">Tên campaign</label>
+                        <label class="form-label">Campaign Name</label>
                         <input type="text" class="form-control" name="search"
-                               value="${searchName}" placeholder="Nhập tên campaign...">
+                               value="${searchName}" placeholder="Enter campaign name...">
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Trạng thái</label>
+                        <label class="form-label">Status</label>
                         <select class="form-select" name="status">
-                            <option value="">-- Tất cả trạng thái --</option>
-                            <option value="ACTIVE"    ${filterStatus == 'ACTIVE'    ? 'selected' : ''}>Đang chạy</option>
-                            <option value="PLANNING"  ${filterStatus == 'PLANNING'  ? 'selected' : ''}>Lên kế hoạch</option>
-                            <option value="PAUSED"    ${filterStatus == 'PAUSED'    ? 'selected' : ''}>Tạm dừng</option>
-                            <option value="COMPLETED" ${filterStatus == 'COMPLETED' ? 'selected' : ''}>Kết thúc</option>
+                            <option value="">-- All Status --</option>
+                            <option value="ACTIVE"    ${filterStatus == 'ACTIVE'    ? 'selected' : ''}>Active</option>
+                            <option value="PLANNING"  ${filterStatus == 'PLANNING'  ? 'selected' : ''}>Planning</option>
+                            <option value="PAUSED"    ${filterStatus == 'PAUSED'    ? 'selected' : ''}>Paused</option>
+                            <option value="COMPLETED" ${filterStatus == 'COMPLETED' ? 'selected' : ''}>Completed</option>
                         </select>
                     </div>
 
                     <div class="col-md-3 d-flex align-items-end gap-2">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search me-1"></i> Tìm kiếm
+                            <i class="fas fa-search me-1"></i> Search
                         </button>
                         <a href="${pageContext.request.contextPath}/marketing/campaign"
                            class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-redo me-1"></i> Đặt lại
+                            <i class="fas fa-redo me-1"></i> Reset
                         </a>
                     </div>
                 </form>
@@ -73,7 +73,7 @@
             <%-- Tìm nhưng không có kết quả --%>
             <c:when test="${empty campaigns and (not empty searchName or not empty filterStatus)}">
                 <div class="alert alert-warning">
-                    <i class="fas fa-search me-1"></i> Không tìm thấy campaign phù hợp.
+                    <i class="fas fa-search me-1"></i> No matching campaigns found.
                 </div>
             </c:when>
 
@@ -85,8 +85,8 @@
                         <span class="fs-2 fw-bold">${pagination.totalItems}</span>
                         <span class="ms-2">
                             <c:choose>
-                                <c:when test="${not empty searchName or not empty filterStatus}">Campaign tìm thấy</c:when>
-                                <c:otherwise>Tổng Campaign</c:otherwise>
+                                <c:when test="${not empty searchName or not empty filterStatus}">Campaign found</c:when>
+                                <c:otherwise>Total Campaigns</c:otherwise>
                             </c:choose>
                         </span>
                     </div>
@@ -98,12 +98,12 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>
-                                    <th>Tên Campaign</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngân sách</th>
-                                    <th>Kênh</th>
-                                    <th>Thời gian</th>
-                                    <th class="text-center">Hành động</th>
+                                    <th>Campaign Name</th>
+                                    <th>Status</th>
+                                    <th>Budget</th>
+                                    <th>Channel</th>
+                                    <th>Duration</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -119,16 +119,16 @@
                                         <td>
                                             <c:choose>
                                                 <c:when test="${campaign.status == 'ACTIVE'}">
-                                                    <span class="badge bg-success">Đang chạy</span>
+                                                    <span class="badge bg-success">Active</span>
                                                 </c:when>
                                                 <c:when test="${campaign.status == 'PLANNING'}">
-                                                    <span class="badge bg-info text-dark">Lên kế hoạch</span>
+                                                    <span class="badge bg-info text-dark">Planning</span>
                                                 </c:when>
                                                 <c:when test="${campaign.status == 'PAUSED'}">
-                                                    <span class="badge bg-warning text-dark">Tạm dừng</span>
+                                                    <span class="badge bg-warning text-dark">Paused</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge bg-secondary">Kết thúc</span>
+                                                    <span class="badge bg-secondary">Completed</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
@@ -151,11 +151,11 @@
 
                                         <td class="text-center">
                                             <a href="${pageContext.request.contextPath}/marketing/campaign/detail?id=${campaign.campaignId}"
-                                               class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                               class="btn btn-sm btn-outline-info" title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="${pageContext.request.contextPath}/marketing/campaign/form?id=${campaign.campaignId}"
-                                               class="btn btn-sm btn-outline-warning ms-1" title="Chỉnh sửa">
+                                               class="btn btn-sm btn-outline-warning ms-1" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         </td>
@@ -176,10 +176,10 @@
                 <div class="card shadow-sm text-center py-5">
                     <div class="card-body">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">Không có campaign nào</h5>
+                        <h5 class="text-muted">No campaigns found</h5>
                         <a href="${pageContext.request.contextPath}/marketing/campaign/form"
                            class="btn btn-primary mt-2">
-                            <i class="fas fa-plus me-1"></i> Tạo Campaign
+                            <i class="fas fa-plus me-1"></i> Create Campaign
                         </a>
                     </div>
                 </div>
@@ -195,16 +195,16 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-1"></i> Xác nhận xóa</h5>
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-1"></i> Confirm Delete</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Cảnh báo!</strong> Bạn chắc chắn muốn xóa campaign này?</p>
-                <p class="text-danger small">Hành động này không thể hoàn tác.</p>
+                <p><strong>Warning!</strong> Are you sure you want to delete this campaign?</p>
+                <p class="text-danger small">This action cannot be undone.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
             </div>
         </div>
     </div>

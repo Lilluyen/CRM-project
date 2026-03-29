@@ -1,21 +1,27 @@
 package controller.manager;
 
 import dao.*;
+import dto.ConflictResult;
 import dto.CustomerCreateDTO;
-import exception.DuplicateEmailException;
-import exception.DuplicatePhoneException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.ContactValidationResult;
+import model.User;
 import service.CustomerService;
+import util.ControllerUltil;
+import util.CustomerActivityUtil;
+import util.PhoneCheck;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "UpdateCustomerController", urlPatterns = {"/customers/edit"})
 public class UpdateCustomerController extends HttpServlet {
@@ -23,15 +29,17 @@ public class UpdateCustomerController extends HttpServlet {
     CustomerDAO customerDAO = new CustomerDAO();
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -81,15 +89,6 @@ public class UpdateCustomerController extends HttpServlet {
             String address = trim(request.getParameter("address"));
             String source = trim(request.getParameter("source"));
 
-            String heightRaw = trim(request.getParameter("height"));
-            String weightRaw = trim(request.getParameter("weight"));
-            String preferredSize = request.getParameter("preferred_size");
-            String bustRaw = trim(request.getParameter("bust"));
-            String waistRaw = trim(request.getParameter("waist"));
-            String hipsRaw = trim(request.getParameter("hips"));
-            String shoulderRaw = trim(request.getParameter("shoulder"));
-            String bodyShape = request.getParameter("bodyShape");
-
             String[] tagIdsRaw = request.getParameterValues("tagIds");
 
             // ── Field-level error map ────────────────────────────────────
@@ -100,26 +99,28 @@ public class UpdateCustomerController extends HttpServlet {
                 fieldErrors.put("name", "Full name is required.");
             } else if (name.length() > 100) {
                 fieldErrors.put("name", "Name must not exceed 100 characters.");
+            } else if (!name.matches(
+                    "^[a-zA-Z\\s\\-'àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđa-z]+$")) {
+                fieldErrors.put("name", "Name must only contain letters, numbers, spaces, hyphens, and apostrophes.");
             }
 
             // Phone
             if (phone == null || phone.isBlank()) {
                 fieldErrors.put("phone", "Phone number is required.");
-            } else if (!phone.matches("^[0-9]{9,15}$")) {
-                fieldErrors.put("phone", "Phone must be 9–15 digits.");
+            } else if (!PhoneCheck.isValidPhone(phone)) {
+                fieldErrors.put("phone", "Phone is invalid.");
             }
 
             // Email
-            if (email == null || email.isBlank()) {
-                fieldErrors.put("email", "Email is required.");
-            } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            if (email != null && !email.isBlank() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 fieldErrors.put("email", "Invalid email format.");
             }
 
             // Gender
-            if (gender == null || gender.isBlank()) {
-                fieldErrors.put("gender", "Please select a gender.");
-            } else if (!gender.equalsIgnoreCase("MALE")
+//            if (gender == null || gender.isBlank()) {
+//                fieldErrors.put("gender", "Please select a gender.");
+//            } else
+            if (gender != null && !gender.equalsIgnoreCase("MALE")
                     && !gender.equalsIgnoreCase("FEMALE")
                     && !gender.equalsIgnoreCase("OTHER")) {
                 fieldErrors.put("gender", "Invalid gender value.");
@@ -127,26 +128,16 @@ public class UpdateCustomerController extends HttpServlet {
 
             // Birthday
             LocalDate birthday = null;
-            if (birthdayRaw == null || birthdayRaw.isBlank()) {
-                fieldErrors.put("birthday", "Date of birth is required.");
-            } else {
+            if (birthdayRaw != null && !birthdayRaw.isBlank()) {
                 try {
-                    birthday = LocalDate.parse(birthdayRaw);
-                    if (birthday.isAfter(LocalDate.now())) {
+                    birthday = ControllerUltil.parseDate(birthdayRaw);
+                    if (birthday != null && birthday.isAfter(LocalDate.now())) {
                         fieldErrors.put("birthday", "Birthday must be in the past.");
                     }
-                } catch (DateTimeParseException e) {
+                } catch (Exception e) {
                     fieldErrors.put("birthday", "Invalid date format.");
                 }
             }
-
-            // Measurements (optional, positive only)
-            BigDecimal height = parseDecimalValidated(heightRaw, "height", fieldErrors);
-            BigDecimal weight = parseDecimalValidated(weightRaw, "weight", fieldErrors);
-            BigDecimal bust = parseDecimalValidated(bustRaw, "bust", fieldErrors);
-            BigDecimal waist = parseDecimalValidated(waistRaw, "waist", fieldErrors);
-            BigDecimal hips = parseDecimalValidated(hipsRaw, "hips", fieldErrors);
-            BigDecimal shoulder = parseDecimalValidated(shoulderRaw, "shoulder", fieldErrors);
 
             // ── If errors → reload form ──────────────────────────────────
             if (!fieldErrors.isEmpty()) {
@@ -158,17 +149,10 @@ public class UpdateCustomerController extends HttpServlet {
                 request.setAttribute("oldBirthday", birthdayRaw);
                 request.setAttribute("oldSource", source);
                 request.setAttribute("oldAddress", address);
-                request.setAttribute("oldHeight", heightRaw);
-                request.setAttribute("oldWeight", weightRaw);
-                request.setAttribute("oldPreferredSize", preferredSize);
-                request.setAttribute("oldBust", bustRaw);
-                request.setAttribute("oldWaist", waistRaw);
-                request.setAttribute("oldHips", hipsRaw);
-                request.setAttribute("oldShoulder", shoulderRaw);
-                request.setAttribute("oldBodyShape", bodyShape);
 
                 Set<String> selectedTagSet = new HashSet<>();
-                if (tagIdsRaw != null) Collections.addAll(selectedTagSet, tagIdsRaw);
+                if (tagIdsRaw != null)
+                    Collections.addAll(selectedTagSet, tagIdsRaw);
                 request.setAttribute("selectedTags", selectedTagSet);
 
                 reloadFormData(request, customerId, fieldErrors, null);
@@ -179,11 +163,12 @@ public class UpdateCustomerController extends HttpServlet {
             // ── Build DTO ────────────────────────────────────────────────
             List<Integer> tagIds = new ArrayList<>();
             if (tagIdsRaw != null) {
-                for (String id : tagIdsRaw) tagIds.add(Integer.parseInt(id));
+                for (String id : tagIdsRaw)
+                    tagIds.add(Integer.parseInt(id));
             }
 
             CustomerCreateDTO dto = new CustomerCreateDTO();
-            dto.setCustomer_id(customerId);
+            dto.setCustomerId(customerId);
             dto.setName(name);
             dto.setPhone(phone);
             dto.setEmail(email);
@@ -192,31 +177,75 @@ public class UpdateCustomerController extends HttpServlet {
             dto.setAddress(address);
             dto.setSource(source);
             dto.setStyleTags(tagIds);
-            dto.setHeight(height);
-            dto.setWeight(weight);
-            dto.setPreferredSize(preferredSize);
-            dto.setBust(bust);
-            dto.setWaist(waist);
-            dto.setHips(hips);
-            dto.setShoulder(shoulder);
-            dto.setBodyShape(bodyShape);
 
-            customerService.updateCustomer(dto, customerId);
-            response.sendRedirect(
-                    request.getContextPath() + "/customers/detail?customerId=" + customerId);
+            ConflictResult conflict = customerService.checkDuplicate(dto, customerId);
+            if (conflict != null) {
+                conflict.setSource("update");
+                conflict.setIncomingId(customerId);
+                request.getSession().setAttribute("pendingConflict", conflict);
+                response.sendRedirect(request.getContextPath() + "/customers/resolve-conflict");
+                return;
+            }
 
-        } catch (DuplicateEmailException e) {
-            Map<String, String> fieldErrors = new LinkedHashMap<>();
-            fieldErrors.put("email", "This email is already registered.");
-            reloadFormData(request, customerId, fieldErrors, null);
-            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+            // Chỉ gọi 1 lần
+            int row = customerService.updateCustomer(dto, customerId);
+            String description = (phone != null && !phone.isBlank() ? "Updated customer with phone: " + phone
+                    : ("")) +
+                    (email != null && !email.isBlank() ? ", with email: " + email : ("")) +
+                    (gender != null && !gender.isBlank() ? ", with gender: " + gender : ("")) +
+                    (birthday != null && birthday.isBefore(LocalDate.now())
+                            ? ", with birthday: " + birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                            : "")
+                    +
+                    (source != null && !source.isBlank() ? ", from: " + source : ("")) +
+                    (address != null && !address.isBlank() ? ", address: " + address : (""));
+            if (row > 0) {
+                CustomerActivityUtil.logCustomerActivity(customerId, "UPDATE", "Customer updated",
+                        description + ".",
+                        (User) request.getSession().getAttribute("user"));
+            }
 
-        } catch (DuplicatePhoneException e) {
-            Map<String, String> fieldErrors = new LinkedHashMap<>();
-            fieldErrors.put("phone", "This phone number is already registered.");
-            reloadFormData(request, customerId, fieldErrors, null);
-            request.getRequestDispatcher("/view/layout.jsp").forward(request, response);
+            // Validate và lưu extra contacts
+            String[] extraValues = request.getParameterValues("extraContactValue");
+            String[] extraTypes = request.getParameterValues("extraContactType");
 
+            if (extraValues != null && extraTypes != null) {
+                List<ContactValidationResult> issues = customerService.saveExtraContacts(customerId, extraTypes,
+                        extraValues);
+
+                List<ContactValidationResult> contactConflicts = issues.stream()
+                        .filter(ContactValidationResult::isConflictOther)
+                        .collect(Collectors.toList());
+
+                if (!contactConflicts.isEmpty()) {
+                    request.getSession().setAttribute("contactConflictWarning", contactConflicts);
+                    response.sendRedirect(request.getContextPath()
+                            + "/customers/edit?customerId=" + customerId
+                            + "&status=contact-conflict");
+                    return;
+                }
+
+                List<ContactValidationResult> formatOrSelfIssues = issues.stream()
+                        .filter(r -> r.getStatus() == ContactValidationResult.Status.INVALID_FORMAT
+                                || r.getStatus() == ContactValidationResult.Status.DUPLICATE_SELF)
+                        .collect(Collectors.toList());
+
+                if (!formatOrSelfIssues.isEmpty()) {
+                    request.getSession().setAttribute("contactWarnings", formatOrSelfIssues);
+                    response.sendRedirect(request.getContextPath()
+                            + "/customers/edit?customerId=" + customerId
+                            + "&status=contact-warning");
+                    return;
+                }
+            }
+
+            // Tất cả OK — chỉ có 1 sendRedirect duy nhất ở đây
+            response.sendRedirect(request.getContextPath()
+                    + "/customers/detail?customerId=" + customerId);
+
+        } catch (SQLException e) {
+            log("DB error", e);
+            response.sendRedirect(request.getContextPath() + "/customers?status=failed");
         } catch (Exception e) {
             log("Update customer error", e);
             response.sendRedirect(request.getContextPath() + "/customers?status=failed");
@@ -249,12 +278,15 @@ public class UpdateCustomerController extends HttpServlet {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     private String trim(String value) {
-        return value != null ? value.trim() : null;
+        if (value == null)
+            return null;
+        return value.trim().isEmpty() ? null : value.trim();
     }
 
     private BigDecimal parseDecimalValidated(String value, String fieldName,
                                              Map<String, String> errors) {
-        if (value == null || value.isBlank()) return null;
+        if (value == null || value.isBlank())
+            return null;
         try {
             BigDecimal bd = new BigDecimal(value);
             if (bd.compareTo(BigDecimal.ZERO) < 0) {

@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
-
 import dao.CampaignDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
@@ -21,6 +19,7 @@ import model.Lead;
 import model.User;
 import service.LeadImportService;
 import util.ExcelUtil;
+import util.JsonUtility;
 import util.LeadActivityUtil;
 
 @WebServlet(name = "LeadImportController", urlPatterns = {"/marketing/leads/import"})
@@ -30,7 +29,8 @@ public class LeadImportController extends HttpServlet {
     private LeadImportService importService = new LeadImportService();
     private CampaignDAO campaignDAO = new CampaignDAO();
     private UserDAO userDAO = new UserDAO();
-    private Gson gson = new Gson();
+    // Đã xóa: private Gson gson = new Gson();
+    // Dùng JsonUtility thay thế để xử lý đúng LocalDateTime (Java 17+)
 
     // ===== GET: Show import form (qua layout) =====
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -67,8 +67,8 @@ public class LeadImportController extends HttpServlet {
             if (filePart == null || filePart.getSize() == 0) {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("Vui lòng chọn file");
-                response.getWriter().write(gson.toJson(errorResponse));
+                errorResponse.setMessage("Please select a file");
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -77,8 +77,8 @@ public class LeadImportController extends HttpServlet {
             if (!fileName.endsWith(".xlsx")) {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("Chỉ hỗ trợ file .xlsx");
-                response.getWriter().write(gson.toJson(errorResponse));
+                errorResponse.setMessage("Only .xlsx files are supported. Please select a valid Excel file.");
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -114,9 +114,9 @@ public class LeadImportController extends HttpServlet {
                 // File format error - can't read Excel
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("Vui lòng nhập file khác vì sai định dạng. File phải là .xlsx và không bị corrupt.");
-                errorResponse.addError("Lỗi đọc file: " + e.getMessage());
-                response.getWriter().write(gson.toJson(errorResponse));
+                errorResponse.setMessage("Please select a different file as the format is incorrect. The file must be a .xlsx file and not corrupted.");
+                errorResponse.addError("Error reading file: " + e.getMessage());
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -124,8 +124,8 @@ public class LeadImportController extends HttpServlet {
             if (leads == null || leads.isEmpty()) {
                 ImportLeadResponse errorResponse = new ImportLeadResponse();
                 errorResponse.setSuccess(false);
-                errorResponse.setMessage("File không có dữ liệu hoặc không đúng định dạng.");
-                response.getWriter().write(gson.toJson(errorResponse));
+                errorResponse.setMessage("File does not contain data or is not in the correct format.");
+                response.getWriter().write(JsonUtility.toJson(errorResponse));
                 return;
             }
 
@@ -140,29 +140,31 @@ public class LeadImportController extends HttpServlet {
                 importResponse.setTotalFailed(importResponse.getTotalFailed() + parseErrors.size());
             }
 
-            // ===== Log Activity for imported leads =====
+            // ===== Log Activity CHỈ cho lead MỚI (chưa tồn tại trong hệ thống) =====
             if (importResponse.isSuccess()) {
                 User sessionUser = (User) request.getSession().getAttribute("user");
-                for (Lead imported : importResponse.getImportedLeads()) {
-                    LeadActivityUtil.logLeadActivity(
-                            imported.getLeadId(),
-                            imported.getFullName(),
-                            "Lead Imported - " + imported.getFullName(),
-                            "Lead imported from Excel file",
-                            sessionUser
-                    );
+                if (sessionUser != null) {
+                    for (Lead imported : importResponse.getNewlyCreatedLeads()) {
+                        LeadActivityUtil.logLeadActivity(
+                                imported.getLeadId(),
+                                imported.getFullName(),
+                                "Lead Imported - " + imported.getFullName(),
+                                "Lead imported from Excel file",
+                                sessionUser
+                        );
+                    }
                 }
             }
 
             // ===== Response =====
-            response.getWriter().write(gson.toJson(importResponse));
+            response.getWriter().write(JsonUtility.toJson(importResponse));
 
         } catch (Exception e) {
             ImportLeadResponse errorResponse = new ImportLeadResponse();
             errorResponse.setSuccess(false);
-            errorResponse.setMessage("Lỗi: " + e.getMessage());
+            errorResponse.setMessage("Error: " + e.getMessage());
             errorResponse.addError(e.toString());
-            response.getWriter().write(gson.toJson(errorResponse));
+            response.getWriter().write(JsonUtility.toJson(errorResponse));
         }
     }
 }

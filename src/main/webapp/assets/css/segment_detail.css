@@ -858,6 +858,7 @@ select.method:focus {
     display: flex;
     align-items: center;
     gap: 6px;
+    height: 91px;
 }
 
 .action-cell button,

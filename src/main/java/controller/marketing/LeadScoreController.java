@@ -29,7 +29,7 @@ public class LeadScoreController extends HttpServlet {
             String scoreStr = request.getParameter("score");
 
             if (leadIdStr == null || scoreStr == null) {
-                response.getWriter().write("{\"success\": false, \"message\": \"Thiếu tham số.\"}");
+                response.getWriter().write("{\"success\": false, \"message\": \"Missing parameters.\"}");
                 return;
             }
 
@@ -49,15 +49,15 @@ public class LeadScoreController extends HttpServlet {
                         sessionUser
                 );
 
-                response.getWriter().write("{\"success\": true, \"message\": \"Cập nhật điểm thành công.\"}");
+                response.getWriter().write("{\"success\": true, \"message\": \"Score updated successfully.\"}");
             } else {
-                response.getWriter().write("{\"success\": false, \"message\": \"Lead không tồn tại.\"}");
+                response.getWriter().write("{\"success\": false, \"message\": \"Lead does not exist.\"}");
             }
 
         } catch (IllegalArgumentException e) {
             response.getWriter().write("{\"success\": false, \"message\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
-            response.getWriter().write("{\"success\": false, \"message\": \"Lỗi hệ thống.\"}");
+            response.getWriter().write("{\"success\": false, \"message\": \"System error.\"}");
         }
     }
 }

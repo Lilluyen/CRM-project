@@ -125,7 +125,7 @@ var currentRelatedType = '<%= a.getRelatedType() != null ? a.getRelatedType() : 
 var currentRelatedId = '<%= a.getRelatedId() != null ? a.getRelatedId() : "" %>';
 var currentSourceType = '<%= a.getSourceType() != null ? a.getSourceType() : "" %>';
 var currentSourceId = '<%= a.getSourceId() != null ? a.getSourceId() : "" %>';
-var currentPerformedBy = '<%= a.getPerformedBy() != null && a.getPerformedBy().getUserId() != null ? a.getPerformedBy().getUserId() : "" %>';
+var currentPerformedBy = '<%= a.getPerformedBy() != null && a.getPerformedBy().getUserId() >0 ? a.getPerformedBy().getUserId() : "" %>';
 
 function loadRelatedEntities() {
     var typeSelect = document.getElementById('relatedType');

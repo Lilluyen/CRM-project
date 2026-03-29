@@ -81,15 +81,16 @@ public class CustomerJourneyController extends HttpServlet {
                 CustomerDAO customerDAO = new CustomerDAO();
                 CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
                 CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-                CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
                 CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
+                CustomerContactDAO contactDAO = new CustomerContactDAO();
+                CustomerNoteDAO noteDAO = new CustomerNoteDAO();
                 CustomerService customerService = new CustomerService(
                         customerDAO,
                         customerStyleDAO,
                         customerQueryDAO,
-                        customerMeasurementDAO,
-                        customerSegmentDAO);
+                        customerSegmentDAO,
+                        contactDAO, noteDAO);
                 CustomerDetailDTO customerDetail = customerService.getCustomerDetail(customerId);
                 if (customerDetail == null) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Customer not found");

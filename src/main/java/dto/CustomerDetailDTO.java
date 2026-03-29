@@ -1,11 +1,12 @@
 package dto;
 
+import model.CustomerContact;
+import model.StyleTag;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import model.CustomerMeasurement;
-import model.StyleTag;
 
 public class CustomerDetailDTO {
 
@@ -21,16 +22,26 @@ public class CustomerDetailDTO {
     private String status;
     private String loyaltyTier;
 
-    private int rfmScore;
-    private double returnRate;
+    private BigDecimal totalSpent;
     private LocalDateTime lastPurchase;
 
     private String ownerName;
 
-    private CustomerMeasurement latestMeasurement;
     private List<StyleTag> styleTags;
 
+    private List<CustomerContact> contacts;
+
     // Getter & Setter ...
+
+
+    public List<CustomerContact> getContacts() {
+        return contacts;
+    }
+
+    public void setContacts(List<CustomerContact> contacts) {
+        this.contacts = contacts;
+    }
+
     public int getCustomerId() {
         return customerId;
     }
@@ -111,21 +122,14 @@ public class CustomerDetailDTO {
         this.loyaltyTier = loyaltyTier;
     }
 
-    public int getRfmScore() {
-        return rfmScore;
+    public BigDecimal getTotalSpent() {
+        return totalSpent;
     }
 
-    public void setRfmScore(int rfmScore) {
-        this.rfmScore = rfmScore;
+    public void setTotalSpent(BigDecimal totalSpent) {
+        this.totalSpent = totalSpent;
     }
 
-    public double getReturnRate() {
-        return returnRate;
-    }
-
-    public void setReturnRate(double returnRate) {
-        this.returnRate = returnRate;
-    }
 
     public LocalDateTime getLastPurchase() {
         return lastPurchase;
@@ -143,13 +147,6 @@ public class CustomerDetailDTO {
         this.ownerName = ownerName;
     }
 
-    public CustomerMeasurement getLatestMeasurement() {
-        return latestMeasurement;
-    }
-
-    public void setLatestMeasurement(CustomerMeasurement latestMeasurement) {
-        this.latestMeasurement = latestMeasurement;
-    }
 
     public List<StyleTag> getStyleTags() {
         return styleTags;

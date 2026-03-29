@@ -8,7 +8,7 @@
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h4 class="mb-1"><i class="fas fa-eye me-2"></i>Chi tiết Campaign</h4>
+                <h4 class="mb-1"><i class="fas fa-eye me-2"></i>Campaign Details</h4>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/marketing/campaign">Campaign</a></li>
@@ -18,7 +18,7 @@
             </div>
             <a href="${pageContext.request.contextPath}/marketing/campaign"
                class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                <i class="fas fa-arrow-left me-1"></i> Back to List
             </a>
         </div>
 
@@ -26,7 +26,7 @@
         <c:if test="${not empty error}">
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle"></i>
-                <strong>Lỗi!</strong> ${error}
+                <strong>Error!</strong> ${error}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
@@ -35,7 +35,7 @@
         <c:if test="${not empty success}">
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle"></i>
-                <strong>Thành công!</strong> ${success}
+                <strong>Success!</strong> ${success}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
@@ -50,22 +50,22 @@
                             <c:choose>
                                 <c:when test="${campaign.status == 'ACTIVE'}">
                                     <span class="badge-status badge-active">
-                                        <i class="bi bi-play-fill"></i> Đang chạy
+                                        <i class="bi bi-play-fill"></i> Active
                                     </span>
                                 </c:when>
                                 <c:when test="${campaign.status == 'PLANNING'}">
                                     <span class="badge-status badge-planning">
-                                        <i class="bi bi-hourglass"></i> Lên kế hoạch
+                                        <i class="bi bi-hourglass"></i> Planning
                                     </span>
                                 </c:when>
                                 <c:when test="${campaign.status == 'PAUSED'}">
                                     <span class="badge-status badge-paused">
-                                        <i class="bi bi-pause-fill"></i> Tạm dừng
+                                        <i class="bi bi-pause-fill"></i> Paused
                                     </span>
                                 </c:when>
                                 <c:when test="${campaign.status == 'COMPLETED'}">
                                     <span class="badge-status badge-completed">
-                                        <i class="bi bi-check-circle"></i> Kết thúc
+                                        <i class="bi bi-check-circle"></i> Completed
                                     </span>
                                 </c:when>
                             </c:choose>
@@ -80,7 +80,7 @@
                     <div class="col-md-4">
                         <div class="text-end">
                             <div class="mb-3">
-                                <span class="detail-label d-block mb-2">Ngân sách</span>
+                                <span class="detail-label d-block mb-2">Budget</span>
                                 <span class="budget-amount">
                                     <fmt:formatNumber value="${campaign.budget}" type="currency" 
                                                       currencySymbol="₫" maxFractionDigits="0"/>
@@ -134,30 +134,30 @@
         <!-- Campaign Details -->
         <div class="card">
             <div class="card-header">
-                <h5><i class="bi bi-info-circle"></i> Thông tin Campaign</h5>
+                <h5><i class="bi bi-info-circle"></i> Campaign Information</h5>
             </div>
             <div class="card-body">
                 <div class="detail-section">
-                    <h6><i class="bi bi-calendar2-event"></i> Thời gian Chiến dịch</h6>
+                    <h6><i class="bi bi-calendar2-event"></i> Campaign Timeline</h6>
                     <div class="detail-row">
-                        <span class="detail-label">Ngày bắt đầu:</span>
+                        <span class="detail-label">Start Date:</span>
                         <span class="detail-value">
                             <i class="bi bi-calendar"></i>
                             ${campaign.startDate}
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Ngày kết thúc:</span>
+                        <span class="detail-label">End Date:</span>
                         <span class="detail-value">
                             <i class="bi bi-calendar"></i>
                             ${campaign.endDate}
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Thời gian chạy:</span>
+                        <span class="detail-label">Campaign Duration:</span>
                         <span class="detail-value">
                         <c:if test="${not empty campaign.startDate and not empty campaign.endDate}">
-                            ${campaign.endDate.toEpochDay() - campaign.startDate.toEpochDay()} ngày
+                            ${campaign.endDate.toEpochDay() - campaign.startDate.toEpochDay()} days
                         </c:if>
                         </span>
                     </div>
@@ -166,16 +166,16 @@
                 <hr>
 
                 <div class="detail-section">
-                    <h6><i class="bi bi-briefcase"></i> Thông tin Ngân sách</h6>
+                    <h6><i class="bi bi-briefcase"></i> Budget Information</h6>
                     <div class="detail-row">
-                        <span class="detail-label">Ngân sách tổng:</span>
+                        <span class="detail-label">Total Budget:</span>
                         <span class="detail-value budget-amount">
                             <fmt:formatNumber value="${campaign.budget}" type="currency" 
                                               currencySymbol="₫" maxFractionDigits="0"/>
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Kênh Marketing:</span>
+                        <span class="detail-label">Marketing Channel:</span>
                         <span class="detail-value">
                             <span class="channel-badge">
                                 <c:choose>
@@ -217,27 +217,27 @@
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Trạng thái:</span>
+                        <span class="detail-label">Status:</span>
                         <span class="detail-value">
                             <c:choose>
                                 <c:when test="${campaign.status == 'ACTIVE'}">
                                     <span class="badge-status badge-active">
-                                        <i class="bi bi-play-fill"></i> Đang chạy
+                                        <i class="bi bi-play-fill"></i> Active
                                     </span>
                                 </c:when>
                                 <c:when test="${campaign.status == 'PLANNING'}">
                                     <span class="badge-status badge-planning">
-                                        <i class="bi bi-hourglass"></i> Lên kế hoạch
+                                        <i class="bi bi-hourglass"></i> Planning
                                     </span>
                                 </c:when>
                                 <c:when test="${campaign.status == 'PAUSED'}">
                                     <span class="badge-status badge-paused">
-                                        <i class="bi bi-pause-fill"></i> Tạm dừng
+                                        <i class="bi bi-pause-fill"></i> Paused
                                     </span>
                                 </c:when>
                                 <c:when test="${campaign.status == 'COMPLETED'}">
                                     <span class="badge-status badge-completed">
-                                        <i class="bi bi-check-circle"></i> Kết thúc
+                                        <i class="bi bi-check-circle"></i> Completed
                                     </span>
                                 </c:when>
                             </c:choose>
@@ -248,15 +248,15 @@
                 <hr>
 
                 <div class="detail-section">
-                    <h6><i class="bi bi-clock-history"></i> Thông tin Tạo & Cập nhật</h6>
+                    <h6><i class="bi bi-clock-history"></i> Creation & Update Information</h6>
                     <div class="detail-row">
-                        <span class="detail-label">Tạo lúc:</span>
+                        <span class="detail-label">Created At:</span>
                         <span class="detail-value">
                             ${campaign.createdAt}
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Cập nhật lúc:</span>
+                        <span class="detail-label">Updated At:</span>
                         <span class="detail-value">
                             ${campaign.updatedAt}
                         </span>
@@ -268,20 +268,20 @@
         <!-- Campaign Stats Card -->
         <div class="card">
             <div class="card-header">
-                <h5><i class="bi bi-graph-up"></i> Thống kê Campaign</h5>
+                <h5><i class="bi bi-graph-up"></i> Campaign Statistics</h5>
             </div>
             <div class="card-body">
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-number">${report != null ? report.totalLead : 0}</div>
-                        <div class="stat-label">Tổng Leads</div>
+                        <div class="stat-label">Total Leads</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number">${report != null ? report.qualifiedLead : 0}</div>
-                        <div class="stat-label">Leads Qualified</div>
+                        <div class="stat-label">Qualified Leads</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">${report != null ? report.convertedLead : 0}</div>
+                        <div class="stat-number">${dealsCreated}</div>
                         <div class="stat-label">Deals Created</div>
                     </div>
                     <div class="stat-card">
@@ -306,16 +306,16 @@
         <!-- Action Buttons -->
         <div class="card">
             <div class="card-body">
-                <h6 class="mb-3"><i class="bi bi-lightning"></i> Hành động</h6>
+                <h6 class="mb-3"><i class="bi bi-lightning"></i> Action Buttons</h6>
                 <div class="action-buttons">
                     <a href="${pageContext.request.contextPath}/marketing/campaign" class="btn btn-large btn-secondary-custom">
-                        <i class="bi bi-list"></i> Quay lại Danh sách
+                        <i class="bi bi-list"></i> Back to List
                     </a>
                     <a href="${pageContext.request.contextPath}/marketing/campaign/form?id=${campaign.campaignId}" class="btn btn-large btn-warning-custom">
-                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                        <i class="bi bi-pencil"></i> Edit
                     </a>
                     <a href="${pageContext.request.contextPath}/marketing/leads?campaignId=${campaign.campaignId}" class="btn btn-large btn-primary-custom">
-                        <i class="bi bi-people"></i> Xem Leads
+                        <i class="bi bi-people"></i> View Leads
                     </a>
                 </div>
             </div>
@@ -327,17 +327,17 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Xác nhận xóa</h5>
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Cảnh báo!</strong> Bạn chắc chắn muốn xóa campaign này?</p>
+                <p><strong>Warning!</strong> Are you sure you want to delete this campaign?</p>
                 <p class="text-danger small"><strong>${campaign.name}</strong></p>
-                <p class="text-danger small">Hành động này không thể hoàn tác.</p>
+                <p class="text-danger small">This action cannot be undone.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
             </div>
         </div>
     </div>

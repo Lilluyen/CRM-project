@@ -13,7 +13,8 @@ public class Lead {
     private String status;
     private int score;
     private int campaignId;
-    private String campaignName; // transient - lấy từ JOIN Campaigns
+    private String campaignName;   // transient - lấy từ JOIN Campaigns (giữ lại cho backward compat)
+    private String campaignNames;  // transient - danh sách tất cả campaign, VD: "Camp A, Camp B"
     private Integer assignedTo;
     private String assignedToName; // transient - lấy từ JOIN Users
     private LocalDateTime createdAt;
@@ -112,6 +113,19 @@ public class Lead {
 
     public void setCampaignName(String campaignName) {
         this.campaignName = campaignName;
+    }
+
+    /**
+     * Danh sách tất cả campaign mà lead tham gia, phân cách bằng " | "
+     * VD: "Summer Sale | Black Friday | New Year"
+     * Dùng để hiển thị badge list trong lead_list.jsp
+     */
+    public String getCampaignNames() {
+        return campaignNames;
+    }
+
+    public void setCampaignNames(String campaignNames) {
+        this.campaignNames = campaignNames;
     }
 
     public Integer getAssignedTo() {

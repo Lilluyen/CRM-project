@@ -1,12 +1,11 @@
-package Mapper;
-
-import java.time.LocalDateTime;
+package mapper;
 
 import dto.CustomerCreateDTO;
 import dto.CustomerDetailDTO;
 import model.Customer;
-import model.CustomerMeasurement;
 import model.User;
+
+import java.time.LocalDateTime;
 
 public class CustomerMapper {
 
@@ -27,10 +26,10 @@ public class CustomerMapper {
         customer.setCreatedAt(LocalDateTime.now());
         return customer;
     }
-    
+
     public static Customer toCustomerForUpdate(CustomerCreateDTO dto, int userId) {
         Customer customer = new Customer();
-        customer.setCustomerId(dto.getCustomer_id());
+        customer.setCustomerId(dto.getCustomerId());
         customer.setName(dto.getName());
         customer.setPhone(dto.getPhone());
         customer.setBirthday(dto.getBirthday());
@@ -47,21 +46,6 @@ public class CustomerMapper {
         return customer;
     }
 
-    public static CustomerMeasurement toCustomerMeasurement(CustomerCreateDTO dto, int customerId) {
-        CustomerMeasurement measurement = new CustomerMeasurement();
-        measurement.setHeight(dto.getHeight());
-        measurement.setWeight(dto.getWeight());
-        measurement.setBust(dto.getBust());
-        measurement.setWaist(dto.getWaist());
-        measurement.setHips(dto.getHips());
-        measurement.setMeasuredAt(LocalDateTime.now());
-        measurement.setShoulder(dto.getShoulder());
-        measurement.setPreferredSize(dto.getPreferredSize());
-        measurement.setBodyShape(dto.getBodyShape());
-        measurement.setCustomerId(customerId);
-        return measurement;
-    }
-
     public static CustomerDetailDTO toDTO(Customer c) {
 
         CustomerDetailDTO dto = new CustomerDetailDTO();
@@ -76,8 +60,7 @@ public class CustomerMapper {
         dto.setSource(c.getSource());
         dto.setStatus(c.getStatus());
         dto.setLoyaltyTier(c.getLoyaltyTier());
-        dto.setRfmScore(c.getRfmScore());
-        dto.setReturnRate(c.getReturnRate());
+        dto.setTotalSpent(c.getTotalSpent());
         dto.setLastPurchase(c.getLastPurchase());
 
         if (c.getOwner() != null) {

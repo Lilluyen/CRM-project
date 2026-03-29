@@ -1,7 +1,5 @@
 package filter;
 
-import java.io.IOException;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebFilter;
@@ -9,8 +7,9 @@ import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import model.User;
+
+import java.io.IOException;
 
 @WebFilter("/sale/*")
 public class SaleFilter extends HttpFilter {
@@ -23,10 +22,10 @@ public class SaleFilter extends HttpFilter {
 
         String context = request.getContextPath();
 
-        // ❗ Không tạo session mới
+        //  Không tạo session mới
         HttpSession session = request.getSession(false);
 
-        // ===== 1️⃣ Chưa login =====
+        // =====  Chưa login =====
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(context + "/login");
             return;
@@ -34,11 +33,14 @@ public class SaleFilter extends HttpFilter {
 
         User user = (User) session.getAttribute("user");
 
-        if (2 != user.getRole().getRoleId()) {
-            response.sendRedirect(context + "/login?error=accessDenied");
+        int roleId = user.getRole() != null ? user.getRole().getRoleId() : -1;
+
+        // SALE vào toàn bộ /sale/*
+        if (roleId == 2 || roleId == 5 || roleId == 1) {
+            chain.doFilter(request, response);
             return;
         }
 
-        chain.doFilter(request, response);
+        response.sendRedirect(context + "/login?error=accessDenied");
     }
 }

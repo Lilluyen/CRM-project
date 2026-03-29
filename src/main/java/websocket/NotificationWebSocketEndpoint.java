@@ -41,7 +41,6 @@ public class NotificationWebSocketEndpoint {
     @OnOpen
     public void onOpen(Session session, EndpointConfig config, @PathParam("userId") int userId) {
         this.userId = userId;
-
         HttpSession httpSession = (HttpSession) config.getUserProperties().get(HttpSessionConfigurator.HTTP_SESSION);
         if (httpSession == null) {
             closeSilently(session, CloseReason.CloseCodes.VIOLATED_POLICY, "Missing HTTP session");
@@ -58,6 +57,7 @@ public class NotificationWebSocketEndpoint {
             return;
         }
 
+        session.getUserProperties().put("httpSession", httpSession);
         USER_SESSIONS.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(session);
 
         // Send initial unread sync so header is accurate even without reload
@@ -80,7 +80,8 @@ public class NotificationWebSocketEndpoint {
             e.printStackTrace();
             return;
         }
-        if (obj == null) return;
+        if (obj == null)
+            return;
 
         String action = obj.has("action") ? safeString(obj.get("action").getAsString()) : "";
         if ("mark_all_read".equalsIgnoreCase(action)) {
@@ -99,7 +100,8 @@ public class NotificationWebSocketEndpoint {
         Set<Session> set = USER_SESSIONS.get(userId);
         if (set != null) {
             set.remove(session);
-            if (set.isEmpty()) USER_SESSIONS.remove(userId);
+            if (set.isEmpty())
+                USER_SESSIONS.remove(userId);
         }
     }
 
@@ -134,7 +136,8 @@ public class NotificationWebSocketEndpoint {
         root.addProperty("count", count);
         JsonArray arr = new JsonArray();
         if (unread != null) {
-            for (Notification n : unread) arr.add(toItem(n));
+            for (Notification n : unread)
+                arr.add(toItem(n));
         }
         root.add("items", arr);
         return GSON.toJson(root);
@@ -142,28 +145,44 @@ public class NotificationWebSocketEndpoint {
 
     private static JsonObject toItem(Notification n) {
         JsonObject o = new JsonObject();
-        if (n == null) return o;
+        if (n == null)
+            return o;
         o.addProperty("id", n.getNotificationId());
         o.addProperty("title", n.getTitle());
         o.addProperty("content", n.getContent());
         o.addProperty("type", n.getType());
         o.addProperty("relatedType", n.getRelatedType());
-        if (n.getRelatedId() != null) o.addProperty("relatedId", n.getRelatedId());
-        else o.add("relatedId", null);
+        if (n.getRelatedId() != null)
+            o.addProperty("relatedId", n.getRelatedId());
+        else
+            o.add("relatedId", null);
         o.addProperty("createdAt", n.getCreatedAt() != null ? n.getCreatedAt().format(FMT) : "");
         return o;
     }
 
     private static void sendToUser(int userId, String payload) {
         Set<Session> set = USER_SESSIONS.get(userId);
-        if (set == null || set.isEmpty()) return;
+        if (set == null || set.isEmpty())
+            return;
+
         for (Session s : set) {
+
+            // Lấy HttpSession đã lưu khi user connect
+            HttpSession httpSession = (HttpSession) s.getUserProperties().get("httpSession");
+
+            // Nếu session đã hết hạn → đóng luôn WebSocket
+            if (httpSession == null || httpSession.getAttribute("user") == null) {
+                closeSilently(s, CloseReason.CloseCodes.VIOLATED_POLICY, "Session expired");
+                continue;
+            }
+
             send(s, payload);
         }
     }
 
     private static void send(Session s, String payload) {
-        if (s == null || !s.isOpen()) return;
+        if (s == null || !s.isOpen())
+            return;
         try {
             s.getAsyncRemote().sendText(payload);
         } catch (Exception ignored) {
@@ -180,5 +199,16 @@ public class NotificationWebSocketEndpoint {
     private static String safeString(String s) {
         return s == null ? "" : s.trim();
     }
-}
 
+    public static void disconnectUser(int userId) {
+        Set<Session> set = USER_SESSIONS.get(userId);
+        if (set == null)
+            return;
+
+        for (Session s : set) {
+            closeSilently(s, CloseReason.CloseCodes.NORMAL_CLOSURE, "Session expired");
+        }
+
+        USER_SESSIONS.remove(userId);
+    }
+}

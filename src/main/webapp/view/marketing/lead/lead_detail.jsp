@@ -8,7 +8,7 @@
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h4 class="mb-1"><i class="fas fa-eye me-2"></i>Chi tiết Lead</h4>
+                <h4 class="mb-1"><i class="fas fa-eye me-2"></i>Lead Details</h4>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
@@ -24,7 +24,7 @@
             </a>
             <a href="${pageContext.request.contextPath}/marketing/leads"
                class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                <i class="fas fa-arrow-left me-1"></i> Back to Leads
             </a>
         </div>
 
@@ -79,7 +79,7 @@
 
                     <div class="col-md-4 text-end">
                         <div class="mb-3">
-                            <span class="detail-label d-block mb-2">Điểm số</span>
+                            <span class="detail-label d-block mb-2">Score</span>
                             <c:choose>
                                 <c:when test="${lead.score >= 70}">
                                     <span class="score-badge-lg score-hot">${lead.score}/100</span>
@@ -104,9 +104,9 @@
             </div>
             <div class="card-body">
                 <div class="detail-section">
-                    <h6><i class="fas fa-user me-1"></i> Thông tin liên hệ</h6>
+                    <h6><i class="fas fa-user me-1"></i> Contact Information</h6>
                     <div class="detail-row">
-                        <span class="detail-label">Họ tên:</span>
+                        <span class="detail-label">Full Name:</span>
                         <span class="detail-value">${lead.fullName}</span>
                     </div>
                     <div class="detail-row">
@@ -118,7 +118,7 @@
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Số điện thoại:</span>
+                        <span class="detail-label">Phone Number:</span>
                         <span class="detail-value">
                             <c:choose>
                                 <c:when test="${not empty lead.phone}">
@@ -129,7 +129,7 @@
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Sở thích / Quan tâm:</span>
+                        <span class="detail-label">Interests / Preferences:</span>
                         <span class="detail-value">
                             ${not empty lead.interest ? lead.interest : '-'}
                         </span>
@@ -139,9 +139,9 @@
                 <hr>
 
                 <div class="detail-section">
-                    <h6><i class="fas fa-bullhorn me-1"></i> Nguồn & Campaign</h6>
+                    <h6><i class="fas fa-bullhorn me-1"></i> Source & Campaign</h6>
                     <div class="detail-row">
-                        <span class="detail-label">Nguồn Lead:</span>
+                        <span class="detail-label">Lead Source:</span>
                         <span class="detail-value">
                             <span class="badge bg-light text-dark border">
                                 ${not empty lead.source ? lead.source : '-'}
@@ -156,7 +156,7 @@
                                     <i class="fas fa-user-tie me-1"></i>${lead.assignedToName}
                                 </c:when>
                                 <c:otherwise>
-                                    <span class="text-muted">Chưa phân công</span>
+                                    <span class="text-muted">Not assigned</span>
                                 </c:otherwise>
                             </c:choose>
                         </span>
@@ -164,7 +164,7 @@
 
                     <!-- Danh sách campaigns mà lead tham gia -->
                     <div class="mt-3">
-                        <span class="detail-label d-block mb-2">Campaigns tham gia:</span>
+                        <span class="detail-label d-block mb-2">Campaigns joined:</span>
                         <c:choose>
                             <c:when test="${not empty leadCampaigns}">
                                 <div class="table-responsive">
@@ -172,10 +172,10 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th>#</th>
-                                                <th>Tên Campaign</th>
-                                                <th>Kênh</th>
-                                                <th>Trạng thái Campaign</th>
-                                                <th>Thời gian</th>
+                                                <th>Campaign Name</th>
+                                                <th>Channel</th>
+                                                <th>Campaign Status</th>
+                                                <th>Time</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -223,7 +223,7 @@
                             </c:when>
                             <c:otherwise>
                                 <p class="text-muted mb-0">
-                                    <i class="fas fa-info-circle me-1"></i> Chưa tham gia campaign nào.
+                                    <i class="fas fa-info-circle me-1"></i> Not joined any campaigns.
                                 </p>
                             </c:otherwise>
                         </c:choose>
@@ -233,9 +233,9 @@
                 <hr>
 
                 <div class="detail-section">
-                    <h6><i class="fas fa-chart-line me-1"></i> Đánh giá</h6>
+                    <h6><i class="fas fa-chart-line me-1"></i> Evaluation</h6>
                     <div class="detail-row">
-                        <span class="detail-label">Trạng thái:</span>
+                        <span class="detail-label">Status:</span>
                         <span class="detail-value">
                             <c:choose>
                                 <c:when test="${lead.status == 'NEW_LEAD'}">
@@ -258,7 +258,7 @@
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Điểm số:</span>
+                        <span class="detail-label">Score:</span>
                         <span class="detail-value">
                             <c:choose>
                                 <c:when test="${lead.score >= 70}">
@@ -281,13 +281,13 @@
                 <hr>
 
                 <div class="detail-section">
-                    <h6><i class="fas fa-clock me-1"></i> Thông tin thời gian</h6>
+                    <h6><i class="fas fa-clock me-1"></i> Time Information</h6>
                     <div class="detail-row">
-                        <span class="detail-label">Tạo lúc:</span>
+                        <span class="detail-label">Created at:</span>
                         <span class="detail-value">${lead.createdAt}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Cập nhật lúc:</span>
+                        <span class="detail-label">Updated at:</span>
                         <span class="detail-value">${lead.updatedAt}</span>
                     </div>
                 </div>
@@ -297,15 +297,15 @@
         <!-- Action Buttons -->
         <div class="card shadow-sm">
             <div class="card-body">
-                <h6 class="mb-3"><i class="fas fa-bolt me-1"></i> Hành động</h6>
+                <h6 class="mb-3"><i class="fas fa-bolt me-1"></i> Action</h6>
                 <div class="action-buttons">
                     <a href="${pageContext.request.contextPath}/marketing/leads"
                        class="btn btn-large btn-secondary-custom">
-                        <i class="fas fa-list me-1"></i> Quay lại Danh sách
+                        <i class="fas fa-list me-1"></i> Back to List
                     </a>
                     <a href="${pageContext.request.contextPath}/marketing/leads/form?id=${lead.leadId}"
                        class="btn btn-large btn-warning-custom">
-                        <i class="fas fa-edit me-1"></i> Chỉnh sửa
+                        <i class="fas fa-edit me-1"></i> Edit
                     </a>
                 </div>
             </div>

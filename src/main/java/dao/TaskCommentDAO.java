@@ -11,23 +11,23 @@ import java.util.List;
  * DAO for Task_Comments – doubles as the "Work Items" layer.
  *
  * Schema (after migration):
- *   comment_id        PK
- *   task_id           FK → Tasks
- *   user_id           FK → Users  (creator / tagger)
- *   content           NVARCHAR(MAX)
- *   parent_comment_id FK → Task_Comments (nullable – tree parent)
- *   assigned_to       FK → Users  (supporter being tagged)
- *   is_completed      BIT DEFAULT 0
- *   completed_at      DATETIME NULL
- *   is_deleted        BIT DEFAULT 0
- *   created_at        DATETIME
- *   updated_at        DATETIME NULL
+ * comment_id PK
+ * task_id FK → Tasks
+ * user_id FK → Users (creator / tagger)
+ * content NVARCHAR(MAX)
+ * parent_comment_id FK → Task_Comments (nullable – tree parent)
+ * assigned_to FK → Users (supporter being tagged)
+ * is_completed BIT DEFAULT 0
+ * completed_at DATETIME NULL
+ * is_deleted BIT DEFAULT 0
+ * created_at DATETIME
+ * updated_at DATETIME NULL
  *
  * Progress rule:
- *   progress = COUNT(is_completed=1 AND is_deleted=0)
- *            / COUNT(is_deleted=0)  * 100
- *   (only root-level items where parent_comment_id IS NULL are counted
- *    if you want 1-level; for full tree count include all levels)
+ * progress = COUNT(is_completed=1 AND is_deleted=0)
+ * / COUNT(is_deleted=0) * 100
+ * (only root-level items where parent_comment_id IS NULL are counted
+ * if you want 1-level; for full tree count include all levels)
  *
  * This implementation counts ALL non-deleted work items (any depth).
  */
@@ -63,7 +63,8 @@ public class TaskCommentDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+                while (rs.next())
+                    list.add(map(rs));
             }
         }
         return list;
@@ -108,17 +109,21 @@ public class TaskCommentDAO {
             ps.setInt(1, c.getTaskId());
             ps.setInt(2, c.getCreatedBy());
             ps.setString(3, c.getContent());
-            if (c.getParentCommentId() != null) ps.setInt(4, c.getParentCommentId());
-            else                                 ps.setNull(4, Types.INTEGER);
+            if (c.getParentCommentId() != null)
+                ps.setInt(4, c.getParentCommentId());
+            else
+                ps.setNull(4, Types.INTEGER);
             if (c.getAssignedTo() != null && c.getAssignedTo() > 0)
                 ps.setInt(5, c.getAssignedTo());
-            else ps.setNull(5, Types.INTEGER);
+            else
+                ps.setNull(5, Types.INTEGER);
             ps.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
 
             int rows = ps.executeUpdate();
             if (rows == 1) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
-                    if (keys.next()) c.setCommentId(keys.getInt(1));
+                    if (keys.next())
+                        c.setCommentId(keys.getInt(1));
                 }
             }
             return rows == 1;
@@ -141,10 +146,10 @@ public class TaskCommentDAO {
                 """;
         Timestamp now = Timestamp.valueOf(LocalDateTime.now());
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt      (1, completed ? 1 : 0);
+            ps.setInt(1, completed ? 1 : 0);
             ps.setTimestamp(2, completed ? now : null);
             ps.setTimestamp(3, now);
-            ps.setInt      (4, commentId);
+            ps.setInt(4, commentId);
             return ps.executeUpdate() > 0;
         }
     }
@@ -161,6 +166,37 @@ public class TaskCommentDAO {
             ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
             ps.setInt(2, commentId);
             return ps.executeUpdate() == 1;
+        }
+    }
+
+    /**
+     * Recursively soft-delete a work item AND all its descendants.
+     * Performs a depth-first traversal: children are deleted before the parent.
+     *
+     * @param commentId root item to delete
+     * @return true if the root item was successfully soft-deleted
+     */
+    public boolean softDeleteCascade(int commentId) throws SQLException {
+        softDeleteDescendants(commentId);
+        return softDelete(commentId);
+    }
+
+    /**
+     * Recursively find and soft-delete all descendants of the given parent.
+     */
+    private void softDeleteDescendants(int parentId) throws SQLException {
+        String sql = "SELECT comment_id FROM Task_Comments WHERE parent_comment_id = ? AND is_deleted = 0";
+        List<Integer> childIds = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, parentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    childIds.add(rs.getInt(1));
+            }
+        }
+        for (int childId : childIds) {
+            softDeleteDescendants(childId); // depth-first
+            softDelete(childId);
         }
     }
 
@@ -182,10 +218,11 @@ public class TaskCommentDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, taskId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return new int[]{rs.getInt("total"), rs.getInt("completed")};
+                if (rs.next())
+                    return new int[] { rs.getInt("total"), rs.getInt("completed") };
             }
         }
-        return new int[]{0, 0};
+        return new int[] { 0, 0 };
     }
 
     /**
@@ -225,17 +262,26 @@ public class TaskCommentDAO {
         c.setDeleted(rs.getBoolean("is_deleted"));
 
         Timestamp completedAt = rs.getTimestamp("completed_at");
-        if (completedAt != null) c.setCompletedAt(completedAt.toLocalDateTime());
+        if (completedAt != null)
+            c.setCompletedAt(completedAt.toLocalDateTime());
 
         Timestamp ca = rs.getTimestamp("created_at");
-        if (ca != null) c.setCreatedAt(ca.toLocalDateTime());
+        if (ca != null)
+            c.setCreatedAt(ca.toLocalDateTime());
 
         Timestamp ua = rs.getTimestamp("updated_at");
-        if (ua != null) c.setUpdatedAt(ua.toLocalDateTime());
+        if (ua != null)
+            c.setUpdatedAt(ua.toLocalDateTime());
 
         // Transient display fields from JOIN
-        try { c.setAuthorName(rs.getString("author_name"));   } catch (SQLException ignored) {}
-        try { c.setAssignedName(rs.getString("assigned_name")); } catch (SQLException ignored) {}
+        try {
+            c.setAuthorName(rs.getString("author_name"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            c.setAssignedName(rs.getString("assigned_name"));
+        } catch (SQLException ignored) {
+        }
 
         return c;
     }

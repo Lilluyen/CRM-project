@@ -6,10 +6,12 @@ package util;
  */
 public class LeadScoringUtil {
 
+    private LeadScoringUtil() {}
+
     /**
      * Tính leadScore dựa trên thông tin
      *
-     * @return score (0-70)
+     * @return score (0-80)
      */
     public static int calculateScore(String fullName, String email, String phone, int campaignId, String interest) {
         int score = 0;
@@ -25,8 +27,15 @@ public class LeadScoringUtil {
         }
 
         // Có số điện thoại hợp lệ
-        if (phone != null && !phone.trim().isEmpty() && PhoneCheck.isValidPhone(phone)) {
-            score += 20;
+        // Normalize: nếu phone là 9 chữ số (do Excel đọc mất số 0 đầu) → thêm lại 0
+        if (phone != null && !phone.trim().isEmpty()) {
+            String normalizedPhone = phone.trim();
+            if (normalizedPhone.length() == 9 && normalizedPhone.matches("\\d{9}")) {
+                normalizedPhone = "0" + normalizedPhone;
+            }
+            if (PhoneCheck.isValidPhone(normalizedPhone)) {
+                score += 20;
+            }
         }
 
         // Thuộc campaign
@@ -38,21 +47,21 @@ public class LeadScoringUtil {
             score += 10;
         }
 
-        return Math.min(score, 100);
+        return Math.min(score, 80);
     }
 
     /**
-     * Xác định trạng thái Lead tự động dựa trên score < 10: LOST < 20: NEW_LEAD
-     * < 70:  CONTACTED
+     * Xác định trạng thái Lead tự động dựa trên score < 20: LOST < 40: NEW_LEAD
+     * < 70:  NURTURING
      * >= 70: QUALIFIED
      */
     public static String determineStatus(int score) {
-        if (score < 10) {
+        if (score < 20) {
             return "LOST";
-        } else if (score < 20) {
+        } else if (score < 40) {
             return "NEW_LEAD";
         } else if (score < 70) {
-            return "CONTACTED";
+            return "NURTURING";
         } else {
             return "QUALIFIED";
         }

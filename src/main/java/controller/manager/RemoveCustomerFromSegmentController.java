@@ -5,7 +5,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.User;
 import service.CustomerSegmentService;
+import util.CustomerActivityUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,7 +19,8 @@ public class RemoveCustomerFromSegmentController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.sendRedirect(req.getContextPath() + "/customers/segments");
+        String segmentId = req.getParameter("segment_id");
+        resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + segmentId);
     }
 
     @Override
@@ -27,11 +30,18 @@ public class RemoveCustomerFromSegmentController extends HttpServlet {
             int segmentId = Integer.parseInt(req.getParameter("segment_id"));
             service.removeCustomer(customerId, segmentId);
             service.updateSegmentCount(segmentId);
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=success");
+            User user = (User) req.getSession().getAttribute("user");
+            CustomerActivityUtil.logCustomerActivity(
+                    customerId,
+                    "UPDATE",
+                    "Segment removed",
+                    "Removed customer from segment #" + segmentId + ".",
+                    user);
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + segmentId + "&status=success");
         } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=failed");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + req.getParameter("segment_id") + "&status=failed");
         } catch (SQLException e) {
-            resp.sendRedirect(req.getContextPath() + "/customers/segments?created=failed");
+            resp.sendRedirect(req.getContextPath() + "/customers/segment-detail?segment_id=" + req.getParameter("segment_id") + "&status=failed");
             throw new RuntimeException(e);
         }
     }

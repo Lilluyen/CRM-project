@@ -88,7 +88,7 @@
       <div class="rpt-kpi-icon"><i class="fas fa-users"></i></div>
       <div class="rpt-kpi-body">
         <div class="rpt-kpi-value">${reportKpi.totalLeads}</div>
-        <div class="rpt-kpi-label">Total Leads</div>
+        <div class="rpt-kpi-label">Total Engagements</div>
       </div>
     </div>
 
@@ -183,9 +183,9 @@
             <table class="rpt-table" style="font-size:13px;">
               <thead>
                 <tr>
-                  <th style="text-align:left">Nguồn</th>
-                  <th style="text-align:right">Số Lead</th>
-                  <th style="text-align:right">Tỷ lệ</th>
+                  <th style="text-align:left">Source</th>
+                  <th style="text-align:right">Number of Leads</th>
+                  <th style="text-align:right">Percentage</th>
                 </tr>
               </thead>
               <tbody>
@@ -275,7 +275,7 @@
       <%-- We'll do each row individually for clarity --%>
 
       <div class="funnel-row">
-        <div class="funnel-label">New Lead</div>
+        <div class="funnel-label">New Leads</div>
         <div class="funnel-bar-track">
           <div class="funnel-bar-fill fb-new"
                style="width:<c:choose><c:when test="${funnelTotal>0}">${leadFunnel.newCount*100/funnelTotal}</c:when><c:otherwise>0</c:otherwise></c:choose>%">
@@ -288,7 +288,7 @@
       </div>
 
       <div class="funnel-row">
-        <div class="funnel-label">Contacted</div>
+        <div class="funnel-label">Nurturing Leads</div>
         <div class="funnel-bar-track">
           <div class="funnel-bar-fill fb-contacted"
                style="width:<c:choose><c:when test="${funnelTotal>0}">${leadFunnel.contactedCount*100/funnelTotal}</c:when><c:otherwise>0</c:otherwise></c:choose>%">
@@ -301,7 +301,7 @@
       </div>
 
       <div class="funnel-row">
-        <div class="funnel-label">Qualified</div>
+        <div class="funnel-label">Qualified Leads</div>
         <div class="funnel-bar-track">
           <div class="funnel-bar-fill fb-qualified"
                style="width:<c:choose><c:when test="${funnelTotal>0}">${leadFunnel.qualifiedCount*100/funnelTotal}</c:when><c:otherwise>0</c:otherwise></c:choose>%">
@@ -313,7 +313,7 @@
         <div class="funnel-count">${leadFunnel.qualifiedCount}</div>
       </div>
 
-      <div class="funnel-row">
+      <!-- <div class="funnel-row">
         <div class="funnel-label">Deal Created</div>
         <div class="funnel-bar-track">
           <div class="funnel-bar-fill fb-converted"
@@ -324,10 +324,10 @@
           </div>
         </div>
         <div class="funnel-count">${leadFunnel.convertedCount}</div>
-      </div>
+      </div> -->
 
       <div class="funnel-row">
-        <div class="funnel-label">Lost</div>
+        <div class="funnel-label">Lost Leads</div>
         <div class="funnel-bar-track">
           <div class="funnel-bar-fill fb-lost"
                style="width:<c:choose><c:when test="${funnelTotal>0}">${leadFunnel.lostCount*100/funnelTotal}</c:when><c:otherwise>0</c:otherwise></c:choose>%">
@@ -373,7 +373,7 @@
             </thead>
             <tbody>
               <c:forEach var="cp" items="${campaignPerformance}" varStatus="st">
-                <tr>
+             <tr>
                   <td class="td-number" style="color:var(--rpt-muted)">${not empty pagination ? pagination.startItemNumber + st.index : st.index + 1}</td>
                   <td class="td-name">${cp.campaignName}</td>
                   <td class="td-number">${cp.totalLeads}</td>
@@ -405,6 +405,7 @@
                     </span>
                   </td>
                 </tr>
+      
               </c:forEach>
             </tbody>
           </table>

@@ -1,17 +1,13 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 import model.Campaign;
 import model.Lead;
 import util.DBContext;
+
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CampaignLeadDAO {
 
@@ -47,7 +43,7 @@ public class CampaignLeadDAO {
         return false;
     }
 
-    // Lấy dang sách Lead thuộc một campaign (ưu tiên lead có điểm số cao)  
+    // Lấy danh sách Lead thuộc một campaign (ưu tiên lead có điểm số cao)
     public List<Lead> getLeadsByCampaignId(int campaignId) {
         String sql = "SELECT l.* FROM Leads l "
                 + "INNER JOIN Campaign_Leads cl ON l.lead_id = cl.lead_id "
@@ -133,6 +129,95 @@ public class CampaignLeadDAO {
         return 0;
     }
 
+    /**
+     * Lấy danh sách Campaigns mà lead tham gia theo leadId đơn lẻ. Dùng khi
+     * lead chỉ có 1 record trong bảng Leads.
+     */
+    public List<Campaign> getCampaignsByLeadId(int leadId) {
+        String sql = "SELECT c.campaign_id, c.name, c.status, c.channel, "
+                + "c.start_date, c.end_date, cl.lead_status, cl.assigned_at "
+                + "FROM Campaign_Leads cl "
+                + "INNER JOIN Campaigns c ON cl.campaign_id = c.campaign_id "
+                + "WHERE cl.lead_id = ? "
+                + "ORDER BY cl.assigned_at DESC";
+        List<Campaign> campaigns = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, leadId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                campaigns.add(mapResultSetToCampaign(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return campaigns;
+    }
+
+    /**
+     * FIX: Lấy TẤT CẢ campaigns của một người dựa trên EMAIL.
+     * <p>
+     * Lý do cần method này: - Bảng Leads có thể có nhiều row cùng email (mỗi
+     * campaign tạo 1 row riêng, hoặc dùng MIN(lead_id) khi hiển thị list). -
+     * searchLeads() chỉ trả về MIN(lead_id) per email → leadId đó chỉ thuộc 1
+     * campaign trong Campaign_Leads. - Để hiện đủ campaigns trên trang detail,
+     * cần JOIN qua tất cả lead_id có cùng email, không chỉ 1 leadId.
+     * <p>
+     * SQL: lấy DISTINCT campaigns từ tất cả lead_id có email = email của leadId
+     * này.
+     */
+    public List<Campaign> getCampaignsByLeadEmail(int leadId) {
+        String sql = "SELECT DISTINCT c.campaign_id, c.name, c.status, c.channel, "
+                + "c.start_date, c.end_date, cl.lead_status, cl.assigned_at "
+                + "FROM Campaign_Leads cl "
+                + "INNER JOIN Campaigns c ON cl.campaign_id = c.campaign_id "
+                + "WHERE cl.lead_id IN ( "
+                + "  SELECT lead_id FROM Leads WHERE email = ( "
+                + "    SELECT email FROM Leads WHERE lead_id = ? "
+                + "  ) "
+                + ") "
+                + "ORDER BY cl.assigned_at DESC";
+        List<Campaign> campaigns = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, leadId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                campaigns.add(mapResultSetToCampaign(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return campaigns;
+    }
+
+    /**
+     * Xóa lead khỏi một campaign trong bảng Campaign_Leads
+     */
+    public boolean removeLeadFromCampaign(int campaignId, int leadId) {
+        String sql = "DELETE FROM Campaign_Leads WHERE campaign_id = ? AND lead_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ps.setInt(2, leadId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Map ResultSet → Campaign
+    private Campaign mapResultSetToCampaign(ResultSet rs) throws SQLException {
+        Campaign c = new Campaign();
+        c.setCampaignId(rs.getInt("campaign_id"));
+        c.setName(rs.getString("name"));
+        c.setStatus(rs.getString("status"));
+        c.setChannel(rs.getString("channel"));
+        c.setStartDate(rs.getDate("start_date") != null
+                ? rs.getDate("start_date").toLocalDate() : null);
+        c.setEndDate(rs.getDate("end_date") != null
+                ? rs.getDate("end_date").toLocalDate() : null);
+        return c;
+    }
+
     // Map dữ liệu từ ResultSet sang đối tượng Lead
     private Lead mapResultSetToLead(ResultSet rs) throws SQLException {
         return new Lead(
@@ -149,37 +234,5 @@ public class CampaignLeadDAO {
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime()
         );
-    }
-
-    /**
-     * Lấy danh sách Campaigns mà lead tham gia (qua bảng Campaign_Leads)
-     */
-    public List<Campaign> getCampaignsByLeadId(int leadId) {
-        String sql = "SELECT c.campaign_id, c.name, c.status, c.channel, "
-                + "c.start_date, c.end_date, cl.lead_status, cl.assigned_at "
-                + "FROM Campaign_Leads cl "
-                + "INNER JOIN Campaigns c ON cl.campaign_id = c.campaign_id "
-                + "WHERE cl.lead_id = ? "
-                + "ORDER BY cl.assigned_at DESC";
-        List<Campaign> campaigns = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, leadId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Campaign c = new Campaign();
-                c.setCampaignId(rs.getInt("campaign_id"));
-                c.setName(rs.getString("name"));
-                c.setStatus(rs.getString("status"));
-                c.setChannel(rs.getString("channel"));
-                c.setStartDate(rs.getDate("start_date") != null
-                        ? rs.getDate("start_date").toLocalDate() : null);
-                c.setEndDate(rs.getDate("end_date") != null
-                        ? rs.getDate("end_date").toLocalDate() : null);
-                campaigns.add(c);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return campaigns;
     }
 }

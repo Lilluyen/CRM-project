@@ -31,7 +31,7 @@ public class CustomerDAO {
             stmt.setString(3, customer.getEmail());
 
             stmt.setDate(4,
-                    java.sql.Date.valueOf(customer.getBirthday()) != null
+                    customer.getBirthday() != null
                             ? java.sql.Date.valueOf(customer.getBirthday())
                             : null);
             stmt.setString(5, customer.getGender() != null ? customer.getGender() : null);
@@ -157,8 +157,7 @@ public class CustomerDAO {
                         c.source,
                         c.status,
                         c.loyalty_tier,
-                        c.rfm_score,
-                        c.return_rate,
+                        c.total_spent,
                         c.last_purchase,
                         u.full_name AS owner_name
                     FROM Customers c
@@ -189,8 +188,7 @@ public class CustomerDAO {
                 dto.setSource(rs.getString("source"));
                 dto.setStatus(rs.getString("status"));
                 dto.setLoyaltyTier(rs.getString("loyalty_tier"));
-                dto.setRfmScore(rs.getInt("rfm_score"));
-                dto.setReturnRate(rs.getDouble("return_rate"));
+                dto.setTotalSpent(rs.getBigDecimal("total_spent"));
                 dto.setLastPurchase(
                         rs.getTimestamp("last_purchase") != null
                                 ? rs.getTimestamp("last_purchase").toLocalDateTime()
@@ -202,7 +200,7 @@ public class CustomerDAO {
         }
     }
 
-    public void updateBasicInfo(Customer customer, Connection conn)
+    public int updateBasicInfo(Customer customer, Connection conn)
             throws SQLException {
 
         System.out.println("Customer ID = " + customer.getCustomerId());
@@ -227,19 +225,20 @@ public class CustomerDAO {
             ps.setString(3, customer.getEmail());
 
             if (customer.getBirthday() != null) {
-                ps.setDate(4, java.sql.Date.valueOf(customer.getBirthday()));
+                ps.setDate(4, customer.getBirthday() != null ? java.sql.Date.valueOf(customer.getBirthday()) : null);
             } else {
                 ps.setNull(4, java.sql.Types.DATE);
             }
 
-            ps.setNString(5, customer.getGender());
-            ps.setNString(6, customer.getAddress());
-            ps.setNString(7, customer.getSource());
+            ps.setNString(5, customer.getGender() != null ? customer.getGender() : null);
+            ps.setNString(6, customer.getAddress() != null ? customer.getAddress() : null);
+            ps.setNString(7, customer.getSource() != null ? customer.getSource() : null);
 
             ps.setInt(8, customer.getCustomerId());
 
             int row = ps.executeUpdate();
             System.out.println("Row: " + row);
+            return row;
         }
     }
 
@@ -385,11 +384,64 @@ public class CustomerDAO {
         }
     }
 
-    public void calculateRFM(Connection conn) throws SQLException {
-        String sql = "{CALL sp_Calculate_RFM}";
+    public void updatePrimaryPhone(Connection conn, int customerId, String phone)
+            throws SQLException {
+        String sql = "UPDATE Customers SET phone = ? WHERE customer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
 
-        try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.execute();
+    public void updatePrimaryEmail(Connection conn, int customerId, String email)
+            throws SQLException {
+        String sql = "UPDATE Customers SET email = ? WHERE customer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateTotalSpent(Connection conn, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Customers
+                    SET total_spent = (
+                        SELECT ISNULL(SUM(actual_value), 0)
+                        FROM Deals
+                        WHERE customer_id = ?
+                        AND stage = 'Closed Won'
+                    )
+                    WHERE customer_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, customerId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateLoyaltyTier(Connection conn, int customerId) throws SQLException {
+        String sql = """
+                    UPDATE Customers
+                    SET loyalty_tier = (
+                        Case
+                            WHEN total_spent >= 100000000 THEN 'DIAMOND'
+                            WHEN total_spent >= 50000000 THEN 'PLATINUM'
+                            WHEN total_spent >= 10000000 THEN 'GOLD'
+                            WHEN total_spent >= 5000000 THEN 'SILVER'
+                            WHEN total_spent >= 1000000 THEN 'BRONZE'
+                            WHEN total_spent >= 0 THEN 'BRONZE'
+                            ELSE 'BLACKLIST'
+                        END
+                    ),
+                    updated_at = GETDATE()
+                    WHERE customer_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.executeUpdate();
         }
     }
 }

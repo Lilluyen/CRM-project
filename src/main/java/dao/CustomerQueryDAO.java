@@ -1,6 +1,7 @@
 package dao;
 
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
+import dto.CustomerSearchResultDTO;
 import dto.TimeCondition;
 import model.Customer;
 
@@ -27,37 +28,6 @@ public class CustomerQueryDAO {
               FROM [Customers]
             """;
 
-//    private CustomerListDTO mapRow(ResultSet rs) throws SQLException {
-//
-//        CustomerListDTO dto = new CustomerListDTO();
-//
-//        dto.setCustomerId(rs.getInt("customer_id"));
-//        dto.setName(rs.getString("name"));
-//        dto.setPhone(rs.getString("phone"));
-//        dto.setEmail(rs.getString("email"));
-//        dto.setGender(rs.getString("gender"));
-//        dto.setLoyaltyTier(rs.getString("loyalty_tier"));
-//        dto.setRfmScore(rs.getInt("rfm_score"));
-//        dto.setPreferredSize(rs.getString("fit_profile"));
-//        dto.setBodyShape(rs.getString("body_shape"));
-//        dto.setHeight(rs.getBigDecimal("height"));
-//        dto.setWeight(rs.getBigDecimal("weight"));
-//
-//        String styleTagsStr = rs.getString("style_tags");
-//        if (styleTagsStr != null && !styleTagsStr.isBlank()) {
-//            dto.setStyleTags(Arrays.asList(styleTagsStr.split("\\s*,\\s*")));
-//        }
-//
-//        dto.setReturnRate(rs.getDouble("return_rate"));
-//
-//        Timestamp ts = rs.getTimestamp("last_purchase_date");
-//        if (ts != null) {
-//            dto.setLastPurchase(ts.toLocalDateTime());
-//        }
-//
-//        return dto;
-//    }
-
     public List<Customer> getCustomerList(
             Connection connection,
             int page,
@@ -65,7 +35,7 @@ public class CustomerQueryDAO {
     ) throws SQLException {
         List<Customer> customerList = new ArrayList<>();
         String sql = BASE_QUERY + """
-                  Order by customer_id
+                  Order by customer_id DESC
                   OFFSET (? - 1) * ? Rows
                   FETCH NEXT ? ROWS only
                 """;
@@ -88,7 +58,6 @@ public class CustomerQueryDAO {
                 customer.setSource(rs.getString("source"));
                 customer.setStatus(rs.getString("status"));
                 customer.setLoyaltyTier(rs.getString("loyalty_tier"));
-                customer.setReturnRate(rs.getDouble("return_rate"));
                 Timestamp ts = rs.getTimestamp("last_purchase");
                 if (ts != null) {
                     customer.setLastPurchase(ts.toLocalDateTime());
@@ -102,7 +71,6 @@ public class CustomerQueryDAO {
     }
 
     public int countTotalCustomers(Connection connection,
-                                   String returnRate,
                                    String keyword,
                                    List<String> loyaltyTier,
                                    List<String> source, String gender, List<TimeCondition> timeConditions) throws SQLException {
@@ -123,14 +91,6 @@ public class CustomerQueryDAO {
             params.add(value);
             params.add(value);
         }
-
-        // return rate filter
-        if (returnRate != null && returnRate.equals("HIGH")) {
-            sql.append(" AND return_rate >= 40.0");
-        } else if (returnRate != null && returnRate.equals("LOW")) {
-            sql.append(" AND return_rate < 40.0");
-        }
-
         // loyalty tier filter
         if (loyaltyTier != null && !loyaltyTier.isEmpty()) {
             sql.append(" AND loyalty_tier IN (");
@@ -165,7 +125,9 @@ public class CustomerQueryDAO {
                     default -> null;
                 };
 
-                if (column == null) continue;
+                if (column == null) {
+                    continue;
+                }
 
                 // map operator -> SQL operator
                 String op = switch (t.getOperator()) {
@@ -220,6 +182,15 @@ public class CustomerQueryDAO {
             stm.executeUpdate();
         }
 
+        String deletePDealProducts = """
+                    Delete dp From Deal_Products dp LEFT JOIN Deals d on d. [deal_id] = dp.[deal_id]
+                    where customer_id = ?
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(deletePDealProducts);) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
         String deleteDealsSql = "DELETE FROM Deals WHERE customer_id = ?";
         try (PreparedStatement stm = connection.prepareStatement(deleteDealsSql);) {
             stm.setInt(1, customerId);
@@ -247,14 +218,6 @@ public class CustomerQueryDAO {
             stm.executeUpdate();
         }
 
-        // 3. Xóa Customer Measurements
-        String deleteMeasurementSql = """
-                DELETE FROM Customer_Measurements WHERE customer_id = ?
-                """;
-        try (PreparedStatement stm = connection.prepareStatement(deleteMeasurementSql)) {
-            stm.setInt(1, customerId);
-            stm.executeUpdate();
-        }
 
         // 4. Xóa Customer Segment Map
         String deleteCsmSegmentSql = """
@@ -264,6 +227,18 @@ public class CustomerQueryDAO {
             stm.executeUpdate();
         }
 
+        String updateSegmentCount = """
+                    UPDATE Customer_Segments
+                    SET customer_count = (
+                        SELECT COUNT(*)
+                        FROM Customer_Segment_Map csm
+                        WHERE csm.segment_id = Customer_Segments.segment_id
+                    );
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(updateSegmentCount)) {
+            ps.executeUpdate();
+        }
+
         // 5. Xóa Virtual Wardrobe
         String deleteWardrobeSql = "DELETE FROM Virtual_Wardrobe WHERE customer_id = ?";
         try (PreparedStatement stm = connection.prepareStatement(deleteWardrobeSql)) {
@@ -271,6 +246,197 @@ public class CustomerQueryDAO {
             stm.executeUpdate();
         }
 
+        String deleteCustomerNotes = """
+                Delete From customer_note Where customer_id = ?
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(deleteCustomerNotes)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        String deleteCustomerContacts = """
+                Delete From [customer_contact] Where customer_id = ?
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(deleteCustomerContacts)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+        String resetLeadStatus = """
+                UPDATE Leads
+                SET status = 'QUALIFIED', is_converted = 0, converted_customer_id = NULL
+                WHERE converted_customer_id = ?
+                """;
+        try (PreparedStatement stm = connection.prepareStatement(resetLeadStatus)) {
+            stm.setInt(1, customerId);
+            stm.executeUpdate();
+        }
+
+
+    }
+
+    // Chuyển toàn bộ dữ liệu liên quan từ source -> target trước khi xóa source
+    public void reassignCustomerRelatedData(int sourceCustomerId, int targetCustomerId, Connection connection)
+            throws SQLException {
+        if (sourceCustomerId <= 0 || targetCustomerId <= 0 || sourceCustomerId == targetCustomerId) {
+            return;
+        }
+
+        // 0) Merge requests: FK_cmr_target không CASCADE — phải bỏ tham chiếu tới customer sắp xóa
+        try (PreparedStatement stm = connection.prepareStatement("""
+                UPDATE customer_merge_request
+                SET target_id = ?
+                WHERE target_id = ?
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM customer_merge_request WHERE source_id = target_id")) {
+            stm.executeUpdate();
+        }
+
+        // 1) Deal / Ticket / Lead conversion
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Deals SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Tickets SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Leads SET converted_customer_id = ? WHERE converted_customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 2) Activities linked to customer (both related and source)
+        try (PreparedStatement stm = connection.prepareStatement("""
+                UPDATE Activities
+                SET related_id = ?
+                WHERE LOWER(related_type) = 'customer' AND related_id = ?
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection.prepareStatement("""
+                UPDATE Activities
+                SET source_id = ?
+                WHERE LOWER(source_type) = 'customer' AND source_id = ?
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 3) Customer notes
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE customer_note SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 4) Contacts: chỉ chuyển contact chưa tồn tại ở target (theo value)
+        try (PreparedStatement stm = connection.prepareStatement("""
+                INSERT INTO customer_contact (customer_id, is_primary, type, value)
+                SELECT ?, 0, sc.type, sc.value
+                FROM customer_contact sc
+                WHERE sc.customer_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM customer_contact tc
+                    WHERE tc.customer_id = ?
+                      AND LOWER(tc.value) = LOWER(sc.value)
+                  )
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.setInt(3, targetCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM customer_contact WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 5) Style tags: merge unique tags
+        try (PreparedStatement stm = connection.prepareStatement("""
+                INSERT INTO Customer_Style_Map (customer_id, tag_id)
+                SELECT ?, sm.tag_id
+                FROM Customer_Style_Map sm
+                WHERE sm.customer_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM Customer_Style_Map tm
+                    WHERE tm.customer_id = ?
+                      AND tm.tag_id = sm.tag_id
+                  )
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.setInt(3, targetCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM Customer_Style_Map WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 6) Segment map: merge unique segments
+        try (PreparedStatement stm = connection.prepareStatement("""
+                INSERT INTO Customer_Segment_Map (customer_id, segment_id)
+                SELECT ?, s.segment_id
+                FROM Customer_Segment_Map s
+                WHERE s.customer_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM Customer_Segment_Map t
+                    WHERE t.customer_id = ?
+                      AND t.segment_id = s.segment_id
+                  )
+                """)) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.setInt(3, targetCustomerId);
+            stm.executeUpdate();
+        }
+
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM Customer_Segment_Map WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 7) Wardrobe
+        try (PreparedStatement stm = connection
+                .prepareStatement("UPDATE Virtual_Wardrobe SET customer_id = ? WHERE customer_id = ?")) {
+            stm.setInt(1, targetCustomerId);
+            stm.setInt(2, sourceCustomerId);
+            stm.executeUpdate();
+        }
+
+        // 8) OTP: dữ liệu ngắn hạn, không merge; dọn source để tránh rác
+        try (PreparedStatement stm = connection
+                .prepareStatement("DELETE FROM CustomerOTP WHERE customer_id = ?")) {
+            stm.setInt(1, sourceCustomerId);
+            stm.executeUpdate();
+        }
     }
 
     private SQLServerDataTable toStringTVP(List<String> list) throws SQLException {
@@ -300,14 +466,12 @@ public class CustomerQueryDAO {
     }
 
     public List<Customer> filterAdvanced(
-            Connection connection, String keyword,
-            String returnRate, List<String> loyaltyTier,
+            Connection connection, String keyword, List<String> loyaltyTier,
             List<String> source, String gender, List<TimeCondition> timeConditions, int page, int size) throws SQLException {
 
         StringBuilder sql = new StringBuilder(
                 BASE_QUERY + " WHERE 1=1"
         );
-
 
         List<Object> params = new ArrayList<>();
         List<Customer> customerList = new ArrayList<>();
@@ -320,14 +484,6 @@ public class CustomerQueryDAO {
             params.add(value);
             params.add(value);
         }
-
-        // return rate filter
-        if (returnRate != null && returnRate.equals("HIGH")) {
-            sql.append(" AND return_rate > 40.0");
-        } else if (returnRate != null && returnRate.equals("LOW")) {
-            sql.append(" AND return_rate <= 40.0");
-        }
-
         // loyalty tier filter
         if (loyaltyTier != null && !loyaltyTier.isEmpty()) {
             sql.append(" AND loyalty_tier IN (");
@@ -362,7 +518,9 @@ public class CustomerQueryDAO {
                     default -> null;
                 };
 
-                if (column == null) continue;
+                if (column == null) {
+                    continue;
+                }
 
                 // map operator -> SQL operator
                 String op = switch (t.getOperator()) {
@@ -389,7 +547,6 @@ public class CustomerQueryDAO {
         params.add(size);
         params.add(size);
 
-
         try (PreparedStatement stm = connection.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < params.size(); i++) {
@@ -411,7 +568,6 @@ public class CustomerQueryDAO {
                     customer.setSource(rs.getString("source"));
                     customer.setStatus(rs.getString("status"));
                     customer.setLoyaltyTier(rs.getString("loyalty_tier"));
-                    customer.setReturnRate(rs.getDouble("return_rate"));
                     Timestamp ts = rs.getTimestamp("last_purchase");
                     if (ts != null) {
                         customer.setLastPurchase(ts.toLocalDateTime());
@@ -421,5 +577,44 @@ public class CustomerQueryDAO {
                 return customerList;
             }
         }
+    }
+
+    public List<CustomerSearchResultDTO> searchForMerge(Connection conn,
+                                                        String keyword,
+                                                        int excludeId,
+                                                        int limit) throws SQLException {
+        String sql = """
+                SELECT TOP (?) customer_id, name, phone, email
+                FROM customers
+                WHERE customer_id != ?
+                  AND (
+                      name  LIKE ?
+                   OR phone LIKE ?
+                   OR email LIKE ?
+                  )
+                ORDER BY name ASC
+                """;
+        List<CustomerSearchResultDTO> results = new ArrayList<>();
+        String pattern = "%" + keyword + "%";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, excludeId);
+            ps.setString(3, pattern);
+            ps.setString(4, pattern);
+            ps.setString(5, pattern);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new CustomerSearchResultDTO(
+                            rs.getInt("customer_id"),
+                            rs.getString("name"),
+                            rs.getString("phone"),
+                            rs.getString("email")
+                    ));
+                }
+            }
+        }
+        return results;
     }
 }

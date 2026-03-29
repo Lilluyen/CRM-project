@@ -7,15 +7,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Customer;
-import model.Deal;
-import model.Lead;
-import model.Product;
+import model.*;
+import util.CustomerActivityUtil;
 import util.DBContext;
+import util.DealActivityUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,10 +42,19 @@ public class CreateDealController extends HttpServlet {
         List<Lead> leads = leadDAO.getAllLeadsBasic();
         List<Product> products = productDAO.getAllActiveProductsBasic();
 
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
+        if ("customer".equalsIgnoreCase(relatedType)) {
+            request.setAttribute("relatedType", relatedType);
+        } else if ("lead".equalsIgnoreCase(relatedType)) {
+            request.setAttribute("relatedType", relatedType);
+        }
+        request.setAttribute("relatedId", relatedId);
         request.setAttribute("customers", customers);
         request.setAttribute("leads", leads);
         request.setAttribute("products", products);
         request.setAttribute("stages", DealDAO.getDefaultStages());
+
     }
 
     @Override
@@ -77,7 +86,6 @@ public class CreateDealController extends HttpServlet {
             deal.setOwnerId(request.getSession().getAttribute("user") != null
                     ? ((model.User) request.getSession().getAttribute("user")).getUserId()
                     : 0);
-
             if (deal.getOwnerId() <= 0) {
                 throw new IllegalArgumentException("Owner không hợp lệ. Vui lòng đăng nhập lại.");
             }
@@ -91,8 +99,18 @@ public class CreateDealController extends HttpServlet {
             if (newId <= 0) {
                 throw new RuntimeException("Tạo deal thất bại.");
             }
-
+            if ("Closed Won".equalsIgnoreCase(deal.getStage())) {
+                handleClosedWon(newId, conn, (model.User) request.getSession().getAttribute("user"));
+            }
             dealProductDAO.replaceDealItems(newId, items);
+            User createdBy = (User) request.getSession().getAttribute("user");
+            DealActivityUtil.logDealCreated(
+                    conn,
+                    newId,
+                    deal.getDealName(),
+                    deal.getCustomerId(),
+                    deal.getLeadId(),
+                    createdBy);
 
             conn.commit();
             response.sendRedirect(request.getContextPath() + "/sale/deal/detail?id=" + newId);
@@ -127,9 +145,11 @@ public class CreateDealController extends HttpServlet {
     }
 
     private Deal extractDealFromRequest(HttpServletRequest request) {
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
         String dealName = request.getParameter("dealName");
-        String customerIdStr = request.getParameter("customerId");
-        String leadIdStr = request.getParameter("leadId");
+        String customerIdStr = "";
+        String leadIdStr = "";
         String expectedValueStr = request.getParameter("expectedValue");
         String actualValueStr = request.getParameter("actualValue");
         String stage = request.getParameter("stage");
@@ -143,8 +163,13 @@ public class CreateDealController extends HttpServlet {
         Deal d = new Deal();
         d.setDealName(dealName.trim());
 
-        int customerId = parseInt(customerIdStr);
-        int leadId = parseInt(leadIdStr);
+        int customerId = parseIntSafe(customerIdStr);
+        int leadId = parseIntSafe(leadIdStr);
+        if (relatedType.equalsIgnoreCase("lead")) {
+            leadId = Integer.parseInt(relatedId);
+        } else {
+            customerId = Integer.parseInt(relatedId);
+        }
         d.setCustomerId(customerId);
         d.setLeadId(leadId);
 
@@ -158,6 +183,7 @@ public class CreateDealController extends HttpServlet {
             stage = "Prospecting";
         }
         d.setStage(stage);
+
 
         Integer prob = null;
         if (probabilityStr != null && !probabilityStr.isBlank()) {
@@ -179,9 +205,19 @@ public class CreateDealController extends HttpServlet {
 
     private Deal extractDealFromRequestSafe(HttpServletRequest request) {
         Deal d = new Deal();
+        String relatedId = request.getParameter("relatedId");
+        String relatedType = request.getParameter("relatedType");
+        String customerIdStr = "";
+        String leadIdStr = "";
+        d.setCustomerId(parseIntSafe(customerIdStr));
+        d.setLeadId(parseIntSafe(leadIdStr));
+        if ("lead".equalsIgnoreCase(relatedType)) {
+            d.setLeadId(parseIntSafe(relatedId));
+        } else {
+            d.setCustomerId(parseIntSafe(relatedId));
+        }
         d.setDealName(request.getParameter("dealName"));
-        d.setCustomerId(parseIntSafe(request.getParameter("customerId")));
-        d.setLeadId(parseIntSafe(request.getParameter("leadId")));
+
         try {
             d.setExpectedValue(parseBigDecimal(request.getParameter("expectedValue"), BigDecimal.ZERO));
         } catch (Exception ignored) {
@@ -278,5 +314,78 @@ public class CreateDealController extends HttpServlet {
             return defaultValue;
         }
         return new BigDecimal(s.trim());
+    }
+
+    private void handleClosedWon(int dealId, Connection conn, User currentUser) throws SQLException {
+
+        DealDAO dealDAO = new DealDAO(conn);
+        LeadDAO leadDAO = new LeadDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+        CustomerContactDAO contactDAO = new CustomerContactDAO();
+        // 1. Lấy deal
+        Deal deal = dealDAO.getById(dealId);
+
+
+        if (deal.getCustomerId() != null && deal.getCustomerId() > 0) {
+
+            int customerId = deal.getCustomerId();
+
+            // 1. update last_purchase
+            customerDAO.updateLastPurchase(conn, customerId);
+
+            // 2. tính lại total_spent
+            customerDAO.updateTotalSpent(conn, customerId);
+
+            // 3. tính lại loyalty_tier
+            customerDAO.updateLoyaltyTier(conn, customerId);
+
+
+        }
+
+        // 3. Nếu có lead → convert
+        if (deal.getLeadId() > 0) {
+
+            Lead lead = leadDAO.getLeadById(deal.getLeadId());
+
+            //  tránh convert lại
+            if (lead.isConverted()) {
+                // chỉ cần gắn lại customer vào deal
+                dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
+                return;
+            }
+
+            // 4. Check duplicate customer (theo phone/email)
+            Customer existing = customerDAO.findByPhoneOrEmail(conn, lead.getPhone(), lead.getEmail());
+
+            int customerId;
+
+            if (existing != null) {
+                customerId = existing.getCustomerId();
+            } else {
+                // 5. Tạo customer mới
+                customerId = customerDAO.insertFromLead(conn, lead);
+            }
+
+            // 6. Update lead
+            leadDAO.markConverted(conn, lead.getLeadId(), customerId);
+
+            // 7. Update deal
+            dealDAO.updateCustomerForDeal(dealId, customerId);
+
+            // 8. tính lại total_spent
+            customerDAO.updateTotalSpent(conn, customerId);
+            // 9. tính lại loyalty_tier
+            customerDAO.updateLoyaltyTier(conn, customerId);
+
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
+
+            CustomerActivityUtil.logCustomerActivity(
+                    customerId,
+                    "UPDATE",
+                    "Lead converted",
+                    "Converted lead #" + lead.getLeadId() + " to customer via deal #" + dealId + ".",
+                    currentUser);
+        }
     }
 }

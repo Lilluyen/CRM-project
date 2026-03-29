@@ -81,6 +81,7 @@ public class LeadListController extends HttpServlet {
         if (campaignId > 0) {
             Campaign campaign = campaignService.getCampaignById(campaignId);
             request.setAttribute("filterCampaign", campaign);
+            request.setAttribute("campaign", campaign);
             request.setAttribute("filterCampaignId", campaignId);
         }
 
@@ -99,7 +100,7 @@ public class LeadListController extends HttpServlet {
         }
 
         // Layout attributes
-        request.setAttribute("pageTitle", "Quản lý Leads - CRM");
+        request.setAttribute("pageTitle", "Leads Management - CRM");
         request.setAttribute("contentPage", "marketing/lead/lead_list.jsp");
         request.setAttribute("pageCss", "lead_list.css");
         request.setAttribute("page", "lead-list");

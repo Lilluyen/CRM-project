@@ -16,15 +16,17 @@ public class CustomerRemoveController extends HttpServlet {
     CustomerDAO customerDAO = new CustomerDAO();
     CustomerStyleDAO customerStyleDAO = new CustomerStyleDAO();
     CustomerQueryDAO customerQueryDAO = new CustomerQueryDAO();
-    CustomerMeasurementDAO customerMeasurementDAO = new CustomerMeasurementDAO();
+
     CustomerSegmentDAO customerSegmentDAO = new CustomerSegmentDAO();
 
+    private final CustomerContactDAO contactDAO = new CustomerContactDAO();
+    private final CustomerNoteDAO noteDAO = new CustomerNoteDAO();
     CustomerService customerService = new CustomerService(
             customerDAO,
             customerStyleDAO,
             customerQueryDAO,
-            customerMeasurementDAO,
-            customerSegmentDAO);
+            customerSegmentDAO,
+            contactDAO, noteDAO);
 
     /**
      * Xóa khách hàng theo ID

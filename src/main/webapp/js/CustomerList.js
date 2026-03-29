@@ -64,21 +64,13 @@ function filter() {
     const keyword = document.getElementById('searchInput').value;
     const loyaltys = document.querySelector('.loyaltyFilter').value;
     const sources = document.querySelector('.source').value;
-    const active = document.querySelector(".btn-return-rate.btn-primary");
-    let returnRate
-    if (active) {
-        returnRate = active.classList.contains("btn-high-return")
-            ? "HIGH"
-            : "LOW";
 
-    }
 
     const params = new URLSearchParams();
 
     if (keyword) params.append("keyword", keyword);
     if (loyaltys && loyaltys !== 'ALL') params.append("loyaltyFilter", loyaltys);
     if (sources && sources !== 'ALL') params.append("source", sources);
-    if (returnRate) params.append("returnRateFilter", returnRate);
 
     const ctx = window.__CTX__ || "";
     const url = `${ctx}/customers/filter?${params.toString()}`;
@@ -146,7 +138,7 @@ document.addEventListener("click", function (e) {
 
     if (e.target.classList.contains("delete")) {
         e.target.parentElement.remove();
-        document.querySelector('.sub-condition').remove();
+        // document.querySelector('.sub-condition').remove();
     }
 
 });
@@ -177,7 +169,7 @@ function getCheckedValues(selector) {
 document.getElementById("searchInput").addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
-        applyAdvancedFilter();
+        filter();
     }
 });
 
@@ -390,6 +382,12 @@ function downgradeCustomer(customerId) {
         const url = `${ctx}/customers/downgrade?customerId=${encodeURIComponent(customerId)}`;
         window.location.href = url;
     }
+}
+
+function addDealCustomer(customerId) {
+    const ctx = window.__CTX__ || "";
+    const url = `${ctx}/sale/deal/create?relatedId=${encodeURIComponent(customerId)}&relatedType=CUSTOMER`;
+    window.location.href = url;
 }
 
 function deleteCustomer(customerId) {
