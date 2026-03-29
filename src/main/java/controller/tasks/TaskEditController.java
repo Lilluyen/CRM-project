@@ -1,5 +1,6 @@
 package controller.tasks;
 
+import dao.TaskCommentDAO;
 import model.Task;
 import model.User;
 import service.TaskService;
@@ -181,7 +182,19 @@ public class TaskEditController extends HttpServlet {
         existing.setDescription(req.getParameter("description"));
         existing.setStatus(req.getParameter("status"));
         String prog = req.getParameter("progress");
-        existing.setProgress(prog != null && !prog.isBlank() ? Integer.parseInt(prog) : existing.getProgress());
+        int pct=0;
+        try (Connection conn = DBContext.getConnection()) {
+            TaskCommentDAO dao = new TaskCommentDAO(conn);
+            int[] pro = dao.countProgress(existing.getTaskId());
+            int add=0;
+            if(existing.getStatus().equalsIgnoreCase("Done")){
+                add=1;
+            }
+            pct = pro[0] > 0 ? (int) Math.round((double) (pro[1] +add)/ (pro[0]+1) * 100) : 0;} 
+        catch (SQLException ex) {
+            Logger.getLogger(TaskEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        existing.setProgress(pct!=0 ? pct : existing.getProgress());
 
         // Due date / priority: per-task rule (see canEditDuePriority)
         if (canEditDuePriority) {
