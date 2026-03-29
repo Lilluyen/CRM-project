@@ -195,7 +195,7 @@
                                     <line x1="2" y1="12" x2="22" y2="12"/>
                                     <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
                                 </svg>
-                                Gender <span class="cf__req">*</span>
+                                Gender <span class="cf__req"></span>
                             </label>
                             <select class="cf__input" name="gender">
                                 <option value="">Select gender</option>
@@ -500,7 +500,7 @@
         f2.name = 'customerId';
         f2.value = customerId;
 
-         var f3 = document.createElement('input');
+        var f3 = document.createElement('input');
         f3.type = 'hidden';
         f3.name = 'primaryValue';
         f3.value = value;

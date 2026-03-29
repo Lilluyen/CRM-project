@@ -2,24 +2,16 @@ package service;
 
 import dao.TaskDAO;
 import dao.UserDAO;
-import model.Activity;
-import model.Task;
-import model.TaskAssignee;
-import model.TaskComment;
-import model.User;
+import model.*;
 
 import java.sql.Connection;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * TaskService – business logic layer for Tasks.
- *
+ * <p>
  * Responsibilities:
  * • Role-based visibility (ADMIN/MANAGER see all; others see own tasks)
  * • CRUD with change-logging via Task_History / Task_History_Detail
@@ -27,7 +19,7 @@ import java.util.stream.Collectors;
  * • In-app Notifications via NotificationService
  * • Email Notifications via TaskEmailService (async, fire-and-forget)
  * • Scheduler support: markOverdueTasks() (Scenario 9)
- *
+ * <p>
  * Activity mapping (scenario → activity_type):
  * create task → task_created
  * assign task → task_assigned
@@ -45,7 +37,9 @@ public class TaskService {
     private final TaskDAO taskDAO;
     private final ActivityService activityService;
     private final NotificationService notificationService;
-    /** Email notification service – tất cả gửi async, không block. */
+    /**
+     * Email notification service – tất cả gửi async, không block.
+     */
     private final TaskEmailService taskEmailService;
 
     public TaskService(Connection connection) {
@@ -59,12 +53,12 @@ public class TaskService {
     // LIST (paged + filtered) - với createdBy, relatedType, relatedId filters
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> getTasksPaged(User currentUser,
-            String title, String description,
-            String status, String priority,
-            String fromDate, String toDate,
-            Integer createdBy, String relatedType, Integer relatedId,
-            String sortField, String sortDir,
-            int page, int pageSize) {
+                                    String title, String description,
+                                    String status, String priority,
+                                    String fromDate, String toDate,
+                                    Integer createdBy, String relatedType, Integer relatedId,
+                                    String sortField, String sortDir,
+                                    int page, int pageSize) {
         try {
             Integer assigneeFilter = isPrivileged(currentUser) ? null : currentUser.getUserId();
             return taskDAO.getTasksPaged(title, description, status, priority,
@@ -77,10 +71,10 @@ public class TaskService {
     }
 
     public int countTasks(User currentUser,
-            String title, String description,
-            String status, String priority,
-            String fromDate, String toDate,
-            Integer createdBy, String relatedType, Integer relatedId) {
+                          String title, String description,
+                          String status, String priority,
+                          String fromDate, String toDate,
+                          Integer createdBy, String relatedType, Integer relatedId) {
         try {
             Integer assigneeFilter = isPrivileged(currentUser) ? null : currentUser.getUserId();
             return taskDAO.countTasksFiltered(title, description, status, priority,
@@ -95,19 +89,19 @@ public class TaskService {
     // LIST (paged) - backward compatible overload (khong co new filters)
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> getTasksPaged(User currentUser,
-            String title, String description,
-            String status, String priority,
-            String fromDate, String toDate,
-            String sortField, String sortDir,
-            int page, int pageSize) {
+                                    String title, String description,
+                                    String status, String priority,
+                                    String fromDate, String toDate,
+                                    String sortField, String sortDir,
+                                    int page, int pageSize) {
         return getTasksPaged(currentUser, title, description, status, priority,
                 fromDate, toDate, null, null, null, sortField, sortDir, page, pageSize);
     }
 
     public int countTasks(User currentUser,
-            String title, String description,
-            String status, String priority,
-            String fromDate, String toDate) {
+                          String title, String description,
+                          String status, String priority,
+                          String fromDate, String toDate) {
         return countTasks(currentUser, title, description, status, priority,
                 fromDate, toDate, null, null, null);
     }
@@ -116,8 +110,8 @@ public class TaskService {
     // SCHEDULE - get tasks for weekly timetable view
     // ─────────────────────────────────────────────────────────────────────────
     public List<Task> getTasksForSchedule(java.time.LocalDateTime start,
-            java.time.LocalDateTime end,
-            User currentUser) {
+                                          java.time.LocalDateTime end,
+                                          User currentUser) {
         try {
             Integer assigneeFilter = isPrivileged(currentUser) ? null : currentUser.getUserId();
             return taskDAO.findTasksInDateRange(start, end, assigneeFilter);
@@ -172,6 +166,7 @@ public class TaskService {
     // ─────────────────────────────────────────────────────────────────────────
     // CREATE (Scenario 1)
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
      * @param relatedType entity that "owns" this task in the CRM timeline
      *                    (e.g. "Customer", "Lead") – may be null
@@ -183,7 +178,7 @@ public class TaskService {
                 task.setCompletedAt(LocalDateTime.now());
             }
 
-            boolean ok = taskDAO.createTask(task);
+            boolean ok = taskDAO.createTask(task, relatedType, relatedId);
             if (ok && task.getTaskId() != null) {
 
                 // Audit log
@@ -215,7 +210,9 @@ public class TaskService {
         }
     }
 
-    /** Backward-compat overload – no related entity context. */
+    /**
+     * Backward-compat overload – no related entity context.
+     */
 //    public boolean createTask(Task task) {
 //        return createTask(task, null, null);
 //    }
@@ -304,7 +301,9 @@ public class TaskService {
         }
     }
 
-    /** Backward-compat overload – changedBy = 0. */
+    /**
+     * Backward-compat overload – changedBy = 0.
+     */
     public boolean updateTask(Task task) {
         return updateTask(task, 0);
     }
@@ -354,7 +353,9 @@ public class TaskService {
         }
     }
 
-    /** Backward-compat overload. */
+    /**
+     * Backward-compat overload.
+     */
     public boolean updateStatus(int taskId, String status, Task task) {
         return updateStatus(taskId, status, task, 0);
     }
@@ -414,7 +415,9 @@ public class TaskService {
         }
     }
 
-    /** Backward-compat overload. */
+    /**
+     * Backward-compat overload.
+     */
     public boolean updateProgress(int taskId, int progress) {
         return updateProgress(taskId, progress, 0);
     }
@@ -463,7 +466,9 @@ public class TaskService {
         }
     }
 
-    /** Backward-compat overload. */
+    /**
+     * Backward-compat overload.
+     */
     public boolean assignTask(int taskId, int userId, Task task) {
         return assignTask(taskId, userId, task, 0);
     }
@@ -499,7 +504,9 @@ public class TaskService {
         }
     }
 
-    /** Backward-compat overload. */
+    /**
+     * Backward-compat overload.
+     */
     public boolean removeAssignee(int taskId, int userId) {
         return removeAssignee(taskId, userId, 0, null);
     }
@@ -507,6 +514,7 @@ public class TaskService {
     // ─────────────────────────────────────────────────────────────────────────
     // REASSIGN BULK (Scenario 8) – one history record, one activity
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
      * Replace the current assignee set with {@code desiredAssigneeIds}.
      * If the task previously had assignees this is treated as a REASSIGN,
@@ -596,6 +604,7 @@ public class TaskService {
     // ─────────────────────────────────────────────────────────────────────────
     // MARK OVERDUE – Scheduler (Scenario 9)
     // ─────────────────────────────────────────────────────────────────────────
+
     /**
      * Called by the scheduler. Finds all overdue tasks and marks each one,
      * creating an Activity and notifying assignees.
@@ -665,7 +674,9 @@ public class TaskService {
     // ACTIVITY ACCESSORS (delegates to ActivityService)
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Paged activity timeline for the task detail page. */
+    /**
+     * Paged activity timeline for the task detail page.
+     */
     public List<Activity> getActivitiesForTask(int taskId, int page, int pageSize) {
         try {
             return activityService.getActivitiesByTask(taskId, page, pageSize);
@@ -709,7 +720,9 @@ public class TaskService {
     // EMAIL SERVICE ACCESSOR – cho phép controller dùng trực tiếp khi cần
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Trả về TaskEmailService để controller có thể gọi trực tiếp nếu cần. */
+    /**
+     * Trả về TaskEmailService để controller có thể gọi trực tiếp nếu cần.
+     */
     public TaskEmailService getEmailService() {
         return taskEmailService;
     }
@@ -722,12 +735,12 @@ public class TaskService {
      * Build a minimal Activity for a task event.
      */
     private Activity buildTaskActivity(String activityType,
-            String subject,
-            String description,
-            int taskId,
-            String relatedType,
-            Integer relatedId,
-            User actor) {
+                                       String subject,
+                                       String description,
+                                       int taskId,
+                                       String relatedType,
+                                       Integer relatedId,
+                                       User actor) {
         Activity a = new Activity();
         a.setActivityType(activityType);
         a.setSubject(subject);
@@ -779,7 +792,9 @@ public class TaskService {
         return "ADMIN".equalsIgnoreCase(rn) || "MANAGER".equalsIgnoreCase(rn);
     }
 
-    /** Only writes a history detail if the value actually changed. */
+    /**
+     * Only writes a history detail if the value actually changed.
+     */
     private void logDiff(int historyId, String field, String oldVal, String newVal) {
         String o = oldVal != null ? oldVal.trim() : "";
         String n = newVal != null ? newVal.trim() : "";

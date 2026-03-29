@@ -7,14 +7,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Customer;
-import model.Deal;
-import model.Lead;
-import model.Product;
-import util.DBContext;
+import model.*;
 import util.CustomerActivityUtil;
+import util.DBContext;
 import util.DealActivityUtil;
-import model.User;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -378,6 +374,7 @@ public class EditDealController extends HttpServlet {
         DealDAO dealDAO = new DealDAO(conn);
         LeadDAO leadDAO = new LeadDAO();
         CustomerDAO customerDAO = new CustomerDAO();
+        CustomerContactDAO contactDAO = new CustomerContactDAO();
 
         // 1. Lấy deal
         Deal deal = dealDAO.getById(dealId);
@@ -391,8 +388,8 @@ public class EditDealController extends HttpServlet {
             customerDAO.updateLastPurchase(conn, customerId);
 
             // 2. tính lại RFM
-           customerDAO.updateTotalSpent(conn, customerId);
-           customerDAO.updateLoyaltyTier(conn, customerId);
+            customerDAO.updateTotalSpent(conn, customerId);
+            customerDAO.updateLoyaltyTier(conn, customerId);
 
         }
 
@@ -429,6 +426,9 @@ public class EditDealController extends HttpServlet {
             customerDAO.updateTotalSpent(conn, customerId);
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
+
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
             CustomerActivityUtil.logCustomerActivity(
                     customerId,
                     "UPDATE",

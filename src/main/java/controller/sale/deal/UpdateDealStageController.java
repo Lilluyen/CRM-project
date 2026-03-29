@@ -1,5 +1,6 @@
 package controller.sale.deal;
 
+import dao.CustomerContactDAO;
 import dao.CustomerDAO;
 import dao.DealDAO;
 import dao.LeadDAO;
@@ -8,10 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Customer;
-import model.Deal;
-import model.Lead;
-import model.User;
+import model.*;
 import util.CustomerActivityUtil;
 import util.DBContext;
 import util.DealActivityUtil;
@@ -83,6 +81,7 @@ public class UpdateDealStageController extends HttpServlet {
         DealDAO dealDAO = new DealDAO(conn);
         LeadDAO leadDAO = new LeadDAO();
         CustomerDAO customerDAO = new CustomerDAO();
+        CustomerContactDAO contactDAO = new CustomerContactDAO();
 
         // 1. Lấy deal
         Deal deal = dealDAO.getById(dealId);
@@ -138,6 +137,9 @@ public class UpdateDealStageController extends HttpServlet {
             customerDAO.updateTotalSpent(conn, customerId);
             // 9. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
+
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "PHONE", lead.getPhone()));
+            contactDAO.insertCustomerContact(conn, new CustomerContact(customerId, true, "EMAIL", lead.getEmail()));
             CustomerActivityUtil.logCustomerActivity(
                     customerId,
                     "UPDATE",
