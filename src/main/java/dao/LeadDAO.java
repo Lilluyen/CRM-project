@@ -437,6 +437,8 @@ public class LeadDAO {
             params.add("%" + interest.trim() + "%");
         }
 
+        // // Loại trừ lead đã converted
+        // sql += "AND l.status <> 'Converted' ";
         sql += "ORDER BY l.updated_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         params.add((page - 1) * pageSize);
         params.add(pageSize);
@@ -493,6 +495,9 @@ public class LeadDAO {
             sql += "AND l.interest LIKE ? ";
             params.add("%" + interest.trim() + "%");
         }
+
+        // Loại trừ lead đã converted
+        sql += "AND l.status <> 'Converted' ";
 
         sql += "ORDER BY l.updated_at DESC OFFSET 0 ROWS FETCH NEXT 10000 ROWS ONLY";
 
@@ -555,6 +560,8 @@ public class LeadDAO {
             params.add("%" + interest.trim() + "%");
         }
 
+        // Loại trừ lead đã converted
+        sql += "AND status <> 'Converted' ";
         sql += "  GROUP BY email "
                 + ") AS base ";
 
@@ -754,4 +761,62 @@ public class LeadDAO {
             ps.executeUpdate();
         }
     }
+<<<<<<< Updated upstream
+=======
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SALE DASHBOARD – lead stage distribution for a user
+    // Returns a list of {stage, count} pairs for the leads pipeline chart.
+    // ─────────────────────────────────────────────────────────────────────────
+    public List<LeadStageCount> getLeadStageDistribution(int userId, boolean isManager) {
+        List<LeadStageCount> result = new ArrayList<>();
+        String sql;
+        if (isManager) {
+            sql = "SELECT status, COUNT(*) AS cnt FROM Leads GROUP BY status ORDER BY cnt DESC";
+            try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new LeadStageCount(rs.getString("status"), rs.getInt("cnt")));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            sql = "SELECT status, COUNT(*) AS cnt FROM Leads WHERE assigned_to = ? GROUP BY status ORDER BY cnt DESC";
+            try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        result.add(new LeadStageCount(rs.getString("status"), rs.getInt("cnt")));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Simple DTO for lead stage counts (matches
+     * SaleDashboardController.LeadStageCount).
+     */
+    public static class LeadStageCount {
+
+        private final String status;
+        private final int count;
+
+        public LeadStageCount(String status, int count) {
+            this.status = status;
+            this.count = count;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public int getCount() {
+            return count;
+        }
+    }
+>>>>>>> Stashed changes
 }
