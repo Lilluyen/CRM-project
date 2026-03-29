@@ -401,6 +401,7 @@ public class EditDealController extends HttpServlet {
             if (lead.isConverted()) {
                 // chỉ cần gắn lại customer vào deal
                 dealDAO.updateCustomerForDeal(dealId, lead.getConvertedCustomerId());
+                TaskDAO taskDAO = new TaskDAO(conn);
                 return;
             }
 

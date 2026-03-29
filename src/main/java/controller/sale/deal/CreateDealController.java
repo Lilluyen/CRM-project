@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.*;
+import service.NotificationService;
+import service.TaskService;
 import util.CustomerActivityUtil;
 import util.DBContext;
 import util.DealActivityUtil;
@@ -17,6 +19,8 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,6 +102,29 @@ public class CreateDealController extends HttpServlet {
             int newId = dealDAO.createDeal(deal);
             if (newId <= 0) {
                 throw new RuntimeException("Tạo deal thất bại.");
+            }
+            TaskDAO taskDAO = new TaskDAO(conn);
+            User user = (User) request.getSession().getAttribute("user");
+            if (user == null) {
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+            Task task = buildTask(request, user);
+
+            TaskService svc = new TaskService(conn);
+
+            boolean ok = svc.createTask(task, request.getParameter("relatedType"), parseInt(request.getParameter("relatedId")));
+            svc.assignTask(task.getTaskId(), user.getUserId(), task, user.getUserId());
+
+            if (task.getDueDate() != null) {
+                new NotificationService(conn).createForUserWithRule(
+                        user.getUserId(),
+                        "Task Reminder",
+                        "Task \"" + nvl(task.getTitle(), "") + "\" is due at "
+                                + task.getDueDate().toString().replace('T', ' '),
+                        "TASK", "Task", task.getTaskId(),
+                        "ONCE", null, null, task.getDueDate()
+                );
             }
             if ("Closed Won".equalsIgnoreCase(deal.getStage())) {
                 handleClosedWon(newId, conn, (model.User) request.getSession().getAttribute("user"));
@@ -387,5 +414,32 @@ public class CreateDealController extends HttpServlet {
                     "Converted lead #" + lead.getLeadId() + " to customer via deal #" + dealId + ".",
                     currentUser);
         }
+    }
+
+    private static final DateTimeFormatter DT_FMT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+
+    private Task buildTask(HttpServletRequest req, User creator) {
+        Task t = new Task();
+        t.setTitle("Consulting Deal");
+        t.setDescription("Consulting Deal of" + req.getParameter("relatedType") + " #" + req.getParameter("relatedId"));
+        t.setStatus("In Progress");
+        t.setPriority(nvl(req.getParameter("priority"), "Medium"));
+        t.setCreatedBy(creator);
+        String progress = req.getParameter("progress");
+        t.setProgress(progress != null && !progress.isBlank()
+                ? Integer.parseInt(progress) : 0);
+
+        String due = req.getParameter("dueDate");
+        if (due != null && !due.isBlank()) t.setDueDate(LocalDateTime.now().plusWeeks(1));
+
+        String start = req.getParameter("startDate");
+        if (start != null && !start.isBlank()) t.setStartDate(LocalDateTime.now());
+
+        return t;
+    }
+
+    private static String nvl(String s, String def) {
+        return s != null ? s : def;
     }
 }
