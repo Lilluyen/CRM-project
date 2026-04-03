@@ -407,6 +407,7 @@ CREATE TABLE [dbo].[Deals](
 	[deal_id] [int] IDENTITY(1,1) NOT NULL,
 	[customer_id] [int] NULL,
 	[lead_id] [int] NULL,
+	[campaign_id] [int] NULL,
 	[deal_name] [nvarchar](100) NULL,
 	[expected_value] [decimal](15, 2) NULL,
 	[actual_value] [decimal](15, 2) NULL,

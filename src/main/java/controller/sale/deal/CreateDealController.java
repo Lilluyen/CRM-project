@@ -17,12 +17,16 @@ import util.DealActivityUtil;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet("/sale/deal/create")
 public class CreateDealController extends HttpServlet {
@@ -49,16 +53,36 @@ public class CreateDealController extends HttpServlet {
         String relatedId = request.getParameter("relatedId");
         String relatedType = request.getParameter("relatedType");
         if ("customer".equalsIgnoreCase(relatedType)) {
-            request.setAttribute("relatedType", relatedType);
+            request.setAttribute("relatedType", "CUSTOMER");
         } else if ("lead".equalsIgnoreCase(relatedType)) {
-            request.setAttribute("relatedType", relatedType);
+            request.setAttribute("relatedType", "LEAD");
         }
         request.setAttribute("relatedId", relatedId);
         request.setAttribute("customers", customers);
         request.setAttribute("leads", leads);
         request.setAttribute("products", products);
         request.setAttribute("stages", DealDAO.getDefaultStages());
+        loadLeadCampaignOptions(request, relatedType, relatedId);
 
+    }
+
+    private void loadLeadCampaignOptions(HttpServletRequest request, String relatedType, String relatedId) {
+        Integer selectedCampaignId = parseInt(request.getParameter("campaignId"));
+        if (selectedCampaignId != null) {
+            request.setAttribute("selectedCampaignId", selectedCampaignId);
+        }
+
+        if (!"lead".equalsIgnoreCase(relatedType)) {
+            return;
+        }
+
+        int leadId = parseIntSafe(relatedId);
+        if (leadId <= 0) {
+            return;
+        }
+
+        CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
+        request.setAttribute("leadCampaigns", campaignLeadDAO.getCampaignsByLeadEmail(leadId));
     }
 
     @Override
@@ -93,6 +117,7 @@ public class CreateDealController extends HttpServlet {
             if (deal.getOwnerId() <= 0) {
                 throw new IllegalArgumentException("Owner không hợp lệ. Vui lòng đăng nhập lại.");
             }
+            validateCampaignBinding(conn, deal);
 
             List<DealItemDTO> items = extractItemsFromRequest(request);
 
@@ -121,7 +146,7 @@ public class CreateDealController extends HttpServlet {
                         user.getUserId(),
                         "Task Reminder",
                         "Task \"" + nvl(task.getTitle(), "") + "\" is due at "
-                                + task.getDueDate().toString().replace('T', ' '),
+                        + task.getDueDate().toString().replace('T', ' '),
                         "TASK", "Task", task.getTaskId(),
                         "ONCE", null, null, task.getDueDate()
                 );
@@ -174,6 +199,7 @@ public class CreateDealController extends HttpServlet {
     private Deal extractDealFromRequest(HttpServletRequest request) {
         String relatedId = request.getParameter("relatedId");
         String relatedType = request.getParameter("relatedType");
+        String campaignIdStr = request.getParameter("campaignId");
         String dealName = request.getParameter("dealName");
         String customerIdStr = "";
         String leadIdStr = "";
@@ -192,10 +218,27 @@ public class CreateDealController extends HttpServlet {
 
         int customerId = parseIntSafe(customerIdStr);
         int leadId = parseIntSafe(leadIdStr);
+        if (relatedType == null || relatedType.isBlank()) {
+            throw new IllegalArgumentException("Related Type không được để trống.");
+        }
+        if (relatedId == null || relatedId.isBlank()) {
+            throw new IllegalArgumentException("Related Name không được để trống.");
+        }
+
         if (relatedType.equalsIgnoreCase("lead")) {
-            leadId = Integer.parseInt(relatedId);
+            leadId = parseIntSafe(relatedId);
+            if (leadId <= 0) {
+                throw new IllegalArgumentException("Lead không hợp lệ.");
+            }
+            d.setCampaignId(parseInt(campaignIdStr));
+        } else if (relatedType.equalsIgnoreCase("customer")) {
+            customerId = parseIntSafe(relatedId);
+            if (customerId <= 0) {
+                throw new IllegalArgumentException("Customer không hợp lệ.");
+            }
+            d.setCampaignId(null);
         } else {
-            customerId = Integer.parseInt(relatedId);
+            throw new IllegalArgumentException("Related Type không hợp lệ.");
         }
         d.setCustomerId(customerId);
         d.setLeadId(leadId);
@@ -210,7 +253,6 @@ public class CreateDealController extends HttpServlet {
             stage = "Prospecting";
         }
         d.setStage(stage);
-
 
         Integer prob = null;
         if (probabilityStr != null && !probabilityStr.isBlank()) {
@@ -234,14 +276,17 @@ public class CreateDealController extends HttpServlet {
         Deal d = new Deal();
         String relatedId = request.getParameter("relatedId");
         String relatedType = request.getParameter("relatedType");
+        String campaignIdStr = request.getParameter("campaignId");
         String customerIdStr = "";
         String leadIdStr = "";
         d.setCustomerId(parseIntSafe(customerIdStr));
         d.setLeadId(parseIntSafe(leadIdStr));
         if ("lead".equalsIgnoreCase(relatedType)) {
             d.setLeadId(parseIntSafe(relatedId));
+            d.setCampaignId(parseInt(campaignIdStr));
         } else {
             d.setCustomerId(parseIntSafe(relatedId));
+            d.setCampaignId(null);
         }
         d.setDealName(request.getParameter("dealName"));
 
@@ -275,6 +320,7 @@ public class CreateDealController extends HttpServlet {
         String[] discounts = request.getParameterValues("discount");
 
         List<DealItemDTO> items = new ArrayList<>();
+        Set<Integer> selectedProductIds = new HashSet<>();
         if (productIds == null) {
             return items;
         }
@@ -291,6 +337,10 @@ public class CreateDealController extends HttpServlet {
 
             if (productId <= 0 || qty <= 0) {
                 continue;
+            }
+
+            if (!selectedProductIds.add(productId)) {
+                throw new IllegalArgumentException("Mỗi sản phẩm chỉ được chọn một lần trong một deal. Vui lòng tăng số lượng thay vì thêm dòng trùng.");
             }
 
             if (disc.compareTo(BigDecimal.ZERO) < 0 || disc.compareTo(new BigDecimal("100")) > 0) {
@@ -343,6 +393,38 @@ public class CreateDealController extends HttpServlet {
         return new BigDecimal(s.trim());
     }
 
+    private void validateCampaignBinding(Connection conn, Deal deal) throws SQLException {
+        if (deal.getLeadId() <= 0) {
+            deal.setCampaignId(null);
+            return;
+        }
+
+        Integer campaignId = deal.getCampaignId();
+        if (campaignId == null || campaignId <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn campaign khi tạo deal cho lead.");
+        }
+
+        String sql = "SELECT COUNT(*) "
+                + "FROM Campaign_Leads cl "
+                + "WHERE cl.campaign_id = ? "
+                + "AND cl.lead_id IN ( "
+                + "    SELECT l2.lead_id "
+                + "    FROM Leads l2 "
+                + "    WHERE l2.email = (SELECT l1.email FROM Leads l1 WHERE l1.lead_id = ?) "
+                + ")";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ps.setInt(2, deal.getLeadId());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return;
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("Lead không thuộc campaign đã chọn.");
+    }
+
     private void handleClosedWon(int dealId, Connection conn, User currentUser) throws SQLException {
 
         DealDAO dealDAO = new DealDAO(conn);
@@ -351,7 +433,6 @@ public class CreateDealController extends HttpServlet {
         CustomerContactDAO contactDAO = new CustomerContactDAO();
         // 1. Lấy deal
         Deal deal = dealDAO.getById(dealId);
-
 
         if (deal.getCustomerId() != null && deal.getCustomerId() > 0) {
 
@@ -365,7 +446,6 @@ public class CreateDealController extends HttpServlet {
 
             // 3. tính lại loyalty_tier
             customerDAO.updateLoyaltyTier(conn, customerId);
-
 
         }
 
@@ -420,8 +500,8 @@ public class CreateDealController extends HttpServlet {
         }
     }
 
-    private static final DateTimeFormatter DT_FMT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final DateTimeFormatter DT_FMT
+            = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     private Task buildTask(HttpServletRequest req, User creator) {
         Task t = new Task();

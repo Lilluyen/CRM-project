@@ -85,6 +85,22 @@
                     </select>
                 </div>
 
+                <div class="mb-3" id="campaignSelectWrapper"
+                     style="display:${relatedType eq 'LEAD' ? 'block' : 'none'};">
+                    <label class="form-label fw-semibold">Campaign <span class="text-danger">*</span></label>
+                    <select name="campaignId" class="form-select" id="campaignId"
+                            data-selected="${not empty selectedCampaignId ? selectedCampaignId : deal.campaignId}">
+                        <option value="">-- Select Campaign --</option>
+                        <c:forEach items="${leadCampaigns}" var="camp">
+                            <option value="${camp.campaignId}"
+                                    <c:if test="${camp.campaignId == selectedCampaignId || camp.campaignId == deal.campaignId}">selected</c:if>>
+                                    ${camp.name}
+                            </option>
+                        </c:forEach>
+                    </select>
+                    <small class="text-muted">Mỗi deal của lead phải thuộc đúng một campaign.</small>
+                </div>
+
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Stage</label>
@@ -322,6 +338,68 @@
         tbody.appendChild(tr);
     }
 
+    function clearCampaignOptions() {
+        var campaignSelect = document.getElementById('campaignId');
+        if (!campaignSelect) return;
+        campaignSelect.innerHTML = '<option value="">-- Select Campaign --</option>';
+        campaignSelect.value = '';
+    }
+
+    function toggleCampaignSelector() {
+        var typeSelect = document.getElementById('relatedType');
+        var wrapper = document.getElementById('campaignSelectWrapper');
+        var campaignSelect = document.getElementById('campaignId');
+        if (!typeSelect || !wrapper || !campaignSelect) return;
+
+        var isLead = (typeSelect.value || '').toUpperCase() === 'LEAD';
+        wrapper.style.display = isLead ? 'block' : 'none';
+        campaignSelect.required = isLead;
+        if (!isLead) {
+            clearCampaignOptions();
+        }
+    }
+
+    function loadLeadCampaigns() {
+        var typeSelect = document.getElementById('relatedType');
+        var relatedIdSelect = document.getElementById('relatedId');
+        var campaignSelect = document.getElementById('campaignId');
+
+        if (!typeSelect || !relatedIdSelect || !campaignSelect) return;
+        if ((typeSelect.value || '').toUpperCase() !== 'LEAD') {
+            clearCampaignOptions();
+            return;
+        }
+
+        var leadId = relatedIdSelect.value;
+        if (!leadId) {
+            clearCampaignOptions();
+            return;
+        }
+
+        campaignSelect.innerHTML = '<option value="">Loading campaigns...</option>';
+
+        fetch('${pageContext.request.contextPath}/api/related-entities?type=lead-campaign&leadId=' + encodeURIComponent(leadId))
+            .then(r => r.json())
+            .then(data => {
+                clearCampaignOptions();
+                data.forEach(function (item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.name;
+                    campaignSelect.appendChild(opt);
+                });
+
+                var selectedCampaign = campaignSelect.dataset.selected;
+                if (selectedCampaign) {
+                    campaignSelect.value = selectedCampaign;
+                    campaignSelect.dataset.selected = '';
+                }
+            })
+            .catch(() => {
+                campaignSelect.innerHTML = '<option value="">Error loading campaigns</option>';
+            });
+    }
+
     /* =====================================================
        Related entity loaders (giữ nguyên từ bản gốc)
     ===================================================== */
@@ -333,14 +411,17 @@
 
         idSelect.innerHTML = '<option value="">Loading...</option>';
         idSelect.disabled = true;
+        toggleCampaignSelector();
 
         if (!selectedType) {
             idSelect.innerHTML = '<option value="">Select type first</option>';
+            clearCampaignOptions();
             return;
         }
 
         if (selectedType === 'INTERNAL') {
             idSelect.innerHTML = '<option value="">No entities</option>';
+            clearCampaignOptions();
             return;
         }
 
@@ -356,9 +437,16 @@
                     idSelect.appendChild(opt);
                 });
                 idSelect.disabled = false;
+
+                if ((selectedType || '').toUpperCase() === 'LEAD') {
+                    loadLeadCampaigns();
+                } else {
+                    clearCampaignOptions();
+                }
             })
             .catch(() => {
                 idSelect.innerHTML = '<option value="">Error loading</option>';
+                clearCampaignOptions();
             });
     }
 
@@ -384,6 +472,15 @@
     ===================================================== */
     document.addEventListener('DOMContentLoaded', function () {
         loadUsers();
+        toggleCampaignSelector();
+
+        var relatedIdSelect = document.getElementById('relatedId');
+        if (relatedIdSelect) {
+            relatedIdSelect.addEventListener('change', function () {
+                loadLeadCampaigns();
+            });
+        }
+        loadLeadCampaigns();
 
         // Tính lại tổng cho những sản phẩm đã có sẵn (edit mode / validation error)
         document.querySelectorAll('#itemsTable tbody tr').forEach(function (row) {

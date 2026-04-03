@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Deal {
+
     private int dealId;
     private Integer customerId;
     private int leadId;
+    private Integer campaignId;
     private String dealName;
     private BigDecimal expectedValue;
     private BigDecimal actualValue;
@@ -26,8 +28,8 @@ public class Deal {
     }
 
     public Deal(int dealId, int leadId, String dealName, BigDecimal expectedValue,
-                BigDecimal actualValue, String stage, int probability, LocalDate expectedCloseDate,
-                int ownerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            BigDecimal actualValue, String stage, int probability, LocalDate expectedCloseDate,
+            int ownerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.dealId = dealId;
         this.leadId = leadId;
         this.dealName = dealName;
@@ -64,6 +66,14 @@ public class Deal {
 
     public void setLeadId(int leadId) {
         this.leadId = leadId;
+    }
+
+    public Integer getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(Integer campaignId) {
+        this.campaignId = campaignId;
     }
 
     public String getDealName() {
@@ -146,6 +156,11 @@ public class Deal {
         this.products = products;
     }
 
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
 }

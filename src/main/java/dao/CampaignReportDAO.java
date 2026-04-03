@@ -78,15 +78,27 @@ public class CampaignReportDAO {
         List<CampaignPerformanceReportDTO> result = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT c.name AS campaign_name, "
-                + "COUNT(DISTINCT l.lead_id) AS total_leads, "
-                + "COUNT(DISTINCT d.deal_id) AS deals_created, "
-                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
-                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
-                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
-                + "ISNULL(SUM(c.budget), 0) AS cost "
+                + "ISNULL(lm.total_leads, 0) AS total_leads, "
+                + "ISNULL(dm.deals_created, 0) AS deals_created, "
+                + "ISNULL(dm.deals_won, 0) AS deals_won, "
+                + "ISNULL(dm.deals_lost, 0) AS deals_lost, "
+                + "ISNULL(dm.revenue, 0) AS revenue, "
+                + "ISNULL(c.budget, 0) AS cost "
                 + "FROM Campaigns c "
-                + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
-                + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
+                + "LEFT JOIN ( "
+                + "    SELECT campaign_id, COUNT(DISTINCT lead_id) AS total_leads "
+                + "    FROM Campaign_Leads "
+                + "    GROUP BY campaign_id "
+                + ") lm ON lm.campaign_id = c.campaign_id "
+                + "LEFT JOIN ( "
+                + "    SELECT campaign_id, "
+                + "           COUNT(*) AS deals_created, "
+                + "           SUM(CASE WHEN stage = 'Closed Won' THEN 1 ELSE 0 END) AS deals_won, "
+                + "           SUM(CASE WHEN stage = 'Closed Lost' THEN 1 ELSE 0 END) AS deals_lost, "
+                + "           SUM(CASE WHEN stage = 'Closed Won' THEN ISNULL(actual_value, 0) ELSE 0 END) AS revenue "
+                + "    FROM Deals "
+                + "    GROUP BY campaign_id "
+                + ") dm ON dm.campaign_id = c.campaign_id "
                 + "WHERE 1 = 1 ");
 
         List<Object> params = new ArrayList<>();
@@ -103,7 +115,7 @@ public class CampaignReportDAO {
             sql.append(" AND c.start_date <= ? ");
             params.add(toDate);
         }
-        sql.append(" GROUP BY c.campaign_id, c.name ORDER BY c.name");
+        sql.append(" ORDER BY c.name");
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -138,12 +150,7 @@ public class CampaignReportDAO {
      */
     public int countCampaignPerformance(Integer campaignId, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(*) AS cnt FROM ("
-                + "SELECT c.campaign_id "
-                + "FROM Campaigns c "
-                + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
-                + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
-                + "WHERE 1 = 1 ");
+                "SELECT COUNT(*) AS cnt FROM Campaigns c WHERE 1 = 1 ");
 
         List<Object> params = new ArrayList<>();
         if (campaignId != null) {
@@ -158,8 +165,6 @@ public class CampaignReportDAO {
             sql.append(" AND c.start_date <= ? ");
             params.add(toDate);
         }
-        sql.append(" GROUP BY c.campaign_id, c.name ) AS t");
-
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
@@ -182,15 +187,27 @@ public class CampaignReportDAO {
         List<CampaignPerformanceReportDTO> result = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT c.name AS campaign_name, "
-                + "COUNT(DISTINCT l.lead_id) AS total_leads, "
-                + "COUNT(DISTINCT d.deal_id) AS deals_created, "
-                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN 1 ELSE 0 END), 0) AS deals_won, "
-                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Lost' THEN 1 ELSE 0 END), 0) AS deals_lost, "
-                + "ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) AS revenue, "
-                + "ISNULL(SUM(c.budget), 0) AS cost "
+                + "ISNULL(lm.total_leads, 0) AS total_leads, "
+                + "ISNULL(dm.deals_created, 0) AS deals_created, "
+                + "ISNULL(dm.deals_won, 0) AS deals_won, "
+                + "ISNULL(dm.deals_lost, 0) AS deals_lost, "
+                + "ISNULL(dm.revenue, 0) AS revenue, "
+                + "ISNULL(c.budget, 0) AS cost "
                 + "FROM Campaigns c "
-                + "LEFT JOIN Leads l ON l.campaign_id = c.campaign_id "
-                + "LEFT JOIN Deals d ON d.lead_id = l.lead_id "
+                + "LEFT JOIN ( "
+                + "    SELECT campaign_id, COUNT(DISTINCT lead_id) AS total_leads "
+                + "    FROM Campaign_Leads "
+                + "    GROUP BY campaign_id "
+                + ") lm ON lm.campaign_id = c.campaign_id "
+                + "LEFT JOIN ( "
+                + "    SELECT campaign_id, "
+                + "           COUNT(*) AS deals_created, "
+                + "           SUM(CASE WHEN stage = 'Closed Won' THEN 1 ELSE 0 END) AS deals_won, "
+                + "           SUM(CASE WHEN stage = 'Closed Lost' THEN 1 ELSE 0 END) AS deals_lost, "
+                + "           SUM(CASE WHEN stage = 'Closed Won' THEN ISNULL(actual_value, 0) ELSE 0 END) AS revenue "
+                + "    FROM Deals "
+                + "    GROUP BY campaign_id "
+                + ") dm ON dm.campaign_id = c.campaign_id "
                 + "WHERE 1 = 1 AND c.status = 'ACTIVE' ");
 
         List<Object> params = new ArrayList<>();
@@ -207,7 +224,7 @@ public class CampaignReportDAO {
             sql.append(" AND c.start_date <= ? ");
             params.add(toDate);
         }
-        sql.append(" GROUP BY c.campaign_id, c.name ORDER BY c.name OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        sql.append(" ORDER BY c.name OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         params.add(offset);
         params.add(limit);
@@ -347,12 +364,12 @@ public class CampaignReportDAO {
                     SELECT COUNT(DISTINCT d.deal_id) AS total_deals,
                     COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) AS deals_won,
                     COUNT(DISTINCT CASE WHEN d.stage = 'Closed Lost' THEN d.deal_id END) AS deals_lost
-                    FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id
+                    FROM Deals d
                     WHERE 1 = 1""");  // ✅ dùng WHERE 1=1 thay vì hardcode campaign_id
 
         List<Object> params = new ArrayList<>();
         if (campaignId != null) {
-            sql.append(" AND l.campaign_id = ? ");  // ✅ chỉ 1 điều kiện duy nhất
+            sql.append(" AND d.campaign_id = ? ");  // ✅ chỉ 1 điều kiện duy nhất
             params.add(campaignId);
         }
         if (fromDate != null && !fromDate.isEmpty()) {
@@ -418,21 +435,21 @@ public class CampaignReportDAO {
                 + dateConditionLeads
                 + " ) AS total_leads, "
                 + " (SELECT COUNT(DISTINCT d.deal_id) "
-                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  FROM Deals d "
                 + "  WHERE 1 = 1 "
-                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + (campaignId != null ? " AND d.campaign_id = ? " : "")
                 + dateConditionDeals
                 + " ) AS deals_created, "
                 + " (SELECT COUNT(DISTINCT CASE WHEN d.stage = 'Closed Won' THEN d.deal_id END) "
-                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  FROM Deals d "
                 + "  WHERE 1 = 1 "
-                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + (campaignId != null ? " AND d.campaign_id = ? " : "")
                 + dateConditionDeals
                 + " ) AS deals_won, "
                 + " (SELECT ISNULL(SUM(CASE WHEN d.stage = 'Closed Won' THEN ISNULL(d.actual_value, 0) ELSE 0 END), 0) "
-                + "  FROM Deals d INNER JOIN Leads l ON d.lead_id = l.lead_id "
+                + "  FROM Deals d "
                 + "  WHERE 1 = 1 "
-                + (campaignId != null ? " AND l.campaign_id = ? " : "")
+                + (campaignId != null ? " AND d.campaign_id = ? " : "")
                 + dateConditionDeals
                 + " ) AS revenue, "
                 + " (SELECT ISNULL(SUM(c.budget), 0) "

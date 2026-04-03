@@ -15,10 +15,14 @@ import util.DealActivityUtil;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet("/sale/deal/edit")
 public class EditDealController extends HttpServlet {
@@ -45,6 +49,38 @@ public class EditDealController extends HttpServlet {
         request.setAttribute("leads", leads);
         request.setAttribute("products", products);
         request.setAttribute("stages", DealDAO.getDefaultStages());
+
+        String relatedType = String.valueOf(request.getAttribute("relatedType"));
+        if (relatedType == null || "null".equals(relatedType)) {
+            relatedType = request.getParameter("relatedType");
+        }
+        String relatedId = String.valueOf(request.getAttribute("relatedId"));
+        if (relatedId == null || "null".equals(relatedId)) {
+            relatedId = request.getParameter("relatedId");
+        }
+        loadLeadCampaignOptions(request, relatedType, relatedId);
+    }
+
+    private void loadLeadCampaignOptions(HttpServletRequest request, String relatedType, String relatedId) {
+        Integer selectedCampaignId = parseInt(request.getParameter("campaignId"));
+        if (selectedCampaignId == null && request.getAttribute("selectedCampaignId") instanceof Integer) {
+            selectedCampaignId = (Integer) request.getAttribute("selectedCampaignId");
+        }
+        if (selectedCampaignId != null) {
+            request.setAttribute("selectedCampaignId", selectedCampaignId);
+        }
+
+        if (!"lead".equalsIgnoreCase(relatedType)) {
+            return;
+        }
+
+        int leadId = parseIntSafe(relatedId);
+        if (leadId <= 0) {
+            return;
+        }
+
+        CampaignLeadDAO campaignLeadDAO = new CampaignLeadDAO();
+        request.setAttribute("leadCampaigns", campaignLeadDAO.getCampaignsByLeadEmail(leadId));
     }
 
     @Override
@@ -56,7 +92,6 @@ public class EditDealController extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
 
             DealDAO dealDAO = new DealDAO(conn);
-
 
             DealProductDAO dealProductDAO = new DealProductDAO(conn);
 
@@ -73,6 +108,9 @@ public class EditDealController extends HttpServlet {
             } else if (deal.getCustomerId() > 0) {
                 request.setAttribute("relatedType", "CUSTOMER");
                 request.setAttribute("relatedId", String.valueOf(deal.getCustomerId()));
+            }
+            if (deal.getCampaignId() != null) {
+                request.setAttribute("selectedCampaignId", deal.getCampaignId());
             }
 
             List<DealItemDTO> items = dealProductDAO.getDealItems(id);
@@ -105,6 +143,7 @@ public class EditDealController extends HttpServlet {
 
             Deal deal = extractDealFromRequest(request);
             deal.setDealId(dealId);
+            validateCampaignBinding(conn, deal);
 
             DealDAO dealDAO = new DealDAO(conn);
             DealProductDAO dealProductDAO = new DealProductDAO(conn);
@@ -185,6 +224,7 @@ public class EditDealController extends HttpServlet {
     private Deal extractDealFromRequest(HttpServletRequest request) {
         String relatedId = request.getParameter("relatedId");
         String relatedType = request.getParameter("relatedType");
+        String campaignIdStr = request.getParameter("campaignId");
         String dealName = request.getParameter("dealName");
         String customerIdStr = "";
         String leadIdStr = "";
@@ -203,10 +243,27 @@ public class EditDealController extends HttpServlet {
 
         int customerId = parseIntSafe(customerIdStr);
         int leadId = parseIntSafe(leadIdStr);
+        if (relatedType == null || relatedType.isBlank()) {
+            throw new IllegalArgumentException("Related Type không được để trống.");
+        }
+        if (relatedId == null || relatedId.isBlank()) {
+            throw new IllegalArgumentException("Related Name không được để trống.");
+        }
+
         if (relatedType.equalsIgnoreCase("lead")) {
-            leadId = Integer.parseInt(relatedId);
+            leadId = parseIntSafe(relatedId);
+            if (leadId <= 0) {
+                throw new IllegalArgumentException("Lead không hợp lệ.");
+            }
+            d.setCampaignId(parseInt(campaignIdStr));
+        } else if (relatedType.equalsIgnoreCase("customer")) {
+            customerId = parseIntSafe(relatedId);
+            if (customerId <= 0) {
+                throw new IllegalArgumentException("Customer không hợp lệ.");
+            }
+            d.setCampaignId(null);
         } else {
-            customerId = Integer.parseInt(relatedId);
+            throw new IllegalArgumentException("Related Type không hợp lệ.");
         }
         d.setCustomerId(customerId);
         d.setLeadId(leadId);
@@ -251,14 +308,17 @@ public class EditDealController extends HttpServlet {
         d.setDealName(request.getParameter("dealName"));
         String relatedId = request.getParameter("relatedId");
         String relatedType = request.getParameter("relatedType");
+        String campaignIdStr = request.getParameter("campaignId");
 //        String customerIdStr = "";
 //        String leadIdStr = "";
 //        d.setCustomerId(parseIntSafe(customerIdStr));
 //        d.setLeadId(parseIntSafe(leadIdStr));
         if ("lead".equalsIgnoreCase(relatedType)) {
             d.setLeadId(parseIntSafe(relatedId));
+            d.setCampaignId(parseInt(campaignIdStr));
         } else {
             d.setCustomerId(parseIntSafe(relatedId));
+            d.setCampaignId(null);
         }
         try {
             d.setExpectedValue(parseBigDecimal(request.getParameter("expectedValue"), BigDecimal.ZERO));
@@ -291,6 +351,7 @@ public class EditDealController extends HttpServlet {
         String[] discounts = request.getParameterValues("discount");
 
         List<DealItemDTO> items = new ArrayList<>();
+        Set<Integer> selectedProductIds = new HashSet<>();
         if (productIds == null) {
             return items;
         }
@@ -307,6 +368,10 @@ public class EditDealController extends HttpServlet {
 
             if (productId <= 0 || qty <= 0) {
                 continue;
+            }
+
+            if (!selectedProductIds.add(productId)) {
+                throw new IllegalArgumentException("Mỗi sản phẩm chỉ được chọn một lần trong một deal. Vui lòng tăng số lượng thay vì thêm dòng trùng.");
             }
 
             if (disc.compareTo(BigDecimal.ZERO) < 0 || disc.compareTo(new BigDecimal("100")) > 0) {
@@ -369,6 +434,38 @@ public class EditDealController extends HttpServlet {
         return left.equalsIgnoreCase(right);
     }
 
+    private void validateCampaignBinding(Connection conn, Deal deal) throws SQLException {
+        if (deal.getLeadId() <= 0) {
+            deal.setCampaignId(null);
+            return;
+        }
+
+        Integer campaignId = deal.getCampaignId();
+        if (campaignId == null || campaignId <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn campaign khi tạo deal cho lead.");
+        }
+
+        String sql = "SELECT COUNT(*) "
+                + "FROM Campaign_Leads cl "
+                + "WHERE cl.campaign_id = ? "
+                + "AND cl.lead_id IN ( "
+                + "    SELECT l2.lead_id "
+                + "    FROM Leads l2 "
+                + "    WHERE l2.email = (SELECT l1.email FROM Leads l1 WHERE l1.lead_id = ?) "
+                + ")";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, campaignId);
+            ps.setInt(2, deal.getLeadId());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return;
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("Lead không thuộc campaign đã chọn.");
+    }
+
     private void handleClosedWon(int dealId, Connection conn, User currentUser) throws SQLException {
 
         DealDAO dealDAO = new DealDAO(conn);
@@ -378,7 +475,6 @@ public class EditDealController extends HttpServlet {
 
         // 1. Lấy deal
         Deal deal = dealDAO.getById(dealId);
-
 
         if (deal.getCustomerId() != null && deal.getCustomerId() > 0) {
 

@@ -56,6 +56,43 @@ public class RelatedEntitiesServlet extends HttpServlet {
                     case "user":
                         sql = "SELECT user_id as id, COALESCE(full_name, username) as name, email FROM Users WHERE status = 'Active' ORDER BY full_name";
                         break;
+                    case "lead-campaign":
+                        String leadIdParam = req.getParameter("leadId");
+                        if (leadIdParam == null || leadIdParam.isBlank()) {
+                            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.print(gson.toJson(Map.of("error", "leadId parameter is required")));
+                            return;
+                        }
+                        int leadId;
+                        try {
+                            leadId = Integer.parseInt(leadIdParam);
+                        } catch (NumberFormatException ex) {
+                            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.print(gson.toJson(Map.of("error", "leadId parameter must be numeric")));
+                            return;
+                        }
+                        sql = "SELECT DISTINCT c.campaign_id as id, c.name "
+                                + "FROM Campaign_Leads cl "
+                                + "INNER JOIN Campaigns c ON c.campaign_id = cl.campaign_id "
+                                + "WHERE cl.lead_id IN ( "
+                                + "    SELECT l2.lead_id "
+                                + "    FROM Leads l2 "
+                                + "    WHERE l2.email = (SELECT l1.email FROM Leads l1 WHERE l1.lead_id = ?) "
+                                + ") "
+                                + "ORDER BY c.name";
+                        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                            ps.setInt(1, leadId);
+                            try (ResultSet rs = ps.executeQuery()) {
+                                while (rs.next()) {
+                                    Map<String, Object> row = new HashMap<>();
+                                    row.put("id", rs.getInt("id"));
+                                    row.put("name", rs.getString("name"));
+                                    results.add(row);
+                                }
+                            }
+                        }
+                        sql = null;
+                        break;
                     default:
                         sql = "SELECT customer_id as id, name FROM Customers WHERE 1=0"; // empty
                 }
@@ -68,8 +105,10 @@ public class RelatedEntitiesServlet extends HttpServlet {
                             row.put("id", rs.getInt("id"));
                             row.put("name", rs.getString("name"));
                             if (isUserType) {
-                                try { row.put("email", rs.getString("email")); }
-                                catch (Exception ignored) {}
+                                try {
+                                    row.put("email", rs.getString("email"));
+                                } catch (Exception ignored) {
+                                }
                             }
                             results.add(row);
                         }

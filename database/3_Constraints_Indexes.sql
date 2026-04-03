@@ -73,6 +73,12 @@ CREATE NONCLUSTERED INDEX [IX_Deals_customer_id] ON [dbo].[Deals]
 	[customer_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
+/****** Object:  Index [IX_Deals_campaign_id]    Script Date: 3/28/2026 4:55:23 PM ******/
+CREATE NONCLUSTERED INDEX [IX_Deals_campaign_id] ON [dbo].[Deals]
+(
+	[campaign_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
 SET ANSI_PADDING ON
 GO
 /****** Object:  Index [UQ_Leads_Email]    Script Date: 3/28/2026 4:55:23 PM ******/
@@ -506,6 +512,11 @@ ALTER TABLE [dbo].[Deals]  WITH CHECK ADD  CONSTRAINT [fk_deals_customers] FOREI
 REFERENCES [dbo].[Customers] ([customer_id])
 GO
 ALTER TABLE [dbo].[Deals] CHECK CONSTRAINT [fk_deals_customers]
+GO
+ALTER TABLE [dbo].[Deals]  WITH CHECK ADD  CONSTRAINT [fk_deals_campaign] FOREIGN KEY([campaign_id])
+REFERENCES [dbo].[Campaigns] ([campaign_id])
+GO
+ALTER TABLE [dbo].[Deals] CHECK CONSTRAINT [fk_deals_campaign]
 GO
 ALTER TABLE [dbo].[Deals]  WITH CHECK ADD  CONSTRAINT [fk_deals_lead] FOREIGN KEY([lead_id])
 REFERENCES [dbo].[Leads] ([lead_id])
