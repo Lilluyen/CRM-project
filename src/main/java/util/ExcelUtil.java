@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.DataFormatter;
 
 import model.Lead;
 
@@ -36,11 +38,22 @@ public class ExcelUtil {
                     continue;
                 }
 
+                boolean isEmptyRow = true;
+                for (Cell cell : row) {
+                    if (cell != null && cell.getCellType() != CellType.BLANK
+                            && !getCellValue(cell).isBlank()) {
+                        isEmptyRow = false;
+                        break;
+                    }
+                }
+                if (isEmptyRow) {
+                    continue;
+                }
                 try {
                     String fullName = getCellValue(row.getCell(0));
                     String email = getCellValue(row.getCell(1));
                     String phone = getCellValue(row.getCell(2));
-                    String interest = getCellValue(row.getCell(3)); // SỬA: 4 → 3, file chỉ có 4 cột
+                    String interest = getCellValue(row.getCell(3));
 
                     // Chỉ parse dữ liệu thô, KHÔNG validate ở đây
                     // Validation tập trung ở LeadImportService để tránh double validation
@@ -48,15 +61,13 @@ public class ExcelUtil {
                     lead.setFullName(fullName != null ? fullName.trim() : null);
                     lead.setEmail(email != null ? email.trim() : null);
                     lead.setPhone(phone != null ? phone.trim() : null);
-                    lead.setInterest(interest);
-                    lead.setSource("IMPORT"); // hardcode vì file không có cột source
-                    lead.setStatus("NEW_LEAD");
+                    lead.setInterest(interest != null ? interest.trim() : null);
 
                     leads.add(lead);
 
                 } catch (Exception e) {
                     // Collect error nhưng tiếp tục xử lý các row khác
-                    errors.add("Row " + (i + 1) + ": " + e.getMessage());
+                    errors.add("Row " + i + ": " + e.getMessage());
                 }
             }
         }
@@ -89,14 +100,22 @@ public class ExcelUtil {
             case STRING:
                 return cell.getStringCellValue().trim();
             case NUMERIC:
-                // SỬA: Giữ số 0 đầu cho số điện thoại VN
-                long longVal = (long) cell.getNumericCellValue();
-                String numStr = String.valueOf(longVal);
-                // Số điện thoại VN 9 chữ số → thêm lại số 0 đầu bị mất
+                DataFormatter formatter = new DataFormatter();
+                String numStr = formatter.formatCellValue(cell).replaceAll("[^0-9]", "");
                 if (numStr.length() == 9) {
                     numStr = "0" + numStr;
                 }
                 return numStr;
+            case FORMULA:
+                switch (cell.getCachedFormulaResultType()) {
+                    case STRING:
+                        return cell.getStringCellValue().trim();
+                    case NUMERIC:
+                        DataFormatter f = new DataFormatter();
+                        return f.formatCellValue(cell).replaceAll("[^0-9]", "");
+                    default:
+                        return null;
+                }
             default:
                 return null;
         }

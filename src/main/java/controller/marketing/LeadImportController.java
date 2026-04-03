@@ -29,7 +29,6 @@ public class LeadImportController extends HttpServlet {
     private LeadImportService importService = new LeadImportService();
     private CampaignDAO campaignDAO = new CampaignDAO();
     private UserDAO userDAO = new UserDAO();
-    // Đã xóa: private Gson gson = new Gson();
     // Dùng JsonUtility thay thế để xử lý đúng LocalDateTime (Java 17+)
 
     // ===== GET: Show import form (qua layout) =====
