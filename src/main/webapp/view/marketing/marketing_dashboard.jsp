@@ -238,17 +238,17 @@
                                                     </td>
                                                     <td>
                                                         <c:choose>
-                                                            <c:when test="${lead.status == 'NEW_LEAD'}">
-                                                                <span class="lead-badge new">New</span>
+                                                            <c:when test="${lead.status == 'DEAL_CREATED' || lead.status == 'CONVERTED' || lead.status == 'Converted'}">
+                                                                <span class="lead-badge deal">Deal</span>
                                                             </c:when>
-                                                            <c:when test="${lead.status == 'Nurturing' || lead.status == 'NURTURING'}">
-                                                                <span class="lead-badge contacted">Nurturing</span>
-                                                            </c:when>
-                                                            <c:when test="${lead.status == 'QUALIFIED'}">
+                                                            <c:when test="${lead.score >= 70}">
                                                                 <span class="lead-badge qualified">Qualified</span>
                                                             </c:when>
-                                                            <c:when test="${lead.status == 'DEAL_CREATED'}">
-                                                                <span class="lead-badge deal">Deal</span>
+                                                            <c:when test="${lead.score >= 40}">
+                                                                <span class="lead-badge contacted">Nurturing</span>
+                                                            </c:when>
+                                                            <c:when test="${lead.score >= 20}">
+                                                                <span class="lead-badge new">New</span>
                                                             </c:when>
                                                             <c:otherwise>
                                                                 <span class="lead-badge lost">Lost</span>
