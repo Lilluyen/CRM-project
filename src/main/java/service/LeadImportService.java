@@ -35,13 +35,14 @@ public class LeadImportService {
             response.setMessage("File does not contain data.");
             return response;
         }
-
+        
+        // ===== LOAD TẤT CẢ LEAD THEO EMAIL (ĐÃ FIX LOWER + TRIM) =====
         Map<String, Lead> allExistingByEmail = leadDAO.findLeadsByEmailMap();
-        if (allExistingByEmail == null) {
-            allExistingByEmail = new HashMap<>();
-        }
+        // if (allExistingByEmail == null) {
+        //     allExistingByEmail = new HashMap<>();
+        // }
 
-        // ===== LOAD EMAIL TRONG CAMPAIGN (ĐÃ FIX LOWER + TRIM) =====
+        // Lấy tất cả email đã tồn tại trong campaign (nếu có) để check trùng lặp
         Set<String> emailsInCampaign = new HashSet<>();
         if (campaignId != null && campaignId > 0) {
             Set<String> temp = leadDAO.getExistingEmailsByCampaign(campaignId);
@@ -53,7 +54,6 @@ public class LeadImportService {
                 }
             }
         }
-
         Set<String> emailsInBatch = new HashSet<>();
 
         List<Lead> newLeads = new ArrayList<>();

@@ -243,12 +243,10 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         </c:if>
-                                        <c:if test="${lead.status == 'Qualified' || lead.status == 'QUALIFIED'}">
-                                            <a href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${lead.leadId}&relatedType=LEAD${not empty filterCampaignId ? '&campaignId='.concat(filterCampaignId) : ''}"
-                                               class="btn btn-sm btn-outline-warning ms-1" title="Create Deal">
-                                                <i class="fas fa-plus"></i>
-                                            </a>
-                                        </c:if>
+                                        <a href="${pageContext.request.contextPath}/sale/deal/create?relatedId=${lead.leadId}&relatedType=LEAD${not empty filterCampaignId ? '&campaignId='.concat(filterCampaignId) : ''}"
+                                           class="btn btn-sm btn-outline-warning ms-1" title="Create Deal">
+                                            <i class="fas fa-plus"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             </c:forEach>

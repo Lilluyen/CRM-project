@@ -6,11 +6,11 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.ss.usermodel.DataFormatter;
 
 import model.Lead;
 
@@ -37,7 +37,8 @@ public class ExcelUtil {
                 if (row == null) {
                     continue;
                 }
-
+            
+            // Bỏ qua row trống hoàn toàn để tránh lỗi khi người dùng có nhiều dòng trống ở cuối file   
                 boolean isEmptyRow = true;
                 for (Cell cell : row) {
                     if (cell != null && cell.getCellType() != CellType.BLANK

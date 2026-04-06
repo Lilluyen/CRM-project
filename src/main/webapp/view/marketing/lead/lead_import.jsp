@@ -193,10 +193,10 @@ prefix="c" %>
             </tr>
             <tr>
               <td>4</td>
-              <td>source</td>
+              <td>Interest</td>
               <td>Text</td>
               <td><span class="badge bg-success">No</span></td>
-              <td>EVENT</td>
+              <td>Sweater</td>
             </tr>
           </tbody>
         </table>
@@ -210,8 +210,7 @@ prefix="c" %>
           <li>Company Email: +20, Personal Email: +20</li>
           <li>Valid Phone Number: +20</li>
           <li>
-            Source (Event: +30, Referral: +25, Website: +15, Social: +10, Other:
-            +5)
+            Interest Keywords: +10 for each match (Clothing)
           </li>
           <li>Classification: Hot (≥70), Warm (40-69), Cold (&lt;40)</li>
         </ul>
@@ -332,8 +331,8 @@ prefix="c" %>
     errorContainer.innerHTML = "";
     if (result.errors && result.errors.length > 0) {
       // Group errors by type
-      const duplicateErrors = result.errors.filter(e => e.includes("đã tồn tại"));
-      const validationErrors = result.errors.filter(e => !e.includes("đã tồn tại"));
+      const duplicateErrors = result.errors.filter(e => e.includes("existed"));
+      const validationErrors = result.errors.filter(e => !e.includes("existed"));
 
       let errorHtml = '<div class="error-list mt-3">';
 
