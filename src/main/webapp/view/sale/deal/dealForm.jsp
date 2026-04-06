@@ -31,7 +31,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
 
-            <form method="post">
+            <form method="post" action="${pageContext.request.contextPath}/sale/deal/create">
 
                 <c:if test="${deal.dealId != 0}">
                     <input type="hidden" name="dealId" value="${deal.dealId}"/>

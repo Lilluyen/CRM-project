@@ -35,12 +35,12 @@ public class LeadImportService {
             response.setMessage("File does not contain data.");
             return response;
         }
-        
+
         // ===== LOAD TẤT CẢ LEAD THEO EMAIL (ĐÃ FIX LOWER + TRIM) =====
         Map<String, Lead> allExistingByEmail = leadDAO.findLeadsByEmailMap();
-        // if (allExistingByEmail == null) {
-        //     allExistingByEmail = new HashMap<>();
-        // }
+        if (allExistingByEmail == null) {
+            allExistingByEmail = new HashMap<>();
+        }
 
         // Lấy tất cả email đã tồn tại trong campaign (nếu có) để check trùng lặp
         Set<String> emailsInCampaign = new HashSet<>();
